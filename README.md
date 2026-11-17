@@ -4,6 +4,8 @@ Business software screens rebuilt with sample data: accounting, treasury, budget
 
 **Live demo:** https://robertomz.github.io/business-ui-gallery/
 
+![Sales dashboard in dark mode](assets/img/og-image.png)
+
 I build and maintain an internal ERP for a distribution company: a Django platform with 20+ modules that replaced a legacy Visual FoxPro system. That code is private, so this gallery rebuilds the kinds of screens I work on every day, with generated data and no company information, so anyone can open and try them.
 
 ## Screens
