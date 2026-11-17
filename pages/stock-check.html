@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock by Warehouse · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--space-4); align-items: start; }
+    .scroll { max-height: 560px; overflow: auto; }
+    #stock tbody tr { cursor: pointer; }
+    #stock tbody tr[aria-selected="true"] td { background: var(--info-bg); }
+    #stock td { white-space: nowrap; }
+    .pres { font-size: .8rem; color: var(--text-muted); }
+    .check-row { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: center; }
+    .check-row label { display: inline-flex; gap: 6px; align-items: center; font-size: .88rem; cursor: pointer; }
+    .side { position: sticky; top: 72px; }
+    .log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); max-height: 300px; overflow: auto; }
+    .log li { border-left: 3px solid var(--primary); padding: 4px 0 4px 10px; font-size: .86rem; }
+    .log .meta { font-size: .76rem; color: var(--text-muted); }
+    .obs-dot { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; color: var(--warning); }
+    .obs-dot svg { width: 14px; height: 14px; }
+    .zero { color: var(--text-muted); }
+    textarea.input { min-height: 80px; resize: vertical; font-family: inherit; }
+    .layout > * { min-width: 0; }
+    @media (max-width: 1100px) { .layout { grid-template-columns: minmax(0, 1fr); } .side { position: static; } }
+  </style>
+</head>
+<body data-page="stock-check" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Stock by warehouse</h1>
+        <p class="muted">Every item in every warehouse, counted in its presentations. Auditors leave observations that can never be edited.</p>
+      </div>
+    </div>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fWh">Warehouse</label><select id="fWh" multiple></select></div>
+        <div class="field"><label for="fCat">Category</label><select id="fCat" multiple></select></div>
+        <div class="field"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Item code or name"></div>
+      </div>
+      <div class="check-row" style="margin-top:var(--space-3)">
+        <label><input type="checkbox" id="fStock"> Only with stock</label>
+        <label><input type="checkbox" id="fObs"> Only with observations</label>
+      </div>
+    </section>
+
+    <section class="kpis" aria-label="Totals for the filtered rows" aria-live="polite">
+      <div class="card kpi"><div class="kpi-label">Items</div><div class="kpi-value" id="kItems">–</div><div class="kpi-delta muted" id="kRows"></div></div>
+      <div class="card kpi"><div class="kpi-label">Units (base)</div><div class="kpi-value" id="kUnits">–</div></div>
+      <div class="card kpi"><div class="kpi-label">Inventory value</div><div class="kpi-value" id="kValue">–</div></div>
+      <div class="card kpi"><div class="kpi-label">With observations</div><div class="kpi-value" id="kObs">–</div><div class="kpi-delta muted">item-warehouse pairs</div></div>
+    </section>
+
+    <div class="layout">
+      <section class="card">
+        <div class="card-head"><h2>Stock</h2><span class="muted" style="font-size:.82rem">Select a row to see or add observations</span></div>
+        <div class="card-body">
+          <div class="table-wrap scroll">
+            <table class="grid" id="stock">
+              <thead><tr><th>Item</th><th>Warehouse</th><th>Presentations</th><th class="r">Stock</th><th class="r">Base units</th><th class="r">Avg cost</th><th class="r">Value</th><th>Notes</th></tr></thead>
+              <tbody></tbody>
+              <tfoot></tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card side" aria-labelledby="sideTitle">
+        <div class="card-head"><h2 id="sideTitle">Observations</h2></div>
+        <div class="card-body" id="sideBody">
+          <p class="muted" id="sideEmpty">Select a row in the table.</p>
+          <div id="sidePanel" hidden>
+            <p style="font-weight:600" id="sideItem"></p>
+            <p class="muted" style="font-size:.84rem;margin-bottom:var(--space-3)" id="sideWh"></p>
+            <ul class="log" id="log" aria-live="polite"></ul>
+            <form id="obsForm" style="margin-top:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3)" novalidate>
+              <div class="field"><label for="obsAuthor">Auditor</label><select class="input" id="obsAuthor"><option value="">Choose…</option></select><span class="field-error" id="eAuthor"></span></div>
+              <div class="field"><label for="obsText">Observation</label><textarea class="input" id="obsText" maxlength="300" placeholder="What did you find?"></textarea><span class="field-error" id="eText"></span></div>
+              <button class="btn btn-primary" type="submit">Add observation</button>
+              <p class="muted" style="font-size:.78rem">Observations are added to the log. They cannot be edited or deleted.</p>
+            </form>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Stock is stored in base units and shown in each item's presentations, for example 12 boxes and 5 units.</li>
+        <li>Observations are insert-only: each one keeps its date and author, so the audit trail can't be rewritten.</li>
+        <li>The cards and the table footer follow every filter.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(7314);
+    const WAREHOUSES = ["Main warehouse", "North Plaza store", "Harbor store", "Central Market store"];
+    const AUDITORS = ["L. Rivera", "M. Cruz", "P. Herrera", "S. Aguilar"];
+    const PACKS = { Beverages: ["Case", 24], Dairy: ["Box", 12], Snacks: ["Box", 12], Cleaning: ["Box", 6], "Personal care": ["Box", 12], "Canned goods": ["Case", 24], Grains: ["Bag", 10] };
+
+    const items = D.products.map((p, i) => ({ code: "IT-" + String(1001 + i), name: p[0], cat: p[1], pack: PACKS[p[1]], cost: Math.round(UI.between(r, 8, 140) * 100) / 100 }));
+    const rows = [];
+    items.forEach(it => WAREHOUSES.forEach((wh, w) => {
+      const main = w === 0;
+      const units = r() < 0.12 ? 0 : Math.floor(UI.between(r, main ? 120 : 10, main ? 1600 : 380));
+      rows.push({ it, wh, units, cost: Math.round(it.cost * UI.between(r, 0.97, 1.03) * 100) / 100, obs: [] });
+    }));
+    // A few seeded observations.
+    const notes = ["Count differs by 3 units from the system.", "Two boxes damaged, set aside for return.", "Expiry date close: next 30 days.", "Item stored in the wrong aisle.", "Count matches."];
+    for (let i = 0; i < 9; i++) {
+      const row = UI.pick(r, rows);
+      row.obs.push({ date: "2026-11-" + String(3 + Math.floor(r() * 12)).padStart(2, "0") + " " + String(8 + Math.floor(r() * 9)).padStart(2, "0") + ":" + String(Math.floor(r() * 60)).padStart(2, "0"), author: UI.pick(r, AUDITORS), text: UI.pick(r, notes) });
+    }
+    rows.forEach(x => x.obs.sort((a, b) => a.date < b.date ? -1 : 1));
+
+    const NOTE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"/></svg>';
+    function presentation(x) {
+      const [packName, size] = x.it.pack;
+      const packs = Math.floor(x.units / size), loose = x.units % size;
+      if (!x.units) return "0";
+      return (packs ? UI.fmtInt(packs) + " " + packName.toLowerCase() + (packs === 1 ? "" : (packName === "Box" ? "es" : "s")) : "") + (packs && loose ? " + " : "") + (loose ? loose + " unit" + (loose === 1 ? "" : "s") : "");
+    }
+
+    function fill(id, values) {
+      $("#" + id).html(values.map(v => '<option value="' + v + '">' + v + "</option>").join("")).select2({ placeholder: "All", allowClear: true, width: "100%" });
+    }
+    fill("fWh", WAREHOUSES);
+    fill("fCat", D.categories);
+    $("#obsAuthor").append(AUDITORS.map(a => '<option value="' + a + '">' + a + "</option>").join(""));
+
+    let selected = null;
+    function filtered() {
+      const wh = $("#fWh").val() || [], cat = $("#fCat").val() || [];
+      const q = $("#fSearch").val().trim().toLowerCase();
+      const onlyStock = $("#fStock").prop("checked"), onlyObs = $("#fObs").prop("checked");
+      return rows.filter(x => (!wh.length || wh.includes(x.wh)) && (!cat.length || cat.includes(x.it.cat)) &&
+        (!q || x.it.code.toLowerCase().includes(q) || x.it.name.toLowerCase().includes(q)) &&
+        (!onlyStock || x.units > 0) && (!onlyObs || x.obs.length));
+    }
+
+    function render() {
+      const list = filtered();
+      const tbody = document.querySelector("#stock tbody");
+      tbody.innerHTML = list.map(x => {
+        const i = rows.indexOf(x);
+        return '<tr tabindex="0" data-i="' + i + '" aria-selected="' + (selected === i) + '"><td><span class="num">' + x.it.code + "</span> " + x.it.name + "<div class='pres'>" + x.it.cat + "</div></td><td>" + x.wh +
+          '</td><td class="pres">Unit · ' + x.it.pack[0] + " of " + x.it.pack[1] + '</td><td class="r ' + (x.units ? "" : "zero") + '">' + presentation(x) + '</td><td class="r num ' + (x.units ? "" : "zero") + '">' + UI.fmtInt(x.units) +
+          '</td><td class="r num">' + UI.fmtMoney(x.cost) + '</td><td class="r num">' + UI.fmtMoney(x.units * x.cost) + "</td><td>" +
+          (x.obs.length ? '<span class="obs-dot">' + NOTE_ICON + x.obs.length + " note" + (x.obs.length === 1 ? "" : "s") + "</span>" : "") + "</td></tr>";
+      }).join("") || '<tr><td colspan="8" class="muted">No rows match the filters</td></tr>';
+      const units = list.reduce((a, x) => a + x.units, 0), value = list.reduce((a, x) => a + x.units * x.cost, 0);
+      const itemsCount = new Set(list.map(x => x.it.code)).size;
+      $("#kItems").text(UI.fmtInt(itemsCount));
+      $("#kRows").text(UI.fmtInt(list.length) + " item-warehouse rows");
+      $("#kUnits").text(UI.fmtInt(units));
+      $("#kValue").text(UI.fmtMoney(value));
+      $("#kObs").text(UI.fmtInt(list.filter(x => x.obs.length).length));
+      document.querySelector("#stock tfoot").innerHTML = '<tr><td colspan="4">Total (filtered)</td><td class="r num">' + UI.fmtInt(units) + '</td><td></td><td class="r num">' + UI.fmtMoney(value) + "</td><td></td></tr>";
+    }
+
+    function showSide() {
+      const x = rows[selected];
+      $("#sideEmpty").prop("hidden", true);
+      $("#sidePanel").prop("hidden", false);
+      $("#sideItem").text(x.it.code + " · " + x.it.name);
+      $("#sideWh").text(x.wh + " · " + presentation(x) + " (" + UI.fmtInt(x.units) + " units)");
+      document.getElementById("log").innerHTML = x.obs.length
+        ? x.obs.slice().reverse().map(o => '<li><div class="meta">' + o.date + " · " + o.author + "</div>" + $("<div>").text(o.text).html() + "</li>").join("")
+        : '<li style="border-color:var(--border)" class="muted">No observations yet.</li>';
+    }
+
+    document.querySelector("#stock tbody").addEventListener("click", e => {
+      const tr = e.target.closest("tr[data-i]"); if (!tr) return;
+      selected = +tr.dataset.i; render(); showSide();
+    });
+    document.querySelector("#stock tbody").addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const tr = e.target.closest("tr[data-i]"); if (!tr) return;
+      e.preventDefault(); selected = +tr.dataset.i; render(); showSide();
+      const again = document.querySelector('#stock tr[data-i="' + selected + '"]'); if (again) again.focus();
+    });
+
+    document.getElementById("obsForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const author = $("#obsAuthor").val(), text = $("#obsText").val().trim();
+      $("#eAuthor").text(author ? "" : "Choose who is writing.");
+      $("#eText").text(text.length >= 5 ? "" : "Write at least 5 characters.");
+      $("#obsAuthor").attr("aria-invalid", !author); $("#obsText").attr("aria-invalid", text.length < 5);
+      if (!author || text.length < 5) return;
+      const now = new Date();
+      const stamp = UI.fmtDate(now) + " " + String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+      rows[selected].obs.push({ date: stamp, author, text });
+      $("#obsText").val("");
+      render(); showSide();
+      UI.toast("Observation added to the log");
+    });
+
+    $("#fWh, #fCat").on("change", render);
+    $("#fStock, #fObs").on("change", render);
+    let t; $("#fSearch").on("input", () => { clearTimeout(t); t = setTimeout(render, 150); });
+    render();
+  });
+  </script>
+</body>
+</html>

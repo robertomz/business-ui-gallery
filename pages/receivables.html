@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accounts Receivable · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .kpis-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .kpi .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+    .chart-box { position: relative; height: 230px; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); overflow-x: auto; }
+    .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font: inherit; font-size: .9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; min-height: 44px; }
+    .tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
+    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .seg button { border: 0; background: var(--surface); color: var(--text); padding: 0 12px; min-height: 36px; font: inherit; font-size: .86rem; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+    .toolbar { display: flex; gap: var(--space-3); align-items: end; flex-wrap: wrap; justify-content: space-between; margin-bottom: var(--space-3); }
+    #aging td, #aging th, #eff td, #eff th, #stmt td, #stmt th { white-space: nowrap; }
+    .usage { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+    .usage .bar-track { flex: 1; }
+    .link-btn { background: none; border: 0; padding: 0; color: var(--primary); font: inherit; cursor: pointer; text-align: left; text-decoration: underline; text-underline-offset: 2px; min-height: 28px; }
+    .stmt-head { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+    .stmt-head div { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; }
+    .chip svg { width: 13px; height: 13px; }
+    @media (max-width: 1200px) { .kpis-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .kpis-6 .kpi { min-width: 0; }
+    @media (max-width: 640px) { .kpis-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpis-6 .kpi-value { font-size: 1.1rem; } .stmt-head { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body data-page="receivables" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Accounts receivable</h1>
+        <p class="muted">What customers owe as of November 16, 2026, how old it is and how well each seller collects.</p>
+      </div>
+      <div class="field" style="width:240px">
+        <label for="fSeller">Seller</label>
+        <select id="fSeller" multiple></select>
+      </div>
+    </div>
+
+    <section class="kpis kpis-6" aria-label="Aging totals" aria-live="polite" id="kpis"></section>
+
+    <section class="card">
+      <div class="card-head"><h2>Aging by bucket</h2><span class="muted" style="font-size:.82rem">Top 10 by balance; follows the seller filter</span></div>
+      <div class="card-body"><div class="chart-box"><canvas id="agingChart" role="img" aria-label="Stacked bar of balance by age bucket for the top customers"></canvas></div></div>
+    </section>
+
+    <section class="card">
+      <div class="tabs" role="tablist" aria-label="Receivables views">
+        <button class="tab" role="tab" id="tab-aging" aria-controls="panel-aging" aria-selected="true">Aging</button>
+        <button class="tab" role="tab" id="tab-eff" aria-controls="panel-eff" aria-selected="false" tabindex="-1">Collection effectiveness</button>
+      </div>
+      <div class="card-body" role="tabpanel" id="panel-aging" aria-labelledby="tab-aging">
+        <div class="toolbar">
+          <div class="seg" role="group" aria-label="Group rows by">
+            <button type="button" data-g="customer" aria-pressed="true">By customer</button>
+            <button type="button" data-g="seller" aria-pressed="false">By seller</button>
+          </div>
+          <div class="field" style="width:240px"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Customer or seller…"></div>
+        </div>
+        <div class="table-wrap">
+          <table class="grid" id="aging">
+            <thead><tr><th id="gHead">Customer</th><th class="r">Current</th><th class="r">1–30</th><th class="r">31–60</th><th class="r">61–90</th><th class="r">&gt; 90</th><th class="r">Balance</th><th>Credit limit use</th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="card-body" role="tabpanel" id="panel-eff" aria-labelledby="tab-eff" hidden>
+        <p class="muted" style="font-size:.85rem;margin-bottom:10px">Share of the invoices issued in the last 90 days that were paid within 20 and within 40 days of their date.</p>
+        <div class="table-wrap">
+          <table class="grid" id="eff">
+            <thead><tr><th>Seller</th><th class="r">Invoices</th><th>Collected ≤ 20 days</th><th>Collected ≤ 40 days</th><th class="r">Avg days to collect</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each invoice falls in one bucket by its days past due, so the five buckets always add up to the balance shown.</li>
+        <li>The account statement lists invoices and payments in date order with a running balance that ends at the same number as the aging table.</li>
+        <li>Collection effectiveness counts how many invoices were paid within 20 and 40 days, which shows collection habits better than the balance alone.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="stmtModal" role="dialog" aria-modal="true" aria-labelledby="stmtTitle">
+    <div class="modal">
+      <div class="modal-head"><h2 id="stmtTitle">Account statement</h2><span class="muted" id="stmtSub" style="font-size:.85rem"></span></div>
+      <div class="modal-body">
+        <div class="stmt-head" id="stmtHead"></div>
+        <div class="table-wrap">
+          <table class="grid" id="stmt">
+            <thead><tr><th>Date</th><th>Document</th><th>Type</th><th class="r">Days past due</th><th class="r">Charge</th><th class="r">Payment</th><th class="r">Balance</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="printStmt" type="button">Print</button>
+        <button class="btn" id="closeStmt" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(9031);
+    const today = Date.UTC(2026, 10, 16);
+    const DAY = 86400000;
+    const BUCKETS = ["Current", "1–30", "31–60", "61–90", "> 90"];
+    const BUCKET_VARS = ["--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5"];
+    const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>';
+    const ICON_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>';
+    const ICON_BAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+    // ---- Customers, invoices and payments ----
+    const customers = D.customers.map((name, i) => ({
+      name, seller: D.sellers[i % D.sellers.length], limit: Math.round(UI.between(r, 40, 160)) * 1000, terms: UI.pick(r, [15, 30, 30, 45])
+    }));
+    const docs = []; // every charge and payment, used by statements and effectiveness
+    customers.forEach((c, ci) => {
+      const n = 10 + Math.floor(r() * 18);
+      const habit = UI.between(r, 0.55, 1); // how reliably the customer pays
+      for (let k = 0; k < n; k++) {
+        const date = today - Math.floor(UI.between(r, 1, 150)) * DAY;
+        const amount = Math.round(UI.between(r, 900, 14000) * 100) / 100;
+        const inv = { type: "Invoice", doc: "INV-" + (52000 + ci * 40 + k), cust: c.name, date, due: date + c.terms * DAY, amount, paid: 0, paidDate: null };
+        if (r() < habit) {
+          const lag = Math.floor(UI.between(r, 5, 70));
+          const pd = date + lag * DAY;
+          if (pd <= today) {
+            const full = r() < 0.85;
+            inv.paid = full ? amount : Math.round(amount * UI.between(r, 0.3, 0.8) * 100) / 100;
+            inv.paidDate = pd;
+            docs.push({ type: "Payment", doc: "RC-" + (8100 + docs.length), cust: c.name, date: pd, amount: inv.paid, ref: inv.doc });
+          }
+        }
+        docs.push(inv);
+      }
+    });
+    const invoices = docs.filter(d => d.type === "Invoice");
+
+    function bucketOf(inv) {
+      const past = Math.floor((today - inv.due) / DAY);
+      if (past <= 0) return 0;
+      if (past <= 30) return 1;
+      if (past <= 60) return 2;
+      if (past <= 90) return 3;
+      return 4;
+    }
+
+    // ---- Filters ----
+    $("#fSeller").html(D.sellers.map(s => '<option value="' + s + '">' + s + "</option>").join(""))
+      .select2({ placeholder: "All sellers", allowClear: true, width: "100%" });
+    let group = "customer";
+
+    function filteredCustomers() {
+      const sel = $("#fSeller").val() || [];
+      const q = $("#fSearch").val().trim().toLowerCase();
+      return customers.filter(c => (!sel.length || sel.includes(c.seller)) && (!q || c.name.toLowerCase().includes(q) || c.seller.toLowerCase().includes(q)));
+    }
+
+    function agingFor(custList) {
+      const names = new Set(custList.map(c => c.name));
+      const byCust = new Map(custList.map(c => [c.name, { key: c.name, c, b: [0, 0, 0, 0, 0] }]));
+      invoices.forEach(inv => {
+        if (!names.has(inv.cust)) return;
+        const open = inv.amount - inv.paid;
+        if (open <= 0.005) return;
+        byCust.get(inv.cust).b[bucketOf(inv)] += open;
+      });
+      return [...byCust.values()];
+    }
+
+    let chart;
+    function render() {
+      const custs = filteredCustomers();
+      const rowsC = agingFor(custs);
+      let rows;
+      if (group === "seller") {
+        const m = new Map();
+        rowsC.forEach(x => {
+          const g = m.get(x.c.seller) || { key: x.c.seller, limit: 0, b: [0, 0, 0, 0, 0], n: 0 };
+          x.b.forEach((v, i) => g.b[i] += v);
+          g.limit += x.c.limit; g.n++;
+          m.set(x.c.seller, g);
+        });
+        rows = [...m.values()];
+      } else {
+        rows = rowsC.map(x => ({ key: x.key, limit: x.c.limit, b: x.b, cust: true }));
+      }
+      rows.forEach(x => x.bal = x.b.reduce((a, v) => a + v, 0));
+      rows.sort((a, b) => b.bal - a.bal);
+      document.getElementById("gHead").textContent = group === "seller" ? "Seller" : "Customer";
+
+      document.querySelector("#aging tbody").innerHTML = rows.map(x => {
+        const use = x.bal / x.limit;
+        const color = use > 1 ? "var(--negative)" : use > 0.8 ? "var(--warning)" : "var(--positive)";
+        const label = use > 1 ? ICON_BAD + "Over limit" : use > 0.8 ? ICON_WARN + "Near limit" : "";
+        const name = x.cust ? '<button type="button" class="link-btn" data-cust="' + x.key + '">' + x.key + "</button>" : x.key + ' <span class="muted" style="font-size:.8rem">(' + x.n + " customers)</span>";
+        return "<tr><td>" + name + "</td>" + x.b.map((v, i) => '<td class="r num' + (i >= 3 && v > 0 ? " neg" : "") + '">' + (v ? UI.fmtMoney(v) : '<span class="muted">–</span>') + "</td>").join("") +
+          '<td class="r num"><strong>' + UI.fmtMoney(x.bal) + "</strong></td>" +
+          '<td><div class="usage"><div class="bar-track"><span style="width:' + Math.min(use, 1) * 100 + "%;background:" + color + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(use, 0) + "</span>" +
+          (label ? '<span class="chip ' + (use > 1 ? "chip-neg" : "chip-warn") + '">' + label + "</span>" : "") + "</div></td></tr>";
+      }).join("") || '<tr><td colspan="8" class="muted">No customers match the filters</td></tr>';
+
+      const tot = [0, 0, 0, 0, 0];
+      rows.forEach(x => x.b.forEach((v, i) => tot[i] += v));
+      const totBal = tot.reduce((a, v) => a + v, 0);
+      const totLimit = rows.reduce((a, x) => a + x.limit, 0);
+      document.querySelector("#aging tfoot").innerHTML = "<tr><td>Total</td>" + tot.map(v => '<td class="r num">' + UI.fmtMoney(v) + "</td>").join("") +
+        '<td class="r num">' + UI.fmtMoney(totBal) + '</td><td class="num">' + (totLimit ? UI.fmtPct(totBal / totLimit, 0) + " of limits" : "") + "</td></tr>";
+
+      document.getElementById("kpis").innerHTML = BUCKETS.map((b, i) =>
+        '<div class="card kpi"><div class="kpi-label"><span class="swatch" style="background:var(' + BUCKET_VARS[i] + ')"></span>' + (i ? b + " days" : b) + '</div><div class="kpi-value">' + UI.fmtMoney(tot[i]) +
+        '</div><div class="kpi-delta muted">' + (totBal ? UI.fmtPct(tot[i] / totBal) : "0.0%") + " of balance</div></div>").join("") +
+        '<div class="card kpi"><div class="kpi-label">Total balance</div><div class="kpi-value">' + UI.fmtMoney(totBal) + '</div><div class="kpi-delta ' + ((tot[3] + tot[4]) / (totBal || 1) > 0.15 ? "neg" : "muted") + '">' +
+        UI.fmtPct((tot[3] + tot[4]) / (totBal || 1)) + " over 60 days</div></div>";
+
+      renderChart(rowsC);
+      renderEff(custs);
+    }
+
+    function renderChart(rowsC) {
+      const top = rowsC.map(x => ({ k: x.key, b: x.b, s: x.b.reduce((a, v) => a + v, 0) })).sort((a, b) => b.s - a.s).slice(0, 10);
+      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
+      const cfg = {
+        type: "bar",
+        data: { labels: top.map(x => x.k), datasets: BUCKETS.map((b, i) => ({ label: b, data: top.map(x => x.b[i]), backgroundColor: UI.cssVar(BUCKET_VARS[i]), borderRadius: 2 })) },
+        options: {
+          indexAxis: "y", maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: text, boxWidth: 12 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + UI.fmtMoney(c.parsed.x) } } },
+          scales: { x: { stacked: true, ticks: { color: text, callback: v => (v / 1000) + "k" }, grid: { color: grid } }, y: { stacked: true, ticks: { color: text, font: { size: 11 } }, grid: { display: false } } }
+        }
+      };
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("agingChart"), cfg);
+    }
+
+    function renderEff(custs) {
+      const names = new Set(custs.map(c => c.name));
+      const from = today - 90 * DAY;
+      const bySeller = new Map();
+      invoices.forEach(inv => {
+        if (!names.has(inv.cust) || inv.date < from) return;
+        const seller = customers.find(c => c.name === inv.cust).seller;
+        const g = bySeller.get(seller) || { seller, n: 0, d20: 0, d40: 0, days: 0, paidN: 0 };
+        g.n++;
+        if (inv.paidDate && inv.paid >= inv.amount - 0.005) {
+          const d = (inv.paidDate - inv.date) / DAY;
+          if (d <= 20) g.d20++;
+          if (d <= 40) g.d40++;
+          g.days += d; g.paidN++;
+        }
+        bySeller.set(seller, g);
+      });
+      const rows = [...bySeller.values()].sort((a, b) => b.d40 / b.n - a.d40 / a.n);
+      const bar = (p, good) => '<div class="usage"><div class="bar-track"><span style="width:' + p * 100 + "%;background:" + (p >= good ? "var(--positive)" : p >= good - 0.2 ? "var(--warning)" : "var(--negative)") + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(p, 0) + "</span></div>";
+      document.querySelector("#eff tbody").innerHTML = rows.map(g => {
+        const p40 = g.d40 / g.n;
+        const st = p40 >= 0.7 ? '<span class="chip chip-pos">' + ICON_OK + "On track</span>" : p40 >= 0.5 ? '<span class="chip chip-warn">' + ICON_WARN + "Watch</span>" : '<span class="chip chip-neg">' + ICON_BAD + "Low</span>";
+        return "<tr><td>" + g.seller + '</td><td class="r num">' + g.n + "</td><td>" + bar(g.d20 / g.n, 0.5) + "</td><td>" + bar(p40, 0.7) +
+          '</td><td class="r num">' + (g.paidN ? (g.days / g.paidN).toFixed(1) : "–") + "</td><td>" + st + "</td></tr>";
+      }).join("") || '<tr><td colspan="6" class="muted">No invoices match the filters</td></tr>';
+      const t = rows.reduce((a, g) => ({ n: a.n + g.n, d20: a.d20 + g.d20, d40: a.d40 + g.d40, days: a.days + g.days, paidN: a.paidN + g.paidN }), { n: 0, d20: 0, d40: 0, days: 0, paidN: 0 });
+      document.querySelector("#eff tfoot").innerHTML = t.n ? '<tr><td>Total</td><td class="r num">' + t.n + '</td><td class="num">' + UI.fmtPct(t.d20 / t.n, 0) + '</td><td class="num">' + UI.fmtPct(t.d40 / t.n, 0) +
+        '</td><td class="r num">' + (t.paidN ? (t.days / t.paidN).toFixed(1) : "–") + "</td><td></td></tr>" : "";
+    }
+
+    // ---- Account statement ----
+    function openStatement(name) {
+      const c = customers.find(x => x.name === name);
+      const items = docs.filter(d => d.cust === name).sort((a, b) => a.date - b.date || (a.type === "Invoice" ? -1 : 1));
+      let bal = 0;
+      const rows = items.map(d => {
+        const charge = d.type === "Invoice" ? d.amount : 0;
+        const pay = d.type === "Payment" ? d.amount : 0;
+        bal += charge - pay;
+        let past = "";
+        if (d.type === "Invoice" && d.amount - d.paid > 0.005) {
+          const p = Math.floor((today - d.due) / DAY);
+          past = p > 0 ? '<span class="' + (p > 60 ? "neg" : "") + '">' + p + "</span>" : '<span class="muted">0</span>';
+        }
+        return '<tr><td class="num">' + UI.fmtDate(new Date(d.date)) + '</td><td class="num">' + d.doc + "</td><td>" + (d.type === "Payment" ? "Payment of " + d.ref : "Invoice") +
+          '</td><td class="r num">' + past + '</td><td class="r num">' + (charge ? UI.fmtMoney(charge) : "") + '</td><td class="r num pos">' + (pay ? UI.fmtMoney(pay) : "") +
+          '</td><td class="r num">' + UI.fmtMoney(bal) + "</td></tr>";
+      });
+      const open = invoices.filter(i => i.cust === name).reduce((a, i) => a + i.amount - i.paid, 0);
+      document.getElementById("stmtSub").textContent = name + " · seller " + c.seller;
+      document.getElementById("stmtHead").innerHTML =
+        '<div><div class="kpi-label">Balance</div><div class="num"><strong>' + UI.fmtMoney(open) + "</strong></div></div>" +
+        '<div><div class="kpi-label">Credit limit</div><div class="num">' + UI.fmtMoney(c.limit) + "</div></div>" +
+        '<div><div class="kpi-label">Available</div><div class="num ' + (c.limit - open < 0 ? "neg" : "") + '">' + UI.fmtMoney(c.limit - open) + "</div></div>" +
+        '<div><div class="kpi-label">Terms</div><div class="num">' + c.terms + " days</div></div>";
+      document.querySelector("#stmt tbody").innerHTML = rows.join("");
+      UI.openModal("stmtModal");
+    }
+    document.getElementById("aging").addEventListener("click", e => {
+      const b = e.target.closest("[data-cust]");
+      if (b) openStatement(b.dataset.cust);
+    });
+    document.getElementById("closeStmt").addEventListener("click", () => UI.closeModal("stmtModal"));
+    document.getElementById("printStmt").addEventListener("click", () => window.print());
+
+    // ---- Tabs (arrow keys move between them) ----
+    const tabs = [...document.querySelectorAll('[role="tab"]')];
+    function selectTab(t) {
+      tabs.forEach(x => {
+        const on = x === t;
+        x.setAttribute("aria-selected", String(on));
+        x.tabIndex = on ? 0 : -1;
+        document.getElementById(x.getAttribute("aria-controls")).hidden = !on;
+      });
+      t.focus();
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => selectTab(t));
+      t.addEventListener("keydown", e => {
+        if (e.key === "ArrowRight") selectTab(tabs[(i + 1) % tabs.length]);
+        if (e.key === "ArrowLeft") selectTab(tabs[(i - 1 + tabs.length) % tabs.length]);
+      });
+    });
+
+    document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+      group = b.dataset.g;
+      document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      render();
+    }));
+    $("#fSeller").on("change", render);
+    let t;
+    $("#fSearch").on("input", () => { clearTimeout(t); t = setTimeout(render, 180); });
+    document.addEventListener("themechange", render);
+    render();
+  });
+  </script>
+</body>
+</html>

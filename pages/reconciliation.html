@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entry Reconciliation · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .type { display: inline-flex; align-items: center; gap: 6px; font-size: .84rem; font-weight: 500; white-space: nowrap; }
+    .type svg { width: 15px; height: 15px; flex: none; }
+    tr.pickable { cursor: pointer; }
+    tr.sel { background: var(--info-bg) !important; }
+    .switch { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; cursor: pointer; }
+    .switch input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .legend { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: .82rem; }
+    .small { font-size: .82rem; }
+    .sides { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3); }
+    .sides > div { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+    @media (max-width: 600px) { .sides { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="reconciliation" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Entry reconciliation</h1>
+        <p class="muted">Compares what the source documents say should be posted (side A) with what accounting actually shows (side B).</p>
+      </div>
+      <div class="field" style="width:200px">
+        <label for="month">Month</label>
+        <select class="input" id="month"><option value="2026-11">November 2026</option><option value="2026-10">October 2026</option><option value="2026-09">September 2026</option></select>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h2>Summary by reconciliation code</h2><span class="muted small">Select a code to see it day by day</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="summary">
+          <thead><tr><th>Code</th><th>Side A (documents)</th><th>Side B (account)</th><th class="r">Side A</th><th class="r">Side B</th><th class="r">Difference</th><th class="r">Days with difference</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="dailyCard">
+      <div class="card-head">
+        <h2 id="dailyTitle">Daily cross-check</h2>
+        <label class="switch"><input type="checkbox" id="onlyDiff"> Only days with difference</label>
+      </div>
+      <div class="card-body">
+        <div class="legend muted" id="legend" style="margin-bottom:var(--space-3)"></div>
+        <div class="table-wrap">
+          <table class="grid" id="daily">
+            <thead><tr><th>Day</th><th class="r">Side A</th><th class="r">Side B</th><th class="r">Difference</th><th>Result</th><th><span class="sr-only">Documents</span></th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each reconciliation code pairs a group of documents with the accounts they should reach, so new checks are added by configuration, not code.</li>
+        <li>The result of each day is written as text with an icon, so it does not depend on color alone.</li>
+        <li>Totals follow the filter: with "only days with difference" on, the footer adds up only the days shown.</li>
+        <li>Opening a day lists the documents and entries involved, which usually explains the difference right away.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="dayModal" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
+    <div class="modal" style="width:min(980px,100%);max-height:92vh">
+      <div class="modal-head"><h2 id="dayTitle">Day</h2><span id="dayType"></span></div>
+      <div class="modal-body">
+        <div class="sides" id="daySides"></div>
+        <p class="small" id="dayExplain" style="margin-bottom:var(--space-3)"></p>
+        <div class="table-wrap">
+          <table class="grid" id="dayDocs"><thead><tr><th>Document</th><th>Detail</th><th class="r">Side A</th><th class="r">Side B</th><th>Entry</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn" type="button" id="closeDay">Close</button></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const r2 = n => Math.round(n * 100) / 100;
+    const CODES = [
+      { id: "R01", a: "Card sales", b: "1-02-01-02-001 Card payments receivable", base: 15000, prefix: "INV" },
+      { id: "R02", a: "Cash sales", b: "1-01-01-01-001 Cash on hand", base: 42000, prefix: "INV" },
+      { id: "R03", a: "Credit sales", b: "1-02-01-01-001 Accounts receivable", base: 26000, prefix: "INV" },
+      { id: "R04", a: "Purchases received", b: "2-01-01-01-001 Accounts payable", base: 31000, prefix: "PUR" },
+      { id: "R05", a: "Bank deposits", b: "1-01-02-01-001 Bank checking account", base: 38000, prefix: "DEP" },
+      { id: "R06", a: "Payroll runs", b: "6-01-01-01-001 Salaries expense", base: 0, prefix: "PAY" }
+    ];
+    const TYPES = {
+      ok: { text: "Matched", cls: "pos", icon: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>' },
+      missing: { text: "Missing in accounting", cls: "neg", icon: '<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>' },
+      extra: { text: "Extra in accounting", cls: "neg", icon: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>' },
+      differs: { text: "Amount differs", cls: "neg", icon: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>' }
+    };
+    const typeHtml = t => '<span class="type ' + TYPES[t].cls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' + TYPES[t].icon + "</svg>" + TYPES[t].text + "</span>";
+    document.getElementById("legend").innerHTML = Object.keys(TYPES).map(typeHtml).join("");
+
+    // Daily data for one code and month: documents (side A) and what accounting shows (side B).
+    function monthDays(m) {
+      const [y, mo] = m.split("-").map(Number);
+      const last = m === "2026-11" ? 16 : new Date(Date.UTC(y, mo, 0)).getUTCDate();
+      const out = []; for (let d = 1; d <= last; d++) out.push(new Date(Date.UTC(y, mo - 1, d)));
+      return out;
+    }
+    function dayDetail(code, day) {
+      const seed = Math.floor(day.getTime() / 86400000) * 7 + CODES.indexOf(code);
+      const r = UI.rng(seed);
+      const dd = day.getUTCDate();
+      let n = code.id === "R06" ? (dd === 15 || dd === 30 ? 1 : 0) : 3 + Math.floor(r() * 4);
+      if (day.getUTCDay() === 0 && code.id !== "R06") n = Math.max(0, n - 3);
+      const docs = [];
+      for (let i = 0; i < n; i++) {
+        const amt = r2(code.id === "R06" ? UI.between(r, 180000, 210000) : code.base / 4 * UI.between(r, 0.5, 1.5));
+        docs.push({ no: code.prefix + "-" + String(seed % 8000 + 1000 + i * 11), a: amt, b: amt, entry: "AE-" + (seed % 900 + 9000 + i), note: "Posted" });
+      }
+      const roll = r();
+      let extra = null;
+      if (docs.length && roll < 0.08) { const d = docs[docs.length - 1]; d.b = 0; d.entry = "—"; d.note = "Document has no entry"; }
+      else if (docs.length && roll < 0.14) { const d = docs[0]; const delta = r2(UI.between(r, 5, 380)); d.b = r2(d.a - delta); d.note = "Posted with a different amount"; }
+      else if (roll < 0.19 && code.id !== "R06") { extra = { no: "—", a: 0, b: r2(UI.between(r, 150, 2400)), entry: "JE-" + (4000 + seed % 180), note: "Manual entry with no source document" }; docs.push(extra); }
+      const A = r2(docs.reduce((s, d) => s + d.a, 0)), B = r2(docs.reduce((s, d) => s + d.b, 0));
+      let type = "ok";
+      if (Math.abs(A - B) >= 0.005) type = extra ? "extra" : docs.some(d => d.b === 0 && d.a > 0) ? "missing" : "differs";
+      return { day, docs, A, B, diff: r2(A - B), type };
+    }
+
+    let selected = CODES[0];
+    function compute(m) {
+      return CODES.map(c => {
+        const ds = monthDays(m).map(d => dayDetail(c, d));
+        return { code: c, days: ds, A: r2(ds.reduce((s, x) => s + x.A, 0)), B: r2(ds.reduce((s, x) => s + x.B, 0)), bad: ds.filter(x => x.type !== "ok").length };
+      });
+    }
+    let data = [];
+    function renderSummary() {
+      data = compute(document.getElementById("month").value);
+      document.querySelector("#summary tbody").innerHTML = data.map(x => {
+        const diff = r2(x.A - x.B);
+        return '<tr class="pickable' + (x.code === selected ? " sel" : "") + '" tabindex="0" data-id="' + x.code.id + '" aria-selected="' + (x.code === selected) + '"><td class="num">' + x.code.id + "</td><td>" + x.code.a + "</td><td>" + x.code.b +
+          '</td><td class="r num">' + UI.fmtMoney(x.A) + '</td><td class="r num">' + UI.fmtMoney(x.B) + '</td><td class="r num ' + (diff ? "neg" : "") + '">' + UI.fmtMoney(diff) +
+          '</td><td class="r">' + (x.bad ? '<span class="chip chip-neg">' + x.bad + (x.bad === 1 ? " day" : " days") + "</span>" : '<span class="chip chip-pos">None</span>') + "</td></tr>";
+      }).join("");
+      renderDaily();
+    }
+    function renderDaily() {
+      const x = data.find(d => d.code === selected);
+      const only = document.getElementById("onlyDiff").checked;
+      const rows = x.days.filter(d => !only || d.type !== "ok");
+      document.getElementById("dailyTitle").textContent = selected.id + " · " + selected.a + " vs " + selected.b.replace(/^[\d-]+ /, "");
+      document.querySelector("#daily tbody").innerHTML = rows.length ? rows.map((d, i) =>
+        '<tr><td class="num">' + UI.fmtDate(d.day) + '</td><td class="r num">' + UI.fmtMoney(d.A) + '</td><td class="r num">' + UI.fmtMoney(d.B) + '</td><td class="r num ' + (d.diff ? "neg" : "") + '">' + UI.fmtMoney(d.diff) +
+        "</td><td>" + typeHtml(d.type) + '</td><td><button class="btn" type="button" data-day="' + UI.fmtDate(d.day) + '"' + (d.docs.length ? "" : " disabled") + ">Documents</button></td></tr>").join("")
+        : '<tr><td colspan="6" class="muted">Every day matches for this code.</td></tr>';
+      const A = r2(rows.reduce((s, d) => s + d.A, 0)), B = r2(rows.reduce((s, d) => s + d.B, 0));
+      document.querySelector("#daily tfoot").innerHTML = "<tr><td>" + rows.length + ' days shown</td><td class="r num">' + UI.fmtMoney(A) + '</td><td class="r num">' + UI.fmtMoney(B) + '</td><td class="r num">' + UI.fmtMoney(r2(A - B)) + "</td><td colspan=\"2\"></td></tr>";
+    }
+    function pick(tr) {
+      selected = CODES.find(c => c.id === tr.dataset.id);
+      document.querySelectorAll("#summary tr.sel").forEach(t => { t.classList.remove("sel"); t.setAttribute("aria-selected", "false"); });
+      tr.classList.add("sel"); tr.setAttribute("aria-selected", "true");
+      renderDaily();
+    }
+    const sb = document.querySelector("#summary tbody");
+    sb.addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) pick(tr); });
+    sb.addEventListener("keydown", e => { const tr = e.target.closest("tr[data-id]"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick(tr); } });
+    document.getElementById("onlyDiff").addEventListener("change", renderDaily);
+    document.getElementById("month").addEventListener("change", renderSummary);
+
+    const EXPLAIN = {
+      ok: "Every document reached accounting with the same amount.",
+      missing: "At least one document has no accounting entry yet. Generating the entries for that day usually fixes it.",
+      extra: "Accounting shows an amount with no source document behind it, usually a manual entry posted to this account.",
+      differs: "A document was posted, but with a different amount. Compare the two columns of the highlighted line."
+    };
+    document.querySelector("#daily tbody").addEventListener("click", e => {
+      const b = e.target.closest("[data-day]");
+      if (!b) return;
+      const d = data.find(x => x.code === selected).days.find(x => UI.fmtDate(x.day) === b.dataset.day);
+      document.getElementById("dayTitle").textContent = selected.id + " · " + b.dataset.day;
+      document.getElementById("dayType").innerHTML = typeHtml(d.type);
+      document.getElementById("daySides").innerHTML =
+        '<div><div class="muted small">Side A · ' + selected.a + '</div><div class="num" style="font-size:1.1rem;font-weight:600">' + UI.fmtMoney(d.A) + "</div></div>" +
+        '<div><div class="muted small">Side B · ' + selected.b + '</div><div class="num" style="font-size:1.1rem;font-weight:600">' + UI.fmtMoney(d.B) + "</div></div>";
+      document.getElementById("dayExplain").textContent = EXPLAIN[d.type];
+      document.querySelector("#dayDocs tbody").innerHTML = d.docs.map(x => {
+        const bad = Math.abs(x.a - x.b) >= 0.005;
+        return "<tr" + (bad ? ' style="background:var(--negative-bg)"' : "") + '><td class="num">' + x.no + "</td><td>" + (bad ? "<strong>" + x.note + "</strong>" : x.note) +
+          '</td><td class="r num">' + UI.fmtMoney(x.a) + '</td><td class="r num">' + UI.fmtMoney(x.b) + '</td><td class="num">' + x.entry + "</td></tr>";
+      }).join("");
+      UI.openModal("dayModal");
+    });
+    document.getElementById("closeDay").addEventListener("click", () => UI.closeModal("dayModal"));
+    renderSummary();
+  });
+  </script>
+</body>
+</html>

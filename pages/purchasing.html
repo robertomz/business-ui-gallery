@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automatic Purchasing · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .status-legend { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip svg { width: 13px; height: 13px; }
+    .chip-over { background: rgba(139, 92, 246, .14); color: #7c3aed; }
+    :root[data-theme="dark"] .chip-over { color: #c4b5fd; }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip-over { color: #c4b5fd; } }
+    .chip-idle { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+    #items { font-size: .84rem; }
+    #items td, #items th { white-space: nowrap; padding: 6px 10px; }
+    #items tbody tr { height: 36px; }
+    #items tbody td { border-bottom: 1px solid var(--border); }
+    #items tbody tr:hover { background: var(--surface-2); }
+    .dataTables_scrollHead thead th { font-family: var(--font-sans) !important; padding: 8px 10px !important; white-space: nowrap; background: var(--surface-2); color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
+    #items thead th { font-family: var(--font-sans); }
+    #items tbody tr, #items tbody td { background: var(--surface) !important; box-shadow: none !important; color: var(--text); }
+    #items tbody tr:hover td { background: var(--surface-2) !important; }
+    #items tbody tr.picked td { background: var(--info-bg) !important; }
+    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field { margin-top: 8px; color: var(--text); font-family: inherit; }
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered { padding: 0 8px; }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+    .action-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+    .po-group { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--space-4); overflow: hidden; }
+    .po-group-head { display: flex; justify-content: space-between; gap: var(--space-3); padding: 10px 12px; background: var(--surface-2); flex-wrap: wrap; }
+    .po-group table.grid th { position: static; }
+    .qty-input { width: 96px; min-height: 34px; }
+  </style>
+</head>
+<body data-page="purchasing" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Automatic purchasing</h1>
+        <p class="muted">What each branch should order today, based on how fast it sells and how long the supplier takes to deliver.</p>
+      </div>
+    </div>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fSupplier">Supplier</label><select id="fSupplier" multiple></select></div>
+        <div class="field"><label for="fCategory">Category</label><select id="fCategory" multiple></select></div>
+        <div class="field"><label for="fBranch">Branch</label><select id="fBranch" multiple></select></div>
+        <div class="field"><label for="fStatus">Status</label><select id="fStatus" multiple></select></div>
+        <div class="field"><label for="fOver">Overstock above (days)</label><input class="input num" type="number" id="fOver" value="40" min="10" max="120" step="5"></div>
+      </div>
+    </section>
+
+    <section class="kpis" aria-label="Status counts" aria-live="polite">
+      <div class="card kpi"><div class="kpi-label">Shortage</div><div class="kpi-value neg" id="kShort">–</div><div class="kpi-delta muted">Runs out before the next delivery</div></div>
+      <div class="card kpi"><div class="kpi-label">Reorder</div><div class="kpi-value" id="kReorder" style="color:var(--warning)">–</div><div class="kpi-delta muted">Below lead time + safety stock</div></div>
+      <div class="card kpi"><div class="kpi-label">Overstock</div><div class="kpi-value" id="kOver">–</div><div class="kpi-delta muted" id="kOverD">More than 40 days of inventory</div></div>
+      <div class="card kpi"><div class="kpi-label">Suggested purchase</div><div class="kpi-value" id="kCost">–</div><div class="kpi-delta muted" id="kCostD"></div></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head action-bar">
+        <h2>Products by branch</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="muted" style="font-size:.85rem" id="selInfo" aria-live="polite">0 selected</span>
+          <button class="btn" id="pickSuggested" type="button">Select all with a suggestion</button>
+          <button class="btn btn-primary" id="createBtn" type="button" disabled>Create purchase orders</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="status-legend" id="legend" style="margin-bottom:10px"></div>
+        <table id="items" style="width:100%">
+          <thead><tr>
+            <th><input type="checkbox" id="checkAll" aria-label="Select all visible rows"></th>
+            <th>Product</th><th>Branch</th><th>Supplier</th>
+            <th class="r" title="Average daily sales, last 30 days">Avg/day</th>
+            <th class="r">Stock</th><th class="r">In transit</th>
+            <th class="r" title="Supplier lead time in days">Lead (d)</th>
+            <th class="r">Safety</th>
+            <th class="r" title="Stock divided by average daily sales">Days of inv.</th>
+            <th>Status</th>
+            <th class="r">Suggested</th><th class="r">Est. cost</th>
+          </tr></thead>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>By supplier</h2><span class="muted" style="font-size:.82rem">Follows the filters above</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="bySupplier">
+          <thead><tr><th>Supplier</th><th class="r">Lead (d)</th><th class="r">Items to order</th><th class="r">Units</th><th class="r">Est. cost</th></tr></thead>
+          <tbody></tbody><tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Days of inventory = stock ÷ average daily sales of the last 30 days.</li>
+        <li>Suggested quantity = average daily sales × (lead time + safety days) − stock − units in transit, rounded up to full cases. Safety days = lead time × safety %.</li>
+        <li>Status uses icon and text as well as color: Shortage (stock lasts less than the lead time), Reorder (below lead time + safety), OK, Overstock (above the day limit) and No movement.</li>
+        <li>Selected lines become one purchase order per supplier; quantities can still be adjusted before confirming.</li>
+      </ul>
+    </section>
+
+    <div class="modal-backdrop" id="poModal" role="dialog" aria-modal="true" aria-labelledby="poTitle">
+      <div class="modal">
+        <div class="modal-head"><h2 id="poTitle">Create purchase orders</h2><span class="muted" id="poSub"></span></div>
+        <div class="modal-body" id="poBody"></div>
+        <div class="modal-foot">
+          <span class="num" style="margin-right:auto;font-weight:600" id="poTotal"></span>
+          <button class="btn btn-primary" id="poConfirm" type="button">Create orders</button>
+          <button class="btn" id="poCancel" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/scroller/2.3.0/js/dataTables.scroller.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(777);
+    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
+    const STATUS = {
+      "Shortage":    { cls: "chip-neg",  icon: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>') },
+      "Reorder":     { cls: "chip-warn", icon: SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/>') },
+      "OK":          { cls: "chip-pos",  icon: SVG('<path d="M5 12l4 4 10-10"/>') },
+      "Overstock":   { cls: "chip-over", icon: SVG('<path d="M12 19V5M5 12l7-7 7 7"/>') },
+      "No movement": { cls: "chip-idle", icon: SVG('<path d="M6 12h12"/>') }
+    };
+    const chip = s => '<span class="chip ' + STATUS[s].cls + '">' + STATUS[s].icon + s + "</span>";
+
+    // Supplier per category, lead time per supplier.
+    const supplierOf = { "Beverages": "Contoso Beverages", "Dairy": "Litware Dairy", "Snacks": "Adventure Snacks", "Cleaning": "Fabrikam Home", "Personal care": "Fabrikam Home", "Canned goods": "Northwind Foods", "Grains": "Tailspin Grains" };
+    const lead = { "Contoso Beverages": 4, "Litware Dairy": 2, "Adventure Snacks": 6, "Fabrikam Home": 10, "Northwind Foods": 8, "Tailspin Grains": 12 };
+    const safety = { "Contoso Beverages": .5, "Litware Dairy": .5, "Adventure Snacks": .3, "Fabrikam Home": .25, "Northwind Foods": .3, "Tailspin Grains": .25 };
+
+    // Base data (independent of the overstock limit).
+    const base = [];
+    D.products.forEach(([name, cat]) => {
+      const sup = supplierOf[cat];
+      const caseSize = UI.pick(r, [6, 12, 12, 24, 24, 48]);
+      const cost = Math.round(UI.between(r, 12, 180) * 100) / 100;
+      D.branches.forEach(br => {
+        const idle = r() < 0.05;
+        const avg = idle ? 0 : Math.round(UI.between(r, 0.6, 26) * 10) / 10;
+        const lt = lead[sup];
+        const doiTarget = UI.between(r, 0.2, 2.2) * (lt + Math.ceil(lt * safety[sup])) + (r() < 0.15 ? UI.between(r, 25, 60) : 0);
+        const stock = idle ? Math.round(UI.between(r, 4, 60)) : Math.max(0, Math.round(avg * doiTarget));
+        const transit = r() < 0.2 ? caseSize * (1 + Math.floor(r() * 3)) : 0;
+        base.push({ name, cat, sup, br, caseSize, cost, avg, stock, transit, lt, safetyPct: safety[sup] });
+      });
+    });
+
+    let overLimit = 40;
+    let rows = [];
+    function compute() {
+      rows = base.map(x => {
+        const safetyDays = Math.ceil(x.lt * x.safetyPct);
+        const doi = x.avg > 0 ? x.stock / x.avg : null;
+        const need = x.avg * (x.lt + safetyDays) - x.stock - x.transit;
+        const suggested = need > 0 ? Math.ceil(need / x.caseSize) * x.caseSize : 0;
+        let status;
+        if (x.avg === 0) status = "No movement";
+        else if (doi < x.lt) status = "Shortage";
+        else if (doi < x.lt + safetyDays) status = "Reorder";
+        else if (doi > overLimit) status = "Overstock";
+        else status = "OK";
+        return Object.assign({}, x, { safetyDays, doi, suggested, status, estCost: suggested * x.cost });
+      });
+    }
+    compute();
+
+    // Filters
+    function fill(id, values) {
+      $("#" + id).html(values.map(v => '<option value="' + v + '">' + v + "</option>").join(""))
+        .select2({ placeholder: "All", allowClear: true, width: "100%" });
+    }
+    fill("fSupplier", Object.keys(lead));
+    fill("fCategory", D.categories);
+    fill("fBranch", D.branches);
+    fill("fStatus", Object.keys(STATUS));
+    $("#legend").html(Object.keys(STATUS).map(chip).join(""));
+
+    let F = {};
+    function readFilters() {
+      const set = id => { const v = $("#" + id).val() || []; return v.length ? new Set(v) : null; };
+      F = { sup: set("fSupplier"), cat: set("fCategory"), br: set("fBranch"), st: set("fStatus") };
+    }
+    readFilters();
+    $.fn.dataTable.ext.search.push(function (settings, data, idx) {
+      if (settings.nTable.id !== "items") return true;
+      const x = rows[idx];
+      if (F.sup && !F.sup.has(x.sup)) return false;
+      if (F.cat && !F.cat.has(x.cat)) return false;
+      if (F.br && !F.br.has(x.br)) return false;
+      if (F.st && !F.st.has(x.status)) return false;
+      return true;
+    });
+
+    const selected = new Set();
+    const statusOrder = { "Shortage": 0, "Reorder": 1, "OK": 2, "Overstock": 3, "No movement": 4 };
+    const table = $("#items").DataTable({
+      data: rows.map((x, i) => [i]),
+      columnDefs: [{ targets: "_all", data: 0 }],
+      deferRender: true,
+      scrollY: 440, scrollX: true,
+      scroller: { rowHeight: 36, displayBuffer: 4 },
+      dom: "rti",
+      order: [[10, "asc"], [9, "asc"]],
+      columns: [
+        { orderable: false, render: i => '<input type="checkbox" class="pick" data-i="' + i + '" aria-label="Select ' + rows[i].name + " at " + rows[i].br + '"' + (selected.has(i) ? " checked" : "") + ">" },
+        { render: i => rows[i].name },
+        { render: i => rows[i].br },
+        { render: i => rows[i].sup },
+        { className: "dt-right num", render: (i, t) => t === "display" ? rows[i].avg.toFixed(1) : rows[i].avg },
+        { className: "dt-right num", render: (i, t) => t === "display" ? UI.fmtInt(rows[i].stock) : rows[i].stock },
+        { className: "dt-right num", render: (i, t) => t === "display" ? (rows[i].transit ? UI.fmtInt(rows[i].transit) : "–") : rows[i].transit },
+        { className: "dt-right num", render: i => rows[i].lt },
+        { className: "dt-right num", render: (i, t) => t === "display" ? UI.fmtPct(rows[i].safetyPct, 0) + " (" + rows[i].safetyDays + "d)" : rows[i].safetyPct },
+        { className: "dt-right num", render: (i, t) => { const d = rows[i].doi; if (t !== "display") return d == null ? 9999 : d; return d == null ? "–" : d.toFixed(1); } },
+        { render: (i, t) => t === "display" ? chip(rows[i].status) : statusOrder[rows[i].status] },
+        { className: "dt-right num", render: (i, t) => t === "display" ? (rows[i].suggested ? UI.fmtInt(rows[i].suggested) : "–") : rows[i].suggested },
+        { className: "dt-right num", render: (i, t) => t === "display" ? (rows[i].estCost ? UI.fmtMoney(rows[i].estCost) : "–") : rows[i].estCost }
+      ],
+      createdRow: (tr, d) => { if (selected.has(d[0])) tr.classList.add("picked"); },
+      language: { info: "_TOTAL_ product × branch lines", infoFiltered: "(filtered from _MAX_)", infoEmpty: "No lines match the filters", zeroRecords: "No lines match the filters" }
+    });
+
+    function visibleIdx() { return table.rows({ search: "applied" }).data().toArray().map(d => d[0]); }
+
+    function summarize() {
+      const idx = visibleIdx();
+      const c = { "Shortage": 0, "Reorder": 0, "Overstock": 0 };
+      let cost = 0, items = 0;
+      const bySup = new Map();
+      idx.forEach(i => {
+        const x = rows[i];
+        if (c[x.status] != null) c[x.status]++;
+        if (x.suggested > 0) {
+          cost += x.estCost; items++;
+          const g = bySup.get(x.sup) || { items: 0, units: 0, cost: 0 };
+          g.items++; g.units += x.suggested; g.cost += x.estCost;
+          bySup.set(x.sup, g);
+        }
+      });
+      $("#kShort").text(UI.fmtInt(c.Shortage));
+      $("#kReorder").text(UI.fmtInt(c.Reorder));
+      $("#kOver").text(UI.fmtInt(c.Overstock));
+      $("#kOverD").text("More than " + overLimit + " days of inventory");
+      $("#kCost").text(UI.fmtMoney(cost));
+      $("#kCostD").text(UI.fmtInt(items) + " lines with a suggestion");
+      const list = [...bySup.entries()].sort((a, b) => b[1].cost - a[1].cost);
+      let tu = 0, ti = 0;
+      $("#bySupplier tbody").html(list.map(([s, g]) => { tu += g.units; ti += g.items;
+        return "<tr><td>" + s + '</td><td class="r num">' + lead[s] + '</td><td class="r num">' + g.items + '</td><td class="r num">' + UI.fmtInt(g.units) + '</td><td class="r num">' + UI.fmtMoney(g.cost) + "</td></tr>"; }).join("") ||
+        '<tr><td colspan="5" class="muted">Nothing to order with the current filters</td></tr>');
+      $("#bySupplier tfoot").html('<tr><td>Total</td><td></td><td class="r num">' + ti + '</td><td class="r num">' + UI.fmtInt(tu) + '</td><td class="r num">' + UI.fmtMoney(cost) + "</td></tr>");
+      const allChecked = idx.length > 0 && idx.every(i => selected.has(i));
+      $("#checkAll").prop("checked", allChecked);
+    }
+    table.on("draw", summarize);
+    summarize();
+
+    function updateSel() {
+      $("#selInfo").text(selected.size + " selected");
+      $("#createBtn").prop("disabled", selected.size === 0);
+    }
+    function setPick(i, on) {
+      if (on) selected.add(i); else selected.delete(i);
+      const node = table.row((idx, data) => data[0] === i).node();
+      if (node) { node.classList.toggle("picked", on); $(node).find(".pick").prop("checked", on); }
+    }
+    $("#items").on("change", ".pick", function () { setPick(+this.dataset.i, this.checked); updateSel(); summarize(); });
+    $("#checkAll").on("change", function () { const on = this.checked; visibleIdx().forEach(i => setPick(i, on)); updateSel(); });
+    $("#pickSuggested").on("click", () => { visibleIdx().forEach(i => { if (rows[i].suggested > 0) setPick(i, true); }); updateSel(); summarize(); });
+
+    function redraw() { readFilters(); table.draw(false); }
+    $("#fSupplier, #fCategory, #fBranch, #fStatus").on("change", redraw);
+    $("#fOver").on("change", function () {
+      const v = Math.max(10, Math.min(120, parseInt(this.value, 10) || 40));
+      this.value = v; overLimit = v; compute();
+      table.rows().invalidate("data").draw(false);
+    });
+
+    // ---- Purchase order modal ----
+    let draft = [];
+    function openPO() {
+      draft = [...selected].map(i => ({ i, qty: rows[i].suggested || rows[i].caseSize }));
+      const groups = new Map();
+      draft.forEach(d => { const s = rows[d.i].sup; if (!groups.has(s)) groups.set(s, []); groups.get(s).push(d); });
+      $("#poSub").text(groups.size + " supplier" + (groups.size === 1 ? "" : "s") + " · " + draft.length + " lines");
+      let html = "";
+      groups.forEach((list, sup) => {
+        html += '<div class="po-group" data-sup="' + sup + '"><div class="po-group-head"><strong>' + sup + '</strong><span class="muted">Lead time ' + lead[sup] + ' days · subtotal <span class="num sup-total"></span></span></div>' +
+          '<div class="table-wrap"><table class="grid"><thead><tr><th>Product</th><th>Branch</th><th class="r">Case</th><th class="r">Unit cost</th><th class="r">Qty</th><th class="r">Total</th></tr></thead><tbody>' +
+          list.map(d => { const x = rows[d.i]; const k = draft.indexOf(d);
+            return "<tr><td>" + x.name + "</td><td>" + x.br + '</td><td class="r num">' + x.caseSize + '</td><td class="r num">' + UI.fmtMoney(x.cost) +
+              '</td><td class="r"><label class="sr-only" for="q' + k + '">Quantity for ' + x.name + " at " + x.br + '</label><input class="input num qty-input" id="q' + k + '" data-k="' + k + '" inputmode="numeric" value="' + d.qty + '"></td><td class="r num line-total"></td></tr>'; }).join("") +
+          "</tbody></table></div></div>";
+      });
+      $("#poBody").html(html);
+      recalcPO();
+      UI.openModal("poModal");
+    }
+    function recalcPO() {
+      let grand = 0;
+      $("#poBody .po-group").each(function () {
+        let sub = 0;
+        $(this).find(".qty-input").each(function () {
+          const d = draft[+this.dataset.k];
+          const t = d.qty * rows[d.i].cost;
+          sub += t;
+          $(this).closest("tr").find(".line-total").text(UI.fmtMoney(t));
+        });
+        $(this).find(".sup-total").text(UI.fmtMoney(sub));
+        grand += sub;
+      });
+      $("#poTotal").text("Total " + UI.fmtMoney(grand));
+      $("#poConfirm").prop("disabled", !draft.some(d => d.qty > 0));
+    }
+    $("#poBody").on("input", ".qty-input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
+      draft[+this.dataset.k].qty = parseInt(this.value || "0", 10);
+      recalcPO();
+    });
+    $("#createBtn").on("click", openPO);
+    $("#poCancel").on("click", () => UI.closeModal("poModal"));
+    $("#poConfirm").on("click", () => {
+      const sups = new Set(draft.filter(d => d.qty > 0).map(d => rows[d.i].sup));
+      let n = 5120;
+      const nums = [...sups].map(() => "PO-" + String(++n).padStart(6, "0"));
+      UI.closeModal("poModal");
+      [...selected].forEach(i => setPick(i, false));
+      updateSel(); summarize();
+      UI.toast(nums.length + " purchase order" + (nums.length === 1 ? "" : "s") + " created: " + nums.join(", "));
+    });
+
+    window.addEventListener("resize", () => table.columns.adjust());
+    if (document.fonts) document.fonts.ready.then(() => table.columns.adjust());
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sales Dashboard · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .two { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-4); }
+    .chart-box { position: relative; height: 280px; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable[aria-sort="ascending"]::after { content: " ▲"; }
+    th.sortable[aria-sort="descending"]::after { content: " ▼"; }
+    @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="sales-dashboard" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Sales dashboard</h1>
+        <p class="muted">How the day went: what was sold, how it was paid and what is still to collect.</p>
+      </div>
+      <div class="field" style="width:200px">
+        <label for="day">Day</label>
+        <input class="input" type="date" id="day">
+      </div>
+    </div>
+
+    <section class="kpis" aria-label="Key figures">
+      <div class="card kpi"><div class="kpi-label">Gross sales</div><div class="kpi-value" id="kGross"></div><div class="kpi-delta" id="kGrossD"></div></div>
+      <div class="card kpi"><div class="kpi-label">Returns</div><div class="kpi-value" id="kRet"></div><div class="kpi-delta muted" id="kRetD"></div></div>
+      <div class="card kpi"><div class="kpi-label">Net sales</div><div class="kpi-value" id="kNet"></div><div class="kpi-delta" id="kNetD"></div></div>
+      <div class="card kpi"><div class="kpi-label">Cash collected</div><div class="kpi-value" id="kCash"></div><div class="kpi-delta muted" id="kCashD"></div></div>
+    </section>
+
+    <section class="two">
+      <div class="card">
+        <div class="card-head"><h2>Net sales, last 30 days</h2><span class="muted" style="font-size:.82rem">Same weekday a week before shown dashed</span></div>
+        <div class="card-body"><div class="chart-box"><canvas id="trend" aria-label="Net sales trend for the last 30 days" role="img"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Day summary</h2></div>
+        <div class="card-body">
+          <div class="ladder" id="ladder"></div>
+          <p class="muted" style="font-size:.8rem;margin-top:10px">Each line adds up to the one above it, so the summary can be checked by hand.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>By branch</h2><span class="muted" style="font-size:.82rem">Select a column header to sort</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="branches">
+          <thead><tr>
+            <th class="sortable" data-k="branch">Branch</th>
+            <th class="sortable" data-k="region">Region</th>
+            <th class="sortable r" data-k="tickets">Tickets</th>
+            <th class="sortable r" data-k="net">Net sales</th>
+            <th class="sortable r" data-k="card">Card share</th>
+            <th class="sortable r" data-k="vs">vs last week</th>
+            <th>Goal progress</th>
+          </tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The real version is fed by a nightly job that closes each day, so past days load instantly and today is calculated live.</li>
+        <li>Comparisons use the same weekday of the previous week, because a Monday is not comparable with a Saturday.</li>
+        <li>The day summary works like a ladder: total, the parts that make it up, what is subtracted and the result.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const today = new Date(Date.UTC(2026, 10, 16));
+
+    // One deterministic record per branch and day.
+    function dayData(date) {
+      const seed = Math.floor(date.getTime() / 86400000);
+      const r = UI.rng(seed * 31);
+      const weekdayBoost = [0.75, 1, 1, 1.05, 1.1, 1.3, 1.2][date.getUTCDay()];
+      return D.branches.map((b, i) => {
+        const rb = UI.rng(seed * 97 + i);
+        const base = [52000, 38000, 61000, 29000, 33000, 24000][i] * weekdayBoost * UI.between(rb, 0.85, 1.15);
+        const cash = base * UI.between(rb, 0.38, 0.5);
+        const card = base * UI.between(rb, 0.22, 0.32);
+        const transfer = base * UI.between(rb, 0.05, 0.1);
+        const credit = base - cash - card - transfer;
+        const returns = base * UI.between(rb, 0.005, 0.025);
+        const collected = credit * UI.between(rb, 0.4, 0.9);
+        return { branch: b, region: D.regions[b], tickets: Math.round(base / UI.between(rb, 240, 380)), cash, card, transfer, credit, gross: base, returns, net: base - returns, collected, goal: [50000, 37000, 60000, 30000, 32000, 25000][i] * weekdayBoost };
+      });
+    }
+    function sum(rows, k) { return rows.reduce((a, x) => a + x[k], 0); }
+    function shift(d, days) { return new Date(d.getTime() + days * 86400000); }
+
+    const dayInput = document.getElementById("day");
+    dayInput.value = UI.fmtDate(today);
+    dayInput.max = UI.fmtDate(today);
+
+    let sortKey = "net", sortDir = -1, rows = [], prevRows = [];
+    let chart;
+
+    function deltaHtml(cur, prev) {
+      if (!prev) return "";
+      const d = (cur - prev) / prev;
+      const cls = d >= 0 ? "pos" : "neg";
+      return '<span class="' + cls + '">' + (d >= 0 ? "▲ " : "▼ ") + UI.fmtPct(Math.abs(d)) + "</span> <span class='muted'>vs same weekday last week</span>";
+    }
+
+    function render() {
+      const day = new Date(dayInput.value + "T00:00:00Z");
+      rows = dayData(day);
+      prevRows = dayData(shift(day, -7));
+      const gross = sum(rows, "gross"), ret = sum(rows, "returns"), net = gross - ret;
+      const pGross = sum(prevRows, "gross"), pNet = pGross - sum(prevRows, "returns");
+      const cash = sum(rows, "cash"), collected = sum(rows, "collected");
+
+      document.getElementById("kGross").textContent = UI.fmtMoney(gross);
+      document.getElementById("kGrossD").innerHTML = deltaHtml(gross, pGross);
+      document.getElementById("kRet").textContent = UI.fmtMoney(ret);
+      document.getElementById("kRetD").textContent = UI.fmtPct(ret / gross) + " of gross sales";
+      document.getElementById("kNet").textContent = UI.fmtMoney(net);
+      document.getElementById("kNetD").innerHTML = deltaHtml(net, pNet);
+      document.getElementById("kCash").textContent = UI.fmtMoney(cash + collected);
+      document.getElementById("kCashD").textContent = "Cash sales + credit collected";
+
+      const pay = [["Cash", sum(rows, "cash")], ["Card", sum(rows, "card")], ["Transfer", sum(rows, "transfer")], ["Credit", sum(rows, "credit")]];
+      document.getElementById("ladder").innerHTML =
+        '<div class="ladder-row total"><span>Gross sales</span><span class="num">' + UI.fmtMoney(gross) + "</span></div>" +
+        pay.map(p => '<div class="ladder-row indent"><span>' + p[0] + '</span><span class="num">' + UI.fmtMoney(p[1]) + "</span></div>").join("") +
+        '<div class="ladder-row"><span>− Returns</span><span class="num neg">' + UI.fmtMoney(-ret) + "</span></div>" +
+        '<div class="ladder-row result"><span>Net sales</span><span class="num">' + UI.fmtMoney(net) + "</span></div>";
+
+      renderTable();
+      renderChart(day);
+    }
+
+    function renderTable() {
+      const data = rows.map((x, i) => ({ ...x, card: x.card / x.gross, vs: (x.net - prevRows[i].net) / prevRows[i].net, prog: x.net / x.goal }));
+      data.sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : -1) * sortDir);
+      document.querySelector("#branches tbody").innerHTML = data.map(x => {
+        const pct = Math.min(x.prog, 1.25);
+        const color = x.prog >= 1 ? "var(--positive)" : x.prog >= 0.85 ? "var(--warning)" : "var(--negative)";
+        return "<tr><td>" + x.branch + "</td><td>" + x.region + '</td><td class="r num">' + UI.fmtInt(x.tickets) + '</td><td class="r num">' + UI.fmtMoney(x.net) +
+          '</td><td class="r num">' + UI.fmtPct(x.card) + '</td><td class="r num ' + (x.vs >= 0 ? "pos" : "neg") + '">' + (x.vs >= 0 ? "+" : "") + UI.fmtPct(x.vs) +
+          '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar-track" style="flex:1"><span style="width:' + (pct / 1.25 * 100) + "%;background:" + color + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(x.prog, 0) + "</span></div></td></tr>";
+      }).join("");
+      const net = sum(rows, "net"), pnet = sum(prevRows, "net");
+      document.querySelector("#branches tfoot").innerHTML = "<tr><td>Total</td><td></td><td class='r num'>" + UI.fmtInt(sum(rows, "tickets")) + "</td><td class='r num'>" + UI.fmtMoney(net) +
+        "</td><td class='r num'>" + UI.fmtPct(sum(rows, "card") / sum(rows, "gross")) + "</td><td class='r num " + (net >= pnet ? "pos" : "neg") + "'>" + UI.fmtPct((net - pnet) / pnet) + "</td><td class='num'>" + UI.fmtPct(net / sum(rows, "goal"), 0) + "</td></tr>";
+      document.querySelectorAll("#branches th.sortable").forEach(th => {
+        th.setAttribute("aria-sort", th.dataset.k === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none");
+        th.tabIndex = 0;
+      });
+    }
+
+    function renderChart(day) {
+      const labels = [], cur = [], prev = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = shift(day, -i);
+        labels.push(UI.fmtDate(d).slice(5));
+        const r = dayData(d), p = dayData(shift(d, -7));
+        cur.push(sum(r, "net"));
+        prev.push(sum(p, "net"));
+      }
+      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
+      const cfg = {
+        type: "line",
+        data: { labels, datasets: [
+          { label: "Net sales", data: cur, borderColor: UI.cssVar("--chart-1"), backgroundColor: UI.cssVar("--chart-1"), tension: .3, pointRadius: 0, borderWidth: 2 },
+          { label: "Same weekday last week", data: prev, borderColor: text, borderDash: [5, 4], tension: .3, pointRadius: 0, borderWidth: 1.5 }
+        ] },
+        options: {
+          maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+          plugins: { legend: { labels: { color: text, boxWidth: 14 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + UI.fmtMoney(c.parsed.y) } } },
+          scales: { x: { ticks: { color: text, maxTicksLimit: 8 }, grid: { display: false } }, y: { ticks: { color: text, callback: v => (v / 1000) + "k" }, grid: { color: grid } } }
+        }
+      };
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("trend"), cfg);
+    }
+
+    document.querySelectorAll("#branches th.sortable").forEach(th => {
+      const go = () => { if (sortKey === th.dataset.k) sortDir *= -1; else { sortKey = th.dataset.k; sortDir = -1; } renderTable(); };
+      th.addEventListener("click", go);
+      th.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
+    dayInput.addEventListener("change", render);
+    document.addEventListener("themechange", () => renderChart(new Date(dayInput.value + "T00:00:00Z")));
+    render();
+  });
+  </script>
+</body>
+</html>

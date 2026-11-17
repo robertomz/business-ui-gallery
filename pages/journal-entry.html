@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Journal Entries · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .modal.wide { width: min(1240px, 100%); height: min(92vh, 900px); }
+    .head-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-3); }
+    .head-grid .span2 { grid-column: span 2; }
+    #lines td { vertical-align: top; }
+    #lines .input { min-width: 0; }
+    #lines .c-acc { min-width: 240px; }
+    #lines .c-cc { min-width: 170px; }
+    #lines .c-desc { min-width: 160px; }
+    #lines .c-amt { min-width: 120px; }
+    .row-err { font-size: .76rem; color: var(--negative); margin-top: 4px; }
+    .totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+    .totals > div { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+    .totals .lbl { font-size: .78rem; color: var(--text-muted); }
+    .totals .val { font-family: var(--font-mono); font-size: 1.15rem; font-weight: 600; }
+    .status { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 500; }
+    .status svg { width: 15px; height: 15px; }
+    .hint { font-size: .78rem; color: var(--text-muted); }
+    .ro dt { font-size: .78rem; color: var(--text-muted); }
+    .ro dd { margin: 0 0 8px; }
+    .ro { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 4px var(--space-4); margin: 0 0 var(--space-4); }
+    .msg { font-size: .85rem; }
+    @media (max-width: 600px) { .head-grid .span2 { grid-column: auto; } .totals { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="journal-entry" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Journal entries</h1>
+        <p class="muted">Manual entries for adjustments that no document generates on its own.</p>
+      </div>
+      <button class="btn btn-primary" id="newBtn" type="button">New entry</button>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h2>Recent entries</h2><span class="muted" style="font-size:.82rem">An entry is balanced when total debit equals total credit</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="list">
+          <thead><tr><th>Number</th><th>Date</th><th>Type</th><th>Description</th><th class="r">Debit</th><th class="r">Credit</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each line is either a debit or a credit, never both: typing in one column clears the other.</li>
+        <li>Expense accounts (code 6) need a cost center that has budget for that account. Centers without budget are shown but disabled, with the reason.</li>
+        <li>Totals update while typing, and Save stays disabled until the entry balances and every line is valid. Errors appear next to the line that has them.</li>
+        <li>In production this saves through a stored procedure that numbers the entry and posts it in one transaction.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- New entry -->
+  <div class="modal-backdrop" id="entryModal" role="dialog" aria-modal="true" aria-labelledby="entryTitle">
+    <div class="modal wide">
+      <div class="modal-head"><h2 id="entryTitle">New journal entry</h2><span class="chip chip-info" id="nextNo"></span></div>
+      <div class="modal-body">
+        <div class="head-grid">
+          <div class="field"><label for="hDate">Date</label><input class="input" type="date" id="hDate"><span class="field-error" id="eDate"></span></div>
+          <div class="field"><label for="hBranch">Branch</label><select class="input" id="hBranch"></select><span class="field-error" id="eBranch"></span></div>
+          <div class="field"><label for="hType">Entry type</label><select class="input" id="hType"></select><span class="field-error" id="eType"></span></div>
+          <div class="field"><label for="hCur">Currency</label><select class="input" id="hCur"><option value="LOC">Local currency</option><option value="USD">US dollar</option></select></div>
+          <div class="field"><label for="hRate">Exchange rate</label><input class="input num" type="text" id="hRate" inputmode="decimal" disabled><span class="field-error" id="eRate"></span></div>
+          <div class="field span2"><label for="hDesc">Description</label><input class="input" type="text" id="hDesc" maxlength="200" placeholder="What this entry adjusts"><span class="field-error" id="eDesc"></span></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:var(--space-4) 0 var(--space-2);gap:8px;flex-wrap:wrap">
+          <h3>Lines</h3>
+          <button class="btn" type="button" id="addLine">Add line</button>
+        </div>
+        <div class="table-wrap">
+          <table class="grid" id="lines">
+            <thead><tr><th>Account</th><th>Cost center</th><th>Line description</th><th class="r">Debit</th><th class="r">Credit</th><th><span class="sr-only">Remove</span></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="totals" aria-live="polite">
+          <div><div class="lbl">Total debit</div><div class="val" id="tDebit">0.00</div></div>
+          <div><div class="lbl">Total credit</div><div class="val" id="tCredit">0.00</div></div>
+          <div><div class="lbl">Difference</div><div class="val" id="tDiff">0.00</div></div>
+        </div>
+        <p class="msg" id="saveMsg" style="margin-top:var(--space-3)"></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" type="button" id="saveBtn" disabled>Save entry</button>
+        <button class="btn" type="button" id="closeEntry">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View entry -->
+  <div class="modal-backdrop" id="viewModal" role="dialog" aria-modal="true" aria-labelledby="viewTitle">
+    <div class="modal wide" style="height:auto">
+      <div class="modal-head"><h2 id="viewTitle">Entry</h2><span id="viewStatus"></span></div>
+      <div class="modal-body">
+        <dl class="ro" id="viewHead"></dl>
+        <div class="table-wrap">
+          <table class="grid" id="viewLines"><thead><tr><th>Account</th><th>Cost center</th><th>Description</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn" type="button" id="closeView">Close</button></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    // Postable accounts (level 5) of the sample chart of accounts.
+    const ACCOUNTS = [
+      ["1-01-01-01-001", "Cash on hand"], ["1-01-02-01-001", "Bank checking account"], ["1-01-02-01-002", "Bank savings account"],
+      ["1-02-01-01-001", "Accounts receivable, customers"], ["1-02-01-02-001", "Card payments receivable"], ["1-03-01-01-001", "Merchandise inventory"],
+      ["1-04-01-01-001", "Vehicles"], ["1-04-01-02-001", "Accumulated depreciation, vehicles"],
+      ["2-01-01-01-001", "Accounts payable, suppliers"], ["2-01-02-01-001", "Salaries payable"], ["2-01-02-01-002", "Social security payable"],
+      ["2-01-03-01-001", "Sales tax payable"], ["2-02-01-01-001", "Long-term bank loan"],
+      ["3-01-01-01-001", "Share capital"], ["3-02-01-01-001", "Retained earnings"],
+      ["4-01-01-01-001", "Sales revenue"], ["4-01-01-02-001", "Sales returns"],
+      ["5-01-01-01-001", "Cost of goods sold"],
+      ["6-01-01-01-001", "Salaries expense"], ["6-01-01-01-002", "Employer contributions"], ["6-02-01-01-001", "Rent"], ["6-02-01-01-002", "Utilities"],
+      ["6-02-02-01-001", "Fuel"], ["6-02-02-01-002", "Vehicle maintenance"], ["6-03-01-01-001", "Office supplies"], ["6-03-01-01-002", "Software subscriptions"],
+      ["6-04-01-01-001", "Depreciation expense"]
+    ];
+    const accName = {}; ACCOUNTS.forEach(a => accName[a[0]] = a[1]);
+    const isExpense = code => code.charAt(0) === "6";
+    // Which cost centers have budget for which expense account (deterministic).
+    const rb = UI.rng(606);
+    const BUDGET = {};
+    ACCOUNTS.filter(a => isExpense(a[0])).forEach(a => {
+      BUDGET[a[0]] = D.costCenters.filter(() => rb() > 0.42);
+      if (!BUDGET[a[0]].length) BUDGET[a[0]] = [D.costCenters[0]];
+    });
+    const TYPES = ["Adjustment", "Accrual", "Reclassification", "Depreciation", "Provision"];
+
+    // ---------- Sample list ----------
+    const r = UI.rng(1207);
+    let seq = 4180;
+    const entries = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(Date.UTC(2026, 10, 16 - Math.floor(i * 1.1)));
+      const amt = Math.round(UI.between(r, 800, 42000) * 100) / 100;
+      const exp = UI.pick(r, ACCOUNTS.filter(a => isExpense(a[0])));
+      const type = exp[0] === "6-04-01-01-001" ? "Depreciation" : exp[0].startsWith("6-01") ? "Accrual" : UI.pick(r, ["Adjustment", "Reclassification", "Provision"]);
+      const cc = UI.pick(r, BUDGET[exp[0]]);
+      const credit = UI.pick(r, [["2-01-01-01-001"], ["1-01-02-01-001"], ["2-01-02-01-001"]])[0];
+      const unbalanced = i === 3 || i === 9;
+      entries.push({
+        no: "JE-" + (seq - i), date: UI.fmtDate(d), branch: UI.pick(r, D.branches), type, cur: "LOC", rate: 1,
+        desc: type + " · " + exp[1].toLowerCase(),
+        lines: [
+          { acc: exp[0], cc, desc: exp[1], debit: amt, credit: 0 },
+          { acc: credit, cc: "", desc: accName[credit], debit: 0, credit: unbalanced ? amt - Math.round(UI.between(r, 1, 40) * 100) / 100 : amt }
+        ]
+      });
+    }
+    seq += 1;
+
+    const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>';
+    const ICON_BAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>';
+    const tot = (e, k) => e.lines.reduce((a, l) => a + l[k], 0);
+    function statusHtml(e) {
+      const ok = Math.abs(tot(e, "debit") - tot(e, "credit")) < 0.005;
+      return ok ? '<span class="status pos">' + ICON_OK + "Balanced</span>" : '<span class="status neg">' + ICON_BAD + "Unbalanced</span>";
+    }
+    function renderList() {
+      document.querySelector("#list tbody").innerHTML = entries.map((e, i) =>
+        '<tr><td class="num">' + e.no + '</td><td class="num">' + e.date + "</td><td>" + e.type + "</td><td>" + e.desc + '</td><td class="r num">' + UI.fmtMoney(tot(e, "debit")) +
+        '</td><td class="r num">' + UI.fmtMoney(tot(e, "credit")) + "</td><td>" + statusHtml(e) + '</td><td><button class="btn" type="button" data-view="' + i + '">View</button></td></tr>').join("");
+    }
+    renderList();
+    document.querySelector("#list tbody").addEventListener("click", ev => {
+      const b = ev.target.closest("[data-view]");
+      if (!b) return;
+      const e = entries[+b.dataset.view];
+      document.getElementById("viewTitle").textContent = "Entry " + e.no;
+      document.getElementById("viewStatus").innerHTML = statusHtml(e);
+      document.getElementById("viewHead").innerHTML = [["Date", e.date], ["Branch", e.branch], ["Type", e.type], ["Currency", e.cur === "USD" ? "US dollar · rate " + e.rate.toFixed(4) : "Local currency"], ["Description", e.desc]]
+        .map(x => "<div><dt>" + x[0] + "</dt><dd>" + x[1] + "</dd></div>").join("");
+      document.querySelector("#viewLines tbody").innerHTML = e.lines.map(l => '<tr><td><span class="num">' + l.acc + "</span> " + accName[l.acc] + "</td><td>" + (l.cc || "—") + "</td><td>" + l.desc +
+        '</td><td class="r num">' + (l.debit ? UI.fmtMoney(l.debit) : "") + '</td><td class="r num">' + (l.credit ? UI.fmtMoney(l.credit) : "") + "</td></tr>").join("");
+      document.querySelector("#viewLines tfoot").innerHTML = '<tr><td colspan="3">Total</td><td class="r num">' + UI.fmtMoney(tot(e, "debit")) + '</td><td class="r num">' + UI.fmtMoney(tot(e, "credit")) + "</td></tr>";
+      UI.openModal("viewModal");
+    });
+    document.getElementById("closeView").addEventListener("click", () => UI.closeModal("viewModal"));
+
+    // ---------- New entry form ----------
+    const $modal = $("#entryModal");
+    const hBranch = document.getElementById("hBranch"), hType = document.getElementById("hType");
+    hBranch.innerHTML = '<option value="">Choose a branch</option>' + D.branches.map(b => "<option>" + b + "</option>").join("");
+    hType.innerHTML = '<option value="">Choose a type</option>' + TYPES.map(t => "<option>" + t + "</option>").join("");
+    const hRate = document.getElementById("hRate");
+    UI.maskMoney(hRate);
+    document.getElementById("hCur").addEventListener("change", e => {
+      const usd = e.target.value === "USD";
+      hRate.disabled = !usd;
+      hRate.value = usd ? "24.7350" : "";
+      validate();
+    });
+
+    const tbody = document.querySelector("#lines tbody");
+    let lineId = 0;
+    function accountOptions() {
+      return '<option value=""></option>' + ACCOUNTS.map(a => '<option value="' + a[0] + '">' + a[0] + " · " + a[1] + "</option>").join("");
+    }
+    function ccOptions(acc) {
+      if (!acc) return '<option value="">Choose the account first</option>';
+      if (!isExpense(acc)) return '<option value="">Not needed</option>' + D.costCenters.map(c => "<option>" + c + "</option>").join("");
+      const ok = BUDGET[acc];
+      return '<option value="">Choose a cost center</option>' + D.costCenters.map(c => ok.includes(c)
+        ? "<option>" + c + "</option>"
+        : '<option disabled value="' + c + '">' + c + " (no budget for this account)</option>").join("");
+    }
+    function addLine() {
+      const id = ++lineId;
+      const tr = document.createElement("tr");
+      tr.dataset.id = id;
+      tr.innerHTML =
+        '<td class="c-acc"><label class="sr-only" for="acc' + id + '">Account</label><select id="acc' + id + '" class="acc">' + accountOptions() + '</select><div class="row-err" data-err="acc"></div></td>' +
+        '<td class="c-cc"><label class="sr-only" for="cc' + id + '">Cost center</label><select class="input cc" id="cc' + id + '" disabled>' + ccOptions("") + '</select><div class="hint cc-hint"></div><div class="row-err" data-err="cc"></div></td>' +
+        '<td class="c-desc"><label class="sr-only" for="ds' + id + '">Line description</label><input class="input ds" id="ds' + id + '" type="text" maxlength="120"></td>' +
+        '<td class="c-amt"><label class="sr-only" for="db' + id + '">Debit</label><input class="input num db" id="db' + id + '" type="text" inputmode="decimal"></td>' +
+        '<td class="c-amt"><label class="sr-only" for="cr' + id + '">Credit</label><input class="input num cr" id="cr' + id + '" type="text" inputmode="decimal"><div class="row-err" data-err="amt"></div></td>' +
+        '<td><button class="btn icon-btn rm" type="button" aria-label="Remove line">×</button></td>';
+      tbody.appendChild(tr);
+      const db = tr.querySelector(".db"), cr = tr.querySelector(".cr");
+      UI.maskMoney(db); UI.maskMoney(cr);
+      // Debit XOR credit: typing in one clears the other.
+      db.addEventListener("input", () => { if (db.value) cr.value = ""; validate(); });
+      cr.addEventListener("input", () => { if (cr.value) db.value = ""; validate(); });
+      db.addEventListener("blur", validate); cr.addEventListener("blur", validate);
+      const $acc = $(tr.querySelector(".acc")).select2({ dropdownParent: $modal, placeholder: "Search by code or name", width: "100%" });
+      $acc.on("change", () => {
+        const acc = $acc.val();
+        const cc = tr.querySelector(".cc");
+        cc.innerHTML = ccOptions(acc);
+        cc.disabled = !acc;
+        tr.querySelector(".cc-hint").textContent = acc && isExpense(acc) ? "Budgeted: " + BUDGET[acc].join(", ") : "";
+        if (!tr.querySelector(".ds").value && acc) tr.querySelector(".ds").value = accName[acc];
+        validate();
+      });
+      tr.querySelector(".cc").addEventListener("change", validate);
+      tr.querySelector(".rm").addEventListener("click", () => { $acc.select2("destroy"); tr.remove(); validate(); });
+      return tr;
+    }
+    document.getElementById("addLine").addEventListener("click", () => { const tr = addLine(); $(tr.querySelector(".acc")).select2("open"); });
+
+    function readLines() {
+      return [...tbody.querySelectorAll("tr")].map(tr => ({
+        tr, acc: $(tr.querySelector(".acc")).val() || "", cc: tr.querySelector(".cc").value,
+        desc: tr.querySelector(".ds").value.trim(),
+        debit: UI.parseMoney(tr.querySelector(".db").value), credit: UI.parseMoney(tr.querySelector(".cr").value)
+      }));
+    }
+
+    let touched = false;
+    function validate() {
+      const lines = readLines();
+      let ok = true;
+      const setErr = (id, msg, el) => { document.getElementById(id).textContent = touched ? msg : ""; if (el) el.setAttribute("aria-invalid", msg && touched ? "true" : "false"); if (msg) ok = false; };
+      setErr("eDate", document.getElementById("hDate").value ? "" : "Choose a date", document.getElementById("hDate"));
+      setErr("eBranch", hBranch.value ? "" : "Choose a branch", hBranch);
+      setErr("eType", hType.value ? "" : "Choose an entry type", hType);
+      setErr("eDesc", document.getElementById("hDesc").value.trim().length >= 5 ? "" : "Write at least 5 characters", document.getElementById("hDesc"));
+      setErr("eRate", hRate.disabled || UI.parseMoney(hRate.value) > 0 ? "" : "Enter the exchange rate", hRate);
+
+      let dr = 0, cr = 0, used = 0;
+      lines.forEach(l => {
+        const e = { acc: "", cc: "", amt: "" };
+        const blank = !l.acc && !l.debit && !l.credit;
+        if (!blank) {
+          used++;
+          if (!l.acc) e.acc = "Choose an account";
+          if (l.acc && isExpense(l.acc) && !l.cc) e.cc = "Expense accounts need a budgeted cost center";
+          if (!l.debit && !l.credit) e.amt = "Enter a debit or a credit";
+        }
+        ["acc", "cc", "amt"].forEach(k => {
+          l.tr.querySelector('[data-err="' + k + '"]').textContent = touched || l.debit || l.credit ? e[k] : "";
+          if (e[k]) ok = false;
+        });
+        dr += l.debit; cr += l.credit;
+      });
+      if (used < 2) ok = false;
+      const diff = Math.round((dr - cr) * 100) / 100;
+      document.getElementById("tDebit").textContent = UI.fmtMoney(dr);
+      document.getElementById("tCredit").textContent = UI.fmtMoney(cr);
+      const tDiff = document.getElementById("tDiff");
+      tDiff.textContent = UI.fmtMoney(diff);
+      tDiff.className = "val " + (diff === 0 ? "pos" : "neg");
+      if (diff !== 0 || dr === 0) ok = false;
+      const msg = document.getElementById("saveMsg");
+      msg.className = "msg " + (ok ? "pos" : "muted");
+      msg.textContent = ok ? "Ready to save: the entry balances and every line is valid."
+        : used < 2 ? "An entry needs at least two lines."
+        : diff !== 0 ? "Debit and credit differ by " + UI.fmtMoney(Math.abs(diff)) + ". Save is enabled when they match."
+        : "Complete the fields marked in red.";
+      document.getElementById("saveBtn").disabled = !ok;
+      return ok;
+    }
+    ["hDate", "hDesc"].forEach(id => document.getElementById(id).addEventListener("input", validate));
+    [hBranch, hType, hRate].forEach(el => el.addEventListener("change", validate));
+    hRate.addEventListener("input", validate);
+
+    function resetForm() {
+      $(tbody).find(".acc").each(function () { $(this).select2("destroy"); });
+      tbody.innerHTML = "";
+      ["hDate", "hDesc"].forEach(id => document.getElementById(id).value = "");
+      hBranch.value = ""; hType.value = ""; document.getElementById("hCur").value = "LOC"; hRate.value = ""; hRate.disabled = true;
+      touched = false;
+      addLine(); addLine();
+      document.getElementById("nextNo").textContent = "Will be JE-" + seq;
+      validate();
+    }
+    document.getElementById("newBtn").addEventListener("click", () => { resetForm(); UI.openModal("entryModal"); });
+    document.getElementById("closeEntry").addEventListener("click", () => UI.closeModal("entryModal"));
+    document.getElementById("entryModal").addEventListener("focusout", () => { touched = true; });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      touched = true;
+      if (!validate()) return;
+      const lines = readLines().filter(l => l.acc).map(l => ({ acc: l.acc, cc: l.cc, desc: l.desc || accName[l.acc], debit: l.debit, credit: l.credit }));
+      const cur = document.getElementById("hCur").value;
+      entries.unshift({ no: "JE-" + seq, date: document.getElementById("hDate").value, branch: hBranch.value, type: hType.value, cur, rate: cur === "USD" ? UI.parseMoney(hRate.value) : 1, desc: document.getElementById("hDesc").value.trim(), lines });
+      UI.toast("Entry JE-" + seq + " saved");
+      seq++;
+      renderList();
+      UI.closeModal("entryModal");
+    });
+  });
+  </script>
+</body>
+</html>

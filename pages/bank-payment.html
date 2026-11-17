@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bank Payment · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
+    .form-grid .span-2 { grid-column: span 2; }
+    .form-grid .span-3 { grid-column: 1 / -1; }
+    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .seg label { display: flex; align-items: center; padding: 0 12px; min-height: 36px; cursor: pointer; font-size: .88rem; color: var(--text); }
+    .seg input { position: absolute; opacity: 0; pointer-events: none; }
+    .seg input:checked + span { color: var(--on-primary); }
+    .seg label:has(input:checked) { background: var(--primary); color: var(--on-primary); }
+    .seg label:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: -2px; }
+    .balance { font-size: .82rem; margin-top: 2px; }
+    .words { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px dashed var(--border); font-size: .88rem; min-height: 40px; }
+    .two { display: grid; grid-template-columns: 3fr 2fr; gap: var(--space-4); align-items: start; }
+    .apply-input { width: 130px; min-height: 32px; }
+    .summary-row { display: flex; justify-content: space-between; gap: var(--space-3); padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: .9rem; }
+    .summary-row.total { font-weight: 600; border-bottom: 1px solid var(--border); }
+    .actions { display: flex; gap: var(--space-2); justify-content: flex-end; flex-wrap: wrap; }
+    td input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+    @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } .form-grid .span-2 { grid-column: auto; } }
+    .two > * { min-width: 0; }
+    .card { min-width: 0; }
+  </style>
+</head>
+<body data-page="bank-payment" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Bank payment</h1>
+        <p class="muted">Pay a supplier or creditor by check or transfer and apply the payment to their open invoices.</p>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h2>Payment</h2></div>
+      <form class="card-body" id="payForm" novalidate>
+        <div class="form-grid">
+          <div class="field span-2">
+            <label for="bank">Bank account</label>
+            <select id="bank" class="input"></select>
+            <div class="balance muted" id="bankBalance" aria-live="polite"></div>
+          </div>
+          <div class="field">
+            <label for="date">Date</label>
+            <input class="input" type="date" id="date">
+          </div>
+
+          <div class="field">
+            <span id="methodLabel" style="font-size:.8rem;color:var(--text-muted);font-weight:500">Method</span>
+            <div class="seg" role="radiogroup" aria-labelledby="methodLabel">
+              <label><input type="radio" name="method" value="Check" checked><span>Check</span></label>
+              <label><input type="radio" name="method" value="Transfer"><span>Transfer</span></label>
+            </div>
+          </div>
+          <div class="field" id="checkField">
+            <label for="checkNo">Check number</label>
+            <input class="input num" id="checkNo" inputmode="numeric" aria-describedby="checkErr">
+            <div class="field-error" id="checkErr"></div>
+          </div>
+          <div class="field">
+            <label for="rate">Exchange rate (LCY per USD)</label>
+            <input class="input num" id="rate" value="24.6512" inputmode="decimal" aria-describedby="rateHelp">
+            <div class="balance muted" id="rateHelp">Sample rate. Used when the bank account is in USD.</div>
+          </div>
+
+          <div class="field">
+            <span id="ptLabel" style="font-size:.8rem;color:var(--text-muted);font-weight:500">Payee type</span>
+            <div class="seg" role="radiogroup" aria-labelledby="ptLabel">
+              <label><input type="radio" name="ptype" value="Supplier" checked><span>Supplier</span></label>
+              <label><input type="radio" name="ptype" value="Creditor"><span>Creditor</span></label>
+            </div>
+          </div>
+          <div class="field span-2">
+            <label for="payee">Payee</label>
+            <select id="payee" class="input" aria-describedby="payeeErr"></select>
+            <div class="field-error" id="payeeErr"></div>
+          </div>
+
+          <div class="field span-3">
+            <label for="memo">Memo</label>
+            <input class="input" id="memo" maxlength="140" placeholder="Shown on the check stub and in the entry description">
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="two">
+      <div class="card">
+        <div class="card-head">
+          <h2>Apply to open invoices</h2>
+          <span class="muted" style="font-size:.82rem" id="openInfo"></span>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="grid" id="invoices">
+              <thead><tr>
+                <th><span class="sr-only">Select</span></th>
+                <th>Invoice</th><th>Due</th><th class="r">Balance (LCY)</th><th class="r">Apply (LCY)</th>
+              </tr></thead>
+              <tbody></tbody>
+              <tfoot></tfoot>
+            </table>
+          </div>
+          <div class="field-error" id="applyErr" style="margin-top:6px"></div>
+          <div class="form-grid" style="margin-top:var(--space-3)">
+            <div class="field">
+              <label for="advance">Advance to payee (LCY)</label>
+              <input class="input num" id="advance" inputmode="decimal" placeholder="0.00" aria-describedby="advHelp">
+              <div class="balance muted" id="advHelp">Paid ahead of an invoice. Applied later.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Summary</h2></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div id="summary"></div>
+          <div>
+            <div class="muted" style="font-size:.8rem;font-weight:500;margin-bottom:4px">Amount in words</div>
+            <div class="words" id="words" aria-live="polite">—</div>
+          </div>
+          <div class="field-error" id="totalErr"></div>
+          <div class="actions">
+            <button class="btn btn-primary" type="button" id="saveBtn">Save payment</button>
+            <button class="btn" type="button" id="clearBtn">Clear</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Accounting entry preview</h2><span class="muted" style="font-size:.82rem">One line per account and side</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="entry">
+          <thead><tr><th>Account</th><th>Description</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Recent payments</h2></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="recent">
+          <thead><tr><th>Date</th><th>Number</th><th>Method</th><th>Payee</th><th>Bank account</th><th class="r">Amount</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The available balance updates as invoices are selected, and the payment cannot be saved if it leaves the account below zero.</li>
+        <li>Check numbers are suggested from the last one used in that account and must be unique.</li>
+        <li>When a USD account pays invoices in local currency, the amount is converted at the day's rate and the cents that do not convert exactly go to an exchange difference line, so the entry always balances.</li>
+        <li>The entry is shown before saving. Lines for the same account and side are added into one.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(4242);
+
+    const BANKS = [
+      { id: "B1", name: "Operating account · ****1022", ccy: "LCY", balance: 1842560.35, gl: "1-1-02-01 Bank · Operating", lastCheck: 10458 },
+      { id: "B2", name: "Payroll account · ****3310", ccy: "LCY", balance: 412300.00, gl: "1-1-02-02 Bank · Payroll", lastCheck: 2215 },
+      { id: "B3", name: "USD account · ****7741", ccy: "USD", balance: 58240.18, gl: "1-1-02-05 Bank · USD", lastCheck: 880 }
+    ];
+    const usedChecks = { B1: [10456, 10457, 10458], B2: [2213, 2214, 2215], B3: [878, 879, 880] };
+    const CREDITORS = ["Metro Power & Light", "City Water Utility", "Prime Insurance Co.", "Rapid Courier", "Summit Office Rentals"];
+
+    // Open invoices per payee, generated once.
+    const invoicesByPayee = {};
+    function payees(type) { return type === "Supplier" ? D.suppliers : CREDITORS; }
+    D.suppliers.concat(CREDITORS).forEach((p, i) => {
+      const rp = UI.rng(900 + i);
+      const n = 3 + Math.floor(rp() * 4);
+      invoicesByPayee[p] = Array.from({ length: n }, (_, k) => {
+        const due = new Date(Date.UTC(2026, 10, 5 + Math.floor(rp() * 40) - 15));
+        return { no: "INV-" + (24000 + i * 37 + k * 5), due: UI.fmtDate(due), balance: Math.round(UI.between(rp, 3500, 95000) * 100) / 100 };
+      }).sort((a, b) => a.due < b.due ? -1 : 1);
+    });
+
+    const $bank = $("#bank"), $payee = $("#payee");
+    $bank.html(BANKS.map(b => '<option value="' + b.id + '">' + b.name + " (" + b.ccy + ")</option>").join(""));
+    $bank.select2({ width: "100%", minimumResultsForSearch: Infinity });
+    function fillPayees() {
+      const t = $("input[name=ptype]:checked").val();
+      $payee.html('<option value=""></option>' + payees(t).map(p => "<option>" + p + "</option>").join(""));
+      $payee.val("").trigger("change.select2");
+      renderInvoices();
+    }
+    $payee.select2({ width: "100%", placeholder: "Search a payee", allowClear: true });
+
+    const dateEl = document.getElementById("date");
+    dateEl.value = "2026-11-17";
+    const advEl = document.getElementById("advance");
+    UI.maskMoney(advEl);
+    const rateEl = document.getElementById("rate");
+    const checkEl = document.getElementById("checkNo");
+
+    let applied = {}; // invoice no -> amount
+
+    function bank() { return BANKS.find(b => b.id === $bank.val()); }
+    function method() { return $("input[name=method]:checked").val(); }
+    function rate() { const v = parseFloat(rateEl.value); return v > 0 ? v : 0; }
+
+    function suggestCheck() {
+      const b = bank();
+      checkEl.value = String(Math.max.apply(null, usedChecks[b.id]) + 1);
+      validateCheck();
+    }
+    function validateCheck() {
+      const err = document.getElementById("checkErr");
+      if (method() !== "Check") { err.textContent = ""; checkEl.removeAttribute("aria-invalid"); return true; }
+      const n = parseInt(checkEl.value, 10);
+      let msg = "";
+      if (!n) msg = "Enter a check number.";
+      else if (usedChecks[bank().id].includes(n)) msg = "Check " + n + " was already used in this account.";
+      err.textContent = msg;
+      if (msg) checkEl.setAttribute("aria-invalid", "true"); else checkEl.removeAttribute("aria-invalid");
+      return !msg;
+    }
+
+    function renderInvoices() {
+      const p = $payee.val();
+      const tbody = document.querySelector("#invoices tbody");
+      applied = {};
+      if (!p) {
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">Choose a payee to see their open invoices.</td></tr>';
+        document.getElementById("openInfo").textContent = "";
+        recalc();
+        return;
+      }
+      const list = invoicesByPayee[p];
+      document.getElementById("openInfo").textContent = list.length + " open · " + UI.fmtMoney(list.reduce((a, x) => a + x.balance, 0)) + " LCY";
+      const today = dateEl.value;
+      tbody.innerHTML = list.map(x => {
+        const overdue = x.due < today;
+        return '<tr><td><input type="checkbox" data-no="' + x.no + '" aria-label="Apply to ' + x.no + '"></td><td>' + x.no + "</td><td>" + x.due +
+          (overdue ? ' <span class="chip chip-neg">Overdue</span>' : "") + '</td><td class="r num">' + UI.fmtMoney(x.balance) +
+          '</td><td class="r"><input class="input num apply-input" data-no="' + x.no + '" inputmode="decimal" disabled aria-label="Amount to apply to ' + x.no + '"></td></tr>';
+      }).join("");
+      tbody.querySelectorAll("input.apply-input").forEach(el => UI.maskMoney(el));
+      recalc();
+    }
+
+    document.querySelector("#invoices tbody").addEventListener("change", e => {
+      const no = e.target.dataset.no;
+      if (!no) return;
+      const inv = invoicesByPayee[$payee.val()].find(x => x.no === no);
+      const amtEl = document.querySelector('input.apply-input[data-no="' + no + '"]');
+      if (e.target.type === "checkbox") {
+        amtEl.disabled = !e.target.checked;
+        amtEl.value = e.target.checked ? UI.fmtMoney(inv.balance) : "";
+      }
+      recalc();
+    });
+    document.querySelector("#invoices tbody").addEventListener("input", recalc);
+    document.querySelector("#invoices tbody").addEventListener("focusout", recalc);
+
+    // ---------- Amount in words ----------
+    const ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+    const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+    function under1000(n) {
+      let s = "";
+      if (n >= 100) { s += ONES[Math.floor(n / 100)] + " hundred"; n %= 100; if (n) s += " "; }
+      if (n >= 20) { s += TENS[Math.floor(n / 10)]; if (n % 10) s += "-" + ONES[n % 10]; }
+      else if (n > 0) s += ONES[n];
+      return s;
+    }
+    function words(amount, ccy) {
+      const whole = Math.floor(amount + 1e-9);
+      const cents = Math.round((amount - whole) * 100);
+      if (whole === 0 && cents === 0) return "—";
+      const scales = [[1e9, "billion"], [1e6, "million"], [1e3, "thousand"]];
+      let n = whole, parts = [];
+      scales.forEach(([v, name]) => { if (n >= v) { parts.push(under1000(Math.floor(n / v)) + " " + name); n %= v; } });
+      if (n > 0) parts.push(under1000(n));
+      const w = parts.length ? parts.join(" ") : "zero";
+      const unit = ccy === "USD" ? "US dollars" : "LCY";
+      return (w.charAt(0).toUpperCase() + w.slice(1)) + " " + unit + " and " + String(cents).padStart(2, "0") + "/100";
+    }
+
+    // ---------- Totals and entry ----------
+    let state = {};
+    function recalc() {
+      const p = $payee.val();
+      const b = bank();
+      let appliedTotal = 0, applyMsg = "";
+      applied = {};
+      if (p) {
+        invoicesByPayee[p].forEach(inv => {
+          const cb = document.querySelector('input[type=checkbox][data-no="' + inv.no + '"]');
+          const el = document.querySelector('input.apply-input[data-no="' + inv.no + '"]');
+          if (!cb || !cb.checked) { if (el) el.removeAttribute("aria-invalid"); return; }
+          const v = UI.parseMoney(el.value);
+          if (v > inv.balance + 0.004) { el.setAttribute("aria-invalid", "true"); applyMsg = inv.no + ": the amount to apply cannot exceed its balance of " + UI.fmtMoney(inv.balance) + "."; }
+          else el.removeAttribute("aria-invalid");
+          if (v > 0) { applied[inv.no] = v; appliedTotal += v; }
+        });
+      }
+      document.getElementById("applyErr").textContent = applyMsg;
+      document.querySelector("#invoices tfoot").innerHTML = p ? '<tr><td></td><td colspan="2">Applied</td><td></td><td class="r num">' + UI.fmtMoney(appliedTotal) + "</td></tr>" : "";
+
+      const advance = UI.parseMoney(advEl.value);
+      const totalLcy = Math.round((appliedTotal + advance) * 100) / 100;
+      let payAmount = totalLcy, bankLcy = totalLcy, diff = 0;
+      if (b.ccy === "USD") {
+        const rt = rate();
+        payAmount = rt ? Math.round(totalLcy / rt * 100) / 100 : 0;
+        bankLcy = Math.round(payAmount * rt * 100) / 100;
+        diff = Math.round((totalLcy - bankLcy) * 100) / 100; // >0: bank paid less than owed in LCY
+      }
+      const after = b.balance - payAmount;
+      document.getElementById("bankBalance").innerHTML = "Available " + UI.fmtMoney(b.balance) + " " + b.ccy +
+        (payAmount ? ' · after this payment <span class="num ' + (after < 0 ? "neg" : "") + '">' + UI.fmtMoney(after) + "</span>" : "");
+
+      let rows = '<div class="summary-row"><span>Applied to invoices</span><span class="num">' + UI.fmtMoney(appliedTotal) + " LCY</span></div>" +
+        '<div class="summary-row"><span>Advance</span><span class="num">' + UI.fmtMoney(advance) + " LCY</span></div>";
+      if (b.ccy === "USD") {
+        rows += '<div class="summary-row"><span>Converted at ' + rate().toFixed(4) + '</span><span class="num">' + UI.fmtMoney(bankLcy) + " LCY</span></div>" +
+          '<div class="summary-row"><span>Rounding difference</span><span class="num ' + (diff ? (diff > 0 ? "pos" : "neg") : "") + '">' + UI.fmtMoney(diff) + " LCY</span></div>";
+      }
+      rows += '<div class="summary-row total"><span>Payment amount</span><span class="num">' + UI.fmtMoney(payAmount) + " " + b.ccy + "</span></div>";
+      document.getElementById("summary").innerHTML = rows;
+      document.getElementById("words").textContent = words(payAmount, b.ccy);
+
+      let totalMsg = "";
+      if (after < 0) totalMsg = "The payment is larger than the available balance of the account.";
+      document.getElementById("totalErr").textContent = totalMsg;
+
+      state = { appliedTotal, advance, totalLcy, payAmount, bankLcy, diff, ok: !applyMsg && !totalMsg };
+      renderEntry();
+    }
+
+    function renderEntry() {
+      const b = bank(), p = $payee.val() || "payee";
+      const lines = new Map();
+      function add(acct, desc, side, amt) {
+        if (!amt) return;
+        const key = acct + "|" + side;
+        const cur = lines.get(key) || { acct, desc, debit: 0, credit: 0 };
+        cur[side] += amt;
+        lines.set(key, cur);
+      }
+      const isSup = $("input[name=ptype]:checked").val() === "Supplier";
+      add(isSup ? "2-1-01-01 Accounts payable · suppliers" : "2-1-03-01 Accounts payable · creditors", p, "debit", state.appliedTotal);
+      add("1-1-05-01 Advances to suppliers", p, "debit", state.advance);
+      add(b.gl, method() + (method() === "Check" ? " " + checkEl.value : ""), "credit", state.bankLcy);
+      if (state.diff > 0) add("4-9-01-01 Exchange rate gain", "Rounding on conversion", "credit", state.diff);
+      if (state.diff < 0) add("6-9-01-01 Exchange rate loss", "Rounding on conversion", "debit", -state.diff);
+      const arr = Array.from(lines.values());
+      const tb = document.querySelector("#entry tbody");
+      if (!arr.length) {
+        tb.innerHTML = '<tr><td colspan="4" class="muted">Select invoices or enter an advance to see the entry.</td></tr>';
+        document.querySelector("#entry tfoot").innerHTML = "";
+        return;
+      }
+      tb.innerHTML = arr.map(l => "<tr><td>" + l.acct + "</td><td>" + l.desc + '</td><td class="r num">' + (l.debit ? UI.fmtMoney(l.debit) : "") + '</td><td class="r num">' + (l.credit ? UI.fmtMoney(l.credit) : "") + "</td></tr>").join("");
+      const td = arr.reduce((a, l) => a + l.debit, 0), tc = arr.reduce((a, l) => a + l.credit, 0);
+      const ok = Math.abs(td - tc) < 0.005;
+      document.querySelector("#entry tfoot").innerHTML = '<tr><td colspan="2">Total ' + (ok ? '<span class="chip chip-pos">✓ Balanced</span>' : '<span class="chip chip-neg">✕ Off by ' + UI.fmtMoney(td - tc) + "</span>") +
+        '</td><td class="r num">' + UI.fmtMoney(td) + '</td><td class="r num">' + UI.fmtMoney(tc) + "</td></tr>";
+    }
+
+    // ---------- Recent payments ----------
+    const recent = [];
+    for (let i = 0; i < 5; i++) {
+      const b = BANKS[i % 2];
+      recent.push({ date: "2026-11-" + String(16 - i * 2).padStart(2, "0"), no: i % 2 ? "TRF-" + (5120 - i) : "CHK-" + (b.lastCheck - i % 3), method: i % 2 ? "Transfer" : "Check", payee: UI.pick(r, D.suppliers.concat(CREDITORS)), bank: b.name, amount: UI.between(r, 8000, 160000), ccy: b.ccy, status: i === 0 ? "Pending print" : "Posted" });
+    }
+    function renderRecent() {
+      document.querySelector("#recent tbody").innerHTML = recent.map(x => "<tr><td>" + x.date + '</td><td class="num">' + x.no + "</td><td>" + x.method + "</td><td>" + x.payee + "</td><td>" + x.bank +
+        '</td><td class="r num">' + UI.fmtMoney(x.amount) + " " + x.ccy + '</td><td><span class="chip ' + (x.status === "Posted" ? "chip-pos" : x.status === "Saved" ? "chip-info" : "chip-warn") + '">' + x.status + "</span></td></tr>").join("");
+    }
+    renderRecent();
+
+    // ---------- Events ----------
+    $bank.on("change", () => { suggestCheck(); recalc(); });
+    $payee.on("change", () => { document.getElementById("payeeErr").textContent = ""; renderInvoices(); });
+    $("input[name=ptype]").on("change", fillPayees);
+    $("input[name=method]").on("change", () => {
+      const isCheck = method() === "Check";
+      document.getElementById("checkField").style.visibility = isCheck ? "visible" : "hidden";
+      validateCheck(); recalc();
+    });
+    checkEl.addEventListener("input", () => { checkEl.value = checkEl.value.replace(/\D/g, ""); validateCheck(); renderEntry(); });
+    rateEl.addEventListener("input", recalc);
+    advEl.addEventListener("input", recalc);
+    advEl.addEventListener("blur", recalc);
+    dateEl.addEventListener("change", renderInvoices);
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      recalc();
+      let ok = state.ok && validateCheck();
+      if (!$payee.val()) { document.getElementById("payeeErr").textContent = "Choose who is being paid."; ok = false; }
+      if (!state.payAmount) { document.getElementById("totalErr").textContent = "Select at least one invoice or enter an advance."; ok = false; }
+      if (!ok) { UI.toast("Check the highlighted fields."); return; }
+      const b = bank();
+      const no = method() === "Check" ? "CHK-" + checkEl.value : "TRF-" + (5121 + recent.length);
+      if (method() === "Check") usedChecks[b.id].push(parseInt(checkEl.value, 10));
+      // Reduce the paid balances so the open invoices stay consistent.
+      Object.keys(applied).forEach(k => {
+        const inv = invoicesByPayee[$payee.val()].find(x => x.no === k);
+        inv.balance = Math.round((inv.balance - applied[k]) * 100) / 100;
+      });
+      invoicesByPayee[$payee.val()] = invoicesByPayee[$payee.val()].filter(x => x.balance > 0.004);
+      b.balance -= state.payAmount;
+      recent.unshift({ date: dateEl.value, no, method: method(), payee: $payee.val(), bank: b.name, amount: state.payAmount, ccy: b.ccy, status: "Saved" });
+      renderRecent();
+      UI.toast("Payment " + no + " saved for " + UI.fmtMoney(state.payAmount) + " " + b.ccy + ".");
+      advEl.value = "";
+      document.getElementById("memo").value = "";
+      suggestCheck();
+      renderInvoices();
+    });
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      advEl.value = ""; document.getElementById("memo").value = "";
+      $payee.val("").trigger("change");
+    });
+
+    fillPayees();
+    suggestCheck();
+    recalc();
+  });
+  </script>
+</body>
+</html>

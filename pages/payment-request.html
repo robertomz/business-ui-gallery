@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Payment Request · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .head-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3); }
+    .head-grid .span2 { grid-column: span 2; }
+    /* Keeps select2's hidden <select> inside the scrolling wrapper on narrow screens. */
+    .table-wrap { position: relative; }
+    #lines td { vertical-align: top; }
+    #lines .c-acc { min-width: 250px; }
+    #lines .c-desc { min-width: 170px; }
+    #lines .c-qty { width: 90px; min-width: 80px; }
+    #lines .c-price { min-width: 120px; }
+    #lines .c-nd { text-align: center; }
+    #lines .c-tot { min-width: 110px; }
+    .row-err { font-size: .76rem; color: var(--negative); margin-top: 4px; }
+    .sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+    .sum > div { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+    .sum .lbl { font-size: .78rem; color: var(--text-muted); }
+    .sum .val { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 600; }
+    .actions { display: flex; gap: var(--space-2); justify-content: flex-end; margin-top: var(--space-4); flex-wrap: wrap; }
+    .status { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+    .status svg { width: 14px; height: 14px; }
+    .hint { font-size: .78rem; color: var(--text-muted); }
+    .modal.sm { width: min(520px, 100%); }
+    textarea.input { min-height: 80px; resize: vertical; font-family: inherit; }
+    @media (max-width: 640px) { .head-grid .span2 { grid-column: auto; } .sum { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body data-page="payment-request" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Payment request</h1>
+        <p class="muted">Ask treasury to pay a supplier or creditor. Expense lines must use an account that has budget in the chosen cost center.</p>
+      </div>
+    </div>
+
+    <section class="card" aria-labelledby="formTitle">
+      <div class="card-head"><h2 id="formTitle">New request</h2><span class="chip chip-info" id="nextNo"></span></div>
+      <div class="card-body">
+        <div class="head-grid">
+          <div class="field span2"><label for="payee">Payee</label><select id="payee"></select><span class="field-error" id="ePayee"></span></div>
+          <div class="field"><label for="center">Cost center</label><select class="input" id="center"></select><span class="field-error" id="eCenter"></span></div>
+          <div class="field"><label for="docRef">Document number</label><input class="input" id="docRef" maxlength="30" placeholder="Supplier invoice no."><span class="field-error" id="eRef"></span></div>
+          <div class="field"><label for="docDate">Document date</label><input class="input" type="date" id="docDate"><span class="field-error" id="eDate"></span></div>
+          <div class="field"><label for="credit">Credit days</label><input class="input num" id="credit" inputmode="numeric" maxlength="3" value="30"><span class="field-error" id="eCredit"></span></div>
+          <div class="field"><label for="due">Due date</label><input class="input" type="date" id="due" disabled><span class="hint">Document date + credit days</span></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:var(--space-5) 0 var(--space-2);gap:8px;flex-wrap:wrap">
+          <h3>Lines</h3>
+          <button class="btn" type="button" id="addLine">Add line</button>
+        </div>
+        <p class="hint" id="budgetHint" style="margin-bottom:var(--space-2)"></p>
+        <div class="table-wrap">
+          <table class="grid" id="lines">
+            <thead><tr><th>Account</th><th>Description</th><th class="r">Qty</th><th class="r">Unit price</th><th>Non-deductible</th><th class="r">Line total</th><th><span class="sr-only">Remove</span></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="sum" aria-live="polite">
+          <div><div class="lbl">Subtotal</div><div class="val" id="tSub">0.00</div></div>
+          <div><div class="lbl">Sales tax 15% (sample)</div><div class="val" id="tTax">0.00</div></div>
+          <div><div class="lbl">Total to pay</div><div class="val" id="tTotal">0.00</div></div>
+          <div><div class="lbl">Non-deductible</div><div class="val" id="tNd">0.00</div></div>
+        </div>
+        <p id="formMsg" class="field-error" style="margin-top:var(--space-3)"></p>
+        <div class="actions">
+          <button class="btn btn-primary" type="button" id="saveBtn">Save request</button>
+          <button class="btn" type="button" id="clearBtn">Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Requests</h2><span class="muted" style="font-size:.82rem" id="pendingNote"></span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="list">
+          <thead><tr><th>Number</th><th>Payee</th><th>Cost center</th><th>Due date</th><th class="r">Total</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The due date is the document date plus the payee's credit days, so treasury sees what is coming before it is due.</li>
+        <li>Expense accounts (code 6) only appear enabled when the selected cost center has budget for them. The rest stay visible but disabled, with the reason.</li>
+        <li>Lines marked non-deductible are still paid, but they are reported apart for taxes.</li>
+        <li>Every request starts as pending. Rejecting one requires a reason, which goes back to the person who asked.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- Reject -->
+  <div class="modal-backdrop" id="rejectModal" role="dialog" aria-modal="true" aria-labelledby="rejTitle">
+    <div class="modal sm">
+      <div class="modal-head"><h2 id="rejTitle">Reject request</h2></div>
+      <div class="modal-body">
+        <div class="field"><label for="rejReason">Reason</label><textarea class="input" id="rejReason" maxlength="240" placeholder="Tell the requester what to fix"></textarea><span class="field-error" id="eRej"></span></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" type="button" id="rejOk">Reject request</button>
+        <button class="btn" type="button" id="rejClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    let touched = false; // show errors only after the first save attempt
+    const ACCOUNTS = [
+      ["1-05-01-01-001", "Prepaid expenses"], ["1-04-02-01-001", "Office equipment"],
+      ["6-02-01-01-001", "Rent"], ["6-02-01-01-002", "Utilities"], ["6-02-02-01-001", "Fuel"], ["6-02-02-01-002", "Vehicle maintenance"],
+      ["6-03-01-01-001", "Office supplies"], ["6-03-01-01-002", "Software subscriptions"], ["6-03-02-01-001", "Professional fees"],
+      ["6-03-02-01-002", "Cleaning services"], ["6-03-03-01-001", "Advertising"], ["6-03-03-01-002", "Travel and meals"]
+    ];
+    const accName = {}; ACCOUNTS.forEach(a => accName[a[0]] = a[1]);
+    const isExp = c => c.charAt(0) === "6";
+    const rb = UI.rng(3141);
+    const BUDGET = {}; // center -> Set of budgeted expense accounts
+    D.costCenters.forEach(c => { BUDGET[c] = new Set(ACCOUNTS.filter(a => isExp(a[0]) && rb() > 0.45).map(a => a[0])); });
+    const CREDITORS = ["City Power & Light", "Metro Water Utility", "Office Plus Supplies", "Rapid Fleet Service", "Clean Team Services", "Bright Ads Agency", "Ledger & Co. Accountants"];
+    const PAYEES = D.suppliers.map(s => ({ name: s, kind: "Supplier", days: 30 })).concat(CREDITORS.map((c, i) => ({ name: c, kind: "Creditor", days: [15, 15, 30, 30, 15, 45, 30][i] })));
+
+    const ICONS = {
+      pending: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+      approved: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>',
+      rejected: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>'
+    };
+    const STATUS = { pending: ["chip-warn", "Pending approval"], approved: ["chip-pos", "Approved"], rejected: ["chip-neg", "Rejected"] };
+
+    // ---- Header ----
+    $("#payee").html('<option value=""></option>' + PAYEES.map((p, i) => '<option value="' + i + '">' + p.name + " · " + p.kind + "</option>").join(""))
+      .select2({ placeholder: "Search supplier or creditor", width: "100%" });
+    $("#center").html('<option value="">Choose…</option>' + D.costCenters.map(c => "<option>" + c + "</option>").join(""));
+    const today = "2026-11-17";
+    $("#docDate").val(today);
+    function addDays(iso, n) { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return UI.fmtDate(d); }
+    function updateDue() {
+      const d = $("#docDate").val(), n = parseInt($("#credit").val(), 10);
+      $("#due").val(d && !isNaN(n) ? addDays(d, n) : "");
+    }
+    $("#payee").on("change", function () { const p = PAYEES[this.value]; if (p) $("#credit").val(p.days); updateDue(); validate(); });
+    $("#docDate").on("change", () => { updateDue(); validate(); });
+    $("#credit").on("input", function () { this.value = this.value.replace(/\D/g, ""); updateDue(); validate(); });
+    updateDue();
+
+    // ---- Lines ----
+    const tbody = document.querySelector("#lines tbody");
+    function accOptions() {
+      const c = $("#center").val();
+      return '<option value=""></option>' + ACCOUNTS.map(a => {
+        const off = isExp(a[0]) && (!c || !BUDGET[c].has(a[0]));
+        const why = !c ? " (choose a cost center first)" : " (no budget in " + c + ")";
+        return '<option value="' + a[0] + '"' + (off ? " disabled" : "") + ">" + a[0] + " · " + a[1] + (off ? why : "") + "</option>";
+      }).join("");
+    }
+    function addLine() {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td class="c-acc"><select class="acc" aria-label="Account"></select><div class="row-err" data-e="acc"></div></td>' +
+        '<td class="c-desc"><input class="input desc" maxlength="120" aria-label="Line description"><div class="row-err" data-e="desc"></div></td>' +
+        '<td class="c-qty"><input class="input num qty" inputmode="numeric" maxlength="5" value="1" aria-label="Quantity"><div class="row-err" data-e="qty"></div></td>' +
+        '<td class="c-price"><input class="input num price" inputmode="decimal" aria-label="Unit price"><div class="row-err" data-e="price"></div></td>' +
+        '<td class="c-nd"><input type="checkbox" class="nd" aria-label="Non-deductible"></td>' +
+        '<td class="c-tot r num tot">0.00</td>' +
+        '<td><button class="btn icon-btn rm" type="button" aria-label="Remove line">×</button></td>';
+      tbody.appendChild(tr);
+      const $acc = $(tr.querySelector(".acc")).html(accOptions()).select2({ placeholder: "Search by code or name", width: "100%" });
+      $acc.on("change", validate);
+      UI.maskMoney(tr.querySelector(".price"));
+      tr.querySelector(".qty").addEventListener("input", function () { this.value = this.value.replace(/\D/g, ""); validate(); });
+      tr.querySelector(".price").addEventListener("input", validate);
+      tr.querySelector(".price").addEventListener("blur", validate);
+      tr.querySelector(".desc").addEventListener("input", validate);
+      tr.querySelector(".nd").addEventListener("change", validate);
+      tr.querySelector(".rm").addEventListener("click", () => { $acc.select2("destroy"); tr.remove(); validate(); });
+      return tr;
+    }
+    document.getElementById("addLine").addEventListener("click", () => { const tr = addLine(); $(tr.querySelector(".acc")).select2("open"); });
+
+    $("#center").on("change", () => {
+      // Rebuild the account lists for the new center; keep the chosen account so its error can be shown.
+      $(tbody).find("tr").each(function () {
+        const $s = $(this).find(".acc"), v = $s.val();
+        $s.html(accOptions());
+        if (v) { if (!$s.find('option[value="' + v + '"]').length) $s.append('<option value="' + v + '">' + v + "</option>"); $s.find('option[value="' + v + '"]').prop("disabled", false); $s.val(v); }
+        $s.trigger("change.select2");
+      });
+      const c = $("#center").val();
+      $("#budgetHint").text(c ? c + " has budget for " + BUDGET[c].size + " expense accounts. Others are shown disabled." : "Choose a cost center to see which expense accounts you can use.");
+      validate();
+    });
+    $("#center").trigger("change");
+
+    function validate() {
+      const c = $("#center").val();
+      let sub = 0, nd = 0, ok = true;
+      const rows = [...tbody.querySelectorAll("tr")];
+      rows.forEach(tr => {
+        const acc = $(tr).find(".acc").val(), desc = tr.querySelector(".desc").value.trim();
+        const qty = parseInt(tr.querySelector(".qty").value, 10) || 0, price = UI.parseMoney(tr.querySelector(".price").value);
+        const tot = Math.round(qty * price * 100) / 100;
+        tr.querySelector(".tot").textContent = UI.fmtMoney(tot);
+        sub += tot; if (tr.querySelector(".nd").checked) nd += tot;
+        const err = {};
+        if (!acc) err.acc = "Choose an account.";
+        else if (isExp(acc) && (!c || !BUDGET[c].has(acc))) err.acc = c ? "No budget for this account in " + c + "." : "Choose a cost center first.";
+        if (desc.length < 3) err.desc = "Describe the line.";
+        if (qty < 1) err.qty = "At least 1.";
+        if (price <= 0) err.price = "Enter a price.";
+        tr.querySelectorAll("[data-e]").forEach(el => { el.textContent = touched ? (err[el.dataset.e] || "") : ""; });
+        if (Object.keys(err).length) ok = false;
+      });
+      // Tax is paid on every line; non-deductible lines are only reported apart.
+      const tax = Math.round(sub * 0.15 * 100) / 100;
+      $("#tSub").text(UI.fmtMoney(sub)); $("#tTax").text(UI.fmtMoney(tax)); $("#tTotal").text(UI.fmtMoney(sub + tax)); $("#tNd").text(UI.fmtMoney(nd));
+      const head = {
+        ePayee: $("#payee").val() ? "" : "Choose who will be paid.",
+        eCenter: c ? "" : "Choose a cost center.",
+        eRef: $("#docRef").val().trim() ? "" : "Enter the document number.",
+        eDate: $("#docDate").val() ? "" : "Enter the document date.",
+        eCredit: $("#credit").val() !== "" && +$("#credit").val() <= 180 ? "" : "Between 0 and 180 days."
+      };
+      Object.keys(head).forEach(k => { $("#" + k).text(touched ? head[k] : ""); if (head[k]) ok = false; });
+      if (!rows.length) ok = false;
+      $("#formMsg").text(touched && !rows.length ? "Add at least one line." : "");
+      return { ok, sub, tax, total: sub + tax, nd };
+    }
+    $("#docRef").on("input", validate);
+
+    // ---- Requests list ----
+    const r = UI.rng(8080);
+    let seq = 2310;
+    const requests = [];
+    for (let i = 0; i < 6; i++) {
+      const p = UI.pick(r, PAYEES), c = UI.pick(r, D.costCenters), total = Math.round(UI.between(r, 900, 24000) * 100) / 100;
+      requests.push({ no: "PR-" + (seq++), payee: p.name, center: c, due: addDays("2026-11-" + String(2 + i * 2).padStart(2, "0"), p.days), total, status: i < 3 ? "pending" : i === 5 ? "rejected" : "approved", reason: i === 5 ? "Missing the signed receipt." : "" });
+    }
+    $("#nextNo").text("Next: PR-" + seq);
+    function renderList() {
+      document.querySelector("#list tbody").innerHTML = requests.slice().reverse().map(q => {
+        const s = STATUS[q.status], i = requests.indexOf(q);
+        return '<tr><td class="num">' + q.no + "</td><td>" + q.payee + "</td><td>" + q.center + '</td><td class="num">' + q.due + '</td><td class="r num">' + UI.fmtMoney(q.total) +
+          '</td><td><span class="status ' + s[0] + '">' + ICONS[q.status] + s[1] + "</span>" + (q.reason ? '<div class="hint">' + $("<div>").text(q.reason).html() + "</div>" : "") + "</td><td>" +
+          (q.status === "pending" ? '<div style="display:flex;gap:6px"><button class="btn btn-primary" type="button" data-ok="' + i + '">Approve</button><button class="btn" type="button" data-no="' + i + '">Reject</button></div>' : "") + "</td></tr>";
+      }).join("");
+      const pend = requests.filter(q => q.status === "pending");
+      document.querySelector("#list tfoot").innerHTML = '<tr><td colspan="4">Pending approval</td><td class="r num">' + UI.fmtMoney(pend.reduce((a, q) => a + q.total, 0)) + '</td><td colspan="2">' + pend.length + " request" + (pend.length === 1 ? "" : "s") + "</td></tr>";
+      $("#pendingNote").text(pend.length + " waiting for approval");
+    }
+    renderList();
+
+    let rejIdx = null;
+    document.querySelector("#list tbody").addEventListener("click", e => {
+      const ok = e.target.closest("[data-ok]"), no = e.target.closest("[data-no]");
+      if (ok) { const q = requests[+ok.dataset.ok]; q.status = "approved"; renderList(); UI.toast(q.no + " approved and sent to the payment schedule"); }
+      if (no) { rejIdx = +no.dataset.no; $("#rejReason").val("").attr("aria-invalid", false); $("#eRej").text(""); $("#rejTitle").text("Reject " + requests[rejIdx].no); UI.openModal("rejectModal"); }
+    });
+    $("#rejOk").on("click", () => {
+      const v = $("#rejReason").val().trim();
+      if (v.length < 5) { $("#eRej").text("A reason is required (at least 5 characters)."); $("#rejReason").attr("aria-invalid", true).focus(); return; }
+      requests[rejIdx].status = "rejected"; requests[rejIdx].reason = v;
+      UI.closeModal("rejectModal"); renderList(); UI.toast(requests[rejIdx].no + " rejected");
+    });
+    $("#rejClose").on("click", () => UI.closeModal("rejectModal"));
+
+    function clearForm() {
+      touched = false;
+      $(tbody).find(".acc").each(function () { $(this).select2("destroy"); });
+      tbody.innerHTML = "";
+      $("#payee").val("").trigger("change.select2"); $("#center").val("").trigger("change"); $("#docRef").val(""); $("#docDate").val(today); $("#credit").val("30");
+      updateDue(); addLine(); validate();
+    }
+    $("#clearBtn").on("click", clearForm);
+    $("#saveBtn").on("click", () => {
+      touched = true;
+      const v = validate();
+      if (!v.ok) { const first = document.querySelector(".field-error:not(:empty), .row-err:not(:empty)"); if (first) first.scrollIntoView({ block: "center", behavior: "smooth" }); return; }
+      const p = PAYEES[$("#payee").val()];
+      const q = { no: "PR-" + (seq++), payee: p.name, center: $("#center").val(), due: $("#due").val(), total: v.total, status: "pending", reason: "" };
+      requests.push(q); renderList(); $("#nextNo").text("Next: PR-" + seq);
+      UI.toast(q.no + " saved · Pending approval");
+      clearForm();
+    });
+    addLine(); validate();
+  });
+  </script>
+</body>
+</html>

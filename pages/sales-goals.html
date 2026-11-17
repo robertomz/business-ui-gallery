@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sales Goals · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .kpis-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .chart-box { position: relative; height: 280px; }
+    .status { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+    .status svg { width: 13px; height: 13px; }
+    .s-ahead { background: var(--positive-bg); color: var(--positive); }
+    .s-track { background: var(--info-bg); color: var(--info); }
+    .s-behind { background: var(--warning-bg); color: var(--warning); }
+    .s-risk { background: var(--negative-bg); color: var(--negative); }
+    tr.seller-row { cursor: pointer; }
+    tr.seller-row[aria-selected="true"] td { background: var(--info-bg); }
+    .pace { position: relative; height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); min-width: 110px; }
+    .pace > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; }
+    .pace > i { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text); }
+    .legend { display: flex; gap: var(--space-3); flex-wrap: wrap; font-size: .8rem; }
+    @media (max-width: 1100px) { .kpis-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .two { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .kpis-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body data-page="sales-goals" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Sales goals</h1>
+        <p class="muted">November 2026, closed through Nov 16. The pace counts working days only, so a Sunday does not count against anyone.</p>
+      </div>
+    </div>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fSeller">Seller</label><select id="fSeller" multiple></select></div>
+        <div class="field"><label for="fRegion">Region</label><select id="fRegion" multiple></select></div>
+        <div class="field"><label for="fStatus">Status</label><select id="fStatus" multiple></select></div>
+        <div class="field"><label>&nbsp;</label><button class="btn" id="clearBtn" type="button">Clear filters</button></div>
+      </div>
+    </section>
+
+    <section class="kpis kpis-5" aria-label="Totals for the selected sellers" aria-live="polite">
+      <div class="card kpi"><div class="kpi-label">Month goal</div><div class="kpi-value" id="kGoal"></div></div>
+      <div class="card kpi"><div class="kpi-label">Sold to date</div><div class="kpi-value" id="kSold"></div></div>
+      <div class="card kpi"><div class="kpi-label">Expected to date</div><div class="kpi-value" id="kExp"></div><div class="kpi-delta muted" id="kDays"></div></div>
+      <div class="card kpi"><div class="kpi-label">Achieved vs pace</div><div class="kpi-value" id="kPace"></div></div>
+      <div class="card kpi"><div class="kpi-label">Projection to month end</div><div class="kpi-value" id="kProj"></div><div class="kpi-delta" id="kProjD"></div></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>By seller</h2>
+        <div class="legend muted" aria-label="Status legend">
+          <span>Ahead: 105% of pace or more</span><span>On track: 95–105%</span><span>Behind: 85–95%</span><span>At risk: below 85%</span>
+        </div>
+      </div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="sellers">
+          <thead><tr>
+            <th>Seller</th><th>Region</th><th class="r">Goal</th><th class="r">Sold</th><th class="r">Expected</th><th>Pace</th><th class="r">vs pace</th><th class="r">Projection</th><th>Status</th>
+          </tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+        <p class="muted" style="font-size:.8rem;margin-top:8px">The black mark on each bar is where the seller should be today. Select a seller to see their customers and chart.</p>
+      </div>
+    </section>
+
+    <section class="two">
+      <div class="card">
+        <div class="card-head"><h2 id="chartTitle">Cumulative sales vs goal</h2></div>
+        <div class="card-body"><div class="chart-box"><canvas id="cum" role="img" aria-label="Cumulative sales compared with the goal line"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2 id="custTitle">Customers</h2><span class="muted" style="font-size:.82rem" id="custNote"></span></div>
+        <div class="card-body table-wrap" style="max-height:330px;overflow:auto">
+          <table class="grid" id="customers"><thead><tr><th>Customer</th><th class="r">Goal</th><th class="r">Sold</th><th class="r">vs pace</th><th>Status</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each seller's goal is the sum of their customers' monthly goals, so the drill-down always adds up to the seller row.</li>
+        <li>Expected to date = goal × working days elapsed ÷ working days in the month. Sundays and holidays are excluded on both sides.</li>
+        <li>Projection extends the current daily average over the working days left; it is a reference, not a forecast model.</li>
+        <li>Status always shows an icon and a word, not only a color, and the totals follow the filters.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const HOLIDAYS = ["2026-11-02"];
+    const YEAR = 2026, MONTH = 10, CUTOFF = 16; // November, closed through the 16th
+    const daysInMonth = new Date(Date.UTC(YEAR, MONTH + 1, 0)).getUTCDate();
+    const isWorking = d => { const dt = new Date(Date.UTC(YEAR, MONTH, d)); return dt.getUTCDay() !== 0 && !HOLIDAYS.includes(UI.fmtDate(dt)); };
+    const workDays = []; for (let d = 1; d <= daysInMonth; d++) if (isWorking(d)) workDays.push(d);
+    const elapsed = workDays.filter(d => d <= CUTOFF).length, totalWD = workDays.length;
+    const paceFactor = elapsed / totalWD;
+
+    const SELLER_REGION = {};
+    D.sellers.forEach((s, i) => SELLER_REGION[s] = ["North", "Center", "Coast", "West"][i % 4]);
+
+    // Customers per seller with goals and daily sales to the cut-off.
+    const sellers = D.sellers.map((s, si) => {
+      const r = UI.rng(500 + si * 13);
+      const strength = UI.between(r, 0.72, 1.18);
+      const customers = [];
+      const n = 6 + Math.floor(r() * 5);
+      for (let c = 0; c < n; c++) {
+        const name = D.customers[(si * 3 + c * 7) % D.customers.length] + (c >= 4 ? " #" + (c + 1) : "");
+        const goal = Math.round(UI.between(r, 8000, 42000) / 100) * 100;
+        const cs = strength * UI.between(r, 0.7, 1.3);
+        const daily = {};
+        workDays.filter(d => d <= CUTOFF).forEach(d => { daily[d] = goal / totalWD * cs * UI.between(r, 0.4, 1.6); });
+        customers.push({ name, goal, daily });
+      }
+      return { seller: s, region: SELLER_REGION[s], customers };
+    });
+
+    function calc(goal, daily) {
+      const sold = Object.values(daily).reduce((a, v) => a + v, 0);
+      const expected = goal * paceFactor;
+      const vsPace = expected ? sold / expected : 0;
+      const projection = elapsed ? sold / elapsed * totalWD : 0;
+      return { goal, sold, expected, vsPace, projection, status: statusOf(vsPace) };
+    }
+    function statusOf(p) { return p >= 1.05 ? "ahead" : p >= 0.95 ? "track" : p >= 0.85 ? "behind" : "risk"; }
+    const STATUS = {
+      ahead: { text: "Ahead", cls: "s-ahead", icon: '<path d="M5 12l5 5 9-10"/>' },
+      track: { text: "On track", cls: "s-track", icon: '<path d="M5 12h14M13 6l6 6-6 6"/>' },
+      behind: { text: "Behind", cls: "s-behind", icon: '<path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/>' },
+      risk: { text: "At risk", cls: "s-risk", icon: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>' }
+    };
+    const statusHtml = s => '<span class="status ' + STATUS[s].cls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">' + STATUS[s].icon + "</svg>" + STATUS[s].text + "</span>";
+    function sellerCalc(x) {
+      const daily = {};
+      x.customers.forEach(c => Object.entries(c.daily).forEach(([d, v]) => daily[d] = (daily[d] || 0) + v));
+      return Object.assign({ seller: x.seller, region: x.region, customers: x.customers, daily }, calc(x.customers.reduce((a, c) => a + c.goal, 0), daily));
+    }
+    const rows = sellers.map(sellerCalc);
+
+    // Filters
+    function fill(id, items, ph) {
+      $("#" + id).html(items.map(v => '<option value="' + v + '">' + (STATUS[v] ? STATUS[v].text : v) + "</option>").join("")).select2({ placeholder: ph, width: "100%" }).on("change", render);
+    }
+    fill("fSeller", D.sellers, "All sellers");
+    fill("fRegion", ["North", "Center", "Coast", "West"], "All regions");
+    fill("fStatus", Object.keys(STATUS), "All statuses");
+    document.getElementById("clearBtn").addEventListener("click", () => { $("#fSeller,#fRegion,#fStatus").val(null).trigger("change.select2"); render(); });
+
+    let selected = null, chart;
+
+    function filtered() {
+      const s = $("#fSeller").val() || [], r = $("#fRegion").val() || [], st = $("#fStatus").val() || [];
+      return rows.filter(x => (!s.length || s.includes(x.seller)) && (!r.length || r.includes(x.region)) && (!st.length || st.includes(x.status)));
+    }
+
+    function paceBar(x) {
+      const max = Math.max(x.goal, x.sold) || 1;
+      const color = { ahead: "var(--positive)", track: "var(--info)", behind: "var(--warning)", risk: "var(--negative)" }[x.status];
+      return '<div class="pace" aria-hidden="true"><span style="width:' + (x.sold / max * 100) + "%;background:" + color + '"></span><i style="left:' + (x.expected / max * 100) + '%"></i></div>';
+    }
+
+    function render() {
+      const data = filtered().sort((a, b) => b.vsPace - a.vsPace);
+      if (selected && !data.some(x => x.seller === selected)) selected = null;
+      const sum = k => data.reduce((a, x) => a + x[k], 0);
+      const goal = sum("goal"), sold = sum("sold"), exp = sum("expected"), proj = sum("projection");
+      document.getElementById("kGoal").textContent = UI.fmtMoney(goal);
+      document.getElementById("kSold").textContent = UI.fmtMoney(sold);
+      document.getElementById("kExp").textContent = UI.fmtMoney(exp);
+      document.getElementById("kDays").textContent = elapsed + " of " + totalWD + " working days";
+      document.getElementById("kPace").textContent = exp ? UI.fmtPct(sold / exp) : "–";
+      document.getElementById("kProj").textContent = UI.fmtMoney(proj);
+      document.getElementById("kProjD").innerHTML = goal ? '<span class="' + (proj >= goal ? "pos" : "neg") + '">' + (proj >= goal ? "▲ " : "▼ ") + UI.fmtPct(proj / goal) + "</span> <span class='muted'>of goal</span>" : "";
+
+      document.querySelector("#sellers tbody").innerHTML = data.length ? data.map(x =>
+        '<tr class="seller-row" tabindex="0" data-s="' + x.seller + '" aria-selected="' + (x.seller === selected) + '"><td>' + x.seller + "</td><td>" + x.region + '</td><td class="r num">' + UI.fmtMoney(x.goal) +
+        '</td><td class="r num">' + UI.fmtMoney(x.sold) + '</td><td class="r num">' + UI.fmtMoney(x.expected) + "</td><td>" + paceBar(x) +
+        '</td><td class="r num">' + UI.fmtPct(x.vsPace) + '</td><td class="r num">' + UI.fmtMoney(x.projection) + "</td><td>" + statusHtml(x.status) + "</td></tr>").join("")
+        : '<tr><td colspan="9" class="muted">No sellers match the filters.</td></tr>';
+      document.querySelector("#sellers tfoot").innerHTML = '<tr><td>Total (' + data.length + ')</td><td></td><td class="r num">' + UI.fmtMoney(goal) + '</td><td class="r num">' + UI.fmtMoney(sold) +
+        '</td><td class="r num">' + UI.fmtMoney(exp) + '</td><td></td><td class="r num">' + (exp ? UI.fmtPct(sold / exp) : "–") + '</td><td class="r num">' + UI.fmtMoney(proj) + "</td><td></td></tr>";
+      renderDetail(data);
+    }
+
+    function renderDetail(data) {
+      const sel = selected ? rows.find(x => x.seller === selected) : null;
+      const scope = sel ? [sel] : data;
+      document.getElementById("chartTitle").textContent = sel ? "Cumulative sales vs goal · " + sel.seller : "Cumulative sales vs goal · selection";
+      // Chart: cumulative actual (to cutoff) vs cumulative goal across working days.
+      const goal = scope.reduce((a, x) => a + x.goal, 0);
+      const labels = [], actual = [], goalLine = [];
+      let acc = 0, wd = 0;
+      for (let d = 1; d <= daysInMonth; d++) {
+        if (!isWorking(d)) continue;
+        wd++;
+        labels.push("Nov " + d);
+        goalLine.push(goal * wd / totalWD);
+        if (d <= CUTOFF) { acc += scope.reduce((a, x) => a + (x.daily[d] || 0), 0); actual.push(acc); } else actual.push(null);
+      }
+      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("cum"), {
+        type: "line",
+        data: { labels, datasets: [
+          { label: "Sold (cumulative)", data: actual, borderColor: UI.cssVar("--chart-1"), backgroundColor: UI.cssVar("--chart-1"), tension: .2, pointRadius: 0, borderWidth: 2.2, spanGaps: false },
+          { label: "Goal pace", data: goalLine, borderColor: text, borderDash: [5, 4], pointRadius: 0, borderWidth: 1.5 }
+        ] },
+        options: {
+          maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+          plugins: { legend: { labels: { color: text, boxWidth: 14 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + UI.fmtMoney(c.parsed.y) } } },
+          scales: { x: { ticks: { color: text, maxTicksLimit: 8 }, grid: { display: false } }, y: { ticks: { color: text, callback: v => Math.round(v / 1000) + "k" }, grid: { color: grid } } }
+        }
+      });
+
+      // Customers of the selected seller
+      const tb = document.querySelector("#customers tbody");
+      if (!sel) {
+        document.getElementById("custTitle").textContent = "Customers";
+        document.getElementById("custNote").textContent = "";
+        tb.innerHTML = '<tr><td colspan="5" class="muted">Select a seller in the table above to see their customers.</td></tr>';
+        return;
+      }
+      const cust = sel.customers.map(c => Object.assign({ name: c.name }, calc(c.goal, c.daily))).sort((a, b) => a.vsPace - b.vsPace);
+      document.getElementById("custTitle").textContent = "Customers · " + sel.seller;
+      document.getElementById("custNote").textContent = cust.length + " customers, goals add up to " + UI.fmtMoney(sel.goal);
+      tb.innerHTML = cust.map(c => "<tr><td>" + c.name + '</td><td class="r num">' + UI.fmtMoney(c.goal) + '</td><td class="r num">' + UI.fmtMoney(c.sold) + '</td><td class="r num">' + UI.fmtPct(c.vsPace) + "</td><td>" + statusHtml(c.status) + "</td></tr>").join("");
+    }
+
+    const tbody = document.querySelector("#sellers tbody");
+    tbody.addEventListener("click", e => { const tr = e.target.closest("tr.seller-row"); if (!tr) return; selected = selected === tr.dataset.s ? null : tr.dataset.s; render(); const t = tbody.querySelector('tr[data-s="' + tr.dataset.s + '"]'); if (t) t.focus(); });
+    tbody.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr.seller-row")) { e.preventDefault(); e.target.click(); } });
+    document.addEventListener("themechange", () => renderDetail(filtered()));
+    render();
+  });
+  </script>
+</body>
+</html>

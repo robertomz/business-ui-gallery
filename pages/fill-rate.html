@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order Fill Rate · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .kpis-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .chart-box { position: relative; height: 320px; }
+    #lines { font-size: .84rem; }
+    #lines td, #lines th { white-space: nowrap; padding: 6px 10px; }
+    #lines tbody tr { height: 34px; }
+    #lines tbody td { border-bottom: 1px solid var(--border); }
+    #lines tbody tr, #lines tbody td { background: var(--surface) !important; box-shadow: none !important; color: var(--text); }
+    #lines tbody tr:hover td { background: var(--surface-2) !important; }
+    #lines tfoot td { font-weight: 600; background: var(--surface-2); border-top: 1px solid var(--border); padding: 8px 10px; }
+    .dataTables_scrollHead thead th { font-family: var(--font-sans) !important; padding: 8px 10px !important; white-space: nowrap; background: var(--surface-2); color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
+    .dataTables_scrollFoot, .dataTables_scrollHead { background: var(--surface-2); }
+    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field { margin-top: 8px; color: var(--text); font-family: inherit; }
+    .reason { display: inline-flex; align-items: center; gap: 4px; font-size: .76rem; font-weight: 500; padding: 1px 8px; border-radius: 999px; }
+    .reason svg { width: 12px; height: 12px; }
+    .r-ok { background: var(--positive-bg); color: var(--positive); }
+    .r-stock { background: var(--negative-bg); color: var(--negative); }
+    .r-cancel { background: var(--warning-bg); color: var(--warning); }
+    .r-price { background: var(--info-bg); color: var(--info); }
+    .group-scroll { max-height: 340px; overflow: auto; }
+    @media (max-width: 1100px) { .kpis-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .two { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .kpis-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body data-page="fill-rate" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Order fill rate</h1>
+        <p class="muted">What customers ordered against what was invoiced in November 2026, and why the rest was lost.</p>
+      </div>
+    </div>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fBranch">Branch</label><select id="fBranch" multiple></select></div>
+        <div class="field"><label for="fSeller">Seller</label><select id="fSeller" multiple></select></div>
+        <div class="field"><label for="fCategory">Category</label><select id="fCategory" multiple></select></div>
+        <div class="field"><label for="fReason">Result</label><select id="fReason" multiple></select></div>
+        <div class="field"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Order, customer, product…"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn" id="clearBtn" type="button">Clear filters</button></div>
+      </div>
+    </section>
+
+    <section class="kpis kpis-5" aria-label="Totals for the filtered lines" aria-live="polite">
+      <div class="card kpi"><div class="kpi-label">Orders</div><div class="kpi-value" id="kOrders">–</div><div class="kpi-delta muted" id="kLines"></div></div>
+      <div class="card kpi"><div class="kpi-label">Fill rate by lines</div><div class="kpi-value" id="kFillL">–</div><div class="kpi-delta muted">Lines invoiced complete</div></div>
+      <div class="card kpi"><div class="kpi-label">Fill rate by value</div><div class="kpi-value" id="kFillV">–</div><div class="kpi-delta muted">Invoiced ÷ ordered</div></div>
+      <div class="card kpi"><div class="kpi-label">Ordered value</div><div class="kpi-value" id="kOrd">–</div></div>
+      <div class="card kpi"><div class="kpi-label">Lost sales</div><div class="kpi-value neg" id="kLost">–</div><div class="kpi-delta muted" id="kLostD"></div></div>
+    </section>
+
+    <section class="two">
+      <div class="card">
+        <div class="card-head">
+          <h2>Summary</h2>
+          <div class="field" style="width:170px"><label for="groupBy">Group by</label>
+            <select class="input" id="groupBy"><option value="product">Product</option><option value="seller">Seller</option><option value="branch" selected>Branch</option><option value="reason">Result</option></select>
+          </div>
+        </div>
+        <div class="card-body group-scroll">
+          <table class="grid" id="groups"><thead><tr><th id="gHead">Branch</th><th class="r">Lines</th><th class="r">Ordered</th><th class="r">Invoiced</th><th class="r">Fill (value)</th><th class="r">Lost</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Top 10 products by lost value</h2></div>
+        <div class="card-body"><div class="chart-box"><canvas id="topChart" role="img" aria-label="Bar chart of the ten products with the most lost sales value"></canvas></div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Order lines</h2><span class="muted" style="font-size:.82rem" id="loadNote"></span></div>
+      <div class="card-body">
+        <table id="lines" style="width:100%">
+          <thead><tr>
+            <th>Order</th><th>Date</th><th>Branch</th><th>Seller</th><th>Customer</th><th>Product</th>
+            <th class="r">Ordered</th><th class="r">Invoiced</th><th class="r">Ordered value</th><th class="r">Invoiced value</th><th class="r">Lost</th><th>Result</th>
+          </tr></thead>
+          <tfoot><tr><td colspan="6">Total (filtered)</td><td class="r num" id="fOq"></td><td class="r num" id="fIq"></td><td class="r num" id="fOv"></td><td class="r num" id="fIv"></td><td class="r num" id="fLost"></td><td></td></tr></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each order line is matched with the invoice that came from that order, so the fill rate is measured line by line, not by comparing monthly totals.</li>
+        <li>Fill rate by lines counts lines invoiced complete; fill rate by value weighs each line by its amount. Both are needed: many small misses hurt service, a few big ones hurt revenue.</li>
+        <li>Every missing unit gets a reason: no stock, cancelled by the customer or a price change. Only "no stock" is a purchasing problem.</li>
+        <li>The cards, the summary, the chart and the table footer all follow the same filters.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/scroller/2.3.0/js/dataTables.scroller.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const REASONS = {
+      ok: { text: "Complete", cls: "r-ok", icon: '<path d="M5 12l5 5 9-10"/>' },
+      stock: { text: "No stock", cls: "r-stock", icon: '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M4 4l16 16"/>' },
+      cancel: { text: "Cancelled", cls: "r-cancel", icon: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>' },
+      price: { text: "Price change", cls: "r-price", icon: '<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>' }
+    };
+    const reasonHtml = k => '<span class="reason ' + REASONS[k].cls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' + REASONS[k].icon + "</svg>" + REASONS[k].text + "</span>";
+    const PRICE = {}; D.products.forEach((p, i) => PRICE[p[0]] = [1.1, 2.4, 2.9, 1.3, 1.5, 6.8, 4.2, 3.6, 2.2, 2.7, 1.9, 2.5, 9.5, 2.8, 1.6, 3.1, 5.4, 2.6, 3.3, 1.8, 1.4, 1.2, 3.9, 1.7, 3.2][i] * 10);
+
+    // ~3,000 order lines
+    const r = UI.rng(4242);
+    const lines = [];
+    let orderNo = 71000;
+    for (let o = 0; o < 720; o++) {
+      orderNo++;
+      const day = 1 + Math.floor(r() * 16);
+      const branch = UI.pick(r, D.branches), seller = UI.pick(r, D.sellers), cust = UI.pick(r, D.customers);
+      const n = 2 + Math.floor(r() * 6);
+      for (let l = 0; l < n; l++) {
+        const p = D.products[Math.floor(r() * D.products.length)];
+        const oq = 6 + Math.floor(r() * 60);
+        const x = r();
+        let reason = "ok", iq = oq;
+        if (x < 0.13) { reason = "stock"; iq = Math.floor(oq * UI.between(r, 0, 0.7)); }
+        else if (x < 0.17) { reason = "cancel"; iq = 0; }
+        else if (x < 0.20) { reason = "price"; iq = Math.floor(oq * UI.between(r, 0.3, 0.8)); }
+        const price = PRICE[p[0]];
+        lines.push({ order: "SO-" + orderNo, date: "2026-11-" + String(day).padStart(2, "0"), branch, seller, cust, product: p[0], cat: p[1], oq, iq, ov: oq * price, iv: iq * price, lost: (oq - iq) * price, reason });
+      }
+    }
+
+    function fill(id, items, ph, labels) {
+      $("#" + id).html(items.map(v => '<option value="' + v + '">' + (labels ? labels[v].text : v) + "</option>").join("")).select2({ placeholder: ph, width: "100%" });
+    }
+    fill("fBranch", D.branches, "All branches");
+    fill("fSeller", D.sellers, "All sellers");
+    fill("fCategory", D.categories, "All categories");
+    fill("fReason", Object.keys(REASONS), "All results", REASONS);
+
+    // Custom filter using the select2 values
+    $.fn.dataTable.ext.search.push(function (settings, data, idx) {
+      if (settings.nTable.id !== "lines") return true;
+      const x = lines[idx];
+      const b = $("#fBranch").val(), s = $("#fSeller").val(), c = $("#fCategory").val(), rs = $("#fReason").val();
+      return (!b.length || b.includes(x.branch)) && (!s.length || s.includes(x.seller)) && (!c.length || c.includes(x.cat)) && (!rs.length || rs.includes(x.reason));
+    });
+
+    const table = $("#lines").DataTable({
+      data: lines.map(x => [x.order, x.date, x.branch, x.seller, x.cust, x.product, x.oq, x.iq, x.ov, x.iv, x.lost, x.reason]),
+      columns: [
+        {}, {}, {}, {}, {}, {},
+        { className: "r num" }, { className: "r num" },
+        { className: "r num", render: (v, t) => t === "display" ? UI.fmtMoney(v) : v },
+        { className: "r num", render: (v, t) => t === "display" ? UI.fmtMoney(v) : v },
+        { className: "r num", render: (v, t) => t === "display" ? (v ? '<span class="neg">' + UI.fmtMoney(v) + "</span>" : UI.fmtMoney(0)) : v },
+        { render: (v, t) => t === "display" ? reasonHtml(v) : REASONS[v].text }
+      ],
+      deferRender: true, scrollY: 420, scrollX: true, scroller: { rowHeight: 34, displayBuffer: 4 },
+      order: [[1, "desc"], [0, "desc"]], dom: "rti", autoWidth: false,
+      language: { info: "_TOTAL_ lines", infoFiltered: "(of _MAX_)", infoEmpty: "No lines match the filters", zeroRecords: "No lines match the filters" }
+    });
+    document.getElementById("loadNote").textContent = UI.fmtInt(lines.length) + " lines from " + UI.fmtInt(orderNo - 71000) + " orders";
+
+    let chart;
+    function filteredRows() { return table.rows({ search: "applied" }).indexes().toArray().map(i => lines[i]); }
+
+    function summarize() {
+      const rows = filteredRows();
+      const sum = k => rows.reduce((a, x) => a + x[k], 0);
+      const ov = sum("ov"), iv = sum("iv"), lost = sum("lost");
+      const orders = new Set(rows.map(x => x.order)).size;
+      const complete = rows.filter(x => x.iq === x.oq).length;
+      document.getElementById("kOrders").textContent = UI.fmtInt(orders);
+      document.getElementById("kLines").textContent = UI.fmtInt(rows.length) + " lines";
+      document.getElementById("kFillL").textContent = rows.length ? UI.fmtPct(complete / rows.length) : "–";
+      document.getElementById("kFillV").textContent = ov ? UI.fmtPct(iv / ov) : "–";
+      document.getElementById("kOrd").textContent = UI.fmtMoney(ov);
+      document.getElementById("kLost").textContent = UI.fmtMoney(lost);
+      const lostStock = rows.filter(x => x.reason === "stock").reduce((a, x) => a + x.lost, 0);
+      document.getElementById("kLostD").textContent = lost ? UI.fmtPct(lostStock / lost) + " of it from no stock" : "";
+      document.getElementById("fOq").textContent = UI.fmtInt(sum("oq"));
+      document.getElementById("fIq").textContent = UI.fmtInt(sum("iq"));
+      document.getElementById("fOv").textContent = UI.fmtMoney(ov);
+      document.getElementById("fIv").textContent = UI.fmtMoney(iv);
+      document.getElementById("fLost").textContent = UI.fmtMoney(lost);
+
+      // Group summary
+      const g = document.getElementById("groupBy").value;
+      const key = { product: "product", seller: "seller", branch: "branch", reason: "reason" }[g];
+      document.getElementById("gHead").textContent = { product: "Product", seller: "Seller", branch: "Branch", reason: "Result" }[g];
+      const map = new Map();
+      rows.forEach(x => { const k = x[key]; const m = map.get(k) || { n: 0, ov: 0, iv: 0, lost: 0 }; m.n++; m.ov += x.ov; m.iv += x.iv; m.lost += x.lost; map.set(k, m); });
+      const groups = [...map.entries()].sort((a, b) => b[1].lost - a[1].lost);
+      document.querySelector("#groups tbody").innerHTML = groups.length ? groups.map(([k, m]) =>
+        "<tr><td>" + (g === "reason" ? reasonHtml(k) : k) + '</td><td class="r num">' + UI.fmtInt(m.n) + '</td><td class="r num">' + UI.fmtMoney(m.ov) + '</td><td class="r num">' + UI.fmtMoney(m.iv) +
+        '</td><td class="r num">' + UI.fmtPct(m.ov ? m.iv / m.ov : 0) + '</td><td class="r num neg">' + UI.fmtMoney(m.lost) + "</td></tr>").join("") : '<tr><td colspan="6" class="muted">No lines match the filters.</td></tr>';
+      document.querySelector("#groups tfoot").innerHTML = '<tr><td>Total</td><td class="r num">' + UI.fmtInt(rows.length) + '</td><td class="r num">' + UI.fmtMoney(ov) + '</td><td class="r num">' + UI.fmtMoney(iv) + '</td><td class="r num">' + (ov ? UI.fmtPct(iv / ov) : "–") + '</td><td class="r num">' + UI.fmtMoney(lost) + "</td></tr>";
+
+      renderChart(rows);
+    }
+
+    function renderChart(rows) {
+      const map = new Map();
+      rows.forEach(x => { if (x.lost) map.set(x.product, (map.get(x.product) || 0) + x.lost); });
+      const top = [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("topChart"), {
+        type: "bar",
+        data: { labels: top.map(t => t[0]), datasets: [{ label: "Lost value", data: top.map(t => t[1]), backgroundColor: UI.cssVar("--chart-5"), borderRadius: 4 }] },
+        options: {
+          indexAxis: "y", maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => "Lost: " + UI.fmtMoney(c.parsed.x) } } },
+          scales: { x: { ticks: { color: text, callback: v => Math.round(v / 1000) + "k" }, grid: { color: grid } }, y: { ticks: { color: text, font: { size: 11 } }, grid: { display: false } } }
+        }
+      });
+    }
+
+    table.on("draw", summarize);
+    $("#fBranch,#fSeller,#fCategory,#fReason").on("change", () => table.draw());
+    let t;
+    document.getElementById("fSearch").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => table.search(e.target.value).draw(), 200); });
+    document.getElementById("groupBy").addEventListener("change", summarize);
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      $("#fBranch,#fSeller,#fCategory,#fReason").val(null).trigger("change.select2");
+      document.getElementById("fSearch").value = "";
+      table.search("").draw();
+    });
+    document.addEventListener("themechange", () => renderChart(filteredRows()));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => table.columns.adjust());
+    summarize();
+  });
+  </script>
+</body>
+</html>

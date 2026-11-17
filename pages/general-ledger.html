@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Journal Book · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .scroll { max-height: 600px; overflow: auto; }
+    #book td { white-space: nowrap; }
+    #book td.desc { white-space: normal; min-width: 220px; }
+    .xbtn { width: 30px; height: 30px; min-height: 30px; padding: 0; }
+    .xbtn svg { width: 14px; height: 14px; transition: transform .15s var(--ease); }
+    .xbtn[aria-expanded="true"] svg { transform: rotate(90deg); }
+    tr.detail > td { background: var(--surface-2); padding: 0 10px 10px 48px; }
+    tr.detail table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    tr.detail th, tr.detail td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+    tr.detail th { font-size: .72rem; text-transform: uppercase; color: var(--text-muted); }
+    .status { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 500; }
+    .status svg { width: 15px; height: 15px; }
+    .check-row label { display: inline-flex; gap: 6px; align-items: center; font-size: .88rem; cursor: pointer; }
+    .doc { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-4); background: var(--surface-2); }
+    .doc-head { display: flex; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-3); }
+    .doc-title { font-size: 1.05rem; font-weight: 600; letter-spacing: .02em; }
+    .ro { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px var(--space-4); margin: 0 0 var(--space-3); }
+    .ro dt { font-size: .76rem; color: var(--text-muted); }
+    .ro dd { margin: 0 0 6px; }
+    .steps { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); }
+    .steps span { font-size: .8rem; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); }
+    .steps span.on { background: var(--info-bg); color: var(--info); border-color: transparent; font-weight: 500; }
+    .countdown { font-family: var(--font-mono); font-size: 1rem; font-weight: 600; }
+    .code-box { font-family: var(--font-mono); font-size: 1.3rem; letter-spacing: .2em; padding: var(--space-3); text-align: center; border: 1px dashed var(--border); border-radius: var(--radius-sm); margin: var(--space-3) 0; }
+    .modal.md { width: min(760px, 100%); }
+  </style>
+</head>
+<body data-page="general-ledger" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Journal book</h1>
+        <p class="muted">Every entry of the period, checked for balance, with the document that created it one click away.</p>
+      </div>
+    </div>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fFrom">From</label><input class="input" type="date" id="fFrom"></div>
+        <div class="field"><label for="fTo">To</label><input class="input" type="date" id="fTo"></div>
+        <div class="field"><label for="fType">Entry type</label><select id="fType" multiple></select></div>
+        <div class="field"><label for="fSource">Source</label><select id="fSource" multiple></select></div>
+        <div class="field"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Number or description"></div>
+      </div>
+      <div class="check-row" style="margin-top:var(--space-3)"><label><input type="checkbox" id="fUnb"> Only unbalanced entries</label></div>
+    </section>
+
+    <section class="kpis" aria-label="Totals for the filtered entries" aria-live="polite">
+      <div class="card kpi"><div class="kpi-label">Entries</div><div class="kpi-value" id="kCount">–</div></div>
+      <div class="card kpi"><div class="kpi-label">Total debit</div><div class="kpi-value" id="kDebit">–</div></div>
+      <div class="card kpi"><div class="kpi-label">Total credit</div><div class="kpi-value" id="kCredit">–</div></div>
+      <div class="card kpi"><div class="kpi-label">Unbalanced</div><div class="kpi-value" id="kUnb">–</div><div class="kpi-delta muted" id="kUnbD"></div></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Entries</h2><span class="muted" style="font-size:.82rem">Expand a row to see its lines</span></div>
+      <div class="card-body">
+        <div class="table-wrap scroll">
+          <table class="grid" id="book">
+            <thead><tr><th><span class="sr-only">Expand</span></th><th>Number</th><th>Date</th><th>Type</th><th>Source</th><th>Description</th><th class="r">Debit</th><th class="r">Credit</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each entry is checked for balance; unbalanced ones are flagged with an icon and text, and can be filtered on their own.</li>
+        <li>"Source document" opens the document that generated the entry, and its layout changes with the source: an invoice, a payroll summary, a bank movement.</li>
+        <li>Posted entries are locked. Editing one needs an approval code that expires after five minutes.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- Source document -->
+  <div class="modal-backdrop" id="docModal" role="dialog" aria-modal="true" aria-labelledby="docTitle">
+    <div class="modal md">
+      <div class="modal-head"><h2 id="docTitle">Source document</h2><span class="chip chip-info" id="docChip"></span></div>
+      <div class="modal-body" id="docBody"></div>
+      <div class="modal-foot"><button class="btn" type="button" id="closeDoc">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Edit with approval -->
+  <div class="modal-backdrop" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="modal md">
+      <div class="modal-head"><h2 id="editTitle">Edit entry</h2><span id="editTimer"></span></div>
+      <div class="modal-body">
+        <div class="steps" aria-hidden="true"><span id="st1">1 Request</span><span id="st2">2 Enter code</span><span id="st3">3 Edit</span></div>
+        <div id="step1">
+          <p class="muted" style="margin-bottom:var(--space-3)">Posted entries are locked. Ask your supervisor for a one-time approval code.</p>
+          <div class="field"><label for="reqReason">Why do you need to edit it?</label><input class="input" id="reqReason" maxlength="160" placeholder="For example: wrong description on the invoice reference"><span class="field-error" id="eReason"></span></div>
+        </div>
+        <div id="step2" hidden>
+          <p class="muted">Code sent to your supervisor. In this demo it is shown here:</p>
+          <div class="code-box" id="demoCode" aria-label="Demo approval code"></div>
+          <div class="field"><label for="codeIn">Approval code</label><input class="input num" id="codeIn" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><span class="field-error" id="eCode"></span></div>
+        </div>
+        <div id="step3" hidden>
+          <p class="chip chip-pos" style="margin-bottom:var(--space-3)">Unlocked</p>
+          <div class="field"><label for="editDesc">Description</label><input class="input" id="editDesc" maxlength="200"><span class="field-error" id="eDesc"></span></div>
+          <p class="muted" style="font-size:.8rem;margin-top:var(--space-2)">Amounts come from the source document and can't be edited here.</p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" type="button" id="editPrimary">Request code</button>
+        <button class="btn" type="button" id="closeEdit">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(5521);
+    const A = {
+      cash: ["1-01-01-01-001", "Cash on hand"], bank: ["1-01-02-01-001", "Bank checking account"], ar: ["1-02-01-01-001", "Accounts receivable, customers"],
+      inv: ["1-03-01-01-001", "Merchandise inventory"], ap: ["2-01-01-01-001", "Accounts payable, suppliers"], sal: ["2-01-02-01-001", "Salaries payable"],
+      ss: ["2-01-02-01-002", "Social security payable"], tax: ["2-01-03-01-001", "Sales tax payable"], rev: ["4-01-01-01-001", "Sales revenue"],
+      ret: ["4-01-01-02-001", "Sales returns"], cogs: ["5-01-01-01-001", "Cost of goods sold"], salx: ["6-01-01-01-001", "Salaries expense"],
+      emp: ["6-01-01-01-002", "Employer contributions"], rent: ["6-02-01-01-001", "Rent"], fuel: ["6-02-02-01-001", "Fuel"], dep: ["6-04-01-01-001", "Depreciation expense"],
+      accdep: ["1-04-01-02-001", "Accumulated depreciation, vehicles"]
+    };
+    const round = v => Math.round(v * 100) / 100;
+    const SOURCES = ["Sales", "Purchases", "Returns", "Payroll", "Bank", "Manual"];
+    const TYPES = ["Daily", "Adjustment", "Provision", "Reclassification"];
+    const entries = [];
+    let no = 9001;
+    function add(date, type, source, desc, lines, doc) { entries.push({ no: "JB-" + (no++), date, type, source, desc, lines, doc }); }
+
+    for (let d = 1; d <= 16; d++) {
+      const date = "2026-11-" + String(d).padStart(2, "0");
+      D.branches.slice(0, 3).forEach(b => {
+        const net = round(UI.between(r, 18000, 62000)), tax = round(net * 0.15), cash = round((net + tax) * UI.between(r, .45, .7));
+        const lines = [{ a: A.cash, d: cash, c: 0 }, { a: A.ar, d: round(net + tax - cash), c: 0 }, { a: A.rev, d: 0, c: net }, { a: A.tax, d: 0, c: tax }];
+        add(date, "Daily", "Sales", "Sales of the day · " + b, lines, { kind: "invoice", branch: b, net, tax, invoices: 40 + Math.floor(r() * 90) });
+        const cost = round(net * UI.between(r, .62, .72));
+        add(date, "Daily", "Sales", "Cost of sales · " + b, [{ a: A.cogs, d: cost, c: 0 }, { a: A.inv, d: 0, c: cost }], { kind: "cost", branch: b, cost, net });
+      });
+      if (d % 2 === 0) {
+        const sup = UI.pick(r, D.suppliers), amt = round(UI.between(r, 8000, 45000));
+        add(date, "Daily", "Purchases", "Purchase · " + sup, [{ a: A.inv, d: amt, c: 0 }, { a: A.ap, d: 0, c: amt }], { kind: "purchase", supplier: sup, amt, ref: "PI-" + (3300 + d * 7) });
+      }
+      if (d % 3 === 0) {
+        const amt = round(UI.between(r, 300, 2400)), b = UI.pick(r, D.branches);
+        add(date, "Daily", "Returns", "Customer return · " + b, [{ a: A.ret, d: amt, c: 0 }, { a: A.cash, d: 0, c: amt }], { kind: "return", branch: b, amt, ref: "CN-" + (700 + d), customer: UI.pick(r, D.customers) });
+      }
+      if (d % 4 === 1) {
+        const sup = UI.pick(r, D.suppliers), amt = round(UI.between(r, 5000, 30000));
+        add(date, "Daily", "Bank", "Payment to " + sup, [{ a: A.ap, d: amt, c: 0 }, { a: A.bank, d: 0, c: amt }], { kind: "bank", payee: sup, amt, method: r() < .5 ? "Check" : "Transfer", ref: "CHK-" + (12040 + d) });
+      }
+    }
+    // Payroll (1st half) and some manual entries.
+    const gross = 412380.55, ssE = round(gross * .035), ssP = round(gross * .07);
+    add("2026-11-15", "Provision", "Payroll", "Payroll Nov 1–15", [{ a: A.salx, d: gross, c: 0 }, { a: A.emp, d: ssP, c: 0 }, { a: A.sal, d: 0, c: round(gross - ssE) }, { a: A.ss, d: 0, c: round(ssE + ssP) }],
+      { kind: "payroll", period: "Nov 1 – Nov 15, 2026", employees: 118, gross, ssE, ssP });
+    const manual = [["Adjustment", "Rent of November", A.rent, A.ap, 18500], ["Provision", "Depreciation of vehicles", A.dep, A.accdep, 7240.5], ["Reclassification", "Fuel charged to wrong account", A.fuel, A.rent, 1320.75]];
+    manual.forEach((m, i) => add("2026-11-" + String(5 + i * 4).padStart(2, "0"), m[0], "Manual", m[1], [{ a: m[2], d: m[4], c: 0 }, { a: m[3], d: 0, c: i === 2 ? m[4] - 20 : m[4] }], { kind: "manual", author: UI.pick(r, ["A. Torres", "C. Ramos"]) }));
+    // One unbalanced automatic entry to show the check.
+    const bad = entries[17]; bad.lines[bad.lines.length - 1].c = round(bad.lines[bad.lines.length - 1].c - 12.4);
+    entries.sort((a, b) => a.date === b.date ? (a.no < b.no ? -1 : 1) : (a.date < b.date ? -1 : 1));
+
+    const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>';
+    const ICON_BAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>';
+    const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+    const sumD = e => e.lines.reduce((a, l) => a + l.d, 0), sumC = e => e.lines.reduce((a, l) => a + l.c, 0);
+    const balanced = e => Math.abs(sumD(e) - sumC(e)) < 0.005;
+    const status = e => balanced(e) ? '<span class="status pos">' + ICON_OK + "Balanced</span>" : '<span class="status neg">' + ICON_BAD + "Unbalanced · " + UI.fmtMoney(Math.abs(sumD(e) - sumC(e))) + "</span>";
+
+    function fill(id, values) { $("#" + id).html(values.map(v => '<option value="' + v + '">' + v + "</option>").join("")).select2({ placeholder: "All", allowClear: true, width: "100%" }); }
+    fill("fType", TYPES); fill("fSource", SOURCES);
+    $("#fFrom").val("2026-11-01"); $("#fTo").val("2026-11-16");
+
+    const open = new Set();
+    function filtered() {
+      const from = $("#fFrom").val() || "0000", to = $("#fTo").val() || "9999";
+      const ty = $("#fType").val() || [], so = $("#fSource").val() || [], q = $("#fSearch").val().trim().toLowerCase(), unb = $("#fUnb").prop("checked");
+      return entries.filter(e => e.date >= from && e.date <= to && (!ty.length || ty.includes(e.type)) && (!so.length || so.includes(e.source)) &&
+        (!q || e.no.toLowerCase().includes(q) || e.desc.toLowerCase().includes(q)) && (!unb || !balanced(e)));
+    }
+    function render() {
+      const list = filtered();
+      const html = [];
+      list.forEach(e => {
+        const i = entries.indexOf(e), isOpen = open.has(i);
+        html.push('<tr><td><button class="btn icon-btn xbtn" type="button" data-x="' + i + '" aria-expanded="' + isOpen + '" aria-controls="det-' + i + '" aria-label="Show lines of ' + e.no + '">' + CHEV + "</button></td>" +
+          '<td class="num">' + e.no + '</td><td class="num">' + e.date + "</td><td>" + e.type + "</td><td>" + e.source + '</td><td class="desc">' + $("<div>").text(e.desc).html() + '</td><td class="r num">' + UI.fmtMoney(sumD(e)) +
+          '</td><td class="r num">' + UI.fmtMoney(sumC(e)) + "</td><td>" + status(e) + '</td><td style="display:flex;gap:6px"><button class="btn" type="button" data-doc="' + i + '">Source document</button><button class="btn" type="button" data-edit="' + i + '">Edit</button></td></tr>');
+        if (isOpen) html.push('<tr class="detail" id="det-' + i + '"><td colspan="10"><table><thead><tr><th>Account</th><th style="text-align:right">Debit</th><th style="text-align:right">Credit</th></tr></thead><tbody>' +
+          e.lines.map(l => '<tr><td><span class="num">' + l.a[0] + "</span> " + l.a[1] + '</td><td class="num" style="text-align:right">' + (l.d ? UI.fmtMoney(l.d) : "") + '</td><td class="num" style="text-align:right">' + (l.c ? UI.fmtMoney(l.c) : "") + "</td></tr>").join("") + "</tbody></table></td></tr>");
+      });
+      document.querySelector("#book tbody").innerHTML = html.join("") || '<tr><td colspan="10" class="muted">No entries match the filters</td></tr>';
+      const td = list.reduce((a, e) => a + sumD(e), 0), tc = list.reduce((a, e) => a + sumC(e), 0), unb = list.filter(e => !balanced(e)).length;
+      document.querySelector("#book tfoot").innerHTML = '<tr><td></td><td colspan="5">Total (filtered)</td><td class="r num">' + UI.fmtMoney(td) + '</td><td class="r num">' + UI.fmtMoney(tc) + '</td><td colspan="2">' + (Math.abs(td - tc) < 0.005 ? "" : '<span class="status neg">' + ICON_BAD + "Difference " + UI.fmtMoney(Math.abs(td - tc)) + "</span>") + "</td></tr>";
+      $("#kCount").text(UI.fmtInt(list.length)); $("#kDebit").text(UI.fmtMoney(td)); $("#kCredit").text(UI.fmtMoney(tc));
+      $("#kUnb").text(UI.fmtInt(unb)); $("#kUnbD").html(unb ? '<span class="neg">Needs review</span>' : '<span class="pos">All balanced</span>');
+    }
+
+    // ---- Source documents ----
+    function docHtml(e) {
+      const x = e.doc;
+      const head = (title, ref) => '<div class="doc-head"><div class="doc-title">' + title + '</div><div class="num muted">' + ref + "</div></div>";
+      const dl = pairs => '<dl class="ro">' + pairs.map(p => "<div><dt>" + p[0] + "</dt><dd>" + p[1] + "</dd></div>").join("") + "</dl>";
+      if (x.kind === "invoice") {
+        const rr = UI.rng(e.no.length * 991 + parseInt(e.no.slice(3)));
+        const lines = [0, 1, 2, 3].map(() => { const p = UI.pick(rr, D.products); const q = 6 + Math.floor(rr() * 60); return [p[0], q]; });
+        return '<div class="doc">' + head("Daily sales summary", "SUM-" + e.no.slice(3)) + dl([["Branch", x.branch], ["Date", e.date], ["Invoices", UI.fmtInt(x.invoices)], ["Net sales", UI.fmtMoney(x.net)], ["Sales tax", UI.fmtMoney(x.tax)], ["Total", UI.fmtMoney(x.net + x.tax)]]) +
+          '<table class="grid"><thead><tr><th>Top products</th><th class="r">Units</th></tr></thead><tbody>' + lines.map(l => "<tr><td>" + l[0] + '</td><td class="r num">' + l[1] + "</td></tr>").join("") + "</tbody></table></div>";
+      }
+      if (x.kind === "cost") return '<div class="doc">' + head("Cost of sales calculation", "COS-" + e.no.slice(3)) + dl([["Branch", x.branch], ["Date", e.date], ["Net sales", UI.fmtMoney(x.net)], ["Cost at average cost", UI.fmtMoney(x.cost)], ["Gross margin", UI.fmtPct(1 - x.cost / x.net)]]) + '<p class="muted" style="font-size:.84rem">Cost is each unit sold at the item\'s average cost on that day.</p></div>';
+      if (x.kind === "purchase") return '<div class="doc">' + head("Supplier invoice", x.ref) + dl([["Supplier", x.supplier], ["Date", e.date], ["Credit days", "30"], ["Due date", "2026-12-" + e.date.slice(8)], ["Total", UI.fmtMoney(x.amt)]]) + '<p class="muted" style="font-size:.84rem">Received in the main warehouse; the inventory entry uses the invoice cost.</p></div>';
+      if (x.kind === "return") return '<div class="doc">' + head("Credit note", x.ref) + dl([["Customer", x.customer], ["Branch", x.branch], ["Date", e.date], ["Amount refunded", UI.fmtMoney(x.amt)], ["Reason", "Damaged product"]]) + "</div>";
+      if (x.kind === "bank") return '<div class="doc">' + head("Bank movement", x.ref) + dl([["Bank account", "Checking ···· 4471"], ["Method", x.method], ["Payee", x.payee], ["Date", e.date], ["Amount", UI.fmtMoney(x.amt)], ["Applied to", "3 open invoices"]]) + "</div>";
+      if (x.kind === "payroll") return '<div class="doc">' + head("Payroll summary", "PR-2026-21") + dl([["Period", x.period], ["Employees", x.employees], ["Gross pay", UI.fmtMoney(x.gross)], ["Employee social security", UI.fmtMoney(x.ssE)], ["Employer contributions", UI.fmtMoney(x.ssP)], ["Net pay", UI.fmtMoney(x.gross - x.ssE)]]) + '<p class="muted" style="font-size:.84rem">Sample rates. The full breakdown per employee lives in the payroll run.</p></div>';
+      return '<div class="doc">' + head("Manual entry", e.no) + dl([["Entered by", x.author], ["Date", e.date], ["Type", e.type]]) + '<p class="muted" style="font-size:.84rem">Manual entries have no source document; the description and the author are the audit trail.</p></div>';
+    }
+
+    // ---- Approval code flow ----
+    let editIdx = null, step = 1, code = "", expires = 0, timer = null;
+    function setStep(s) {
+      step = s;
+      [1, 2, 3].forEach(n => { document.getElementById("step" + n).hidden = n !== s; document.getElementById("st" + n).classList.toggle("on", n === s); });
+      $("#editPrimary").text(s === 1 ? "Request code" : s === 2 ? "Unlock" : "Save changes");
+    }
+    function tick() {
+      const left = Math.max(0, Math.round((expires - Date.now()) / 1000));
+      $("#editTimer").html(left ? '<span class="countdown" aria-live="off">Expires in ' + Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0") + "</span>" : "");
+      if (!left && step === 3) { clearInterval(timer); setStep(1); $("#eReason").text("The approval expired. Request a new code."); }
+    }
+    function openEdit(i) {
+      editIdx = i; code = ""; clearInterval(timer); $("#editTimer").empty();
+      $("#editTitle").text("Edit entry " + entries[i].no);
+      $("#reqReason, #codeIn, #editDesc").val("").attr("aria-invalid", false); $("#eReason, #eCode, #eDesc").text("");
+      setStep(1); UI.openModal("editModal");
+    }
+    $("#editPrimary").on("click", () => {
+      if (step === 1) {
+        const reason = $("#reqReason").val().trim();
+        if (reason.length < 8) { $("#eReason").text("Explain the reason in at least 8 characters."); $("#reqReason").attr("aria-invalid", true).focus(); return; }
+        $("#eReason").text(""); $("#reqReason").attr("aria-invalid", false);
+        code = String(100000 + Math.floor(Math.random() * 900000));
+        $("#demoCode").text(code); setStep(2); $("#codeIn").focus();
+      } else if (step === 2) {
+        if ($("#codeIn").val().trim() !== code) { $("#eCode").text("The code doesn't match."); $("#codeIn").attr("aria-invalid", true).focus(); return; }
+        expires = Date.now() + 5 * 60 * 1000; tick(); timer = setInterval(tick, 1000);
+        $("#editDesc").val(entries[editIdx].desc); setStep(3); $("#editDesc").focus();
+      } else {
+        const v = $("#editDesc").val().trim();
+        if (v.length < 4) { $("#eDesc").text("The description is too short."); $("#editDesc").attr("aria-invalid", true); return; }
+        entries[editIdx].desc = v; clearInterval(timer); UI.closeModal("editModal"); render(); UI.toast(entries[editIdx].no + " updated; the change was logged with the approval");
+      }
+    });
+    $("#closeEdit").on("click", () => { clearInterval(timer); UI.closeModal("editModal"); });
+    $("#codeIn").on("input", function () { this.value = this.value.replace(/\D/g, ""); });
+
+    document.querySelector("#book tbody").addEventListener("click", ev => {
+      const x = ev.target.closest("[data-x]"), dc = ev.target.closest("[data-doc]"), ed = ev.target.closest("[data-edit]");
+      if (x) { const i = +x.dataset.x; open.has(i) ? open.delete(i) : open.add(i); render(); const b = document.querySelector('[data-x="' + i + '"]'); if (b) b.focus(); }
+      if (dc) { const e = entries[+dc.dataset.doc]; $("#docTitle").text("Source of " + e.no); $("#docChip").text(e.source); $("#docBody").html(docHtml(e)); UI.openModal("docModal"); }
+      if (ed) openEdit(+ed.dataset.edit);
+    });
+    $("#closeDoc").on("click", () => UI.closeModal("docModal"));
+
+    $("#fType, #fSource").on("change", render);
+    $("#fFrom, #fTo, #fUnb").on("change", render);
+    let t; $("#fSearch").on("input", () => { clearTimeout(t); t = setTimeout(render, 150); });
+    render();
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Payroll Run · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .kpis.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .steps { display: flex; gap: var(--space-2); list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+    .steps li { display: flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--text-muted); }
+    .steps .dot { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border); font-family: var(--font-mono); font-size: .8rem; }
+    .steps li[aria-current="step"] { color: var(--text); font-weight: 500; }
+    .steps li[aria-current="step"] .dot { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    .steps li.done .dot { background: var(--positive-bg); color: var(--positive); border-color: transparent; }
+    .steps li + li::before { content: ""; width: 20px; height: 1px; background: var(--border); }
+    .toolbar { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-3); flex-wrap: wrap; }
+    #emp { font-size: .84rem; }
+    #emp td, #emp th { white-space: nowrap; padding: 6px 10px; }
+    #emp tbody td { height: 38px; }
+    #emp td.dt-right, #emp th.dt-right { text-align: right; }
+    .dataTables_scrollHead th:first-child, .dataTables_scrollBody td:first-child, .dataTables_scrollFoot td:first-child, .dataTables_scrollFoot th:first-child {
+      position: sticky; left: 0; z-index: 1; background: var(--surface); border-right: 1px solid var(--border);
+    }
+    .dataTables_scrollHead th { background: var(--surface-2) !important; color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; }
+    .dataTables_scrollHead th:first-child, .dataTables_scrollFoot td:first-child, .dataTables_scrollFoot th:first-child { background: var(--surface-2) !important; }
+    .dataTables_scrollFoot td, .dataTables_scrollFoot th { background: var(--surface-2); font-weight: 600; text-align: right; }
+    table.dataTable tbody tr { background: transparent; }
+    table.dataTable.display tbody tr:hover > * { box-shadow: inset 0 0 0 9999px var(--surface-2) !important; }
+    table.dataTable tbody td { border-top: 1px solid var(--border) !important; }
+    .adj-btn { min-height: 30px; padding: 0 10px; font-size: .8rem; }
+    .pill { display: inline-block; margin-left: 4px; font-size: .7rem; padding: 0 6px; border-radius: 999px; background: var(--info-bg); color: var(--info); }
+    .phase { display: flex; gap: 8px; align-items: center; font-size: .88rem; padding: 4px 0; }
+    .phase .mark { width: 18px; text-align: center; }
+    pre.csv { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: var(--font-mono); font-size: .78rem; overflow-x: auto; margin: 0; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); align-items: start; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-4); }
+    .form-grid .span-2 { grid-column: 1 / -1; }
+    textarea.input { min-height: 72px; resize: vertical; }
+    .rules { font-size: .82rem; }
+    .rules td { padding: 4px 8px; }
+    @media (max-width: 1200px) { .kpis.five { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .kpis.five { grid-template-columns: 1fr 1fr; } .form-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 520px) { .kpis.five { grid-template-columns: 1fr; } }
+    .two > * { min-width: 0; }
+    .card { min-width: 0; }
+  </style>
+</head>
+<body data-page="payroll" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Payroll run</h1>
+        <p class="muted">Bi-weekly payroll: review every employee, adjust, then apply to create the bank file and the accounting entry.</p>
+      </div>
+      <div class="field" style="width:260px">
+        <label for="period">Period</label>
+        <select class="input" id="period"></select>
+      </div>
+    </div>
+
+    <section class="card card-body toolbar">
+      <ol class="steps" id="steps" aria-label="Payroll progress">
+        <li data-s="1"><span class="dot">1</span>Attendance</li>
+        <li data-s="2"><span class="dot">2</span>Earnings</li>
+        <li data-s="3"><span class="dot">3</span>Deductions</li>
+        <li data-s="4"><span class="dot">4</span>Review</li>
+        <li data-s="5"><span class="dot">5</span>Apply</li>
+      </ol>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="status"></span>
+        <button class="btn btn-primary" id="applyBtn" type="button">Apply payroll</button>
+      </div>
+    </section>
+
+    <section class="kpis five" aria-label="Payroll totals">
+      <div class="card kpi"><div class="kpi-label">Employees</div><div class="kpi-value" id="kEmp"></div><div class="kpi-delta muted" id="kEmpD"></div></div>
+      <div class="card kpi"><div class="kpi-label">Gross pay</div><div class="kpi-value" id="kGross"></div></div>
+      <div class="card kpi"><div class="kpi-label">Employee deductions</div><div class="kpi-value" id="kDed"></div></div>
+      <div class="card kpi"><div class="kpi-label">Employer contributions</div><div class="kpi-value" id="kEmpr"></div></div>
+      <div class="card kpi"><div class="kpi-label">Net pay</div><div class="kpi-value" id="kNet"></div></div>
+    </section>
+
+    <section class="card" id="processCard" hidden>
+      <div class="card-head"><h2>Applying payroll</h2><span class="num muted" id="pct">0%</span></div>
+      <div class="card-body">
+        <div class="progress" role="progressbar" aria-labelledby="pct" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pbar"><span></span></div>
+        <div id="phases" style="margin-top:10px" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="two" id="results" hidden>
+      <div class="card">
+        <div class="card-head"><h2>Bank transfer file</h2><button class="btn" id="csvBtn" type="button">Download CSV</button></div>
+        <div class="card-body"><pre class="csv" id="csv"></pre><p class="muted" style="font-size:.8rem;margin-top:6px" id="csvInfo"></p></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Accounting entry</h2><span id="entryChip"></span></div>
+        <div class="card-body table-wrap"><table class="grid" id="entry"><thead><tr><th>Account</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Employees in this run</h2><span class="muted" style="font-size:.82rem">Totals follow the search</span></div>
+      <div class="card-body">
+        <table id="emp" class="display" style="width:100%">
+          <thead><tr>
+            <th>Employee</th><th>Cost center</th><th class="dt-right">Base salary</th><th class="dt-right">Days</th><th class="dt-right">Overtime</th><th class="dt-right">Commissions</th><th class="dt-right">Bonuses</th>
+            <th class="dt-right">Gross</th><th class="dt-right">Social security</th><th class="dt-right">Pension fund</th><th class="dt-right">Income tax</th><th class="dt-right">Loans</th><th class="dt-right">Other</th><th class="dt-right">Net pay</th><th></th>
+          </tr></thead>
+          <tfoot><tr><th>Total</th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="two">
+      <div class="card">
+        <div class="card-head"><h2>Not in this run</h2></div>
+        <div class="card-body table-wrap"><table class="grid" id="missing"><thead><tr><th>Employee</th><th>Cost center</th><th>Reason</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Rules used (sample rates)</h2></div>
+        <div class="card-body">
+          <table class="grid rules">
+            <tbody>
+              <tr><td>Social security</td><td>Employee 3.5%, employer 7%, on gross up to a ceiling of 11,000.00 per period</td></tr>
+              <tr><td>Pension fund</td><td>Employee 4%, employer 4%, only on the part of gross above a floor of 6,850.00</td></tr>
+              <tr><td>Housing fund</td><td>Employer 1.5% of gross</td></tr>
+              <tr><td>Income tax</td><td>Gross × 24 minus 40,000.00 exempt; 0% to 200k, 15% to 500k, 20% to 1M, 25% above; divided by 24</td></tr>
+              <tr><td>Overtime</td><td>Hourly rate (monthly salary ÷ 240) × 1.5</td></tr>
+            </tbody>
+          </table>
+          <p class="muted" style="font-size:.78rem;margin-top:8px">These rates are invented for the demo. Real payroll rules depend on each country.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Payroll is built in steps: attendance sets the days worked, then earnings, then deductions, and nothing is posted until it is reviewed and applied.</li>
+        <li>Contributions with a ceiling or a floor are calculated per employee, which is where most payroll mistakes happen.</li>
+        <li>Manual bonuses and deductions need a reason and are kept per employee.</li>
+        <li>Applying creates the bank transfer file and one accounting entry: salaries by cost center, withholdings payable and net pay payable, one line per account.</li>
+        <li>People who are active but not in the run are listed with the reason, so nobody is left out by accident.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="adjModal" role="dialog" aria-modal="true" aria-labelledby="adjTitle">
+    <div class="modal" style="width:min(560px,100%)">
+      <div class="modal-head"><div><h2 id="adjTitle">Manual adjustment</h2><p class="muted" id="adjWho" style="font-size:.85rem"></p></div></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field"><label for="aType">Type</label><select class="input" id="aType"><option value="">Choose</option><option value="bonus">Bonus (adds to gross)</option><option value="deduction">Deduction (subtracts from net)</option></select><div class="field-error" id="aTypeErr"></div></div>
+          <div class="field"><label for="aAmt">Amount</label><input class="input num" id="aAmt" inputmode="decimal" aria-describedby="aAmtErr"><div class="field-error" id="aAmtErr"></div></div>
+          <div class="field span-2"><label for="aReason">Reason</label><textarea class="input" id="aReason" aria-describedby="aReasonErr"></textarea><div class="field-error" id="aReasonErr"></div></div>
+        </div>
+        <div id="adjList" style="margin-top:var(--space-3)"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="adjSave" type="button">Add adjustment</button>
+        <button class="btn" id="adjClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/scroller/2.3.0/js/dataTables.scroller.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const R2 = n => Math.round(n * 100) / 100;
+    const RULES = { ssEmp: 0.035, ssEr: 0.07, ssCeil: 11000, penEmp: 0.04, penEr: 0.04, penFloor: 6850, housing: 0.015, exempt: 40000 };
+    const BRACKETS = [[200000, 0], [500000, 0.15], [1000000, 0.2], [Infinity, 0.25]];
+
+    const PERIODS = [
+      { id: "2026-11-B", label: "Nov 16 – Nov 30, 2026", status: "Draft" },
+      { id: "2026-11-A", label: "Nov 1 – Nov 15, 2026", status: "Applied" },
+      { id: "2026-10-B", label: "Oct 16 – Oct 31, 2026", status: "Applied" },
+      { id: "2026-10-A", label: "Oct 1 – Oct 15, 2026", status: "Applied" }
+    ];
+    const pSel = document.getElementById("period");
+    pSel.innerHTML = PERIODS.map(p => '<option value="' + p.id + '">' + p.label + " · " + p.status + "</option>").join("");
+
+    // Staff list (stable across periods).
+    const rs = UI.rng(2026);
+    const POSITIONS = { "Sales North": "Sales rep", "Sales Center": "Sales rep", "Sales Coast": "Sales rep", "Warehouse": "Warehouse clerk", "Logistics": "Driver", "Administration": "Accountant", "IT": "Developer" };
+    const staff = Array.from({ length: 124 }, (_, i) => {
+      const center = D.costCenters[Math.floor(rs() * D.costCenters.length)];
+      const name = UI.pick(rs, D.firstNames) + " " + UI.pick(rs, D.lastNames) + " " + UI.pick(rs, D.lastNames).charAt(0) + ".";
+      const salary = Math.round(UI.between(rs, 11000, center === "IT" || center === "Administration" ? 52000 : 26000) / 50) * 50;
+      return { id: "E" + String(1001 + i), name, center, position: POSITIONS[center], salary, sales: center.startsWith("Sales"), account: "****" + String(1000 + Math.floor(rs() * 8999)) };
+    });
+    const MISSING_REASONS = ["Hired after the attendance cut-off (Nov 25)", "Unpaid leave for the whole period", "No bank account on file", "Contract ended Nov 15"];
+
+    let rows = [], missing = [], applied = false;
+    const adjustments = {}; // period|empId -> [{type, amount, reason}]
+
+    function tax(gross) {
+      let base = Math.max(0, gross * 24 - RULES.exempt), prev = 0, t = 0;
+      for (const [top, rate] of BRACKETS) {
+        if (base <= prev) break;
+        t += (Math.min(base, top) - prev) * rate;
+        prev = top;
+      }
+      return R2(t / 24);
+    }
+    function calc(e) {
+      const adj = adjustments[pSel.value + "|" + e.id] || [];
+      const manualBonus = adj.filter(a => a.type === "bonus").reduce((s, a) => s + a.amount, 0);
+      const manualDed = adj.filter(a => a.type === "deduction").reduce((s, a) => s + a.amount, 0);
+      const base = R2(e.salary / 2 * e.days / 15);
+      const overtime = R2(e.otHours * e.salary / 240 * 1.5);
+      const bonuses = R2(e.bonus + manualBonus);
+      const gross = R2(base + overtime + e.commission + bonuses);
+      const ss = R2(Math.min(gross, RULES.ssCeil) * RULES.ssEmp);
+      const pen = R2(Math.max(0, gross - RULES.penFloor) * RULES.penEmp);
+      const it = tax(gross);
+      const other = R2(e.otherBase + manualDed);
+      const net = R2(gross - ss - pen - it - e.loan - other);
+      const ssEr = R2(Math.min(gross, RULES.ssCeil) * RULES.ssEr);
+      const penEr = R2(Math.max(0, gross - RULES.penFloor) * RULES.penEr);
+      const housing = R2(gross * RULES.housing);
+      return Object.assign(e, { base, overtime, bonuses, gross, ss, pen, it, other, net, ssEr, penEr, housing, nAdj: adj.length });
+    }
+
+    function load() {
+      const pid = pSel.value, pidx = PERIODS.findIndex(p => p.id === pid);
+      const r = UI.rng(500 + pidx * 77);
+      const miss = new Set([7, 33, 58, 91].map(i => (i + pidx * 5) % staff.length));
+      missing = []; rows = [];
+      staff.forEach((s, i) => {
+        if (miss.has(i)) { missing.push({ s, reason: MISSING_REASONS[missing.length % MISSING_REASONS.length] }); return; }
+        const days = r() < 0.12 ? 15 - (1 + Math.floor(r() * 4)) : 15;
+        rows.push(calc({ ...s, days, otHours: r() < 0.35 ? Math.floor(UI.between(r, 2, 16)) : 0, commission: s.sales ? R2(UI.between(r, 1500, 9000)) : 0,
+          bonus: r() < 0.08 ? 1000 : 0, loan: r() < 0.2 ? R2(UI.between(r, 400, 2500)) : 0, otherBase: r() < 0.1 ? R2(UI.between(r, 150, 600)) : 0 }));
+      });
+      applied = PERIODS[pidx].status === "Applied";
+      document.getElementById("results").hidden = !applied;
+      document.getElementById("processCard").hidden = true;
+      table.clear().rows.add(rows).draw();
+      renderMissing();
+      renderState();
+      if (applied) showResults();
+    }
+
+    const money = d => UI.fmtMoney(d);
+    const table = $("#emp").DataTable({
+      data: [],
+      columns: [
+        { data: "name", render: (d, t, r) => t === "display" ? "<strong>" + d + "</strong> <span class='muted' style='font-size:.75rem'>" + r.id + "</span>" + (r.nAdj ? "<span class='pill' title='Manual adjustments'>" + r.nAdj + " adj.</span>" : "") : d },
+        { data: "center" },
+        { data: "base", className: "dt-right num", render: money },
+        { data: "days", className: "dt-right num", render: (d, t) => t === "display" && d < 15 ? "<span class='neg'>" + d + "</span>" : d },
+        { data: "overtime", className: "dt-right num", render: money },
+        { data: "commission", className: "dt-right num", render: money },
+        { data: "bonuses", className: "dt-right num", render: money },
+        { data: "gross", className: "dt-right num", render: (d, t) => t === "display" ? "<strong>" + money(d) + "</strong>" : d },
+        { data: "ss", className: "dt-right num", render: money },
+        { data: "pen", className: "dt-right num", render: money },
+        { data: "it", className: "dt-right num", render: money },
+        { data: "loan", className: "dt-right num", render: money },
+        { data: "other", className: "dt-right num", render: money },
+        { data: "net", className: "dt-right num", render: (d, t) => t === "display" ? "<strong>" + money(d) + "</strong>" : d },
+        { data: null, orderable: false, searchable: false, render: (d, t, r) => "<button class='btn adj-btn' type='button' data-id='" + r.id + "' aria-label='Adjust " + r.name + "'>Adjust</button>" }
+      ],
+      order: [[0, "asc"]],
+      deferRender: true,
+      scrollX: true,
+      scrollY: "420px",
+      scrollCollapse: true,
+      scroller: { rowHeight: 39, displayBuffer: 4 },
+      dom: "frti",
+      language: { search: "Search", info: "_TOTAL_ employees", infoFiltered: "(of _MAX_)", emptyTable: "No employees in this run" },
+      footerCallback: function () {
+        const api = this.api();
+        const sums = [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+        sums.forEach(c => {
+          const v = api.column(c, { search: "applied" }).data().reduce((a, b) => a + b, 0);
+          $(api.column(c).footer()).html("<span class='num'>" + UI.fmtMoney(v) + "</span>");
+        });
+        $(api.column(3).footer()).html("");
+        $(api.column(0).footer()).html("Total (" + api.rows({ search: "applied" }).count() + ")");
+        renderKpis(api.rows({ search: "applied" }).data().toArray());
+      }
+    });
+
+    function renderKpis(list) {
+      const s = k => list.reduce((a, r) => a + r[k], 0);
+      document.getElementById("kEmp").textContent = list.length;
+      document.getElementById("kEmpD").textContent = missing.length + " active not in this run";
+      document.getElementById("kGross").textContent = UI.fmtMoney(s("gross"));
+      document.getElementById("kDed").textContent = UI.fmtMoney(s("ss") + s("pen") + s("it") + s("loan") + s("other"));
+      document.getElementById("kEmpr").textContent = UI.fmtMoney(s("ssEr") + s("penEr") + s("housing"));
+      document.getElementById("kNet").textContent = UI.fmtMoney(s("net"));
+    }
+
+    function renderMissing() {
+      document.querySelector("#missing tbody").innerHTML = missing.map(m => "<tr><td>" + m.s.name + ' <span class="muted" style="font-size:.75rem">' + m.s.id + "</span></td><td>" + m.s.center + '</td><td><span class="chip chip-warn">' + m.reason + "</span></td></tr>").join("");
+    }
+
+    function renderState(stepNow) {
+      const step = stepNow || (applied ? 6 : 4);
+      document.querySelectorAll("#steps li").forEach(li => {
+        const s = +li.dataset.s;
+        li.classList.toggle("done", s < step);
+        if (s === step) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+        li.querySelector(".dot").textContent = s < step ? "✓" : s;
+      });
+      document.getElementById("status").innerHTML = applied ? '<span class="chip chip-pos">✓ Applied</span>' : '<span class="chip chip-warn">Draft</span>';
+      const btn = document.getElementById("applyBtn");
+      btn.disabled = applied;
+      btn.textContent = applied ? "Applied" : "Apply payroll";
+      document.querySelectorAll(".adj-btn").forEach(b => b.disabled = applied);
+    }
+    table.on("draw", () => document.querySelectorAll(".adj-btn").forEach(b => b.disabled = applied));
+
+    // ---------- Adjustments ----------
+    let current = null;
+    const aType = document.getElementById("aType"), aAmt = document.getElementById("aAmt"), aReason = document.getElementById("aReason");
+    UI.maskMoney(aAmt);
+    function listAdj() {
+      const adj = adjustments[pSel.value + "|" + current.id] || [];
+      document.getElementById("adjList").innerHTML = adj.length ? '<table class="grid"><thead><tr><th>Type</th><th>Reason</th><th class="r">Amount</th></tr></thead><tbody>' +
+        adj.map(a => "<tr><td>" + (a.type === "bonus" ? '<span class="chip chip-pos">Bonus</span>' : '<span class="chip chip-neg">Deduction</span>') + "</td><td>" + a.reason + '</td><td class="r num">' + UI.fmtMoney(a.amount) + "</td></tr>").join("") + "</tbody></table>" : '<p class="muted" style="font-size:.85rem">No manual adjustments for this period.</p>';
+    }
+    $("#emp").on("click", ".adj-btn", function () {
+      current = rows.find(r => r.id === this.dataset.id);
+      document.getElementById("adjWho").textContent = current.name + " · " + current.id + " · Net pay " + UI.fmtMoney(current.net);
+      aType.value = ""; aAmt.value = ""; aReason.value = "";
+      ["aTypeErr", "aAmtErr", "aReasonErr"].forEach(id => document.getElementById(id).textContent = "");
+      listAdj();
+      UI.openModal("adjModal");
+    });
+    document.getElementById("adjSave").addEventListener("click", () => {
+      let ok = true;
+      const amt = UI.parseMoney(aAmt.value);
+      ["aTypeErr", "aAmtErr", "aReasonErr"].forEach(id => document.getElementById(id).textContent = "");
+      if (!aType.value) { document.getElementById("aTypeErr").textContent = "Choose bonus or deduction."; ok = false; }
+      if (!(amt > 0)) { document.getElementById("aAmtErr").textContent = "Enter an amount greater than zero."; ok = false; }
+      else if (aType.value === "deduction" && amt > current.net) { document.getElementById("aAmtErr").textContent = "A deduction cannot leave net pay below zero."; ok = false; }
+      if (aReason.value.trim().length < 5) { document.getElementById("aReasonErr").textContent = "Write the reason (at least 5 characters)."; ok = false; }
+      if (!ok) return;
+      const key = pSel.value + "|" + current.id;
+      (adjustments[key] = adjustments[key] || []).push({ type: aType.value, amount: amt, reason: aReason.value.trim() });
+      calc(current);
+      table.rows().every(function () { if (this.data().id === current.id) this.data(current); });
+      table.draw(false);
+      document.getElementById("adjWho").textContent = current.name + " · " + current.id + " · Net pay " + UI.fmtMoney(current.net);
+      aType.value = ""; aAmt.value = ""; aReason.value = "";
+      listAdj();
+      UI.toast("Adjustment added. Net pay is now " + UI.fmtMoney(current.net) + ".");
+    });
+    document.getElementById("adjClose").addEventListener("click", () => UI.closeModal("adjModal"));
+
+    // ---------- Apply ----------
+    function buildCsv() {
+      const lines = ["employee_id,name,bank_account,amount,reference"];
+      rows.forEach(r => lines.push([r.id, '"' + r.name + '"', r.account, r.net.toFixed(2), "PAYROLL " + pSel.value].join(",")));
+      return lines;
+    }
+    function buildEntry() {
+      const map = new Map();
+      const add = (acct, side, amt) => { if (!amt) return; const k = acct + "|" + side; const c = map.get(k) || { acct, debit: 0, credit: 0 }; c[side] = R2(c[side] + amt); map.set(k, c); };
+      rows.forEach(r => {
+        add("6-01-01 Salaries and wages · " + r.center, "debit", r.gross);
+        add("6-01-02 Employer contributions · " + r.center, "debit", R2(r.ssEr + r.penEr + r.housing));
+        add("2-1-04-01 Social security payable", "credit", R2(r.ss + r.ssEr));
+        add("2-1-04-02 Pension fund payable", "credit", R2(r.pen + r.penEr));
+        add("2-1-04-03 Housing fund payable", "credit", r.housing);
+        add("2-1-04-04 Income tax withheld", "credit", r.it);
+        add("1-1-04-03 Employee loans receivable", "credit", r.loan);
+        add("2-1-04-09 Other deductions payable", "credit", r.other);
+        add("2-1-04-10 Net pay payable", "credit", r.net);
+      });
+      return Array.from(map.values()).sort((a, b) => (b.debit ? 1 : 0) - (a.debit ? 1 : 0) || a.acct.localeCompare(b.acct));
+    }
+    function showResults() {
+      const lines = buildCsv();
+      document.getElementById("csv").textContent = lines.slice(0, 8).join("\n") + "\n…";
+      document.getElementById("csvInfo").textContent = (lines.length - 1) + " transfers · total " + UI.fmtMoney(rows.reduce((a, r) => a + r.net, 0));
+      const e = buildEntry();
+      const td = R2(e.reduce((a, l) => a + l.debit, 0)), tc = R2(e.reduce((a, l) => a + l.credit, 0));
+      document.querySelector("#entry tbody").innerHTML = e.map(l => '<tr><td style="' + (l.credit ? "padding-left:24px" : "") + '">' + l.acct + '</td><td class="r num">' + (l.debit ? UI.fmtMoney(l.debit) : "") + '</td><td class="r num">' + (l.credit ? UI.fmtMoney(l.credit) : "") + "</td></tr>").join("");
+      document.querySelector("#entry tfoot").innerHTML = '<tr><td>Total</td><td class="r num">' + UI.fmtMoney(td) + '</td><td class="r num">' + UI.fmtMoney(tc) + "</td></tr>";
+      document.getElementById("entryChip").innerHTML = Math.abs(td - tc) < 0.005 ? '<span class="chip chip-pos">✓ Balanced</span>' : '<span class="chip chip-neg">✕ Off by ' + UI.fmtMoney(td - tc) + "</span>";
+      document.getElementById("results").hidden = false;
+    }
+    document.getElementById("csvBtn").addEventListener("click", () => {
+      const blob = new Blob([buildCsv().join("\n")], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "payroll-" + pSel.value + ".csv";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+
+    document.getElementById("applyBtn").addEventListener("click", () => {
+      if (applied) return;
+      const btn = document.getElementById("applyBtn");
+      btn.disabled = true; pSel.disabled = true;
+      document.querySelectorAll(".adj-btn").forEach(b => b.disabled = true);
+      const card = document.getElementById("processCard"), bar = document.getElementById("pbar"), pct = document.getElementById("pct"), ph = document.getElementById("phases");
+      card.hidden = false;
+      const PH = ["Calculating " + rows.length + " employees", "Building the bank transfer file", "Generating the accounting entry"];
+      renderState(5);
+      let p = 0;
+      const paint = () => {
+        const cur = Math.min(2, Math.floor(p / 34));
+        ph.innerHTML = PH.map((t, i) => '<div class="phase"><span class="mark ' + (i < cur || p >= 100 ? "pos" : "") + '">' + (i < cur || p >= 100 ? "✓" : i === cur ? "…" : "○") + "</span>" + t + "</div>").join("");
+        bar.firstElementChild.style.width = p + "%";
+        bar.setAttribute("aria-valuenow", p);
+        pct.textContent = p + "%";
+      };
+      paint();
+      const timer = setInterval(() => {
+        p = Math.min(100, p + 4);
+        paint();
+        if (p >= 100) {
+          clearInterval(timer);
+          applied = true;
+          PERIODS.find(x => x.id === pSel.value).status = "Applied";
+          pSel.querySelector('option[value="' + pSel.value + '"]').textContent = PERIODS.find(x => x.id === pSel.value).label + " · Applied";
+          pSel.disabled = false;
+          renderState();
+          showResults();
+          UI.toast("Payroll applied: bank file and accounting entry are ready.");
+        }
+      }, 70);
+    });
+
+    pSel.addEventListener("change", load);
+    load();
+  });
+  </script>
+</body>
+</html>

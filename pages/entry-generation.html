@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automatic Entries · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--space-2); margin-top: var(--space-3); }
+    .src { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface-2); }
+    .src input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
+    .run { display: grid; gap: var(--space-3); }
+    .run-top { display: flex; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; font-size: .9rem; }
+    .src-status { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-2); }
+    .src-status > div { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: .85rem; }
+    .modal.wide { width: min(1100px, 100%); max-height: 92vh; }
+    tr.sel { background: var(--info-bg) !important; }
+    tr.clickable { cursor: pointer; }
+    .small { font-size: .82rem; }
+  </style>
+</head>
+<body data-page="entry-generation" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Automatic entries</h1>
+        <p class="muted">Creates the accounting entries for a date range from the documents each area already recorded.</p>
+      </div>
+    </div>
+
+    <section class="card card-body">
+      <div class="filters">
+        <div class="field"><label for="from">From</label><input class="input" type="date" id="from" value="2026-11-09"></div>
+        <div class="field"><label for="to">To</label><input class="input" type="date" id="to" value="2026-11-16"></div>
+      </div>
+      <fieldset style="border:none;padding:0;margin:0">
+        <legend class="muted" style="font-size:.8rem;font-weight:500;margin-top:var(--space-3)">Sources to generate</legend>
+        <div class="sources" id="sources"></div>
+      </fieldset>
+      <div class="actions">
+        <button class="btn btn-primary" id="genBtn" type="button">Generate entries</button>
+        <button class="btn" id="cancelBtn" type="button" disabled>Cancel</button>
+        <button class="btn" id="delBtn" type="button">Delete generated</button>
+      </div>
+      <p class="field-error" id="formErr" style="margin-top:8px"></p>
+    </section>
+
+    <section class="card card-body run" id="runCard" hidden aria-live="polite">
+      <div class="run-top"><h2 id="runTitle">Generating</h2><span class="num" id="runCount"></span></div>
+      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar"><span></span></div>
+      <div class="src-status" id="srcStatus"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Generated entries</h2><span class="muted small" id="genSummary"></span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="results">
+          <thead><tr><th>Day</th><th>Source</th><th>Entry</th><th class="r">Documents</th><th class="r">Debit</th><th class="r">Credit</th><th>Status</th><th><span class="sr-only">Preview</span></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Generation runs one day and one source at a time, so a long range shows progress and can be cancelled without leaving half a day posted.</li>
+        <li>Days that already have an entry for a source are skipped, so running the same range twice never duplicates anything.</li>
+        <li>Each entry keeps one line per account and side, with the amounts added up. The documents behind each line are in a separate detail table.</li>
+        <li>In production each step is one request to a stored procedure, and the browser drives the loop.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- Preview -->
+  <div class="modal-backdrop" id="prevModal" role="dialog" aria-modal="true" aria-labelledby="prevTitle">
+    <div class="modal wide">
+      <div class="modal-head"><h2 id="prevTitle">Entry</h2><span class="muted small" id="prevSub"></span></div>
+      <div class="modal-body">
+        <h3 style="margin-bottom:8px">Entry lines <span class="muted small">(select a line to see its documents)</span></h3>
+        <div class="table-wrap">
+          <table class="grid" id="prevLines"><thead><tr><th>Account</th><th class="r">Documents</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+        <h3 style="margin:var(--space-4) 0 8px" id="detTitle">Source documents</h3>
+        <div class="table-wrap" style="max-height:300px;overflow:auto">
+          <table class="grid" id="prevDocs"><thead><tr><th>Document</th><th>Account</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn" type="button" id="closePrev">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Confirm delete -->
+  <div class="modal-backdrop" id="delModal" role="dialog" aria-modal="true" aria-labelledby="delTitle">
+    <div class="modal" style="width:min(480px,100%)">
+      <div class="modal-head"><h2 id="delTitle">Delete generated entries</h2></div>
+      <div class="modal-body"><p id="delText"></p></div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" type="button" id="delOk" style="background:var(--negative);border-color:var(--negative)">Delete</button>
+        <button class="btn" type="button" id="delClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const ACC = {
+      cash: ["1-01-01-01-001", "Cash on hand"], bank: ["1-01-02-01-001", "Bank checking account"], ar: ["1-02-01-01-001", "Accounts receivable, customers"],
+      inv: ["1-03-01-01-001", "Merchandise inventory"], ap: ["2-01-01-01-001", "Accounts payable, suppliers"], salPay: ["2-01-02-01-001", "Salaries payable"],
+      ssPay: ["2-01-02-01-002", "Social security payable"], tax: ["2-01-03-01-001", "Sales tax payable"], sales: ["4-01-01-01-001", "Sales revenue"],
+      ret: ["4-01-01-02-001", "Sales returns"], cogs: ["5-01-01-01-001", "Cost of goods sold"], sal: ["6-01-01-01-001", "Salaries expense"], emp: ["6-01-01-01-002", "Employer contributions"]
+    };
+    const r2 = n => Math.round(n * 100) / 100;
+    const SOURCES = [
+      { id: "sales", name: "Sales invoices", prefix: "INV" },
+      { id: "cogs", name: "Cost of sales", prefix: "INV" },
+      { id: "purch", name: "Purchases", prefix: "PUR" },
+      { id: "ret", name: "Returns", prefix: "RET" },
+      { id: "bank", name: "Bank movements", prefix: "BNK" },
+      { id: "payroll", name: "Payroll", prefix: "PAY" }
+    ];
+
+    // Builds the documents of one source on one day; each document posts to several accounts.
+    function documents(src, day) {
+      const seed = Math.floor(day.getTime() / 86400000) * 13 + SOURCES.findIndex(s => s.id === src.id);
+      const r = UI.rng(seed);
+      const dd = day.getUTCDate();
+      let n = { sales: 18, cogs: 18, purch: 5, ret: 3, bank: 7, payroll: 0 }[src.id];
+      if (src.id === "payroll" && (dd === 15 || dd === 30)) n = 1;
+      if (src.id === "ret" && r() < 0.25) n = 0;
+      const docs = [];
+      for (let i = 0; i < n; i++) {
+        const no = src.prefix + "-" + String(seed % 9000 + 1000 + i * 7).padStart(5, "0");
+        const p = [];
+        if (src.id === "sales") {
+          const net = r2(UI.between(r, 300, 9000)), tax = r2(net * 0.15), credit = r() < 0.35;
+          p.push([credit ? ACC.ar : ACC.cash, net + tax, 0], [ACC.sales, 0, net], [ACC.tax, 0, tax]);
+        } else if (src.id === "cogs") {
+          const c = r2(UI.between(r, 200, 6500));
+          p.push([ACC.cogs, c, 0], [ACC.inv, 0, c]);
+        } else if (src.id === "purch") {
+          const c = r2(UI.between(r, 2000, 28000));
+          p.push([ACC.inv, c, 0], [ACC.ap, 0, c]);
+        } else if (src.id === "ret") {
+          const net = r2(UI.between(r, 80, 900)), tax = r2(net * 0.15);
+          p.push([ACC.ret, net, 0], [ACC.tax, tax, 0], [ACC.ar, 0, net + tax]);
+        } else if (src.id === "bank") {
+          const c = r2(UI.between(r, 1500, 30000));
+          if (r() < 0.55) p.push([ACC.bank, c, 0], [ACC.cash, 0, c]); else p.push([ACC.ap, c, 0], [ACC.bank, 0, c]);
+        } else if (src.id === "payroll") {
+          const gross = r2(UI.between(r, 180000, 210000)), emp = r2(gross * 0.11), ss = r2(gross * 0.035 + emp);
+          p.push([ACC.sal, gross, 0], [ACC.emp, emp, 0], [ACC.salPay, 0, r2(gross - gross * 0.035)], [ACC.ssPay, 0, r2(ss)]);
+          // keep it balanced to the cent
+          const d = r2(p.reduce((a, x) => a + x[1] - x[2], 0));
+          p[2][2] = r2(p[2][2] + d);
+        }
+        docs.push({ no, posts: p.map(x => ({ acc: x[0], debit: r2(x[1]), credit: r2(x[2]) })) });
+      }
+      return docs;
+    }
+    // Same account + same side = one accumulated line.
+    function accumulate(docs) {
+      const map = new Map();
+      docs.forEach(d => d.posts.forEach(p => {
+        const side = p.debit ? "D" : "C";
+        const k = p.acc[0] + side;
+        if (!map.has(k)) map.set(k, { acc: p.acc, side, amount: 0, docs: new Set() });
+        const l = map.get(k); l.amount = r2(l.amount + (p.debit || p.credit)); l.docs.add(d.no);
+      }));
+      return [...map.values()].sort((a, b) => (a.side === b.side ? a.acc[0].localeCompare(b.acc[0]) : a.side === "D" ? -1 : 1));
+    }
+
+    // Already generated before this visit (to show the "skipped" path).
+    const generated = new Map();
+    let entrySeq = 9120;
+    function key(day, src) { return UI.fmtDate(day) + "|" + src.id; }
+    function generate(day, src) {
+      const docs = documents(src, day);
+      if (!docs.length) return null;
+      const lines = accumulate(docs);
+      const e = { day: UI.fmtDate(day), src, no: "AE-" + (entrySeq++), docs, lines,
+        debit: r2(lines.filter(l => l.side === "D").reduce((a, l) => a + l.amount, 0)),
+        credit: r2(lines.filter(l => l.side === "C").reduce((a, l) => a + l.amount, 0)) };
+      generated.set(key(day, src), e);
+      return e;
+    }
+    ["2026-11-09", "2026-11-10", "2026-11-11"].forEach(d => SOURCES.slice(0, 2).forEach(s => generate(new Date(d + "T00:00:00Z"), s)));
+
+    document.getElementById("sources").innerHTML = SOURCES.map(s =>
+      '<label class="src"><input type="checkbox" value="' + s.id + '" checked><span>' + s.name + "</span></label>").join("");
+
+    function days() {
+      const a = new Date(document.getElementById("from").value + "T00:00:00Z"), b = new Date(document.getElementById("to").value + "T00:00:00Z");
+      const out = [];
+      for (let d = a; d <= b; d = new Date(d.getTime() + 86400000)) out.push(d);
+      return out;
+    }
+    function chosen() { return [...document.querySelectorAll("#sources input:checked")].map(i => SOURCES.find(s => s.id === i.value)); }
+    function checkForm() {
+      const err = document.getElementById("formErr");
+      const f = document.getElementById("from").value, t = document.getElementById("to").value;
+      if (!f || !t) { err.textContent = "Choose both dates."; return false; }
+      if (f > t) { err.textContent = "The start date must be on or before the end date."; return false; }
+      if (days().length > 62) { err.textContent = "Choose a range of 62 days or less."; return false; }
+      if (!chosen().length) { err.textContent = "Choose at least one source."; return false; }
+      err.textContent = ""; return true;
+    }
+
+    const ICON_OK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>';
+    function renderResults() {
+      const list = [...generated.values()].sort((a, b) => a.day === b.day ? SOURCES.indexOf(a.src) - SOURCES.indexOf(b.src) : a.day < b.day ? 1 : -1);
+      document.querySelector("#results tbody").innerHTML = list.length ? list.map(e => {
+        const bal = Math.abs(e.debit - e.credit) < 0.005;
+        return '<tr><td class="num">' + e.day + "</td><td>" + e.src.name + '</td><td class="num">' + e.no + '</td><td class="r num">' + e.docs.length + '</td><td class="r num">' + UI.fmtMoney(e.debit) +
+          '</td><td class="r num">' + UI.fmtMoney(e.credit) + '</td><td><span class="chip ' + (bal ? "chip-pos" : "chip-neg") + '">' + (bal ? ICON_OK + " Balanced" : "Unbalanced") +
+          '</span></td><td><button class="btn" type="button" data-k="' + e.day + "|" + e.src.id + '">Preview</button></td></tr>';
+      }).join("") : '<tr><td colspan="8" class="muted">No entries generated yet.</td></tr>';
+      document.getElementById("genSummary").textContent = list.length + " entries";
+    }
+    renderResults();
+
+    // ---------- Async runner (generate / delete) ----------
+    let cancel = false, running = false;
+    function setRunning(on) {
+      running = on;
+      document.getElementById("genBtn").disabled = on;
+      document.getElementById("delBtn").disabled = on;
+      document.getElementById("cancelBtn").disabled = !on;
+    }
+    function run(mode) {
+      if (!checkForm()) return;
+      const ds = days(), srcs = chosen();
+      const queue = [];
+      ds.forEach(d => srcs.forEach(s => queue.push([d, s])));
+      const stat = {};
+      srcs.forEach(s => stat[s.id] = { done: 0, skipped: 0, empty: 0, total: ds.length, state: "Pending" });
+      const card = document.getElementById("runCard");
+      card.hidden = false;
+      document.getElementById("runTitle").textContent = mode === "gen" ? "Generating entries" : "Deleting generated entries";
+      const bar = document.getElementById("bar");
+      const paint = (i) => {
+        const pct = Math.round(i / queue.length * 100);
+        bar.firstElementChild.style.width = pct + "%";
+        bar.setAttribute("aria-valuenow", String(pct));
+        document.getElementById("runCount").textContent = i + " of " + queue.length + " steps · " + pct + "%";
+        document.getElementById("srcStatus").innerHTML = srcs.map(s => {
+          const st = stat[s.id];
+          const chip = st.state === "Done" ? "chip-pos" : st.state === "Running" ? "chip-info" : st.state === "Cancelled" ? "chip-warn" : "";
+          const detail = mode === "gen"
+            ? st.done + " new · " + st.skipped + " already generated · " + st.empty + " without documents"
+            : st.done + " deleted · " + st.empty + " had nothing";
+          return "<div><span><strong>" + s.name + '</strong><br><span class="muted small">' + detail + '</span></span><span class="chip ' + chip + '">' + st.state + "</span></div>";
+        }).join("");
+      };
+      cancel = false;
+      setRunning(true);
+      let i = 0;
+      paint(0);
+      const step = () => {
+        if (cancel) {
+          srcs.forEach(s => { if (stat[s.id].state !== "Done") stat[s.id].state = "Cancelled"; });
+          paint(i); setRunning(false); renderResults();
+          UI.toast("Stopped after " + i + " of " + queue.length + " steps. Finished days are kept.");
+          return;
+        }
+        if (i >= queue.length) {
+          paint(i); setRunning(false); renderResults();
+          UI.toast(mode === "gen" ? "Generation finished" : "Deletion finished");
+          return;
+        }
+        const [d, s] = queue[i];
+        const st = stat[s.id];
+        st.state = "Running";
+        const k = key(d, s);
+        if (mode === "gen") {
+          if (generated.has(k)) st.skipped++;
+          else if (generate(d, s)) st.done++;
+          else st.empty++;
+        } else {
+          if (generated.delete(k)) st.done++; else st.empty++;
+        }
+        i++;
+        if (st.done + st.skipped + st.empty === st.total) st.state = "Done";
+        paint(i);
+        if (i % 6 === 0) renderResults();
+        setTimeout(step, 150);
+      };
+      setTimeout(step, 150);
+    }
+    document.getElementById("genBtn").addEventListener("click", () => run("gen"));
+    document.getElementById("cancelBtn").addEventListener("click", () => { cancel = true; });
+    document.getElementById("delBtn").addEventListener("click", () => {
+      if (!checkForm()) return;
+      const ds = days(), srcs = chosen();
+      let n = 0; ds.forEach(d => srcs.forEach(s => { if (generated.has(key(d, s))) n++; }));
+      document.getElementById("delText").innerHTML = "This deletes <strong>" + n + "</strong> generated entries from " + document.getElementById("from").value + " to " + document.getElementById("to").value +
+        " for: " + srcs.map(s => s.name).join(", ") + ". The source documents are not touched, so the entries can be generated again.";
+      document.getElementById("delOk").disabled = n === 0;
+      UI.openModal("delModal");
+    });
+    document.getElementById("delOk").addEventListener("click", () => { UI.closeModal("delModal"); run("del"); });
+    document.getElementById("delClose").addEventListener("click", () => UI.closeModal("delModal"));
+
+    // ---------- Preview ----------
+    let current = null;
+    function showDocs(line) {
+      const rows = [];
+      current.docs.forEach(d => d.posts.forEach(p => {
+        if (line && (p.acc[0] !== line.acc[0] || (p.debit ? "D" : "C") !== line.side)) return;
+        rows.push('<tr><td class="num">' + d.no + '</td><td><span class="num">' + p.acc[0] + "</span> " + p.acc[1] + '</td><td class="r num">' + (p.debit ? UI.fmtMoney(p.debit) : "") + '</td><td class="r num">' + (p.credit ? UI.fmtMoney(p.credit) : "") + "</td></tr>");
+      }));
+      document.querySelector("#prevDocs tbody").innerHTML = rows.join("");
+      document.getElementById("detTitle").textContent = line ? "Documents behind " + line.acc[1] + " (" + (line.side === "D" ? "debit" : "credit") + ") · " + rows.length : "All source documents · " + current.docs.length + " documents";
+    }
+    document.querySelector("#results tbody").addEventListener("click", ev => {
+      const b = ev.target.closest("[data-k]");
+      if (!b) return;
+      const [d, s] = b.dataset.k.split("|");
+      current = generated.get(d + "|" + s);
+      document.getElementById("prevTitle").textContent = "Entry " + current.no;
+      document.getElementById("prevSub").textContent = current.src.name + " · " + current.day;
+      const tb = document.querySelector("#prevLines tbody");
+      tb.innerHTML = current.lines.map((l, i) => '<tr class="clickable" tabindex="0" data-i="' + i + '"><td><span class="num">' + l.acc[0] + "</span> " + l.acc[1] + '</td><td class="r num">' + l.docs.size +
+        '</td><td class="r num">' + (l.side === "D" ? UI.fmtMoney(l.amount) : "") + '</td><td class="r num">' + (l.side === "C" ? UI.fmtMoney(l.amount) : "") + "</td></tr>").join("");
+      document.querySelector("#prevLines tfoot").innerHTML = '<tr><td>Total</td><td></td><td class="r num">' + UI.fmtMoney(current.debit) + '</td><td class="r num">' + UI.fmtMoney(current.credit) + "</td></tr>";
+      showDocs(null);
+      UI.openModal("prevModal");
+    });
+    function pickLine(tr) {
+      const sel = tr.classList.contains("sel");
+      document.querySelectorAll("#prevLines tr.sel").forEach(x => x.classList.remove("sel"));
+      if (sel) { showDocs(null); return; }
+      tr.classList.add("sel");
+      showDocs(current.lines[+tr.dataset.i]);
+    }
+    const tbl = document.querySelector("#prevLines tbody");
+    tbl.addEventListener("click", ev => { const tr = ev.target.closest("tr[data-i]"); if (tr) pickLine(tr); });
+    tbl.addEventListener("keydown", ev => { const tr = ev.target.closest("tr[data-i]"); if (tr && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); pickLine(tr); } });
+    document.getElementById("closePrev").addEventListener("click", () => UI.closeModal("prevModal"));
+  });
+  </script>
+</body>
+</html>

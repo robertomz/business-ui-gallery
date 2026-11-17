@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business UI Gallery</title>
+  <meta name="description" content="33 business software screens rebuilt with sample data: sales, inventory, accounting, treasury, budgets, payroll and IT.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <style>
+    .hero { padding: var(--space-5); display: grid; gap: var(--space-3); }
+    .hero h1 { font-size: 1.7rem; }
+    .hero p { max-width: 760px; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
+    .tile { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); text-decoration: none; color: var(--text); transition: border-color .15s var(--ease), transform .15s var(--ease); }
+    .tile:hover { border-color: var(--primary); transform: translateY(-1px); }
+    .tile-top { display: flex; align-items: center; gap: var(--space-2); }
+    .tile-icon { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--info-bg); color: var(--info); }
+    .tile-icon svg { width: 20px; height: 20px; }
+    .tile-group { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .stack { display: flex; flex-wrap: wrap; gap: 6px; }
+  </style>
+</head>
+<body data-page="home" data-root="">
+  <main class="content" id="content">
+    <section class="card hero">
+      <h1>Business UI Gallery</h1>
+      <p class="muted">Screens like the ones I build for a distribution company's ERP every day, rebuilt here with sample data. 33 screens cover sales, inventory, accounting, treasury, budgets, payroll and IT. Each one shows the business rules behind it, not only the layout.</p>
+      <div class="stack">
+        <span class="chip chip-info">HTML · CSS · JavaScript</span>
+        <span class="chip chip-info">jQuery · DataTables · Select2</span>
+        <span class="chip chip-info">Chart.js · vis-network · GridStack</span>
+        <span class="chip chip-info">Light and dark theme</span>
+        <span class="chip chip-warn">All data is generated</span>
+      </div>
+      <p class="muted" style="font-size:.88rem">In production these screens run on Django, MySQL and stored procedures. Here they run in the browser so anyone can try them without a server.</p>
+    </section>
+    <section aria-labelledby="screens-title">
+      <h2 id="screens-title" style="margin-bottom:var(--space-3)">Screens</h2>
+      <div class="tiles" id="tiles"></div>
+    </section>
+  </main>
+  <script src="assets/js/common.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const tiles = document.getElementById("tiles");
+      tiles.innerHTML = UI.PAGES.filter(p => p.id !== "home").map(p =>
+        '<a class="card tile" href="' + p.href + '">' +
+          '<div class="tile-top"><span class="tile-icon">' + UI.icon(p.icon) + '</span><div><div class="tile-group">' + p.group + '</div><h3>' + p.title + '</h3></div></div>' +
+          '<p class="muted" style="font-size:.88rem">' + p.blurb + '</p>' +
+        '</a>').join("");
+    });
+  </script>
+</body>
+</html>

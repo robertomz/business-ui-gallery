@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Attendance · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .import { display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; }
+    .import .progress { flex: 1; min-width: 200px; }
+    .inc { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; margin: 1px 2px 1px 0; }
+    .inc svg { width: 13px; height: 13px; }
+    .i-late { background: var(--warning-bg); color: var(--warning); }
+    .i-early { background: var(--warning-bg); color: var(--warning); }
+    .i-ot { background: var(--info-bg); color: var(--info); }
+    .i-miss { background: var(--negative-bg); color: var(--negative); }
+    .i-abs { background: var(--negative-bg); color: var(--negative); }
+    .i-ok { background: var(--positive-bg); color: var(--positive); }
+    .switch { display: flex; align-items: center; gap: 8px; min-height: 38px; font-size: .9rem; }
+    .switch input { width: 18px; height: 18px; }
+    .lock { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+    .modal.sm { width: min(640px, 100%); }
+    #sheet td, #week td { white-space: nowrap; }
+  </style>
+</head>
+<body data-page="attendance" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Attendance</h1>
+        <p class="muted">Clock-ins come from the devices at each branch. Here they are checked against the schedule before the payroll cut-off.</p>
+      </div>
+    </div>
+
+    <section class="card card-body">
+      <div class="import">
+        <div>
+          <h2>Import from devices</h2>
+          <p class="muted" style="font-size:.85rem" id="impInfo">Week of Nov 9 – 15, 2026 not imported yet.</p>
+        </div>
+        <div class="progress" aria-label="Import progress"><span id="impBar"></span></div>
+        <button class="btn btn-primary" id="impBtn" type="button">Import clock-ins</button>
+      </div>
+      <p class="muted" style="font-size:.8rem;margin-top:8px;font-family:var(--font-mono)" id="impLog" aria-live="polite"></p>
+    </section>
+
+    <div id="afterImport" hidden>
+      <section class="card card-body lock" id="lockBar"></section>
+
+      <section class="card card-body" aria-label="Filters" style="margin-top:var(--space-5)">
+        <div class="filters">
+          <div class="field"><label for="fDay">Day</label><select class="input" id="fDay"></select></div>
+          <div class="field"><label for="fDept">Department</label><select class="input" id="fDept"><option value="">All departments</option></select></div>
+          <div class="field"><label for="fQ">Search</label><input class="input" id="fQ" type="search" placeholder="Employee"></div>
+          <label class="switch"><input type="checkbox" id="fInc"> Only incidents</label>
+        </div>
+      </section>
+
+      <section class="kpis" style="margin-top:var(--space-5)" aria-label="Totals for the filtered day" aria-live="polite">
+        <div class="card kpi"><div class="kpi-label">Employees</div><div class="kpi-value" id="kEmp"></div><div class="kpi-delta muted" id="kPresent"></div></div>
+        <div class="card kpi"><div class="kpi-label">Late arrivals</div><div class="kpi-value" id="kLate"></div><div class="kpi-delta muted" id="kLateMin"></div></div>
+        <div class="card kpi"><div class="kpi-label">Overtime</div><div class="kpi-value" id="kOt"></div><div class="kpi-delta muted">hours on the filtered day</div></div>
+        <div class="card kpi"><div class="kpi-label">Missing punches</div><div class="kpi-value" id="kMiss"></div><div class="kpi-delta muted">need a manual correction</div></div>
+      </section>
+
+      <section class="card" style="margin-top:var(--space-5)">
+        <div class="card-head"><h2 id="sheetTitle">Daily timesheet</h2></div>
+        <div class="card-body table-wrap">
+          <table class="grid" id="sheet">
+            <thead><tr><th>Employee</th><th>Department</th><th>Scheduled</th><th>In</th><th>Out</th><th class="r">Late min</th><th class="r">Early leave min</th><th class="r">Overtime h</th><th>Incidents</th><th><span class="sr-only">Action</span></th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:var(--space-5)">
+        <div class="card-head"><h2>Weekly summary</h2><span class="muted" style="font-size:.82rem">Follows the department and search filters</span></div>
+        <div class="card-body table-wrap">
+          <table class="grid" id="week">
+            <thead><tr><th>Employee</th><th class="r">Days worked</th><th class="r">Absences</th><th class="r">Late arrivals</th><th class="r">Late min</th><th class="r">Overtime h</th><th class="r">Missing punches</th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The devices only record punches; the schedule decides what each punch means. A 10-minute grace period applies before a late arrival counts.</li>
+        <li>Overtime counts only after 30 extra minutes and in half-hour blocks, the way payroll pays it.</li>
+        <li>A day with only one punch is a missing punch: it cannot be paid until someone corrects it, so the cut-off is blocked while any remain.</li>
+        <li>Closing the cut-off locks the week and sends overtime hours and absences to the payroll run; after that, corrections go through a payroll adjustment.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="fixModal" role="dialog" aria-modal="true" aria-labelledby="fixTitle">
+    <div class="modal sm">
+      <div class="modal-head"><h2 id="fixTitle">Correct missing punch</h2></div>
+      <div class="modal-body">
+        <p class="muted" id="fixInfo" style="margin-bottom:var(--space-3)"></p>
+        <div class="filters">
+          <div class="field"><label for="fxIn">In</label><input class="input num" id="fxIn" type="time"></div>
+          <div class="field"><label for="fxOut">Out</label><input class="input num" id="fxOut" type="time" aria-describedby="fxErr"></div>
+        </div>
+        <div class="field" style="margin-top:var(--space-3)"><label for="fxReason">Reason</label><input class="input" id="fxReason" placeholder="Forgot to clock out, device offline…" aria-describedby="fxErr"></div>
+        <div class="field-error" id="fxErr" style="margin-top:6px"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="fxSave" type="button">Save correction</button>
+        <button class="btn" id="fxClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(31415);
+    const DEPTS = ["Sales", "Warehouse", "Logistics", "Finance", "IT"];
+    const DAYS = [];
+    for (let i = 0; i < 7; i++) DAYS.push(new Date(Date.UTC(2026, 10, 9 + i)));
+    const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const SCHED = { Warehouse: [6 * 60, 15 * 60], Logistics: [6 * 60, 15 * 60], Sales: [8 * 60, 17 * 60], Finance: [8 * 60, 17 * 60], IT: [8 * 60, 17 * 60] };
+    const GRACE = 10;
+    const hm = m => m == null ? "—" : String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
+    const I = {
+      late: ["i-late", SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), "Late"],
+      early: ["i-early", SVG('<path d="M15 6l-6 6 6 6"/>'), "Left early"],
+      ot: ["i-ot", SVG('<path d="M12 5v14M5 12h14"/>'), "Overtime"],
+      miss: ["i-miss", SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'), "Missing punch"],
+      abs: ["i-abs", SVG('<path d="M6 6l12 12M18 6L6 18"/>'), "Absent"],
+      ok: ["i-ok", SVG('<path d="M5 12l5 5 9-10"/>'), "On time"]
+    };
+    const inc = k => '<span class="inc ' + I[k][0] + '">' + I[k][1] + I[k][2] + "</span>";
+
+    const emps = [];
+    for (let i = 0; i < 48; i++) emps.push({ name: UI.pick(r, D.firstNames) + " " + UI.pick(r, D.lastNames), dept: DEPTS[i % DEPTS.length] });
+    emps.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Punches per employee and day (Sunday off; Saturday half day for some).
+    let records = [];
+    function buildRecords() {
+      records = [];
+      emps.forEach((e, ei) => DAYS.forEach((d, di) => {
+        const dow = d.getUTCDay();
+        if (dow === 0) return;
+        const [s, en0] = SCHED[e.dept];
+        const en = dow === 6 ? s + 5 * 60 : en0;
+        const x = r();
+        let tin = null, tout = null;
+        if (x < 0.04) { /* absent */ }
+        else {
+          tin = s - Math.round(UI.between(r, 0, 20)) + (x > 0.82 ? Math.round(UI.between(r, 12, 55)) : 0);
+          tout = en + Math.round(UI.between(r, -5, 25)) + (x > 0.6 && x < 0.72 ? Math.round(UI.between(r, 40, 150)) : 0) - (x > 0.94 ? Math.round(UI.between(r, 30, 90)) : 0);
+          if (x > 0.05 && x < 0.075) tout = null;
+        }
+        records.push({ emp: e, day: d, dayIdx: di, sched: [s, en], tin, tout, fixed: null });
+      }));
+    }
+    function calc(rec) {
+      const [s, en] = rec.sched;
+      const res = { late: 0, early: 0, ot: 0, incs: [] };
+      if (rec.tin == null && rec.tout == null) { res.incs.push("abs"); res.absent = true; return res; }
+      if (rec.tin == null || rec.tout == null) { res.incs.push("miss"); res.miss = true; }
+      if (rec.tin != null && rec.tin > s + GRACE) { res.late = rec.tin - s; res.incs.push("late"); }
+      if (rec.tout != null && rec.tout < en) { res.early = en - rec.tout; res.incs.push("early"); }
+      if (rec.tout != null && rec.tout - en >= 30) { res.ot = Math.floor((rec.tout - en) / 30) * 0.5; res.incs.push("ot"); }
+      if (!res.incs.length) res.incs.push("ok");
+      return res;
+    }
+
+    // ---------- Import ----------
+    let imported = false, locked = false;
+    document.getElementById("impBtn").addEventListener("click", () => {
+      const btn = document.getElementById("impBtn");
+      btn.disabled = true;
+      buildRecords();
+      const files = ["North Plaza", "Harbor", "Central Market", "Riverside", "Hillcrest", "West Gate"];
+      const total = records.reduce((a, x) => a + (x.tin != null) + (x.tout != null), 0);
+      let i = 0;
+      const step = () => {
+        i++;
+        document.getElementById("impBar").style.width = (i / files.length * 100) + "%";
+        document.getElementById("impLog").textContent = "Reading device at " + files[i - 1] + "… " + Math.round(total * i / files.length) + " of " + total + " punches";
+        if (i < files.length) setTimeout(step, 260);
+        else {
+          imported = true;
+          document.getElementById("impInfo").textContent = "Week of Nov 9 – 15, 2026 imported: " + total + " punches from " + files.length + " devices.";
+          document.getElementById("impLog").textContent = "Done. Duplicated punches within 2 minutes were merged.";
+          btn.textContent = "Imported";
+          document.getElementById("afterImport").hidden = false;
+          render();
+        }
+      };
+      setTimeout(step, 200);
+    });
+
+    const fDay = document.getElementById("fDay"), fDept = document.getElementById("fDept");
+    DAYS.forEach((d, i) => { if (d.getUTCDay() !== 0) fDay.insertAdjacentHTML("beforeend", "<option value='" + i + "'" + (i === 3 ? " selected" : "") + ">" + DOW[d.getUTCDay()] + " " + UI.fmtDate(d) + "</option>"); });
+    DEPTS.forEach(d => fDept.insertAdjacentHTML("beforeend", "<option>" + d + "</option>"));
+
+    function empFilter(e) { const q = document.getElementById("fQ").value.trim().toLowerCase(); return (!fDept.value || e.dept === fDept.value) && (!q || e.name.toLowerCase().includes(q)); }
+
+    function render() {
+      if (!imported) return;
+      const di = +fDay.value, only = document.getElementById("fInc").checked;
+      const day = records.filter(x => x.dayIdx === di && empFilter(x.emp)).map(x => ({ rec: x, c: calc(x) }));
+      const shown = only ? day.filter(x => !x.c.incs.includes("ok")) : day;
+      document.getElementById("sheetTitle").textContent = "Daily timesheet · " + DOW[DAYS[di].getUTCDay()] + " " + UI.fmtDate(DAYS[di]);
+      document.querySelector("#sheet tbody").innerHTML = shown.length ? shown.map(({ rec, c }) => {
+        const idx = records.indexOf(rec);
+        return "<tr><td>" + rec.emp.name + (rec.fixed ? " <span class='muted' style='font-size:.75rem'>(corrected)</span>" : "") + "</td><td>" + rec.emp.dept + "</td><td class='num'>" + hm(rec.sched[0]) + "–" + hm(rec.sched[1]) +
+          "</td><td class='num'>" + hm(rec.tin) + "</td><td class='num'>" + hm(rec.tout) + "</td><td class='r num'>" + (c.late || "—") + "</td><td class='r num'>" + (c.early || "—") + "</td><td class='r num'>" + (c.ot ? c.ot.toFixed(1) : "—") +
+          "</td><td>" + c.incs.map(inc).join("") + "</td><td>" + (c.miss && !locked ? "<button class='btn' type='button' data-i='" + idx + "' style='min-height:32px'>Correct</button>" : "") + "</td></tr>";
+      }).join("") : "<tr><td colspan='10' class='muted'>No rows for these filters.</td></tr>";
+      const s = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
+      document.querySelector("#sheet tfoot").innerHTML = "<tr><td colspan='5'>Total (" + shown.length + " shown)</td><td class='r num'>" + s(shown, x => x.c.late) + "</td><td class='r num'>" + s(shown, x => x.c.early) + "</td><td class='r num'>" + s(shown, x => x.c.ot).toFixed(1) + "</td><td colspan='2'></td></tr>";
+
+      document.getElementById("kEmp").textContent = shown.length;
+      document.getElementById("kPresent").textContent = shown.filter(x => !x.c.absent).length + " present, " + shown.filter(x => x.c.absent).length + " absent";
+      document.getElementById("kLate").textContent = shown.filter(x => x.c.late).length;
+      document.getElementById("kLateMin").textContent = s(shown, x => x.c.late) + " minutes in total";
+      document.getElementById("kOt").textContent = s(shown, x => x.c.ot).toFixed(1);
+      document.getElementById("kMiss").textContent = shown.filter(x => x.c.miss).length;
+
+      // Weekly summary (all days, department and search filters).
+      const wk = emps.filter(empFilter).map(e => {
+        const recs = records.filter(x => x.emp === e).map(calc);
+        return { e, worked: recs.filter(c => !c.absent).length, abs: recs.filter(c => c.absent).length, lateN: recs.filter(c => c.late).length, late: s(recs, c => c.late), ot: s(recs, c => c.ot), miss: recs.filter(c => c.miss).length };
+      });
+      document.querySelector("#week tbody").innerHTML = wk.map(w => "<tr><td>" + w.e.name + "</td><td class='r num'>" + w.worked + "</td><td class='r num" + (w.abs ? " neg" : "") + "'>" + w.abs + "</td><td class='r num'>" + w.lateN + "</td><td class='r num'>" + w.late + "</td><td class='r num'>" + w.ot.toFixed(1) + "</td><td class='r num" + (w.miss ? " neg" : "") + "'>" + w.miss + "</td></tr>").join("");
+      document.querySelector("#week tfoot").innerHTML = "<tr><td>Total</td><td class='r num'>" + s(wk, w => w.worked) + "</td><td class='r num'>" + s(wk, w => w.abs) + "</td><td class='r num'>" + s(wk, w => w.lateN) + "</td><td class='r num'>" + s(wk, w => w.late) + "</td><td class='r num'>" + s(wk, w => w.ot).toFixed(1) + "</td><td class='r num'>" + s(wk, w => w.miss) + "</td></tr>";
+      renderLock();
+    }
+
+    function renderLock() {
+      const all = records.map(calc);
+      const miss = all.filter(c => c.miss).length;
+      const bar = document.getElementById("lockBar");
+      if (locked) {
+        const ot = all.reduce((a, c) => a + c.ot, 0), abs = all.filter(c => c.absent).length, late = all.reduce((a, c) => a + c.late, 0);
+        bar.innerHTML = "<span class='chip chip-warn'>" + SVG('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>').replace('aria-hidden="true"', 'aria-hidden="true" style="width:14px;height:14px"') + "Cut-off closed</span>" +
+          "<span>Sent to the payroll run of Nov 16 – 30: <strong class='num'>" + ot.toFixed(1) + "</strong> overtime hours, <strong class='num'>" + abs + "</strong> absences and <strong class='num'>" + late + "</strong> late minutes for " + emps.length + " employees.</span>";
+      } else {
+        bar.innerHTML = "<div><h2>Payroll cut-off · Nov 9 – 15</h2><p class='muted' style='font-size:.85rem'>" + (miss ? miss + " missing punch(es) must be corrected before closing." : "All punches are complete. The week can be closed.") + "</p></div>" +
+          "<button class='btn btn-primary' id='lockBtn' type='button' style='margin-left:auto'" + (miss ? " disabled" : "") + ">Close cut-off for payroll</button>" +
+          (miss ? "<button class='btn' id='nextMiss' type='button'>Show missing punches</button>" : "");
+        const lb = document.getElementById("lockBtn");
+        lb.addEventListener("click", () => { locked = true; render(); UI.toast("Cut-off closed and sent to payroll"); });
+        const nm = document.getElementById("nextMiss");
+        if (nm) nm.addEventListener("click", () => {
+          const first = records.find(x => calc(x).miss);
+          fDay.value = first.dayIdx; fDept.value = ""; document.getElementById("fQ").value = ""; document.getElementById("fInc").checked = true;
+          render();
+          document.getElementById("sheet").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+    }
+
+    // ---------- Correct missing punch ----------
+    let fixing = null;
+    document.querySelector("#sheet tbody").addEventListener("click", e => {
+      const b = e.target.closest("button[data-i]");
+      if (!b) return;
+      fixing = records[+b.dataset.i];
+      document.getElementById("fixInfo").textContent = fixing.emp.name + " · " + UI.fmtDate(fixing.day) + " · scheduled " + hm(fixing.sched[0]) + "–" + hm(fixing.sched[1]);
+      document.getElementById("fxIn").value = fixing.tin != null ? hm(fixing.tin) : "";
+      document.getElementById("fxOut").value = fixing.tout != null ? hm(fixing.tout) : "";
+      document.getElementById("fxReason").value = "";
+      document.getElementById("fxErr").textContent = "";
+      UI.openModal("fixModal");
+    });
+    const toMin = v => { if (!v) return null; const [h, m] = v.split(":").map(Number); return h * 60 + m; };
+    document.getElementById("fxSave").addEventListener("click", () => {
+      const tin = toMin(document.getElementById("fxIn").value), tout = toMin(document.getElementById("fxOut").value), reason = document.getElementById("fxReason").value.trim();
+      const err = document.getElementById("fxErr");
+      if (tin == null || tout == null) { err.textContent = "Both In and Out are needed."; return; }
+      if (tout <= tin) { err.textContent = "Out must be later than In."; return; }
+      if (reason.length < 5) { err.textContent = "Write the reason for the correction."; document.getElementById("fxReason").focus(); return; }
+      fixing.tin = tin; fixing.tout = tout; fixing.fixed = reason;
+      UI.closeModal("fixModal");
+      render();
+      UI.toast("Punch corrected for " + fixing.emp.name);
+    });
+    document.getElementById("fxClose").addEventListener("click", () => UI.closeModal("fixModal"));
+
+    [fDay, fDept, document.getElementById("fInc")].forEach(x => x.addEventListener("change", render));
+    document.getElementById("fQ").addEventListener("input", render);
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suggested Order · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: var(--space-4); align-items: start; }
+    .side { position: sticky; top: 76px; display: flex; flex-direction: column; gap: var(--space-4); }
+    .scan { display: flex; gap: 8px; }
+    .scan .input { font-family: var(--font-mono); }
+    .results { margin-top: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 220px; overflow: auto; }
+    .results button { display: flex; justify-content: space-between; gap: 8px; width: 100%; border: 0; background: var(--surface); color: var(--text); padding: 8px 10px; font: inherit; font-size: .88rem; cursor: pointer; text-align: left; border-bottom: 1px solid var(--border); min-height: 40px; }
+    .results button:hover, .results button:focus-visible { background: var(--surface-2); }
+    .stepper { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .stepper button { width: 32px; min-height: 32px; border: 0; background: var(--surface-2); color: var(--text); font-size: 1rem; cursor: pointer; }
+    .stepper input { width: 56px; min-height: 32px; border: 0; text-align: center; font-family: var(--font-mono); background: var(--surface); color: var(--text); }
+    #cart td, #sugg td { vertical-align: middle; }
+    #cart td, #cart th, #sugg td, #sugg th { white-space: nowrap; }
+    .chip svg { width: 13px; height: 13px; }
+    .tot-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: .92rem; }
+    .tot-row.grand { border-top: 2px solid var(--text); margin-top: 4px; padding-top: 10px; font-weight: 700; font-size: 1.05rem; }
+    .tiers { font-size: .82rem; }
+    .tiers li.on { color: var(--positive); font-weight: 600; }
+    .empty { padding: var(--space-5); text-align: center; }
+    .icon-x { width: 32px; min-height: 32px; padding: 0; }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .side { position: static; } }
+  </style>
+</head>
+<body data-page="suggested-order" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Suggested order</h1>
+        <p class="muted">Start from what the customer usually buys, scan or search anything else, and check stock before sending.</p>
+      </div>
+      <div class="field" style="width:280px">
+        <label for="customer">Customer</label>
+        <select id="customer"></select>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div style="display:flex;flex-direction:column;gap:var(--space-4);min-width:0">
+        <section class="card">
+          <div class="card-head"><h2>Suggested from purchase history</h2><button class="btn" id="addAll" type="button">Add all suggested</button></div>
+          <div class="card-body table-wrap">
+            <table class="grid" id="sugg">
+              <thead><tr><th>Code</th><th>Product</th><th class="r">Avg qty / order</th><th>Last ordered</th><th class="r">Stock</th><th><span class="sr-only">Add</span></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2>Cart</h2><span class="muted" style="font-size:.82rem" id="cartCount"></span></div>
+          <div class="card-body">
+            <div class="field">
+              <label for="scan">Barcode or product name</label>
+              <div class="scan">
+                <input class="input" id="scan" autocomplete="off" placeholder="e.g. 7501001 or milk" aria-describedby="scanHelp" aria-controls="results">
+                <button class="btn btn-primary" id="scanBtn" type="button">Add</button>
+              </div>
+              <span class="muted" id="scanHelp" style="font-size:.78rem">Press Enter to add the exact barcode or the first match.</span>
+              <span class="field-error" id="scanErr" role="alert"></span>
+            </div>
+            <div class="results" id="results" hidden></div>
+            <div class="table-wrap" style="margin-top:12px">
+              <table class="grid" id="cart">
+                <thead><tr><th>Product</th><th>Qty</th><th class="r">Price</th><th class="r">Discount</th><th class="r">Line total</th><th>Stock</th><th><span class="sr-only">Remove</span></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="side">
+        <section class="card card-body">
+          <h2 style="margin-bottom:8px">Order total</h2>
+          <div id="totals"></div>
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="sendBtn" type="button" style="flex:1">Send order</button>
+            <button class="btn" id="clearBtn" type="button">Clear</button>
+          </div>
+          <p class="field-error" id="sendErr" role="alert"></p>
+        </section>
+        <section class="card card-body">
+          <h3 style="margin-bottom:6px">Volume discount</h3>
+          <p class="muted" style="font-size:.82rem">Applied per line, by units of the same product.</p>
+          <ul class="tiers" id="tiers"></ul>
+          <p class="muted" style="font-size:.82rem;margin-top:6px">Price list: <strong id="priceList"></strong></p>
+        </section>
+      </aside>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h2>Recent orders</h2></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="recent">
+          <thead><tr><th>Order</th><th>Date</th><th>Customer</th><th class="r">Lines</th><th class="r">Units</th><th class="r">Total</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The suggestion comes from the customer's own history: products bought in the last orders and their average quantity.</li>
+        <li>The search accepts a scanned barcode or part of the name, so it works with a scanner and with a keyboard.</li>
+        <li>Stock is checked on every line; the order can still be sent with a warning, because the warehouse confirms before invoicing.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="sendModal" role="dialog" aria-modal="true" aria-labelledby="sendTitle">
+    <div class="modal" style="width:min(640px,100%)">
+      <div class="modal-head"><h2 id="sendTitle">Send order</h2></div>
+      <div class="modal-body">
+        <p id="sendText"></p>
+        <div class="table-wrap" style="margin-top:10px"><table class="grid" id="sendLines"><thead><tr><th>Product</th><th class="r">Qty</th><th class="r">Line total</th></tr></thead><tbody></tbody></table></div>
+        <p class="chip chip-warn" id="sendWarn" hidden style="margin-top:10px"></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="confirmSend" type="button">Send order</button>
+        <button class="btn" id="cancelSend" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(7501);
+    const TAX = 0.15;
+    const WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>';
+    const OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>';
+    const TIERS = [{ min: 1, pct: 0 }, { min: 12, pct: 0.03 }, { min: 24, pct: 0.05 }, { min: 48, pct: 0.08 }];
+
+    const products = D.products.map((p, i) => ({
+      code: String(7501001 + i * 7), name: p[0], cat: p[1],
+      price: Math.round(UI.between(r, 18, 240) * 100) / 100,
+      stock: Math.floor(r() < 0.15 ? UI.between(r, 0, 10) : UI.between(r, 20, 400))
+    }));
+    const customers = D.customers.map((name, i) => ({ name, list: i % 3 === 0 ? "Wholesale" : "Retail", factor: i % 3 === 0 ? 0.92 : 1 }));
+
+    function historyFor(cust) {
+      const rc = UI.rng(D.customers.indexOf(cust.name) * 131 + 7);
+      const picked = products.slice().sort(() => rc() - 0.5).slice(0, 6 + Math.floor(rc() * 4));
+      return picked.map(p => ({ p, avg: 2 + Math.round(rc() * 30), last: UI.fmtDate(new Date(Date.UTC(2026, 10, 15) - Math.floor(rc() * 40) * 86400000)) }));
+    }
+
+    $("#customer").html(customers.map((c, i) => '<option value="' + i + '">' + c.name + " · " + c.list + "</option>").join(""))
+      .select2({ width: "100%" });
+    document.getElementById("tiers").innerHTML = TIERS.map((t, i) => '<li data-t="' + i + '">' + t.min + "+ units: " + (t.pct * 100) + "% off</li>").join("");
+
+    let cart = []; // {p, qty}
+    let orderSeq = 30418;
+    const recent = [
+      { no: "SO-030417", date: "2026-11-15", cust: D.customers[4], lines: 7, units: 96, total: 6120.40, st: "Invoiced" },
+      { no: "SO-030416", date: "2026-11-15", cust: D.customers[11], lines: 4, units: 38, total: 2275.10, st: "Invoiced" },
+      { no: "SO-030415", date: "2026-11-14", cust: D.customers[2], lines: 9, units: 140, total: 9810.75, st: "Partially invoiced" }
+    ];
+
+    function cust() { return customers[+$("#customer").val()]; }
+    function priceOf(p) { return Math.round(p.price * cust().factor * 100) / 100; }
+    function tierOf(qty) { return TIERS.slice().reverse().find(t => qty >= t.min) || TIERS[0]; }
+
+    function renderSugg() {
+      const h = historyFor(cust());
+      document.querySelector("#sugg tbody").innerHTML = h.map(x =>
+        '<tr><td class="num">' + x.p.code + "</td><td>" + x.p.name + '</td><td class="r num">' + x.avg + '</td><td class="num">' + x.last +
+        '</td><td class="r num' + (x.p.stock < x.avg ? " neg" : "") + '">' + x.p.stock + '</td><td><button class="btn" type="button" data-add="' + x.p.code + '" data-q="' + x.avg + '">Add</button></td></tr>').join("");
+      document.getElementById("priceList").textContent = cust().list + (cust().factor < 1 ? " (8% below retail)" : "");
+      document.getElementById("addAll").onclick = () => { h.forEach(x => addToCart(x.p, x.avg, true)); renderCart(); UI.toast(h.length + " suggested lines added"); };
+    }
+
+    function addToCart(p, qty, silent) {
+      const line = cart.find(l => l.p === p);
+      if (line) line.qty += qty; else cart.push({ p, qty });
+      if (!silent) { renderCart(); UI.toast(p.name + " added"); }
+    }
+
+    function lineCalc(l) {
+      const price = priceOf(l.p);
+      const t = tierOf(l.qty);
+      const gross = price * l.qty;
+      const disc = Math.round(gross * t.pct * 100) / 100;
+      return { price, t, gross, disc, net: gross - disc };
+    }
+
+    function renderCart() {
+      const body = document.querySelector("#cart tbody");
+      if (!cart.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty muted">The cart is empty. Add suggested lines or scan a product.</td></tr>';
+      } else {
+        body.innerHTML = cart.map((l, i) => {
+          const c = lineCalc(l);
+          const short = l.qty > l.p.stock;
+          return "<tr><td>" + l.p.name + '<div class="muted num" style="font-size:.76rem">' + l.p.code + "</div></td>" +
+            '<td><div class="stepper"><button type="button" data-step="-1" data-i="' + i + '" aria-label="Decrease ' + l.p.name + '">−</button>' +
+            '<input type="text" inputmode="numeric" data-qty="' + i + '" value="' + l.qty + '" aria-label="Quantity of ' + l.p.name + '">' +
+            '<button type="button" data-step="1" data-i="' + i + '" aria-label="Increase ' + l.p.name + '">+</button></div></td>' +
+            '<td class="r num">' + UI.fmtMoney(c.price) + '</td><td class="r num">' + (c.disc ? '<span class="pos">−' + UI.fmtMoney(c.disc) + '</span><div class="muted" style="font-size:.74rem">' + (c.t.pct * 100) + "%</div>" : '<span class="muted">–</span>') +
+            '</td><td class="r num"><strong>' + UI.fmtMoney(c.net) + "</strong></td><td>" +
+            (short ? '<span class="chip chip-warn">' + WARN + "Only " + l.p.stock + " in stock</span>" : '<span class="chip chip-pos">' + OK + l.p.stock + " in stock</span>") +
+            '</td><td><button class="btn icon-x" type="button" data-rm="' + i + '" aria-label="Remove ' + l.p.name + '">×</button></td></tr>';
+        }).join("");
+      }
+      let gross = 0, disc = 0, units = 0;
+      cart.forEach(l => { const c = lineCalc(l); gross += c.gross; disc += c.disc; units += l.qty; });
+      const sub = gross - disc, tax = sub * TAX;
+      document.getElementById("totals").innerHTML =
+        '<div class="tot-row"><span>Lines / units</span><span class="num">' + cart.length + " / " + UI.fmtInt(units) + "</span></div>" +
+        '<div class="tot-row"><span>Gross</span><span class="num">' + UI.fmtMoney(gross) + "</span></div>" +
+        '<div class="tot-row"><span>− Volume discount</span><span class="num pos">' + UI.fmtMoney(disc) + "</span></div>" +
+        '<div class="tot-row"><span>Subtotal</span><span class="num">' + UI.fmtMoney(sub) + "</span></div>" +
+        '<div class="tot-row"><span>Tax 15% (sample)</span><span class="num">' + UI.fmtMoney(tax) + "</span></div>" +
+        '<div class="tot-row grand"><span>Total</span><span class="num">' + UI.fmtMoney(sub + tax) + "</span></div>";
+      document.getElementById("cartCount").textContent = cart.length ? cart.length + " lines" : "";
+      document.getElementById("sendBtn").disabled = !cart.length;
+      const maxQ = cart.reduce((a, l) => Math.max(a, l.qty), 0);
+      document.querySelectorAll("#tiers li").forEach(li => li.classList.toggle("on", cart.length && TIERS[+li.dataset.t] === tierOf(maxQ)));
+      document.getElementById("sendErr").textContent = "";
+    }
+
+    // ---- Barcode / name search ----
+    const scan = document.getElementById("scan");
+    const results = document.getElementById("results");
+    function matches(q) {
+      q = q.trim().toLowerCase();
+      if (!q) return [];
+      return products.filter(p => p.code.startsWith(q) || p.name.toLowerCase().includes(q)).slice(0, 8);
+    }
+    function showResults() {
+      const m = matches(scan.value);
+      document.getElementById("scanErr").textContent = "";
+      if (!scan.value.trim()) { results.hidden = true; return; }
+      results.hidden = false;
+      results.innerHTML = m.length ? m.map(p => '<button type="button" data-pick="' + p.code + '"><span>' + p.name + '</span><span class="num muted">' + p.code + " · " + UI.fmtMoney(priceOf(p)) + "</span></button>").join("")
+        : '<div class="muted" style="padding:10px;font-size:.88rem">No product matches "' + scan.value.replace(/</g, "&lt;") + '"</div>';
+    }
+    function addFromScan() {
+      const q = scan.value.trim();
+      if (!q) { document.getElementById("scanErr").textContent = "Type a barcode or a product name."; return; }
+      const exact = products.find(p => p.code === q);
+      const p = exact || matches(q)[0];
+      if (!p) { document.getElementById("scanErr").textContent = "No product with barcode or name \"" + q + "\"."; return; }
+      addToCart(p, 1);
+      scan.value = ""; results.hidden = true; scan.focus();
+    }
+    scan.addEventListener("input", showResults);
+    scan.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addFromScan(); } });
+    document.getElementById("scanBtn").addEventListener("click", addFromScan);
+    results.addEventListener("click", e => {
+      const b = e.target.closest("[data-pick]");
+      if (!b) return;
+      addToCart(products.find(p => p.code === b.dataset.pick), 1);
+      scan.value = ""; results.hidden = true; scan.focus();
+    });
+
+    // ---- Cart events ----
+    document.getElementById("sugg").addEventListener("click", e => {
+      const b = e.target.closest("[data-add]");
+      if (b) addToCart(products.find(p => p.code === b.dataset.add), +b.dataset.q);
+    });
+    const cartEl = document.getElementById("cart");
+    cartEl.addEventListener("click", e => {
+      const s = e.target.closest("[data-step]");
+      if (s) { const l = cart[+s.dataset.i]; l.qty = Math.max(1, l.qty + +s.dataset.step); renderCart(); cartEl.querySelector('[data-i="' + s.dataset.i + '"][data-step="' + s.dataset.step + '"]').focus(); return; }
+      const rm = e.target.closest("[data-rm]");
+      if (rm) { cart.splice(+rm.dataset.rm, 1); renderCart(); }
+    });
+    cartEl.addEventListener("input", e => { if (e.target.dataset.qty != null) e.target.value = e.target.value.replace(/[^0-9]/g, ""); });
+    cartEl.addEventListener("change", e => {
+      if (e.target.dataset.qty == null) return;
+      cart[+e.target.dataset.qty].qty = Math.max(1, parseInt(e.target.value, 10) || 1);
+      renderCart();
+    });
+    document.getElementById("clearBtn").addEventListener("click", () => { cart = []; renderCart(); });
+    $("#customer").on("change", () => { renderSugg(); renderCart(); });
+
+    // ---- Send ----
+    document.getElementById("sendBtn").addEventListener("click", () => {
+      if (!cart.length) { document.getElementById("sendErr").textContent = "Add at least one line."; return; }
+      let total = 0;
+      document.querySelector("#sendLines tbody").innerHTML = cart.map(l => { const c = lineCalc(l); total += c.net; return "<tr><td>" + l.p.name + '</td><td class="r num">' + l.qty + '</td><td class="r num">' + UI.fmtMoney(c.net) + "</td></tr>"; }).join("");
+      document.getElementById("sendText").innerHTML = "Send the order for <strong>" + cust().name + '</strong> for <span class="num">' + UI.fmtMoney(total * (1 + TAX)) + "</span> including tax?";
+      const short = cart.filter(l => l.qty > l.p.stock).length;
+      const w = document.getElementById("sendWarn");
+      w.hidden = !short;
+      w.innerHTML = WARN + short + (short === 1 ? " line asks" : " lines ask") + " for more than the stock; the warehouse will confirm it.";
+      UI.openModal("sendModal");
+    });
+    document.getElementById("cancelSend").addEventListener("click", () => UI.closeModal("sendModal"));
+    document.getElementById("confirmSend").addEventListener("click", () => {
+      let total = 0, units = 0;
+      cart.forEach(l => { total += lineCalc(l).net; units += l.qty; });
+      const no = "SO-" + String(orderSeq++).padStart(6, "0");
+      recent.unshift({ no, date: "2026-11-16", cust: cust().name, lines: cart.length, units, total: total * (1 + TAX), st: "Sent" });
+      cart = [];
+      UI.closeModal("sendModal");
+      renderCart(); renderRecent();
+      UI.toast("Order " + no + " sent");
+    });
+
+    function renderRecent() {
+      document.querySelector("#recent tbody").innerHTML = recent.map(o =>
+        '<tr><td class="num">' + o.no + '</td><td class="num">' + o.date + "</td><td>" + o.cust + '</td><td class="r num">' + o.lines + '</td><td class="r num">' + o.units +
+        '</td><td class="r num">' + UI.fmtMoney(o.total) + "</td><td>" + (o.st === "Sent" ? '<span class="chip chip-info">' + OK + "Sent</span>" : o.st === "Invoiced" ? '<span class="chip chip-pos">' + OK + "Invoiced</span>" : '<span class="chip chip-warn">' + WARN + o.st + "</span>") + "</td></tr>").join("");
+    }
+
+    renderSugg(); renderCart(); renderRecent();
+  });
+  </script>
+</body>
+</html>

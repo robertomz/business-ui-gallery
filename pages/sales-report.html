@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sales Detail Report · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .kpis-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .toolbar { display: flex; gap: var(--space-3); align-items: end; flex-wrap: wrap; justify-content: space-between; }
+    .toolbar .field { min-width: 200px; }
+    #report { font-size: .84rem; }
+    #report td, #report th { white-space: nowrap; padding: 6px 10px; }
+    #report tbody tr { height: 34px; }
+    #report tbody td { border-bottom: 1px solid var(--border); }
+    #report tbody tr:hover { background: var(--surface-2); }
+    .dataTables_scrollHead thead th { font-family: var(--font-sans) !important; padding: 8px 10px !important; white-space: nowrap; background: var(--surface-2); color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
+    #report tfoot td { font-weight: 600; background: var(--surface-2); border-top: 1px solid var(--border); padding: 8px 10px; }
+    #report thead th, #report tfoot td:first-child { font-family: var(--font-sans); }
+    #report tbody tr, #report tbody td { background: var(--surface) !important; box-shadow: none !important; color: var(--text); }
+    #report tbody tr:hover td { background: var(--surface-2) !important; }
+    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field { margin-top: 8px; color: var(--text); font-family: inherit; }
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered { padding: 0 8px; }
+    .dataTables_scrollFoot, .dataTables_scrollHead { background: var(--surface-2); }
+    .summary-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
+    @media (max-width: 1100px) { .kpis-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 640px) { .kpis-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .toolbar .field { min-width: 0; width: 100%; } }
+  </style>
+</head>
+<body data-page="sales-report" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Sales detail report</h1>
+        <p class="muted">Every invoice line of the month. Filter it any way you need; totals always match what is on screen.</p>
+      </div>
+      <button class="btn" id="exportBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+        Export CSV
+      </button>
+    </div>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fFrom">From</label><input class="input" type="date" id="fFrom"></div>
+        <div class="field"><label for="fTo">To</label><input class="input" type="date" id="fTo"></div>
+        <div class="field"><label for="fBranch">Branch</label><select id="fBranch" multiple></select></div>
+        <div class="field"><label for="fSeller">Seller</label><select id="fSeller" multiple></select></div>
+        <div class="field"><label for="fCategory">Category</label><select id="fCategory" multiple></select></div>
+        <div class="field"><label for="fPayment">Payment</label><select id="fPayment" multiple></select></div>
+        <div class="field"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Invoice, customer, product…"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn" id="clearBtn" type="button">Clear filters</button></div>
+      </div>
+    </section>
+
+    <section class="kpis kpis-5" aria-label="Totals for the filtered lines" aria-live="polite">
+      <div class="card kpi"><div class="kpi-label">Lines</div><div class="kpi-value" id="kLines">–</div></div>
+      <div class="card kpi"><div class="kpi-label">Units</div><div class="kpi-value" id="kUnits">–</div></div>
+      <div class="card kpi"><div class="kpi-label">Net sales</div><div class="kpi-value" id="kNet">–</div></div>
+      <div class="card kpi"><div class="kpi-label">Avg ticket</div><div class="kpi-value" id="kTicket">–</div><div class="kpi-delta muted" id="kInvoices"></div></div>
+      <div class="card kpi"><div class="kpi-label">Discount</div><div class="kpi-value" id="kDisc">–</div><div class="kpi-delta muted">of gross</div></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Invoice lines</h2><span class="muted" style="font-size:.82rem" id="loadNote">Generating 10,000 lines…</span></div>
+      <div class="card-body">
+        <table id="report" style="width:100%">
+          <thead><tr>
+            <th>Date</th><th>Invoice</th><th>Branch</th><th>Seller</th><th>Customer</th><th>Category</th><th>Product</th>
+            <th class="r">Qty</th><th class="r">Price</th><th class="r">Discount</th><th class="r">Net</th><th>Payment</th>
+          </tr></thead>
+          <tfoot><tr>
+            <td colspan="7">Total (filtered)</td><td class="r num" id="fQty"></td><td></td><td class="r num" id="fDisc"></td><td class="r num" id="fNet"></td><td></td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Summary</h2>
+        <div class="field" style="width:200px">
+          <label for="groupBy">Group by</label>
+          <select class="input" id="groupBy">
+            <option value="">None</option>
+            <option value="2" selected>Branch</option>
+            <option value="3">Seller</option>
+            <option value="5">Category</option>
+            <option value="11">Payment</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="summary">
+          <thead><tr><th id="sKey">Branch</th><th class="r">Lines</th><th class="r">Units</th><th class="r">Net</th><th class="r">Share</th></tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The table renders 10,000 lines with virtual scrolling instead of pages, so the user can scroll the whole month without waiting for each page.</li>
+        <li>Every total on this page (cards, footer and summary) is recalculated from the rows that pass the current filters, so the numbers never disagree with the table.</li>
+        <li>Filters use searchable multi-selects; the export downloads exactly the filtered lines.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/scroller/2.3.0/js/dataTables.scroller.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(20261101);
+    const N = 10000;
+    const start = Date.UTC(2026, 9, 1); // October 2026, 31 days
+
+    // ---- Generate invoice lines (an invoice has 1–6 lines) ----
+    const rows = [];
+    let inv = 40211;
+    const prices = {};
+    D.products.forEach(p => { prices[p[0]] = Math.round(UI.between(r, 18, 260) * 100) / 100; });
+    while (rows.length < N) {
+      inv++;
+      const day = Math.floor(r() * 31);
+      const date = UI.fmtDate(new Date(start + day * 86400000));
+      const branch = UI.pick(r, D.branches);
+      const seller = UI.pick(r, D.sellers);
+      const customer = UI.pick(r, D.customers);
+      const pay = r() < 0.42 ? "Cash" : r() < 0.6 ? "Card" : r() < 0.75 ? "Credit" : "Transfer";
+      const lines = 1 + Math.floor(r() * 6);
+      for (let i = 0; i < lines && rows.length < N; i++) {
+        const prod = UI.pick(r, D.products);
+        const qty = 1 + Math.floor(r() * (r() < 0.15 ? 48 : 12));
+        const price = prices[prod[0]];
+        const disc = r() < 0.3 ? Math.round(qty * price * UI.between(r, 0.02, 0.12) * 100) / 100 : 0;
+        const net = Math.round((qty * price - disc) * 100) / 100;
+        rows.push([date, "INV-" + inv, branch, seller, customer, prod[1], prod[0], qty, price, disc, net, pay]);
+      }
+    }
+
+    // ---- Filters ----
+    function fill(id, values) {
+      $("#" + id).html(values.map(v => '<option value="' + v + '">' + v + "</option>").join(""))
+        .select2({ placeholder: "All", allowClear: true, width: "100%" });
+    }
+    fill("fBranch", D.branches);
+    fill("fSeller", D.sellers);
+    fill("fCategory", D.categories);
+    fill("fPayment", D.payment);
+    $("#fFrom").val("2026-10-01").attr({ min: "2026-10-01", max: "2026-10-31" });
+    $("#fTo").val("2026-10-31").attr({ min: "2026-10-01", max: "2026-10-31" });
+
+    // Read filters once per draw, not once per row.
+    let F = {};
+    function readFilters() {
+      const set = id => { const v = $("#" + id).val() || []; return v.length ? new Set(v) : null; };
+      F = { from: $("#fFrom").val() || "0000", to: $("#fTo").val() || "9999", branch: set("fBranch"), seller: set("fSeller"), category: set("fCategory"), pay: set("fPayment") };
+    }
+    readFilters();
+    $.fn.dataTable.ext.search.push(function (settings, data, idx) {
+      if (settings.nTable.id !== "report") return true;
+      const row = rows[idx];
+      if (row[0] < F.from || row[0] > F.to) return false;
+      if (F.branch && !F.branch.has(row[2])) return false;
+      if (F.seller && !F.seller.has(row[3])) return false;
+      if (F.category && !F.category.has(row[5])) return false;
+      if (F.pay && !F.pay.has(row[11])) return false;
+      return true;
+    });
+
+    const moneyCol = { render: (v, t) => t === "display" ? UI.fmtMoney(v) : v, className: "dt-right num" };
+    const table = $("#report").DataTable({
+      data: rows,
+      deferRender: true,
+      scrollY: 460,
+      scrollX: true,
+      scrollCollapse: false,
+      scroller: { rowHeight: 34, displayBuffer: 4 },
+      dom: "rti",
+      order: [[0, "asc"], [1, "asc"]],
+      columns: [
+        { className: "num" }, { className: "num" }, {}, {}, {}, {}, {},
+        { className: "dt-right num", render: (v, t) => t === "display" ? UI.fmtInt(v) : v },
+        moneyCol, moneyCol, moneyCol, {}
+      ],
+      language: { info: "_TOTAL_ lines", infoFiltered: "(filtered from _MAX_)", infoEmpty: "No lines match the filters", zeroRecords: "No lines match the filters" }
+    });
+    $("#loadNote").text("10,000 lines, virtual scrolling");
+
+    // ---- Totals that follow the table ----
+    function summarize() {
+      const data = table.rows({ search: "applied" }).data();
+      let units = 0, net = 0, disc = 0, gross = 0;
+      const invoices = new Set();
+      for (let i = 0; i < data.length; i++) {
+        const x = data[i];
+        units += x[7]; net += x[10]; disc += x[9]; gross += x[7] * x[8];
+        invoices.add(x[1]);
+      }
+      $("#kLines").text(UI.fmtInt(data.length));
+      $("#kUnits").text(UI.fmtInt(units));
+      $("#kNet").text(UI.fmtMoney(net));
+      $("#kTicket").text(invoices.size ? UI.fmtMoney(net / invoices.size) : "0.00");
+      $("#kInvoices").text(UI.fmtInt(invoices.size) + " invoices");
+      $("#kDisc").text(gross ? UI.fmtPct(disc / gross) : "0.0%");
+      $("#fQty").text(UI.fmtInt(units));
+      $("#fDisc").text(UI.fmtMoney(disc));
+      $("#fNet").text(UI.fmtMoney(net));
+      renderSummary(data, net);
+    }
+
+    function renderSummary(data, total) {
+      const col = $("#groupBy").val();
+      const label = $("#groupBy option:selected").text();
+      $("#sKey").text(col === "" ? "All lines" : label);
+      const groups = new Map();
+      for (let i = 0; i < data.length; i++) {
+        const x = data[i];
+        const k = col === "" ? "All lines" : x[+col];
+        const g = groups.get(k) || { lines: 0, units: 0, net: 0 };
+        g.lines++; g.units += x[7]; g.net += x[10];
+        groups.set(k, g);
+      }
+      const list = [...groups.entries()].sort((a, b) => b[1].net - a[1].net);
+      $("#summary tbody").html(list.map(([k, g]) =>
+        "<tr><td>" + k + '</td><td class="r num">' + UI.fmtInt(g.lines) + '</td><td class="r num">' + UI.fmtInt(g.units) +
+        '</td><td class="r num">' + UI.fmtMoney(g.net) + '</td><td class="r num">' + (total ? UI.fmtPct(g.net / total) : "–") + "</td></tr>").join("") ||
+        '<tr><td colspan="5" class="muted">No lines match the filters</td></tr>');
+      let lines = 0, units = 0;
+      list.forEach(([, g]) => { lines += g.lines; units += g.units; });
+      $("#summary tfoot").html('<tr><td>Total</td><td class="r num">' + UI.fmtInt(lines) + '</td><td class="r num">' + UI.fmtInt(units) +
+        '</td><td class="r num">' + UI.fmtMoney(total) + '</td><td class="r num">' + (list.length ? "100.0%" : "–") + "</td></tr>");
+    }
+
+    table.on("draw", summarize);
+    summarize();
+
+    function redraw() { readFilters(); table.draw(); }
+    $("#fBranch, #fSeller, #fCategory, #fPayment").on("change", redraw);
+    $("#fFrom, #fTo").on("change", redraw);
+    let t;
+    $("#fSearch").on("input", function () { clearTimeout(t); const v = this.value; t = setTimeout(() => table.search(v).draw(), 200); });
+    $("#groupBy").on("change", () => renderSummary(table.rows({ search: "applied" }).data(), table.rows({ search: "applied" }).data().reduce((a, x) => a + x[10], 0)));
+    $("#clearBtn").on("click", () => {
+      $("#fBranch, #fSeller, #fCategory, #fPayment").val(null).trigger("change.select2");
+      $("#fFrom").val("2026-10-01"); $("#fTo").val("2026-10-31"); $("#fSearch").val("");
+      table.search("");
+      redraw();
+    });
+
+    // ---- CSV export of the filtered lines ----
+    $("#exportBtn").on("click", () => {
+      const head = ["Date", "Invoice", "Branch", "Seller", "Customer", "Category", "Product", "Qty", "Price", "Discount", "Net", "Payment"];
+      const esc = v => { const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+      const data = table.rows({ search: "applied" }).data().toArray();
+      const csv = [head].concat(data).map(row => row.map(esc).join(",")).join("\r\n");
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "sales-detail-" + (F.from || "") + "-to-" + (F.to || "") + ".csv";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      UI.toast(UI.fmtInt(data.length) + " lines exported");
+    });
+
+    window.addEventListener("resize", () => table.columns.adjust());
+    if (document.fonts) document.fonts.ready.then(() => table.columns.adjust());
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Balance Sheet · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .two { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-4); align-items: start; }
+    .two > * { min-width: 0; }
+    .switch { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; cursor: pointer; min-height: 38px; }
+    .switch input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .check { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius); border: 1px solid var(--border); }
+    .check svg { width: 22px; height: 22px; flex: none; }
+    .check.ok { background: var(--positive-bg); color: var(--positive); }
+    .check.bad { background: var(--negative-bg); color: var(--negative); }
+    .check .muted { color: inherit; opacity: .85; }
+    #tree td.name { white-space: nowrap; }
+    #tree .tog { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-right: 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); cursor: pointer; font: inherit; line-height: 1; vertical-align: middle; }
+    #tree .tog svg { width: 14px; height: 14px; transition: transform .15s var(--ease); }
+    #tree .tog[aria-expanded="true"] svg { transform: rotate(90deg); }
+    #tree .spacer { display: inline-block; width: 26px; flex: none; }
+    #tree .nm { display: flex; align-items: center; gap: 4px; }
+    #tree .tog { flex: none; }
+    #tree tr.l1 td { font-weight: 700; background: var(--surface-2); }
+    #tree tr.l2 td { font-weight: 600; }
+    #tree tr.l5 td { color: var(--text-muted); }
+    #tree tr.result td { font-style: italic; }
+    .chart-box { position: relative; height: 260px; }
+    @media (max-width: 600px) {
+      #tree td.name { white-space: normal; }
+      #tree th:nth-child(3), #tree td:nth-child(3) { display: none; }
+      #tree td, #tree th { padding-left: 6px; padding-right: 6px; }
+    }
+    @media (max-width: 1240px) { .two { grid-template-columns: minmax(0, 1fr); } .chart-box { height: 220px; } }
+  </style>
+</head>
+<body data-page="balance-sheet" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Balance sheet</h1>
+        <p class="muted">What the company owns and owes at the end of a month, from the account classes down to each subaccount.</p>
+      </div>
+    </div>
+
+    <section class="card card-body">
+      <div class="filters">
+        <div class="field"><label for="month">Month</label><select class="input" id="month"></select></div>
+        <div class="field"><label for="level">Detail level</label>
+          <select class="input" id="level"><option value="1">1 · Class</option><option value="2">2 · Group</option><option value="3" selected>3 · Subgroup</option><option value="4">4 · Account</option><option value="5">5 · Subaccount</option></select></div>
+        <label class="switch"><input type="checkbox" id="onlyBal" checked> Only accounts with balance</label>
+        <label class="switch"><input type="checkbox" id="withResult" checked> Include period result</label>
+      </div>
+    </section>
+
+    <div class="check" id="check" role="status" aria-live="polite"></div>
+
+    <section class="two">
+      <div class="card">
+        <div class="card-head"><h2>Accounts</h2>
+          <div style="display:flex;gap:8px"><button class="btn" type="button" id="expandAll">Expand all</button><button class="btn" type="button" id="collapseAll">Collapse all</button></div>
+        </div>
+        <div class="card-body table-wrap">
+          <table class="grid" id="tree"><thead><tr><th>Account</th><th class="r">Balance</th><th class="r">Share</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Composition</h2></div>
+        <div class="card-body">
+          <div class="chart-box"><canvas id="comp" role="img" aria-label="Assets compared with liabilities plus equity"></canvas></div>
+          <div class="ladder" id="mini" style="margin-top:var(--space-3)"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The tree goes from level 1 (class) to level 5 (subaccount), and every parent adds up its children, so any number can be traced down.</li>
+        <li>The banner checks the accounting equation: assets must equal liabilities plus equity.</li>
+        <li>Until the month is closed, the period result (revenue minus costs and expenses) still lives in the income accounts. Turn off "Include period result" and the banner shows that exact difference.</li>
+        <li>Rows expand with a mouse or the keyboard; the toggle buttons announce whether they are open.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const r2 = n => Math.round(n * 100) / 100;
+    // Sample chart of accounts: [code, name, sign, base amount]. Parents are derived from the code.
+    const LEAVES = [
+      ["1-01-01-01-001", "Main cash register", 1, 85000], ["1-01-01-01-002", "Branch petty cash", 1, 12000],
+      ["1-01-02-01-001", "Checking account", 1, 640000], ["1-01-02-01-002", "Savings account", 1, 310000], ["1-01-02-02-001", "US dollar account", 1, 145000],
+      ["1-01-03-01-001", "Trade customers", 1, 920000], ["1-01-03-01-002", "Card payments receivable", 1, 180000], ["1-01-03-02-001", "Allowance for doubtful accounts", -1, 46000],
+      ["1-01-04-01-001", "Main warehouse", 1, 1650000], ["1-01-04-01-002", "Branch stock", 1, 540000],
+      ["1-02-01-01-001", "Delivery trucks", 1, 1200000], ["1-02-01-02-001", "Accumulated depreciation, trucks", -1, 380000], ["1-02-01-03-001", "Office furniture", 1, 95000],
+      ["2-01-01-01-001", "Local suppliers", 1, 1180000], ["2-01-01-01-002", "Foreign suppliers", 1, 0],
+      ["2-01-02-01-001", "Salaries payable", 1, 96000], ["2-01-02-01-002", "Social security payable", 1, 41000],
+      ["2-01-03-01-001", "Sales tax payable", 1, 138000], ["2-01-03-01-002", "Income tax payable", 1, 0],
+      ["2-02-01-01-001", "Long-term bank loan", 1, 900000],
+      ["3-01-01-01-001", "Share capital", 1, 1500000],
+      ["3-02-01-01-001", "Prior years earnings", 1, 0]
+    ];
+    const NAMES = {
+      "1": "Assets", "1-01": "Current assets", "1-01-01": "Cash", "1-01-01-01": "Cash on hand", "1-01-02": "Banks", "1-01-02-01": "Local currency banks", "1-01-02-02": "Foreign currency banks",
+      "1-01-03": "Receivables", "1-01-03-01": "Customers", "1-01-03-02": "Allowances", "1-01-04": "Inventory", "1-01-04-01": "Merchandise",
+      "1-02": "Non-current assets", "1-02-01": "Property and equipment", "1-02-01-01": "Vehicles", "1-02-01-02": "Accumulated depreciation", "1-02-01-03": "Furniture",
+      "2": "Liabilities", "2-01": "Current liabilities", "2-01-01": "Suppliers", "2-01-01-01": "Trade payables", "2-01-02": "Payroll liabilities", "2-01-02-01": "Payroll payables",
+      "2-01-03": "Taxes", "2-01-03-01": "Taxes payable", "2-02": "Long-term liabilities", "2-02-01": "Bank loans", "2-02-01-01": "Loans payable",
+      "3": "Equity", "3-01": "Capital", "3-01-01": "Paid-in capital", "3-01-01-01": "Common shares", "3-02": "Retained earnings", "3-02-01": "Accumulated results", "3-02-01-01": "Prior years",
+      "3-03": "Period result", "3-03-01": "Current year", "3-03-01-01": "Result to date", "3-03-01-01-001": "Revenue minus costs and expenses"
+    };
+
+    const months = [];
+    for (let m = 5; m <= 10; m++) months.push({ v: "2026-" + String(m + 1).padStart(2, "0"), t: new Date(Date.UTC(2026, m, 1)).toLocaleString("en-US", { month: "long", timeZone: "UTC" }) + " 2026", i: m - 5 });
+    const monthSel = document.getElementById("month");
+    monthSel.innerHTML = months.slice().reverse().map(m => '<option value="' + m.v + '">' + m.t + "</option>").join("");
+
+    // Balances for one month; prior years earnings plugs the equation and the period result is computed apart.
+    function balances(mi) {
+      const r = UI.rng(500 + mi);
+      const bal = {};
+      LEAVES.forEach(l => { bal[l[0]] = l[3] ? r2(l[2] * l[3] * (1 + mi * 0.025) * UI.between(r, 0.9, 1.1)) : 0; });
+      if (mi % 2) bal["2-01-01-01-002"] = r2(UI.between(r, 20000, 60000));
+      const result = r2(UI.between(r, 180000, 260000) * (mi + 1) / 2);
+      const sum = p => Object.keys(bal).filter(k => k.startsWith(p)).reduce((a, k) => a + bal[k], 0);
+      bal["3-02-01-01-001"] = r2(sum("1") - sum("2") - sum("3") - result);
+      bal["3-03-01-01-001"] = result;
+      return bal;
+    }
+
+    function buildTree(bal, withResult) {
+      const nodes = {};
+      const ensure = code => {
+        if (nodes[code]) return nodes[code];
+        const parts = code.split("-");
+        const n = { code, name: NAMES[code] || (LEAVES.find(l => l[0] === code) || [])[1], level: parts.length, children: [], bal: 0 };
+        nodes[code] = n;
+        if (parts.length > 1) ensure(parts.slice(0, -1).join("-")).children.push(n);
+        return n;
+      };
+      Object.keys(bal).sort().forEach(code => {
+        if (!withResult && code.startsWith("3-03")) return;
+        const leaf = ensure(code);
+        leaf.bal = bal[code];
+        let p = code.split("-");
+        while (p.length > 1) { p = p.slice(0, -1); nodes[p.join("-")].bal = r2(nodes[p.join("-")].bal + bal[code]); }
+      });
+      return ["1", "2", "3"].map(c => nodes[c]);
+    }
+
+    const expanded = new Set(["1", "2", "3", "1-01", "2-01"]);
+    let roots = [], chart;
+    const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+
+    function render() {
+      const mi = months.find(m => m.v === monthSel.value).i;
+      const withResult = document.getElementById("withResult").checked;
+      const only = document.getElementById("onlyBal").checked;
+      const maxLevel = +document.getElementById("level").value;
+      roots = buildTree(balances(mi), withResult);
+      const [A, L, E] = roots.map(n => n.bal);
+      const rows = [];
+      const walk = (n, rootBal) => {
+        if (only && Math.abs(n.bal) < 0.005) return;
+        const kids = n.level < maxLevel ? n.children.filter(c => !only || Math.abs(c.bal) >= 0.005) : [];
+        const open = expanded.has(n.code);
+        const tog = kids.length ? '<button class="tog" type="button" data-code="' + n.code + '" aria-expanded="' + open + '" aria-label="' + (open ? "Collapse " : "Expand ") + n.name + '">' + CHEV + "</button>" : '<span class="spacer"></span>';
+        rows.push('<tr class="l' + n.level + (n.code.startsWith("3-03") ? " result" : "") + '"><td class="name" style="padding-left:' + (10 + (n.level - 1) * 18) + 'px"><div class="nm">' + tog +
+          '<span><span class="num" style="font-size:.8rem;margin-right:6px">' + n.code + "</span>" + n.name + "</span></div>" + '</td><td class="r num ' + (n.bal < 0 ? "neg" : "") + '">' + UI.fmtMoney(n.bal) +
+          '</td><td class="r num muted">' + UI.fmtPct(rootBal ? n.bal / rootBal : 0) + "</td></tr>");
+        if (open) kids.forEach(c => walk(c, rootBal));
+      };
+      walk(roots[0], A); walk(roots[1], L + E); walk(roots[2], L + E);
+      document.querySelector("#tree tbody").innerHTML = rows.join("");
+
+      const diff = r2(A - (L + E));
+      const check = document.getElementById("check");
+      const ok = Math.abs(diff) < 0.005;
+      check.className = "check " + (ok ? "ok" : "bad");
+      check.innerHTML = (ok
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><strong>Balanced.</strong> <span class="muted">Assets ' + UI.fmtMoney(A) + " = Liabilities " + UI.fmtMoney(L) + " + Equity " + UI.fmtMoney(E) + "</span></div>"
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg><div><strong>Difference of ' + UI.fmtMoney(diff) + ".</strong> <span class=\"muted\">Assets " + UI.fmtMoney(A) + " vs liabilities plus equity " + UI.fmtMoney(L + E) + (withResult ? "" : ". This is the period result, which is not included right now.") + "</span></div>");
+
+      const node = c => (roots.find(x => x.code === c[0]).children.find(x => x.code === c) || { bal: 0 }).bal;
+      document.getElementById("mini").innerHTML =
+        '<div class="ladder-row total"><span>Assets</span><span class="num">' + UI.fmtMoney(A) + "</span></div>" +
+        '<div class="ladder-row"><span>− Liabilities</span><span class="num">' + UI.fmtMoney(-L) + "</span></div>" +
+        '<div class="ladder-row"><span>− Equity</span><span class="num">' + UI.fmtMoney(-E) + "</span></div>" +
+        '<div class="ladder-row result"><span>Difference</span><span class="num ' + (ok ? "pos" : "neg") + '">' + UI.fmtMoney(diff) + "</span></div>";
+
+      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
+      const ds = [
+        { label: "Current assets", data: [node("1-01"), 0], backgroundColor: UI.cssVar("--chart-1") },
+        { label: "Non-current assets", data: [node("1-02"), 0], backgroundColor: UI.cssVar("--chart-4") },
+        { label: "Current liabilities", data: [0, node("2-01")], backgroundColor: UI.cssVar("--chart-5") },
+        { label: "Long-term liabilities", data: [0, node("2-02")], backgroundColor: UI.cssVar("--chart-3") },
+        { label: "Equity", data: [0, E], backgroundColor: UI.cssVar("--chart-2") }
+      ];
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("comp"), {
+        type: "bar",
+        data: { labels: ["Assets", "Liabilities + equity"], datasets: ds },
+        options: {
+          indexAxis: "y", maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom", labels: { color: text, boxWidth: 12, font: { size: 11 } } }, tooltip: { filter: i => i.parsed.x !== 0, callbacks: { label: c => c.dataset.label + ": " + UI.fmtMoney(c.parsed.x) } } },
+          scales: { x: { stacked: true, ticks: { color: text, callback: v => (v / 1e6).toFixed(1) + "M" }, grid: { color: grid } }, y: { stacked: true, ticks: { color: text }, grid: { display: false } } }
+        }
+      });
+    }
+
+    document.querySelector("#tree tbody").addEventListener("click", e => {
+      const b = e.target.closest(".tog");
+      if (!b) return;
+      const c = b.dataset.code;
+      if (expanded.has(c)) expanded.delete(c); else expanded.add(c);
+      render();
+      const again = document.querySelector('#tree .tog[data-code="' + c + '"]');
+      if (again) again.focus();
+    });
+    document.getElementById("expandAll").addEventListener("click", () => {
+      const all = n => { expanded.add(n.code); n.children.forEach(all); };
+      roots.forEach(all); render();
+    });
+    document.getElementById("collapseAll").addEventListener("click", () => { expanded.clear(); render(); });
+    ["month", "level", "onlyBal", "withResult"].forEach(id => document.getElementById(id).addEventListener("change", render));
+    document.addEventListener("themechange", render);
+    render();
+  });
+  </script>
+</body>
+</html>

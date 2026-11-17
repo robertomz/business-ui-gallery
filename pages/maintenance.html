@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maintenance Planner · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .plan-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--space-4); align-items: start; }
+    .cal-head { display: flex; align-items: center; gap: 8px; }
+    .cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+    .cal .dow { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); padding: 6px 8px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .day { min-height: 104px; padding: 6px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .day.other { background: var(--surface-2); }
+    .day.other .dnum { color: var(--text-muted); opacity: .6; }
+    .day.today { box-shadow: inset 0 0 0 2px var(--primary); }
+    .dnum { font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); }
+    .job {
+      display: flex; align-items: center; gap: 4px; width: 100%; text-align: left;
+      font: inherit; font-size: .74rem; line-height: 1.25; padding: 3px 6px; border-radius: 5px; cursor: pointer;
+      border: 1px solid transparent; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .job svg { width: 12px; height: 12px; flex: none; }
+    .job span { overflow: hidden; text-overflow: ellipsis; }
+    .job.t-equipment { background: var(--info-bg); color: var(--info); }
+    .job.t-vehicle { background: var(--positive-bg); color: var(--positive); }
+    .job.t-ac { background: var(--warning-bg); color: var(--warning); }
+    .job.done { opacity: .6; text-decoration: line-through; }
+    .job.overdue { border-color: var(--negative); }
+    .more { font-size: .72rem; color: var(--text-muted); }
+    .side-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); text-align: left; font: inherit; color: var(--text); cursor: pointer; width: 100%; }
+    .item:hover { background: var(--surface-2); }
+    .item .when { font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); white-space: nowrap; }
+    .alert { display: flex; gap: 8px; align-items: flex-start; color: var(--negative); font-size: .85rem; }
+    .alert svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .8rem; }
+    .check-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .check-list label { display: flex; gap: 8px; align-items: center; font-size: .9rem; color: var(--text); }
+    .check-list input { width: 18px; height: 18px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+    .modal.small { width: min(620px, 100%); }
+    textarea.input { min-height: 80px; resize: vertical; }
+    @media (max-width: 1100px) { .plan-layout { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .day { min-height: 64px; padding: 3px; }
+      .job span { display: none; }
+      .job { justify-content: center; padding: 3px; }
+      .cal .dow { padding: 4px; font-size: .64rem; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-page="maintenance" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Maintenance planner</h1>
+        <p class="muted">Preventive maintenance for equipment, vehicles and air conditioning, so nothing waits until it breaks.</p>
+      </div>
+      <button class="btn btn-primary" id="newJob" type="button">Schedule job</button>
+    </div>
+
+    <section class="kpis" aria-label="Maintenance status">
+      <div class="card kpi"><div class="kpi-label">Assets under plan</div><div class="kpi-value" id="kAssets"></div><div class="kpi-delta muted">Equipment, vehicles, AC units</div></div>
+      <div class="card kpi"><div class="kpi-label">Due in 14 days</div><div class="kpi-value" id="kSoon"></div><div class="kpi-delta muted">Scheduled and not done</div></div>
+      <div class="card kpi"><div class="kpi-label">Overdue</div><div class="kpi-value neg" id="kOver"></div><div class="kpi-delta muted">Past their date</div></div>
+      <div class="card kpi"><div class="kpi-label">Done this month</div><div class="kpi-value pos" id="kDone"></div><div class="kpi-delta muted" id="kDoneD"></div></div>
+    </section>
+
+    <section class="plan-layout">
+      <div class="card">
+        <div class="card-head">
+          <div class="cal-head">
+            <button class="btn icon-btn" id="prev" type="button" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+            <h2 id="monthTitle" aria-live="polite" style="min-width:150px;text-align:center"></h2>
+            <button class="btn icon-btn" id="next" type="button" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+            <button class="btn" id="todayBtn" type="button">Today</button>
+          </div>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="card-body"><div class="cal" id="cal"></div></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+        <section class="card card-body" aria-labelledby="overTitle">
+          <h2 id="overTitle">Overdue</h2>
+          <div class="side-list" id="overList"></div>
+        </section>
+        <section class="card card-body" aria-labelledby="soonTitle">
+          <h2 id="soonTitle">Next 14 days</h2>
+          <div class="side-list" id="soonList"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Assets and plans</h2><span class="muted" style="font-size:.82rem">Next date = last done + frequency</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="assets">
+          <thead><tr><th>Asset</th><th>Type</th><th>Location</th><th class="r">Every</th><th>Last done</th><th>Next due</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each asset has a maintenance plan with a frequency. Completing a job schedules the next one automatically from the day it was really done, not from the planned day.</li>
+        <li>A job can only be closed when its checklist is complete, or with a note that explains what was left pending.</li>
+        <li>Overdue jobs stay visible on every screen until someone completes or reschedules them.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- Schedule job -->
+  <div class="modal-backdrop" id="mSchedule" role="dialog" aria-modal="true" aria-labelledby="mScheduleTitle">
+    <div class="modal small">
+      <div class="modal-head"><h2 id="mScheduleTitle">Schedule maintenance job</h2></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field" style="grid-column:1/-1"><label for="sAsset">Asset</label><select class="input" id="sAsset"></select><span class="field-error" id="eAsset"></span></div>
+          <div class="field"><label for="sDate">Date</label><input class="input" type="date" id="sDate"><span class="field-error" id="eDate"></span></div>
+          <div class="field"><label for="sTech">Technician</label><select class="input" id="sTech"></select><span class="field-error" id="eTech"></span></div>
+          <div class="field" style="grid-column:1/-1"><label for="sChecklist">Checklist (one task per line)</label><textarea class="input" id="sChecklist"></textarea><span class="field-error" id="eChecklist"></span></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="sSave" type="button">Schedule</button>
+        <button class="btn" id="sClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Complete job -->
+  <div class="modal-backdrop" id="mJob" role="dialog" aria-modal="true" aria-labelledby="mJobTitle">
+    <div class="modal small">
+      <div class="modal-head"><h2 id="mJobTitle">Job</h2><span id="jStatus"></span></div>
+      <div class="modal-body">
+        <p class="muted" id="jMeta" style="font-size:.88rem"></p>
+        <h3 style="margin:14px 0 8px">Checklist</h3>
+        <ul class="check-list" id="jChecks"></ul>
+        <div class="field" style="margin-top:14px"><label for="jNotes">Notes</label><textarea class="input" id="jNotes"></textarea><span class="field-error" id="eNotes"></span></div>
+        <p class="muted" id="jNext" style="font-size:.85rem;margin-top:8px"></p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="jComplete" type="button">Complete job</button>
+        <button class="btn" id="jClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const DAY = 86400000;
+    const TODAY = new Date(Date.UTC(2026, 10, 16));
+    const iso = d => UI.fmtDate(d);
+    const parse = s => new Date(s + "T00:00:00Z");
+    const addDays = (d, n) => new Date(d.getTime() + n * DAY);
+    const diffDays = (a, b) => Math.round((a - b) / DAY);
+    const nice = d => d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+
+    const TYPES = {
+      equipment: { label: "Equipment", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
+        tasks: ["Check oil and fluid levels", "Inspect belts and hoses", "Clean filters", "Test safety stops", "Record hour meter"] },
+      vehicle: { label: "Vehicle", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 16V7h11v9M14 10h4l3 3v3h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>',
+        tasks: ["Change engine oil", "Rotate and check tires", "Check brakes", "Check lights", "Record mileage"] },
+      ac: { label: "AC unit", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2v20M4.9 6l14.2 12M19.1 6L4.9 18"/></svg>',
+        tasks: ["Clean condenser coils", "Replace air filter", "Check refrigerant pressure", "Clear drain line"] }
+    };
+    const STATE_ICON = {
+      overdue: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>',
+      done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>'
+    };
+
+    // ---------- Sample assets, technicians and jobs ----------
+    const r = UI.rng(7319);
+    const techs = ["M. Rivera", "J. Cruz", "L. Mendoza", "S. Herrera"];
+    const assetDefs = [
+      ["Forklift FL-01", "equipment", 30], ["Forklift FL-02", "equipment", 30], ["Pallet jack PJ-05", "equipment", 60],
+      ["Generator GEN-1", "equipment", 90], ["Walk-in cooler WC-1", "equipment", 60], ["Walk-in cooler WC-2", "equipment", 60], ["Compressor CP-3", "equipment", 90],
+      ["Truck TR-101", "vehicle", 45], ["Truck TR-102", "vehicle", 45], ["Truck TR-103", "vehicle", 45], ["Van VN-21", "vehicle", 60], ["Van VN-22", "vehicle", 60], ["Motorcycle MC-07", "vehicle", 30],
+      ["AC Office 1", "ac", 90], ["AC Office 2", "ac", 90], ["AC Server room", "ac", 30], ["AC Showroom", "ac", 120], ["AC Warehouse", "ac", 180]
+    ];
+    const assets = assetDefs.map((a, i) => {
+      const freq = a[2];
+      // Every third asset was serviced earlier this month; the rest at some point in their cycle (some overdue).
+      const last = i % 3 === 0 ? addDays(TODAY, -(2 + Math.floor(r() * 13))) : addDays(TODAY, -Math.floor(r() * (freq + 18)) - 2);
+      return { id: i + 1, name: a[0], type: a[1], freq, location: UI.pick(r, UI.DATA.branches), last };
+    });
+    const jobs = [];
+    let jobSeq = 1;
+    function makeJob(asset, date, tech, tasks, status) {
+      const j = { id: jobSeq++, assetId: asset.id, date, tech, checklist: tasks.map(t => ({ text: t, done: status === "done" })), status, notes: "" };
+      jobs.push(j);
+      return j;
+    }
+    assets.forEach(a => {
+      // last completed job, then the next planned one
+      makeJob(a, a.last, UI.pick(r, techs), TYPES[a.type].tasks, "done");
+      makeJob(a, addDays(a.last, a.freq), UI.pick(r, techs), TYPES[a.type].tasks, "scheduled");
+    });
+
+    const assetOf = j => assets.find(a => a.id === j.assetId);
+    const isOverdue = j => j.status === "scheduled" && j.date < TODAY;
+    function nextJob(a) { return jobs.filter(j => j.assetId === a.id && j.status === "scheduled").sort((x, y) => x.date - y.date)[0]; }
+
+    // ---------- Legend ----------
+    document.getElementById("legend").innerHTML = Object.keys(TYPES).map(t =>
+      '<span class="job t-' + t + '" style="width:auto">' + TYPES[t].icon + "<span>" + TYPES[t].label + "</span></span>").join("") +
+      '<span class="job t-equipment overdue" style="width:auto">' + STATE_ICON.overdue + "<span>Overdue</span></span>";
+
+    // ---------- Calendar ----------
+    let viewY = TODAY.getUTCFullYear(), viewM = TODAY.getUTCMonth();
+    function jobChip(j) {
+      const a = assetOf(j);
+      const over = isOverdue(j);
+      const ico = j.status === "done" ? STATE_ICON.done : over ? STATE_ICON.overdue : TYPES[a.type].icon;
+      const stateText = j.status === "done" ? "done" : over ? "overdue" : "scheduled";
+      return '<button type="button" class="job t-' + a.type + (j.status === "done" ? " done" : "") + (over ? " overdue" : "") + '" data-job="' + j.id + '" aria-label="' + a.name + ", " + stateText + ", " + nice(j.date) + '">' + ico + "<span>" + a.name + "</span></button>";
+    }
+    function renderCalendar() {
+      const first = new Date(Date.UTC(viewY, viewM, 1));
+      document.getElementById("monthTitle").textContent = first.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+      const start = addDays(first, -first.getUTCDay());
+      let html = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => '<div class="dow" aria-hidden="true">' + d + "</div>").join("");
+      for (let i = 0; i < 42; i++) {
+        const d = addDays(start, i);
+        const dayJobs = jobs.filter(j => +j.date === +d).sort((a, b) => (a.status === "done") - (b.status === "done"));
+        const other = d.getUTCMonth() !== viewM;
+        const shown = dayJobs.slice(0, 3);
+        html += '<div class="day' + (other ? " other" : "") + (+d === +TODAY ? " today" : "") + '"><span class="dnum">' + d.getUTCDate() + (+d === +TODAY ? ' <span class="sr-only">today</span>' : "") + "</span>" +
+          shown.map(jobChip).join("") + (dayJobs.length > 3 ? '<span class="more">+' + (dayJobs.length - 3) + " more</span>" : "") + "</div>";
+      }
+      document.getElementById("cal").innerHTML = html;
+    }
+
+    // ---------- Side lists, KPIs and table ----------
+    function itemHtml(j, extra) {
+      const a = assetOf(j);
+      return '<button type="button" class="item" data-job="' + j.id + '"><span class="job t-' + a.type + '" style="width:auto;flex:none">' + TYPES[a.type].icon + '</span><span style="flex:1;min-width:0"><strong style="font-weight:500">' + a.name +
+        '</strong><br><span class="muted" style="font-size:.8rem">' + j.tech + " · " + a.location + "</span>" + (extra || "") + '</span><span class="when">' + nice(j.date) + "</span></button>";
+    }
+    function renderSide() {
+      const over = jobs.filter(isOverdue).sort((a, b) => a.date - b.date);
+      const soon = jobs.filter(j => j.status === "scheduled" && j.date >= TODAY && j.date <= addDays(TODAY, 14)).sort((a, b) => a.date - b.date);
+      document.getElementById("overList").innerHTML = over.length ? over.map(j =>
+        itemHtml(j, '<br><span class="alert">' + STATE_ICON.overdue + diffDays(TODAY, j.date) + " days late</span>")).join("") : '<p class="muted" style="font-size:.88rem">Nothing overdue.</p>';
+      document.getElementById("soonList").innerHTML = soon.length ? soon.map(j => itemHtml(j)).join("") : '<p class="muted" style="font-size:.88rem">No jobs in the next 14 days.</p>';
+      const monthDone = jobs.filter(j => j.status === "done" && j.doneOn && j.doneOn.getUTCMonth() === TODAY.getUTCMonth()).length +
+        jobs.filter(j => j.status === "done" && !j.doneOn && j.date.getUTCMonth() === TODAY.getUTCMonth() && j.date.getUTCFullYear() === TODAY.getUTCFullYear()).length;
+      document.getElementById("kAssets").textContent = assets.length;
+      document.getElementById("kSoon").textContent = soon.length;
+      document.getElementById("kOver").textContent = over.length;
+      document.getElementById("kDone").textContent = monthDone;
+      document.getElementById("kDoneD").textContent = "November " + TODAY.getUTCFullYear();
+
+      document.querySelector("#assets tbody").innerHTML = assets.slice().sort((a, b) => { const na = nextJob(a), nb = nextJob(b); return (na ? na.date : 0) - (nb ? nb.date : 0); }).map(a => {
+        const n = nextJob(a);
+        const st = !n ? '<span class="chip chip-info">No job</span>' : isOverdue(n) ? '<span class="chip chip-neg">' + STATE_ICON.overdue.replace('aria-hidden="true"', 'aria-hidden="true" width="12" height="12"') + " Overdue " + diffDays(TODAY, n.date) + " d</span>" :
+          n.date <= addDays(TODAY, 14) ? '<span class="chip chip-warn">Due in ' + diffDays(n.date, TODAY) + " d</span>" : '<span class="chip chip-pos">' + STATE_ICON.done.replace('aria-hidden="true"', 'aria-hidden="true" width="12" height="12"') + " On plan</span>";
+        return "<tr><td>" + a.name + "</td><td>" + TYPES[a.type].label + "</td><td>" + a.location + '</td><td class="r num">' + a.freq + ' d</td><td class="num">' + iso(a.last) + '</td><td class="num">' + (n ? iso(n.date) : "—") + "</td><td>" + st + "</td></tr>";
+      }).join("");
+    }
+    function renderAll() { renderCalendar(); renderSide(); }
+
+    // ---------- Schedule modal ----------
+    const sAsset = document.getElementById("sAsset"), sDate = document.getElementById("sDate"), sTech = document.getElementById("sTech"), sChecklist = document.getElementById("sChecklist");
+    sAsset.innerHTML = '<option value="">Choose an asset</option>' + assets.map(a => '<option value="' + a.id + '">' + a.name + " · " + TYPES[a.type].label + "</option>").join("");
+    sTech.innerHTML = '<option value="">Choose a technician</option>' + techs.map(t => "<option>" + t + "</option>").join("");
+    sAsset.addEventListener("change", () => {
+      const a = assets.find(x => x.id === +sAsset.value);
+      if (a && !sChecklist.value.trim()) sChecklist.value = TYPES[a.type].tasks.join("\n");
+    });
+    function clearErrors(ids) { ids.forEach(id => { document.getElementById(id).textContent = ""; }); [sAsset, sDate, sTech, sChecklist].forEach(el => el.removeAttribute("aria-invalid")); }
+    document.getElementById("newJob").addEventListener("click", () => {
+      sAsset.value = ""; sDate.value = ""; sTech.value = ""; sChecklist.value = "";
+      clearErrors(["eAsset", "eDate", "eTech", "eChecklist"]);
+      UI.openModal("mSchedule");
+    });
+    document.getElementById("sClose").addEventListener("click", () => UI.closeModal("mSchedule"));
+    document.getElementById("sSave").addEventListener("click", () => {
+      clearErrors(["eAsset", "eDate", "eTech", "eChecklist"]);
+      let ok = true;
+      const err = (el, id, text) => { ok = false; el.setAttribute("aria-invalid", "true"); document.getElementById(id).textContent = text; };
+      if (!sAsset.value) err(sAsset, "eAsset", "Choose the asset to maintain.");
+      if (!sDate.value) err(sDate, "eDate", "Choose a date.");
+      else if (parse(sDate.value) < TODAY) err(sDate, "eDate", "The date cannot be in the past.");
+      if (!sTech.value) err(sTech, "eTech", "Assign a technician.");
+      const tasks = sChecklist.value.split("\n").map(s => s.trim()).filter(Boolean);
+      if (!tasks.length) err(sChecklist, "eChecklist", "Add at least one task.");
+      if (!ok) { const f = document.querySelector('#mSchedule [aria-invalid="true"]'); if (f) f.focus(); return; }
+      const a = assets.find(x => x.id === +sAsset.value);
+      const j = makeJob(a, parse(sDate.value), sTech.value, tasks, "scheduled");
+      UI.closeModal("mSchedule");
+      viewY = j.date.getUTCFullYear(); viewM = j.date.getUTCMonth();
+      renderAll();
+      UI.toast("Job scheduled for " + a.name + " on " + nice(j.date) + ".");
+    });
+
+    // ---------- Job modal ----------
+    let openJob = null;
+    const jChecks = document.getElementById("jChecks"), jNotes = document.getElementById("jNotes"), jComplete = document.getElementById("jComplete");
+    function openJobModal(id) {
+      const j = jobs.find(x => x.id === id);
+      if (!j) return;
+      openJob = j;
+      const a = assetOf(j);
+      const over = isOverdue(j);
+      document.getElementById("mJobTitle").textContent = a.name;
+      document.getElementById("jStatus").innerHTML = j.status === "done" ? '<span class="chip chip-pos">Done</span>' : over ? '<span class="chip chip-neg">Overdue ' + diffDays(TODAY, j.date) + " days</span>" : '<span class="chip chip-info">Scheduled</span>';
+      document.getElementById("jMeta").textContent = TYPES[a.type].label + " · " + a.location + " · planned " + nice(j.date) + " · " + j.tech + " · every " + a.freq + " days";
+      const ro = j.status === "done";
+      jChecks.innerHTML = j.checklist.map((c, i) => '<li><label><input type="checkbox" data-i="' + i + '"' + (c.done ? " checked" : "") + (ro ? " disabled" : "") + ">" + c.text + "</label></li>").join("");
+      jNotes.value = j.notes || "";
+      jNotes.disabled = ro;
+      document.getElementById("eNotes").textContent = "";
+      jComplete.hidden = ro;
+      document.getElementById("jNext").textContent = ro ? (j.doneOn ? "Completed on " + nice(j.doneOn) + "." : "Completed.") : "When completed today, the next job is scheduled for " + nice(addDays(TODAY, a.freq)) + " (" + a.freq + " days).";
+      UI.openModal("mJob");
+    }
+    document.addEventListener("click", e => {
+      const b = e.target.closest("[data-job]");
+      if (b && !b.closest(".modal")) openJobModal(+b.dataset.job);
+    });
+    document.getElementById("jClose").addEventListener("click", () => UI.closeModal("mJob"));
+    jComplete.addEventListener("click", () => {
+      const j = openJob, a = assetOf(j);
+      jChecks.querySelectorAll("input").forEach(cb => { j.checklist[+cb.dataset.i].done = cb.checked; });
+      const pending = j.checklist.filter(c => !c.done).length;
+      if (pending && !jNotes.value.trim()) {
+        document.getElementById("eNotes").textContent = pending + " task" + (pending > 1 ? "s are" : " is") + " not ticked. Tick them or explain in the notes why they were left pending.";
+        jNotes.setAttribute("aria-invalid", "true");
+        jNotes.focus();
+        return;
+      }
+      jNotes.removeAttribute("aria-invalid");
+      j.notes = jNotes.value.trim();
+      j.status = "done";
+      j.doneOn = TODAY;
+      a.last = TODAY;
+      // The next job is planned from the day it was really done, not from the planned day.
+      const nextDate = addDays(TODAY, a.freq);
+      const n = makeJob(a, nextDate, j.tech, TYPES[a.type].tasks, "scheduled");
+      UI.closeModal("mJob");
+      renderAll();
+      UI.toast(a.name + " completed. Next job: " + nice(n.date) + ".");
+    });
+
+    // ---------- Navigation ----------
+    document.getElementById("prev").addEventListener("click", () => { viewM--; if (viewM < 0) { viewM = 11; viewY--; } renderCalendar(); });
+    document.getElementById("next").addEventListener("click", () => { viewM++; if (viewM > 11) { viewM = 0; viewY++; } renderCalendar(); });
+    document.getElementById("todayBtn").addEventListener("click", () => { viewY = TODAY.getUTCFullYear(); viewM = TODAY.getUTCMonth(); renderCalendar(); });
+
+    renderAll();
+  });
+  </script>
+</body>
+</html>

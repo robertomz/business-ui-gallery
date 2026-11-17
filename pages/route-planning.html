@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Route Planning · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .toolbar { display: flex; gap: var(--space-3); align-items: end; flex-wrap: wrap; justify-content: space-between; }
+    .toolbar .field { min-width: 180px; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); }
+    .tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 12px; font: inherit; font-size: .9rem; color: var(--text-muted); cursor: pointer; min-height: 44px; }
+    .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--primary); font-weight: 500; }
+    .plan { border-collapse: collapse; width: 100%; font-size: .86rem; }
+    .plan th, .plan td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; white-space: nowrap; }
+    .plan th { font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); background: var(--surface-2); position: sticky; top: 0; z-index: 1; }
+    .plan td.day, .plan th.day { text-align: center; width: 70px; }
+    .plan .sticky { position: sticky; left: 0; background: var(--surface); z-index: 1; }
+    .plan th.sticky { background: var(--surface-2); z-index: 2; }
+    .plan tfoot td { background: var(--surface-2); font-weight: 600; }
+    .plan tfoot td.sticky { background: var(--surface-2); }
+    .cell { width: 52px; height: 36px; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: transparent; color: var(--text-muted); font: inherit; font-size: .75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
+    .cell:hover { border-color: var(--primary); }
+    .cell[data-v="1"] { border-style: solid; background: var(--info-bg); color: var(--info); border-color: transparent; }
+    .cell[data-v="2"] { border-style: solid; background: var(--positive-bg); color: var(--positive); border-color: transparent; }
+    .cell[data-v="3"] { border-style: solid; background: var(--warning-bg); color: var(--warning); border-color: transparent; }
+    .cell svg { width: 13px; height: 13px; }
+    .legend { display: flex; gap: var(--space-3); flex-wrap: wrap; font-size: .8rem; align-items: center; }
+    .legend .cell { width: auto; padding: 0 8px; height: 26px; cursor: default; }
+    .scroll-y { max-height: 520px; overflow: auto; }
+    .check-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+    .check-list label { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: .88rem; cursor: pointer; min-height: 44px; }
+    .modal-section + .modal-section { margin-top: var(--space-4); }
+    .modal-section h3 { margin-bottom: 8px; }
+    .bar-track.big { height: 8px; }
+  </style>
+</head>
+<body data-page="route-planning" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Route planning</h1>
+        <p class="muted">Plan the week of each route: which customers get a pre-sale visit and which get a delivery, day by day.</p>
+      </div>
+      <button class="btn btn-primary" id="copyBtn" type="button">Copy week…</button>
+    </div>
+
+    <section class="card card-body">
+      <div class="toolbar">
+        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+          <div class="field"><label for="route">Route</label><select class="input" id="route"></select></div>
+          <div class="field"><label for="week">Week</label><select class="input" id="week"></select></div>
+        </div>
+        <div class="legend" aria-label="Legend">
+          <span class="muted">Select a cell to cycle:</span>
+          <span class="cell" data-v="0">— None</span>
+          <span class="cell" data-v="1">P · Pre-sale</span>
+          <span class="cell" data-v="2">D · Delivery</span>
+          <span class="cell" data-v="3">P+D · Both</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="tabs" role="tablist" aria-label="Views">
+        <button class="tab" role="tab" id="tab-plan" aria-controls="panel-plan" aria-selected="true">Weekly plan</button>
+        <button class="tab" role="tab" id="tab-comp" aria-controls="panel-comp" aria-selected="false" tabindex="-1">Compliance</button>
+      </div>
+      <div role="tabpanel" id="panel-plan" aria-labelledby="tab-plan" class="card-body">
+        <p class="muted" style="font-size:.84rem;margin-bottom:10px" id="planNote"></p>
+        <div class="scroll-y">
+          <table class="plan" id="plan">
+            <thead></thead><tbody></tbody><tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+      <div role="tabpanel" id="panel-comp" aria-labelledby="tab-comp" class="card-body" hidden>
+        <p class="muted" style="font-size:.84rem;margin-bottom:10px">Previous week of this route: what was planned, what was visited and what turned into a sale.</p>
+        <div class="table-wrap">
+          <table class="grid" id="comp">
+            <thead><tr><th>Day</th><th class="r">Planned</th><th class="r">Visited</th><th>Visited %</th><th class="r">With sale</th><th class="r">Effectiveness</th><th class="r">Sales</th></tr></thead>
+            <tbody></tbody><tfoot></tfoot>
+          </table>
+        </div>
+        <h3 style="margin:var(--space-5) 0 8px">Unplanned sales</h3>
+        <p class="muted" style="font-size:.84rem;margin-bottom:10px">Sales to customers that had no visit planned that day. They count as sales but not as plan compliance.</p>
+        <div class="table-wrap">
+          <table class="grid" id="unplanned"><thead><tr><th>Day</th><th>Customer</th><th>Planned on</th><th class="r">Invoice</th><th class="r">Amount</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each customer has a visit frequency (weekly, every two weeks or monthly) and a monthly goal; the expected volume of a day is the goal spread over that customer's visits.</li>
+        <li>Pre-sale and delivery visits are planned separately because they are done by different people on different days.</li>
+        <li>The copy tool previews what will be replaced before anything is written, and can fill only empty days.</li>
+        <li>Compliance compares the plan with what really happened; sales outside the plan are listed apart so they do not hide missed visits.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="copyModal" role="dialog" aria-modal="true" aria-labelledby="copyTitle">
+    <div class="modal" style="width:min(820px,100%)">
+      <div class="modal-head"><h2 id="copyTitle">Copy week</h2><span class="muted" id="copySource" style="font-size:.85rem"></span></div>
+      <div class="modal-body">
+        <div class="modal-section">
+          <h3>Copy to weeks of this route</h3>
+          <div class="check-list" id="copyWeeks"></div>
+        </div>
+        <div class="modal-section">
+          <h3>Copy to other routes</h3>
+          <p class="muted" style="font-size:.82rem;margin-bottom:8px">Other routes have different customers, so each customer receives the days used by customers with the same frequency in this route.</p>
+          <div class="check-list" id="copyRoutes"></div>
+        </div>
+        <div class="modal-section">
+          <label style="display:flex;gap:8px;align-items:center;font-size:.9rem"><input type="checkbox" id="onlyEmpty"> Only fill days that are empty (keep what is already planned)</label>
+        </div>
+        <div class="modal-section">
+          <h3>Preview</h3>
+          <div class="table-wrap"><table class="grid" id="copyPreview"><thead><tr><th>Target</th><th class="r">Visits now</th><th class="r">Visits after</th><th class="r">Replaced</th><th>Note</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="copyConfirm" type="button" disabled>Copy</button>
+        <button class="btn" id="copyClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const WEEKS = ["Week 1 · Nov 2–7", "Week 2 · Nov 9–14", "Week 3 · Nov 16–21", "Week 4 · Nov 23–28"];
+    const FREQ = { W: "Weekly", B: "Every 2 weeks", M: "Monthly" };
+    const VISITS_PER_MONTH = { W: 4, B: 2, M: 1 };
+    const ICON_P = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5h11M9 12h11M9 19h11M4 5h.01M4 12h.01M4 19h.01"/></svg>';
+    const ICON_D = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg>';
+    const LABEL = ["—", "P", "D", "P+D"];
+    const STATE_TEXT = ["no visit", "pre-sale visit", "delivery", "pre-sale and delivery"];
+
+    // Eight routes, each with its own customers.
+    const extra = ["Bayview Store", "Cedar Mart", "Dockside Deli", "Fairway Grocer", "Granite Foods", "Hilltop Pantry", "Ivy Corner", "Juniper Market", "Kestrel Shop", "Lindenmart"];
+    const pool = D.customers.concat(extra);
+    const routes = Array.from({ length: 8 }, (_, ri) => {
+      const r = UI.rng(9000 + ri);
+      const n = 14 + Math.floor(r() * 7);
+      const customers = Array.from({ length: n }, (_, ci) => {
+        const f = r() < 0.55 ? "W" : r() < 0.7 ? "B" : "M";
+        return { name: pool[(ri * 5 + ci * 3) % pool.length] + " · " + (100 + ri * 40 + ci), freq: f, goal: Math.round(UI.between(r, 6000, 36000) / 100) * 100 };
+      });
+      return { id: "R-" + String(ri + 1).padStart(2, "0"), seller: D.sellers[ri % D.sellers.length], customers };
+    });
+
+    // plans[route][week] = matrix customers × 6 days with 0..3
+    const plans = {};
+    routes.forEach((rt, ri) => {
+      plans[rt.id] = WEEKS.map((_, wi) => rt.customers.map((c, ci) => {
+        const r = UI.rng(ri * 1000 + ci * 10 + (c.freq === "W" ? 0 : wi));
+        const row = [0, 0, 0, 0, 0, 0];
+        const visitThisWeek = c.freq === "W" || (c.freq === "B" && (wi + ci) % 2 === 0) || (c.freq === "M" && (wi + ci) % 4 === 0);
+        if (visitThisWeek) {
+          const pre = Math.floor(r() * 5);           // Mon–Fri
+          row[pre] = 1;
+          row[pre + 1] = row[pre + 1] === 1 ? 3 : 2;  // delivery the next day
+        }
+        return row;
+      }));
+    });
+
+    const routeSel = document.getElementById("route"), weekSel = document.getElementById("week");
+    routeSel.innerHTML = routes.map(r => '<option value="' + r.id + '">' + r.id + " · " + r.seller + " (" + r.customers.length + " customers)</option>").join("");
+    weekSel.innerHTML = WEEKS.map((w, i) => '<option value="' + i + '"' + (i === 2 ? " selected" : "") + ">" + w + "</option>").join("");
+
+    const route = () => routes.find(r => r.id === routeSel.value);
+    const plan = () => plans[routeSel.value][+weekSel.value];
+    const hasPre = v => v === 1 || v === 3, hasDel = v => v === 2 || v === 3;
+    const countVisits = m => m.reduce((a, row) => a + row.filter(v => v > 0).length, 0);
+
+    function cellHtml(v, ci, di, cust) {
+      const icons = (hasPre(v) ? ICON_P : "") + (hasDel(v) ? ICON_D : "");
+      return '<button class="cell" type="button" data-c="' + ci + '" data-d="' + di + '" data-v="' + v + '" aria-label="' + cust + ", " + DAYS[di] + ": " + STATE_TEXT[v] + '. Select to change.">' + (v ? icons + LABEL[v] : "—") + "</button>";
+    }
+
+    function renderPlan() {
+      const rt = route(), m = plan();
+      document.querySelector("#plan thead").innerHTML = '<tr><th class="sticky">Customer</th><th>Frequency</th><th class="r">Month goal</th>' + DAYS.map(d => '<th class="day">' + d + "</th>").join("") + '<th class="r">Visits</th></tr>';
+      document.querySelector("#plan tbody").innerHTML = rt.customers.map((c, ci) =>
+        '<tr><td class="sticky">' + c.name + "</td><td>" + FREQ[c.freq] + '</td><td class="r num">' + UI.fmtMoney(c.goal) + "</td>" +
+        m[ci].map((v, di) => '<td class="day">' + cellHtml(v, ci, di, c.name) + "</td>").join("") +
+        '<td class="r num">' + m[ci].filter(v => v > 0).length + "</td></tr>").join("");
+      renderFoot();
+      document.getElementById("planNote").textContent = rt.id + " · " + rt.seller + " · " + WEEKS[+weekSel.value] + ". Expected volume per day = each customer's monthly goal divided by their planned pre-sale visits in the month.";
+    }
+
+    function renderFoot() {
+      const rt = route(), m = plan();
+      const pre = DAYS.map((_, di) => m.filter(row => hasPre(row[di])).length);
+      const del = DAYS.map((_, di) => m.filter(row => hasDel(row[di])).length);
+      const vol = DAYS.map((_, di) => m.reduce((a, row, ci) => a + (hasPre(row[di]) ? rt.customers[ci].goal / VISITS_PER_MONTH[rt.customers[ci].freq] : 0), 0));
+      document.querySelector("#plan tfoot").innerHTML =
+        '<tr><td class="sticky">Pre-sale visits</td><td></td><td></td>' + pre.map(n => '<td class="day num">' + n + "</td>").join("") + '<td class="r num">' + pre.reduce((a, b) => a + b, 0) + "</td></tr>" +
+        '<tr><td class="sticky">Deliveries</td><td></td><td></td>' + del.map(n => '<td class="day num">' + n + "</td>").join("") + '<td class="r num">' + del.reduce((a, b) => a + b, 0) + "</td></tr>" +
+        '<tr><td class="sticky">Expected volume</td><td></td><td></td>' + vol.map(v => '<td class="day num" style="font-size:.76rem">' + (v ? Math.round(v / 100) / 10 + "k" : "–") + "</td>").join("") + '<td class="r num">' + UI.fmtMoney(vol.reduce((a, b) => a + b, 0)) + "</td></tr>";
+    }
+
+    document.querySelector("#plan tbody").addEventListener("click", e => {
+      const b = e.target.closest("button.cell"); if (!b) return;
+      const ci = +b.dataset.c, di = +b.dataset.d, m = plan();
+      m[ci][di] = (m[ci][di] + 1) % 4;
+      const cust = route().customers[ci].name;
+      const td = b.parentElement;
+      td.innerHTML = cellHtml(m[ci][di], ci, di, cust);
+      td.parentElement.lastElementChild.textContent = m[ci].filter(v => v > 0).length;
+      td.firstElementChild.focus();
+      renderFoot();
+    });
+
+    // ---------- Compliance (previous week, simulated from the plan) ----------
+    function renderCompliance() {
+      const rt = route(), wi = Math.max(0, +weekSel.value - 1), m = plans[rt.id][wi];
+      const r = UI.rng(rt.id.charCodeAt(3) * 77 + wi);
+      const rows = DAYS.map((d, di) => {
+        const planned = m.filter(row => hasPre(row[di])).length;
+        let visited = 0, sold = 0, sales = 0;
+        m.forEach((row, ci) => { if (hasPre(row[di])) { if (r() < 0.88) { visited++; if (r() < 0.78) { sold++; sales += rt.customers[ci].goal / VISITS_PER_MONTH[rt.customers[ci].freq] * UI.between(r, 0.6, 1.3); } } } });
+        return { d, planned, visited, sold, sales };
+      });
+      const unplanned = [];
+      rt.customers.forEach((c, ci) => DAYS.forEach((d, di) => {
+        if (!hasPre(m[ci][di]) && r() < 0.035) {
+          const plannedOn = DAYS.filter((_, k) => hasPre(m[ci][k]));
+          unplanned.push({ d, di, c: c.name, plannedOn: plannedOn.length ? plannedOn.join(", ") : "Not this week", inv: "INV-" + (52000 + Math.floor(r() * 9000)), amt: c.goal / 6 * UI.between(r, 0.3, 0.9) });
+        }
+      }));
+      unplanned.sort((a, b) => a.di - b.di);
+      const sum = k => rows.reduce((a, x) => a + x[k], 0);
+      const pct = (a, b) => b ? a / b : 0;
+      document.querySelector("#comp tbody").innerHTML = rows.map(x => {
+        const p = pct(x.visited, x.planned);
+        const color = p >= 0.9 ? "var(--positive)" : p >= 0.75 ? "var(--warning)" : "var(--negative)";
+        return "<tr><td>" + x.d + '</td><td class="r num">' + x.planned + '</td><td class="r num">' + x.visited + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar-track big" style="flex:1"><span style="width:' + p * 100 + "%;background:" + color + '"></span></div><span class="num" style="font-size:.8rem;width:46px;text-align:right">' + UI.fmtPct(p, 0) + '</span></div></td><td class="r num">' + x.sold + '</td><td class="r num">' + UI.fmtPct(pct(x.sold, x.visited), 0) + '</td><td class="r num">' + UI.fmtMoney(x.sales) + "</td></tr>";
+      }).join("");
+      document.querySelector("#comp tfoot").innerHTML = '<tr><td>Week</td><td class="r num">' + sum("planned") + '</td><td class="r num">' + sum("visited") + '</td><td class="num">' + UI.fmtPct(pct(sum("visited"), sum("planned")), 0) + '</td><td class="r num">' + sum("sold") + '</td><td class="r num">' + UI.fmtPct(pct(sum("sold"), sum("visited")), 0) + '</td><td class="r num">' + UI.fmtMoney(sum("sales")) + "</td></tr>";
+      document.querySelector("#unplanned tbody").innerHTML = unplanned.length ? unplanned.map(u => "<tr><td>" + u.d + "</td><td>" + u.c + '</td><td><span class="chip chip-warn">! ' + u.plannedOn + '</span></td><td class="r num">' + u.inv + '</td><td class="r num">' + UI.fmtMoney(u.amt) + "</td></tr>").join("") : '<tr><td colspan="5" class="muted">No unplanned sales this week.</td></tr>';
+      document.querySelector("#unplanned tfoot").innerHTML = unplanned.length ? '<tr><td colspan="4">Total unplanned (' + unplanned.length + ')</td><td class="r num">' + UI.fmtMoney(unplanned.reduce((a, u) => a + u.amt, 0)) + "</td></tr>" : "";
+    }
+
+    // ---------- Tabs ----------
+    const tabs = [...document.querySelectorAll(".tab")];
+    function selectTab(t) {
+      tabs.forEach(x => { const on = x === t; x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute("aria-controls")).hidden = !on; });
+      if (t.id === "tab-comp") renderCompliance();
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => selectTab(t));
+      t.addEventListener("keydown", e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { const n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); selectTab(n); } });
+    });
+
+    function refresh() { renderPlan(); if (!document.getElementById("panel-comp").hidden) renderCompliance(); }
+    routeSel.addEventListener("change", refresh);
+    weekSel.addEventListener("change", refresh);
+
+    // ---------- Copy modal ----------
+    function patternByFreq(rt, m) {
+      const p = {};
+      rt.customers.forEach((c, ci) => { if (!p[c.freq] && m[ci].some(v => v)) p[c.freq] = m[ci].slice(); });
+      return p;
+    }
+    function targets() {
+      const weeks = [...document.querySelectorAll("#copyWeeks input:checked")].map(i => +i.value);
+      const rts = [...document.querySelectorAll("#copyRoutes input:checked")].map(i => i.value);
+      return { weeks, rts };
+    }
+    function buildTarget(kind, key) {
+      const src = route(), m = plan(), onlyEmpty = document.getElementById("onlyEmpty").checked;
+      let tgt, next, note = "";
+      if (kind === "week") {
+        tgt = plans[src.id][key];
+        next = tgt.map((row, ci) => row.map((v, di) => onlyEmpty && v ? v : (onlyEmpty ? (v || m[ci][di]) : m[ci][di])));
+      } else {
+        const rt = routes.find(r => r.id === key);
+        tgt = plans[key][+weekSel.value];
+        const pat = patternByFreq(src, m);
+        let missing = 0;
+        next = tgt.map((row, ci) => {
+          const p = pat[rt.customers[ci].freq];
+          if (!p) { missing++; return row.slice(); }
+          return row.map((v, di) => onlyEmpty && v ? v : (onlyEmpty ? (v || p[di]) : p[di]));
+        });
+        if (missing) note = missing + " customers kept: no customer with their frequency in the source";
+      }
+      let replaced = 0;
+      tgt.forEach((row, ci) => row.forEach((v, di) => { if (v && next[ci][di] !== v) replaced++; }));
+      return { tgt, next, replaced, note };
+    }
+    function renderPreview() {
+      const { weeks, rts } = targets();
+      const items = weeks.map(w => ({ label: route().id + " · " + WEEKS[w], ...buildTarget("week", w) }))
+        .concat(rts.map(id => ({ label: id + " · " + WEEKS[+weekSel.value], ...buildTarget("route", id) })));
+      document.querySelector("#copyPreview tbody").innerHTML = items.length ? items.map(x =>
+        "<tr><td>" + x.label + '</td><td class="r num">' + countVisits(x.tgt) + '</td><td class="r num">' + countVisits(x.next) + '</td><td class="r num ' + (x.replaced ? "neg" : "") + '">' + x.replaced +
+        "</td><td>" + (x.replaced ? '<span class="chip chip-warn">! ' + x.replaced + " planned visits change</span> " : '<span class="chip chip-pos">✓ No conflicts</span> ') + '<span class="muted" style="font-size:.8rem">' + x.note + "</span></td></tr>").join("")
+        : '<tr><td colspan="5" class="muted">Choose at least one week or route.</td></tr>';
+      document.getElementById("copyConfirm").disabled = !items.length;
+      return items;
+    }
+
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      const w = +weekSel.value, rt = route();
+      document.getElementById("copySource").textContent = "From " + rt.id + " · " + WEEKS[w];
+      document.getElementById("copyWeeks").innerHTML = WEEKS.map((x, i) => i === w ? "" : '<label><input type="checkbox" value="' + i + '"> ' + x + "</label>").join("");
+      document.getElementById("copyRoutes").innerHTML = routes.filter(r => r.id !== rt.id).map(r => '<label><input type="checkbox" value="' + r.id + '"> ' + r.id + " · " + r.seller + "</label>").join("");
+      document.getElementById("onlyEmpty").checked = false;
+      renderPreview();
+      UI.openModal("copyModal");
+    });
+    document.getElementById("copyModal").addEventListener("change", renderPreview);
+    document.getElementById("copyClose").addEventListener("click", () => UI.closeModal("copyModal"));
+    document.getElementById("copyConfirm").addEventListener("click", () => {
+      const { weeks, rts } = targets();
+      weeks.forEach(w => { const t = buildTarget("week", w); plans[route().id][w] = t.next; });
+      rts.forEach(id => { const t = buildTarget("route", id); plans[id][+weekSel.value] = t.next; });
+      UI.closeModal("copyModal");
+      UI.toast("Plan copied to " + (weeks.length + rts.length) + " target" + (weeks.length + rts.length === 1 ? "" : "s") + ".");
+    });
+
+    renderPlan();
+  });
+  </script>
+</body>
+</html>

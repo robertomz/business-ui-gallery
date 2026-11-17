@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cost Centers · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    #centers tbody tr { cursor: pointer; }
+    #centers tbody tr[aria-selected="true"] { background: var(--info-bg); }
+    .exec { display: flex; align-items: center; gap: 8px; min-width: 140px; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); overflow-x: auto; }
+    .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font: inherit; font-size: .9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; min-height: 44px; }
+    .tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
+    .count { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: .75rem; margin-left: 4px; }
+    .detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-4); }
+    .mini-kpis { display: flex; gap: var(--space-5); flex-wrap: wrap; }
+    .mini-kpis div span { display: block; }
+    .mini-kpis .v { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .steps { display: flex; gap: var(--space-2); list-style: none; margin: 0 0 var(--space-4); padding: 0; flex-wrap: wrap; }
+    .steps li { display: flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--text-muted); }
+    .steps li .dot { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border); font-family: var(--font-mono); font-size: .8rem; }
+    .steps li[aria-current="step"] { color: var(--text); font-weight: 500; }
+    .steps li[aria-current="step"] .dot { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    .steps li.done .dot { background: var(--positive-bg); color: var(--positive); border-color: transparent; }
+    .steps li + li::before { content: ""; width: 24px; height: 1px; background: var(--border); }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
+    .form-grid .span-2 { grid-column: 1 / -1; }
+    textarea.input { min-height: 80px; resize: vertical; }
+    .modal.sm { width: min(620px, 100%); }
+    .foot-left { margin-right: auto; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="cost-centers" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Cost centers</h1>
+        <p class="muted">Budget, actual and projection for each cost center, January to October 2026 closed.</p>
+      </div>
+      <button class="btn btn-primary" id="newCenterBtn" type="button">New center</button>
+    </div>
+
+    <section class="card card-body">
+      <div class="filters">
+        <div class="field"><label for="q">Search</label><input class="input" id="q" placeholder="Center or responsible"></div>
+        <div class="field"><label for="fType">Type</label>
+          <select class="input" id="fType"><option value="">All types</option><option>Sales</option><option>Operations</option><option>Support</option></select></div>
+        <div class="field"><label for="fStatus">Status</label>
+          <select class="input" id="fStatus"><option value="">All</option><option value="over">Over budget</option><option value="within">Within budget</option></select></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Centers</h2><span class="muted" style="font-size:.82rem">Select a row to see its detail</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="centers">
+          <thead><tr>
+            <th>Center</th><th>Type</th><th class="r">Annual budget</th><th class="r">Budget to date</th><th class="r">Actual to date</th>
+            <th>Executed</th><th class="r">Difference</th><th class="r">Projected year</th><th>Responsible</th>
+          </tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="detail" aria-live="polite">
+      <div class="detail-head">
+        <div>
+          <h2 id="dTitle"></h2>
+          <p class="muted" id="dSub" style="font-size:.85rem"></p>
+        </div>
+        <div class="mini-kpis" id="dKpis"></div>
+        <button class="btn" id="adjBtn" type="button">Request budget adjustment</button>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Center detail">
+        <button class="tab" role="tab" id="tab-monthly" aria-controls="panel-monthly" aria-selected="true">Monthly</button>
+        <button class="tab" role="tab" id="tab-accounts" aria-controls="panel-accounts" aria-selected="false" tabindex="-1">By account</button>
+        <button class="tab" role="tab" id="tab-approvals" aria-controls="panel-approvals" aria-selected="false" tabindex="-1">Approvals <span class="count" id="pendCount">0</span></button>
+      </div>
+      <div class="card-body table-wrap" role="tabpanel" id="panel-monthly" aria-labelledby="tab-monthly"></div>
+      <div class="card-body table-wrap" role="tabpanel" id="panel-accounts" aria-labelledby="tab-accounts" hidden></div>
+      <div class="card-body table-wrap" role="tabpanel" id="panel-approvals" aria-labelledby="tab-approvals" hidden></div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Budgets are kept per center, account and month. The projection is the actual to date plus the budget still to come.</li>
+        <li>Nobody edits a budget directly: a change is requested with a reason and becomes effective only after it is approved. Rejecting also needs a reason, so there is always a record.</li>
+        <li>Expenses are split into direct (charged to the center), indirect and shared (allocated from support centers).</li>
+        <li>A new center can copy the expense accounts of a similar one and scale its budget, which saves typing a hundred lines by hand.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- Adjustment request -->
+  <div class="modal-backdrop" id="adjModal" role="dialog" aria-modal="true" aria-labelledby="adjTitle">
+    <div class="modal sm">
+      <div class="modal-head"><h2 id="adjTitle">Request budget adjustment</h2></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field span-2"><label for="aAcct">Account</label><select class="input" id="aAcct"></select></div>
+          <div class="field"><label for="aMonth">Month</label><select class="input" id="aMonth"></select></div>
+          <div class="field"><label for="aFrom">Current budget</label><input class="input num" id="aFrom" readonly></div>
+          <div class="field"><label for="aTo">New budget</label><input class="input num" id="aTo" inputmode="decimal" aria-describedby="aToErr"><div class="field-error" id="aToErr"></div></div>
+          <div class="field"><label>Change</label><div class="num" id="aDelta" style="padding-top:8px">—</div></div>
+          <div class="field span-2"><label for="aReason">Reason</label><textarea class="input" id="aReason" aria-describedby="aReasonErr"></textarea><div class="field-error" id="aReasonErr"></div></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="adjSave" type="button">Send request</button>
+        <button class="btn" id="adjClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reject -->
+  <div class="modal-backdrop" id="rejModal" role="dialog" aria-modal="true" aria-labelledby="rejTitle">
+    <div class="modal sm">
+      <div class="modal-head"><h2 id="rejTitle">Reject request</h2></div>
+      <div class="modal-body">
+        <p class="muted" id="rejInfo" style="margin-bottom:10px;font-size:.88rem"></p>
+        <div class="field"><label for="rReason">Reason for rejecting</label><textarea class="input" id="rReason" aria-describedby="rReasonErr"></textarea><div class="field-error" id="rReasonErr"></div></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="rejSave" type="button">Reject request</button>
+        <button class="btn" id="rejClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New center wizard -->
+  <div class="modal-backdrop" id="wizModal" role="dialog" aria-modal="true" aria-labelledby="wizTitle">
+    <div class="modal">
+      <div class="modal-head"><h2 id="wizTitle">New cost center</h2></div>
+      <div class="modal-body">
+        <ol class="steps" id="wizSteps">
+          <li data-s="1"><span class="dot">1</span>Basics</li>
+          <li data-s="2"><span class="dot">2</span>Copy accounts</li>
+          <li data-s="3"><span class="dot">3</span>Confirm</li>
+        </ol>
+        <div id="wStep1">
+          <div class="form-grid">
+            <div class="field"><label for="wName">Name</label><input class="input" id="wName" aria-describedby="wNameErr"><div class="field-error" id="wNameErr"></div></div>
+            <div class="field"><label for="wCode">Code</label><input class="input" id="wCode" readonly></div>
+            <div class="field"><label for="wType">Type</label><select class="input" id="wType"><option>Sales</option><option>Operations</option><option>Support</option></select></div>
+            <div class="field"><label for="wResp">Responsible</label><select class="input" id="wResp"></select></div>
+          </div>
+        </div>
+        <div id="wStep2" hidden>
+          <div class="form-grid" style="margin-bottom:var(--space-3)">
+            <div class="field"><label for="wFrom">Copy expense accounts from</label><select class="input" id="wFrom"></select></div>
+            <div class="field"><label for="wScale">Scale budgets to (%)</label><input class="input num" id="wScale" value="100" inputmode="numeric"></div>
+          </div>
+          <div class="table-wrap">
+            <table class="grid" id="wPreview">
+              <thead><tr><th><span class="sr-only">Include</span></th><th>Account</th><th>Kind</th><th class="r">Source annual</th><th class="r">New, Nov–Dec</th></tr></thead>
+              <tbody></tbody><tfoot></tfoot>
+            </table>
+          </div>
+        </div>
+        <div id="wStep3" hidden>
+          <div class="ladder" id="wSummary"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn foot-left" id="wBack" type="button">Back</button>
+        <button class="btn btn-primary" id="wNext" type="button">Next</button>
+        <button class="btn" id="wClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const CLOSED = 10; // Jan..Oct closed
+    const ACCOUNTS = [
+      ["6-01 Salaries and wages", "Direct"], ["6-02 Fuel and travel", "Direct"], ["6-03 Rent", "Direct"], ["6-04 Utilities", "Direct"],
+      ["6-05 Maintenance", "Direct"], ["6-06 Office supplies", "Indirect"], ["6-07 IT services", "Shared"], ["6-08 Administration services", "Shared"]
+    ];
+    const TYPES = { "Sales North": "Sales", "Sales Center": "Sales", "Sales Coast": "Sales", "Warehouse": "Operations", "Logistics": "Operations", "Administration": "Support", "IT": "Support" };
+    const people = Array.from({ length: 12 }, (_, i) => D.firstNames[(i * 3) % D.firstNames.length] + " " + D.lastNames[(i * 5) % D.lastNames.length]);
+
+    function makeCenter(name, idx, type, resp, copy) {
+      const r = UI.rng(700 + idx * 13);
+      const scale = { Sales: 1, Operations: 0.8, Support: 0.55 }[type];
+      const lines = ACCOUNTS.map((a, k) => {
+        const base = [180000, 24000, 30000, 9000, 7000, 3500, 6000, 8000][k] * scale * UI.between(r, 0.7, 1.3);
+        const budget = MONTHS.map((_, m) => Math.round(base * (m === 11 ? 1.15 : 1) * UI.between(r, 0.95, 1.05)));
+        const drift = UI.between(r, 0.85, 1.15);
+        const actual = MONTHS.map((_, m) => m < CLOSED ? Math.round(budget[m] * drift * UI.between(r, 0.9, 1.1)) : null);
+        return { acct: a[0], kind: a[1], budget, actual };
+      });
+      return { code: "CC-" + String(idx + 1).padStart(2, "0"), name, type, resp, lines: copy || lines };
+    }
+    const centers = D.costCenters.map((c, i) => makeCenter(c, i, TYPES[c], people[i]));
+
+    function totals(c) {
+      let annual = 0, btd = 0, atd = 0, rest = 0;
+      c.lines.forEach(l => l.budget.forEach((b, m) => { annual += b; if (m < CLOSED) { btd += b; atd += l.actual[m] || 0; } else rest += b; }));
+      return { annual, btd, atd, proj: atd + rest, diff: btd - atd, exec: btd ? atd / btd : 0 };
+    }
+
+    const requests = [];
+    let reqSeq = 101;
+    function seedRequest(c, acctIdx, m, to, reason) {
+      const l = centers[c].lines[acctIdx];
+      requests.push({ id: "ADJ-" + reqSeq++, center: centers[c].code, acct: l.acct, month: m, from: l.budget[m], to, reason, by: people[c], status: "Pending", note: "" });
+    }
+    seedRequest(0, 1, 10, 31000, "Two new delivery routes start in November.");
+    seedRequest(3, 4, 11, 12500, "Forklift overhaul moved from January.");
+    seedRequest(0, 5, 11, 4200, "Year-end promotional material.");
+
+    let selected = centers[0].code;
+    let tab = "monthly";
+
+    // ---------- List ----------
+    function renderList() {
+      const q = document.getElementById("q").value.trim().toLowerCase();
+      const ft = document.getElementById("fType").value, fs = document.getElementById("fStatus").value;
+      const rows = centers.map(c => ({ c, t: totals(c) })).filter(x =>
+        (!q || (x.c.name + " " + x.c.resp).toLowerCase().includes(q)) && (!ft || x.c.type === ft) &&
+        (!fs || (fs === "over" ? x.t.diff < 0 : x.t.diff >= 0)));
+      const tb = document.querySelector("#centers tbody");
+      tb.innerHTML = rows.length ? rows.map(({ c, t }) => {
+        const over = t.exec > 1;
+        const color = over ? "var(--negative)" : t.exec > 0.95 ? "var(--warning)" : "var(--positive)";
+        return '<tr tabindex="0" data-code="' + c.code + '" aria-selected="' + (c.code === selected) + '"><td><strong>' + c.name + '</strong><div class="muted" style="font-size:.78rem">' + c.code + "</div></td><td>" + c.type +
+          '</td><td class="r num">' + UI.fmtMoney(t.annual) + '</td><td class="r num">' + UI.fmtMoney(t.btd) + '</td><td class="r num">' + UI.fmtMoney(t.atd) +
+          '</td><td><div class="exec"><div class="bar-track" style="flex:1"><span style="width:' + Math.min(t.exec, 1) * 100 + "%;background:" + color + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(t.exec, 0) + "</span></div></td>" +
+          '<td class="r num ' + (t.diff < 0 ? "neg" : "pos") + '">' + (t.diff < 0 ? "▼ " : "▲ ") + UI.fmtMoney(t.diff) + '</td><td class="r num">' + UI.fmtMoney(t.proj) + "</td><td>" + c.resp + "</td></tr>";
+      }).join("") : '<tr><td colspan="9" class="muted">No centers match these filters.</td></tr>';
+      const sum = rows.reduce((a, x) => { ["annual", "btd", "atd", "proj", "diff"].forEach(k => a[k] += x.t[k]); return a; }, { annual: 0, btd: 0, atd: 0, proj: 0, diff: 0 });
+      document.querySelector("#centers tfoot").innerHTML = rows.length ? '<tr><td colspan="2">Total (' + rows.length + ')</td><td class="r num">' + UI.fmtMoney(sum.annual) + '</td><td class="r num">' + UI.fmtMoney(sum.btd) +
+        '</td><td class="r num">' + UI.fmtMoney(sum.atd) + '</td><td class="num">' + UI.fmtPct(sum.btd ? sum.atd / sum.btd : 0, 0) + '</td><td class="r num ' + (sum.diff < 0 ? "neg" : "pos") + '">' + UI.fmtMoney(sum.diff) +
+        '</td><td class="r num">' + UI.fmtMoney(sum.proj) + "</td><td></td></tr>" : "";
+    }
+    const tbody = document.querySelector("#centers tbody");
+    function pick(tr) { if (!tr || !tr.dataset.code) return; selected = tr.dataset.code; renderList(); renderDetail(); }
+    tbody.addEventListener("click", e => pick(e.target.closest("tr")));
+    tbody.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(e.target.closest("tr")); } });
+    ["q", "fType", "fStatus"].forEach(id => document.getElementById(id).addEventListener("input", renderList));
+
+    // ---------- Detail ----------
+    function center() { return centers.find(c => c.code === selected); }
+    function renderDetail() {
+      const c = center(), t = totals(c);
+      document.getElementById("dTitle").textContent = c.name;
+      document.getElementById("dSub").textContent = c.code + " · " + c.type + " · Responsible: " + c.resp;
+      document.getElementById("dKpis").innerHTML =
+        '<div><span class="muted" style="font-size:.78rem">Budget to date</span><span class="v">' + UI.fmtMoney(t.btd) + "</span></div>" +
+        '<div><span class="muted" style="font-size:.78rem">Actual to date</span><span class="v">' + UI.fmtMoney(t.atd) + "</span></div>" +
+        '<div><span class="muted" style="font-size:.78rem">Projected year</span><span class="v">' + UI.fmtMoney(t.proj) + "</span></div>";
+
+      // Monthly
+      let cumB = 0, cumA = 0;
+      const mrows = MONTHS.map((m, i) => {
+        const b = c.lines.reduce((a, l) => a + l.budget[i], 0);
+        const a = i < CLOSED ? c.lines.reduce((s, l) => s + l.actual[i], 0) : null;
+        cumB += b; if (a != null) cumA += a;
+        const v = a == null ? null : b - a;
+        return "<tr><td>" + m + (i >= CLOSED ? ' <span class="chip chip-info">Open</span>' : "") + '</td><td class="r num">' + UI.fmtMoney(b) + '</td><td class="r num">' + (a == null ? "—" : UI.fmtMoney(a)) +
+          '</td><td class="r num ' + (v == null ? "" : v < 0 ? "neg" : "pos") + '">' + (v == null ? "—" : (v < 0 ? "▼ " : "▲ ") + UI.fmtMoney(v)) + '</td><td class="r num">' + (a == null || !b ? "—" : UI.fmtPct(a / b, 0)) + "</td></tr>";
+      }).join("");
+      document.getElementById("panel-monthly").innerHTML = '<table class="grid"><thead><tr><th>Month</th><th class="r">Budget</th><th class="r">Actual</th><th class="r">Variance</th><th class="r">Executed</th></tr></thead><tbody>' + mrows +
+        '</tbody><tfoot><tr><td>Year</td><td class="r num">' + UI.fmtMoney(t.annual) + '</td><td class="r num">' + UI.fmtMoney(t.atd) + '</td><td class="r num">' + UI.fmtMoney(t.diff) + '</td><td class="r num">' + UI.fmtPct(t.exec, 0) + "</td></tr></tfoot></table>" +
+        '<p class="muted" style="font-size:.8rem;margin-top:8px">Variance = budget − actual. ▲ means spending was below budget, ▼ above it.</p>';
+
+      // By account, grouped by kind
+      const groups = ["Direct", "Indirect", "Shared"];
+      let html = '<table class="grid"><thead><tr><th>Account</th><th class="r">Budget to date</th><th class="r">Actual to date</th><th class="r">Variance</th><th class="r">Annual budget</th></tr></thead><tbody>';
+      groups.forEach(g => {
+        const ls = c.lines.filter(l => l.kind === g);
+        if (!ls.length) return;
+        const gs = { b: 0, a: 0, y: 0 };
+        let body = "";
+        ls.forEach(l => {
+          const b = l.budget.slice(0, CLOSED).reduce((x, y) => x + y, 0), a = l.actual.slice(0, CLOSED).reduce((x, y) => x + y, 0), y = l.budget.reduce((x, z) => x + z, 0);
+          gs.b += b; gs.a += a; gs.y += y;
+          body += '<tr><td style="padding-left:24px">' + l.acct + '</td><td class="r num">' + UI.fmtMoney(b) + '</td><td class="r num">' + UI.fmtMoney(a) + '</td><td class="r num ' + (b - a < 0 ? "neg" : "pos") + '">' + UI.fmtMoney(b - a) + '</td><td class="r num">' + UI.fmtMoney(y) + "</td></tr>";
+        });
+        html += '<tr style="background:var(--surface-2)"><td><strong>' + g + ' expenses</strong></td><td class="r num"><strong>' + UI.fmtMoney(gs.b) + '</strong></td><td class="r num"><strong>' + UI.fmtMoney(gs.a) + '</strong></td><td class="r num"><strong>' + UI.fmtMoney(gs.b - gs.a) + '</strong></td><td class="r num"><strong>' + UI.fmtMoney(gs.y) + "</strong></td></tr>" + body;
+      });
+      html += '</tbody><tfoot><tr><td>Total</td><td class="r num">' + UI.fmtMoney(t.btd) + '</td><td class="r num">' + UI.fmtMoney(t.atd) + '</td><td class="r num">' + UI.fmtMoney(t.diff) + '</td><td class="r num">' + UI.fmtMoney(t.annual) + "</td></tr></tfoot></table>";
+      document.getElementById("panel-accounts").innerHTML = html;
+
+      renderApprovals();
+    }
+
+    function chip(s) { return '<span class="chip ' + (s === "Pending" ? "chip-warn" : s === "Approved" ? "chip-pos" : "chip-neg") + '">' + s + "</span>"; }
+    function renderApprovals() {
+      const c = center();
+      const list = requests.filter(q => q.center === c.code);
+      const pend = list.filter(q => q.status === "Pending").length;
+      document.getElementById("pendCount").textContent = pend;
+      document.getElementById("panel-approvals").innerHTML = list.length ? '<table class="grid"><thead><tr><th>Request</th><th>Account</th><th>Month</th><th class="r">From</th><th class="r">To</th><th>Reason</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody>' +
+        list.map(q => '<tr><td class="num">' + q.id + '<div class="muted" style="font-size:.75rem">' + q.by + "</div></td><td>" + q.acct + "</td><td>" + MONTHS[q.month] + '</td><td class="r num">' + UI.fmtMoney(q.from) + '</td><td class="r num">' + UI.fmtMoney(q.to) +
+          '<div class="' + (q.to > q.from ? "neg" : "pos") + '" style="font-size:.75rem">' + (q.to > q.from ? "+" : "") + UI.fmtMoney(q.to - q.from) + "</div></td><td>" + q.reason + (q.note ? '<div class="muted" style="font-size:.78rem">Rejected: ' + q.note + "</div>" : "") +
+          "</td><td>" + chip(q.status) + "</td><td>" + (q.status === "Pending" ? '<div style="display:flex;gap:6px"><button class="btn btn-primary" data-act="approve" data-id="' + q.id + '" type="button">Approve</button><button class="btn" data-act="reject" data-id="' + q.id + '" type="button">Reject</button></div>' : "") + "</td></tr>").join("") +
+        "</tbody></table>" : '<p class="muted">No adjustment requests for this center yet.</p>';
+    }
+    document.getElementById("panel-approvals").addEventListener("click", e => {
+      const b = e.target.closest("button[data-act]");
+      if (!b) return;
+      const q = requests.find(x => x.id === b.dataset.id);
+      if (b.dataset.act === "approve") {
+        const c = centers.find(x => x.code === q.center);
+        c.lines.find(l => l.acct === q.acct).budget[q.month] = q.to;
+        q.status = "Approved";
+        UI.toast(q.id + " approved. The " + MONTHS[q.month] + " budget is now " + UI.fmtMoney(q.to) + ".");
+        renderList(); renderDetail(); selectTab("approvals");
+      } else {
+        rejecting = q;
+        document.getElementById("rejInfo").textContent = q.id + " · " + q.acct + " · " + MONTHS[q.month] + ": " + UI.fmtMoney(q.from) + " → " + UI.fmtMoney(q.to);
+        document.getElementById("rReason").value = "";
+        document.getElementById("rReasonErr").textContent = "";
+        UI.openModal("rejModal");
+      }
+    });
+    let rejecting = null;
+    document.getElementById("rejSave").addEventListener("click", () => {
+      const v = document.getElementById("rReason").value.trim();
+      if (v.length < 5) { document.getElementById("rReasonErr").textContent = "Write why it is rejected (at least 5 characters)."; document.getElementById("rReason").focus(); return; }
+      rejecting.status = "Rejected"; rejecting.note = v;
+      UI.closeModal("rejModal");
+      UI.toast(rejecting.id + " rejected.");
+      renderApprovals();
+    });
+    document.getElementById("rejClose").addEventListener("click", () => UI.closeModal("rejModal"));
+
+    // Tabs (arrow keys move between them)
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    function selectTab(name, focus) {
+      tab = name;
+      tabs.forEach(t => {
+        const on = t.id === "tab-" + name;
+        t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+        if (on && focus) t.focus();
+      });
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => selectTab(t.id.slice(4)));
+      t.addEventListener("keydown", e => {
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+          const n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+          selectTab(n.id.slice(4), true);
+        }
+      });
+    });
+
+    // ---------- Adjustment request ----------
+    const aAcct = document.getElementById("aAcct"), aMonth = document.getElementById("aMonth"), aFrom = document.getElementById("aFrom"), aTo = document.getElementById("aTo"), aReason = document.getElementById("aReason");
+    UI.maskMoney(aTo);
+    function refreshFrom() {
+      const l = center().lines.find(x => x.acct === aAcct.value);
+      aFrom.value = l && aMonth.value !== "" ? UI.fmtMoney(l.budget[+aMonth.value]) : "";
+      refreshDelta();
+    }
+    function refreshDelta() {
+      const d = UI.parseMoney(aTo.value) - UI.parseMoney(aFrom.value);
+      const el = document.getElementById("aDelta");
+      el.textContent = aTo.value && aFrom.value ? (d > 0 ? "+" : "") + UI.fmtMoney(d) : "—";
+      el.className = "num " + (d > 0 ? "neg" : d < 0 ? "pos" : "");
+    }
+    document.getElementById("adjBtn").addEventListener("click", () => {
+      aAcct.innerHTML = '<option value="">Choose an account</option>' + center().lines.map(l => "<option>" + l.acct + "</option>").join("");
+      aMonth.innerHTML = '<option value="">Choose a month</option>' + MONTHS.map((m, i) => i >= CLOSED ? '<option value="' + i + '">' + m + " 2026</option>" : "").join("");
+      aFrom.value = ""; aTo.value = ""; aReason.value = "";
+      ["aToErr", "aReasonErr"].forEach(id => document.getElementById(id).textContent = "");
+      document.getElementById("aDelta").textContent = "—";
+      UI.openModal("adjModal");
+    });
+    aAcct.addEventListener("change", refreshFrom);
+    aMonth.addEventListener("change", refreshFrom);
+    aTo.addEventListener("input", refreshDelta);
+    aTo.addEventListener("blur", refreshDelta);
+    document.getElementById("adjSave").addEventListener("click", () => {
+      let ok = true;
+      const to = UI.parseMoney(aTo.value), from = UI.parseMoney(aFrom.value);
+      document.getElementById("aToErr").textContent = "";
+      document.getElementById("aReasonErr").textContent = "";
+      if (!aAcct.value || aMonth.value === "") { document.getElementById("aToErr").textContent = "Choose the account and the month first."; ok = false; }
+      else if (!aTo.value || to === from) { document.getElementById("aToErr").textContent = "Enter a new amount different from the current budget."; ok = false; }
+      if (aReason.value.trim().length < 10) { document.getElementById("aReasonErr").textContent = "Explain the change (at least 10 characters)."; ok = false; }
+      if (!ok) return;
+      const c = center();
+      requests.push({ id: "ADJ-" + reqSeq++, center: c.code, acct: aAcct.value, month: +aMonth.value, from, to, reason: aReason.value.trim(), by: "You", status: "Pending", note: "" });
+      UI.closeModal("adjModal");
+      UI.toast("Request sent. It waits for approval.");
+      renderApprovals(); selectTab("approvals");
+    });
+    document.getElementById("adjClose").addEventListener("click", () => UI.closeModal("adjModal"));
+
+    // ---------- New center wizard ----------
+    let step = 1, preview = [];
+    const wName = document.getElementById("wName"), wFrom = document.getElementById("wFrom"), wScale = document.getElementById("wScale");
+    function showStep() {
+      [1, 2, 3].forEach(s => document.getElementById("wStep" + s).hidden = s !== step);
+      document.querySelectorAll("#wizSteps li").forEach(li => {
+        const s = +li.dataset.s;
+        li.classList.toggle("done", s < step);
+        if (s === step) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+        li.querySelector(".dot").textContent = s < step ? "✓" : s;
+      });
+      document.getElementById("wBack").disabled = step === 1;
+      document.getElementById("wNext").textContent = step === 3 ? "Create center" : "Next";
+    }
+    function buildPreview() {
+      const src = centers.find(c => c.code === wFrom.value);
+      const k = Math.max(0, parseFloat(wScale.value) || 0) / 100;
+      preview = src.lines.map((l, i) => ({ l, on: preview[i] ? preview[i].on : true, annual: l.budget.reduce((a, b) => a + b, 0), rest: l.budget.slice(CLOSED).reduce((a, b) => a + b, 0) }));
+      document.querySelector("#wPreview tbody").innerHTML = preview.map((p, i) =>
+        '<tr><td><input type="checkbox" data-i="' + i + '"' + (p.on ? " checked" : "") + ' aria-label="Include ' + p.l.acct + '"></td><td>' + p.l.acct + "</td><td>" + p.l.kind + '</td><td class="r num">' + UI.fmtMoney(p.annual) + '</td><td class="r num">' + (p.on ? UI.fmtMoney(p.rest * k) : "—") + "</td></tr>").join("");
+      const tot = preview.filter(p => p.on).reduce((a, p) => a + p.rest * k, 0);
+      document.querySelector("#wPreview tfoot").innerHTML = '<tr><td></td><td colspan="3">' + preview.filter(p => p.on).length + " accounts</td><td class='r num'>" + UI.fmtMoney(tot) + "</td></tr>";
+    }
+    document.querySelector("#wPreview tbody").addEventListener("change", e => { const i = e.target.dataset.i; if (i != null) { preview[i].on = e.target.checked; buildPreview(); } });
+    wFrom.addEventListener("change", () => { preview = []; buildPreview(); });
+    wScale.addEventListener("input", () => { wScale.value = wScale.value.replace(/\D/g, "").slice(0, 3); buildPreview(); });
+
+    document.getElementById("newCenterBtn").addEventListener("click", () => {
+      step = 1; preview = [];
+      wName.value = ""; document.getElementById("wNameErr").textContent = "";
+      document.getElementById("wCode").value = "CC-" + String(centers.length + 1).padStart(2, "0");
+      document.getElementById("wResp").innerHTML = people.map(p => "<option>" + p + "</option>").join("");
+      wFrom.innerHTML = centers.map(c => '<option value="' + c.code + '">' + c.name + "</option>").join("");
+      wScale.value = "100";
+      showStep();
+      UI.openModal("wizModal");
+    });
+    document.getElementById("wBack").addEventListener("click", () => { if (step > 1) { step--; showStep(); } });
+    document.getElementById("wClose").addEventListener("click", () => UI.closeModal("wizModal"));
+    document.getElementById("wNext").addEventListener("click", () => {
+      if (step === 1) {
+        const n = wName.value.trim();
+        if (n.length < 3) { document.getElementById("wNameErr").textContent = "Give the center a name (at least 3 characters)."; wName.focus(); return; }
+        if (centers.some(c => c.name.toLowerCase() === n.toLowerCase())) { document.getElementById("wNameErr").textContent = "A center with this name already exists."; wName.focus(); return; }
+        document.getElementById("wNameErr").textContent = "";
+        step = 2; buildPreview(); showStep(); return;
+      }
+      if (step === 2) {
+        const k = (parseFloat(wScale.value) || 0) / 100;
+        const on = preview.filter(p => p.on);
+        if (!on.length) { UI.toast("Include at least one account."); return; }
+        document.getElementById("wSummary").innerHTML =
+          '<div class="ladder-row"><span>Name</span><span>' + wName.value.trim() + "</span></div>" +
+          '<div class="ladder-row"><span>Code / type</span><span>' + document.getElementById("wCode").value + " · " + document.getElementById("wType").value + "</span></div>" +
+          '<div class="ladder-row"><span>Responsible</span><span>' + document.getElementById("wResp").value + "</span></div>" +
+          '<div class="ladder-row"><span>Accounts copied from ' + centers.find(c => c.code === wFrom.value).name + '</span><span class="num">' + on.length + "</span></div>" +
+          '<div class="ladder-row result"><span>Budget Nov–Dec 2026 at ' + wScale.value + '%</span><span class="num">' + UI.fmtMoney(on.reduce((a, p) => a + p.rest * k, 0)) + "</span></div>";
+        step = 3; showStep(); return;
+      }
+      const k = (parseFloat(wScale.value) || 0) / 100;
+      const lines = preview.filter(p => p.on).map(p => ({ acct: p.l.acct, kind: p.l.kind, budget: p.l.budget.map((b, m) => m < CLOSED ? 0 : Math.round(b * k)), actual: p.l.budget.map((_, m) => m < CLOSED ? 0 : null) }));
+      const c = makeCenter(wName.value.trim(), centers.length, document.getElementById("wType").value, document.getElementById("wResp").value, lines);
+      c.code = document.getElementById("wCode").value;
+      centers.push(c);
+      selected = c.code;
+      UI.closeModal("wizModal");
+      UI.toast(c.name + " created with " + lines.length + " accounts.");
+      renderList(); renderDetail(); selectTab("monthly");
+    });
+
+    renderList();
+    renderDetail();
+  });
+  </script>
+</body>
+</html>

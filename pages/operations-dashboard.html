@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Operations Dashboard · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .kpis-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kpi-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-2); }
+    .spark { width: 110px; height: 36px; flex: none; }
+    .spark path.line { fill: none; stroke-width: 1.8; }
+    .spark path.area { opacity: .12; }
+    .deltas { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; font-size: .8rem; }
+    .delta { display: inline-flex; align-items: center; gap: 4px; }
+    .delta.good { color: var(--positive); }
+    .delta.bad { color: var(--negative); }
+    .delta.flat { color: var(--text-muted); }
+    .sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+    .stat-list { display: flex; flex-direction: column; gap: 10px; }
+    .stat-row { display: grid; grid-template-columns: 120px 1fr 90px; gap: 10px; align-items: center; font-size: .86rem; }
+    .stat-row .bar-track { min-width: 0; }
+    th.sortable { cursor: pointer; user-select: none; }
+    tr.branch-row { cursor: pointer; }
+    tr.branch-row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+    tr.drill td { background: var(--surface-2); }
+    .drill-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); padding: 6px 0; }
+    .drill-grid div { font-size: .82rem; }
+    .drill-grid strong { display: block; font-family: var(--font-mono); font-weight: 600; font-size: .92rem; }
+    .note { font-size: .8rem; }
+    @media (max-width: 1100px) { .kpis-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 900px) { .sections { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) {
+      .kpis-3 { grid-template-columns: 1fr; }
+      .stat-row { grid-template-columns: 90px 1fr 70px; }
+      .drill-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body data-page="operations-dashboard" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Operations dashboard</h1>
+        <p class="muted">The daily close in one screen: cash, sales, receivables, payables and stock, compared with the previous close.</p>
+      </div>
+      <div class="field" style="width:200px">
+        <label for="day">Close of</label>
+        <select class="input" id="day"></select>
+      </div>
+    </div>
+
+    <section class="kpis kpis-3" id="kpis" aria-label="Key figures of the close"></section>
+    <p class="muted note" style="margin-top:-12px">Arrows show the direction of the change. Green means the change is good for the business and red means it is bad: more payables due is red even when the arrow goes up. Sundays and holidays are skipped, so "previous close" is the previous working day.</p>
+
+    <section class="sections">
+      <div class="card">
+        <div class="card-head"><h2>Cash settled vs sold</h2><span class="muted" style="font-size:.82rem">Cash and card sales already deposited</span></div>
+        <div class="card-body"><div class="stat-list" id="settled"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Receivables and payables</h2></div>
+        <div class="card-body">
+          <div class="ladder" id="arap"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Inventory</h2><span class="muted" style="font-size:.82rem">Days of inventory above 40 count as overstock</span></div>
+        <div class="card-body"><div class="stat-list" id="inventory"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Payables due this week</h2></div>
+        <div class="card-body table-wrap">
+          <table class="grid" id="dueTable"><thead><tr><th>Supplier</th><th>Due</th><th class="r">Amount</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>By branch</h2><span class="muted" style="font-size:.82rem">Select a branch to see its detail</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="branches">
+          <thead><tr>
+            <th>Branch</th><th class="r">Sales</th><th class="r">vs previous close</th><th class="r">Settled</th><th class="r">Overdue AR</th><th class="r">Shortages</th><th>Status</th>
+          </tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>A scheduled job closes each day at night and stores a snapshot, so any past close opens instantly and is never recalculated.</li>
+        <li>Every card compares against the previous working day and the same day last month. Non-working days are skipped so a Monday is not compared with a Sunday.</li>
+        <li>Direction and meaning are separate: the arrow shows whether the number went up or down, the color shows whether that is good or bad for that metric.</li>
+        <li>Branch rows open a detail with the same figures, so the totals at the top can be traced down to each branch.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const HOLIDAYS = ["2026-09-15", "2026-10-03", "2026-10-12", "2026-10-21"];
+    const DAY = 86400000;
+
+    function isWorking(d) { return d.getUTCDay() !== 0 && !HOLIDAYS.includes(UI.fmtDate(d)); }
+
+    // The last 60 working-day closes up to Nov 16, 2026.
+    const closes = [];
+    for (let d = new Date(Date.UTC(2026, 10, 16)); closes.length < 60; d = new Date(d.getTime() - DAY)) {
+      if (isWorking(d)) closes.unshift(new Date(d));
+    }
+
+    // A deterministic close snapshot per branch; values drift slowly over time.
+    function snapshot(d) {
+      const n = Math.floor(d.getTime() / DAY);
+      return D.branches.map((b, i) => {
+        const r = UI.rng(n * 131 + i * 17);
+        const trend = 1 + (n % 90) / 900;
+        const sales = [52000, 38000, 61000, 29000, 33000, 24000][i] * trend * UI.between(r, 0.82, 1.18) * (d.getUTCDay() === 6 ? 1.25 : 1);
+        const cashCard = sales * UI.between(r, 0.6, 0.75);
+        const settled = cashCard * UI.between(r, 0.86, 1);
+        const ar = [410000, 300000, 520000, 210000, 260000, 180000][i] * UI.between(r, 0.96, 1.04) * trend;
+        const overdue = ar * UI.between(r, 0.08, 0.26);
+        const ap = [380000, 240000, 450000, 200000, 220000, 160000][i] * UI.between(r, 0.95, 1.06);
+        const apWeek = ap * UI.between(r, 0.12, 0.28);
+        const stock = [900000, 620000, 1100000, 480000, 530000, 400000][i] * UI.between(r, 0.97, 1.03);
+        const overstock = stock * UI.between(r, 0.05, 0.16);
+        const shortages = Math.round(UI.between(r, 2, 26));
+        return { branch: b, sales, cashCard, settled, ar, overdue, ap, apWeek, stock, overstock, shortages };
+      });
+    }
+    function total(rows, k) { return rows.reduce((a, x) => a + x[k], 0); }
+    function totals(d) {
+      const s = snapshot(d);
+      return {
+        sales: total(s, "sales"), settledPct: total(s, "settled") / total(s, "cashCard"),
+        ar: total(s, "ar"), overduePct: total(s, "overdue") / total(s, "ar"),
+        apWeek: total(s, "apWeek"), overstock: total(s, "overstock"), shortages: total(s, "shortages"), rows: s
+      };
+    }
+
+    // Metric definitions: good = which direction is good for the business.
+    const METRICS = [
+      { k: "sales", label: "Net sales", fmt: v => UI.fmtMoney(v), good: "up" },
+      { k: "settledPct", label: "Cash settled", fmt: v => UI.fmtPct(v), good: "up", pct: true },
+      { k: "ar", label: "Receivables", fmt: v => UI.fmtMoney(v), good: "down" },
+      { k: "overduePct", label: "Overdue receivables", fmt: v => UI.fmtPct(v), good: "down", pct: true },
+      { k: "apWeek", label: "Payables due this week", fmt: v => UI.fmtMoney(v), good: "down" },
+      { k: "overstock", label: "Overstock value", fmt: v => UI.fmtMoney(v), good: "down" }
+    ];
+
+    const sel = document.getElementById("day");
+    sel.innerHTML = closes.slice(30).reverse().map(d => '<option value="' + UI.fmtDate(d) + '">' + UI.fmtDate(d) + (d.getUTCDay() === 6 ? " (Sat)" : "") + "</option>").join("");
+
+    function sameDayLastMonth(d) {
+      let m = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, d.getUTCDate()));
+      while (!isWorking(m)) m = new Date(m.getTime() - DAY);
+      return m;
+    }
+
+    function arrow(up) {
+      return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">' + (up ? '<path d="M12 19V5M5 12l7-7 7 7"/>' : '<path d="M12 5v14M5 12l7 7 7-7"/>') + "</svg>";
+    }
+    function deltaHtml(m, cur, prev, label) {
+      const diff = m.pct ? cur - prev : (cur - prev) / prev;
+      if (Math.abs(diff) < 0.0005) return '<span class="delta flat">— no change <span class="muted">' + label + "</span></span>";
+      const up = diff > 0;
+      const good = (m.good === "up") === up;
+      const txt = m.pct ? (Math.abs(diff) * 100).toFixed(1) + " pts" : UI.fmtPct(Math.abs(diff));
+      return '<span class="delta ' + (good ? "good" : "bad") + '">' + arrow(up) + txt + ' <span class="muted">' + label + '</span><span class="sr-only">, ' + (good ? "favorable" : "unfavorable") + "</span></span>";
+    }
+
+    function spark(values, color) {
+      const w = 110, h = 36, min = Math.min(...values), max = Math.max(...values), span = max - min || 1;
+      const pts = values.map((v, i) => [i / (values.length - 1) * w, h - 3 - (v - min) / span * (h - 6)]);
+      const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+      const area = line + " L" + w + " " + h + " L0 " + h + " Z";
+      const last = pts[pts.length - 1];
+      return '<svg class="spark" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true"><path class="area" d="' + area + '" fill="' + color + '"/><path class="line" d="' + line + '" stroke="' + color + '"/><circle cx="' + last[0] + '" cy="' + last[1] + '" r="2.5" fill="' + color + '"/></svg>';
+    }
+
+    let openBranch = null;
+
+    function render() {
+      const day = new Date(sel.value + "T00:00:00Z");
+      const idx = closes.findIndex(d => UI.fmtDate(d) === sel.value);
+      const cur = totals(day), prev = totals(closes[idx - 1]), lm = totals(sameDayLastMonth(day));
+      const history = closes.slice(idx - 29, idx + 1).map(totals);
+
+      document.getElementById("kpis").innerHTML = METRICS.map(m => {
+        const color = UI.cssVar("--chart-1");
+        return '<div class="card kpi"><div class="kpi-top"><div><div class="kpi-label">' + m.label + '</div><div class="kpi-value">' + m.fmt(cur[m.k]) + "</div></div>" +
+          spark(history.map(h => h[m.k]), color) + '</div><div class="deltas">' +
+          deltaHtml(m, cur[m.k], prev[m.k], "vs previous close") + deltaHtml(m, cur[m.k], lm[m.k], "vs same day last month") + "</div></div>";
+      }).join("");
+
+      // Cash settled per branch
+      document.getElementById("settled").innerHTML = cur.rows.map(r => {
+        const p = r.settled / r.cashCard;
+        const color = p >= 0.97 ? "var(--positive)" : p >= 0.9 ? "var(--warning)" : "var(--negative)";
+        return '<div class="stat-row"><span>' + r.branch + '</span><div class="bar-track"><span style="width:' + (p * 100) + "%;background:" + color + '"></span></div><span class="num r" style="text-align:right">' + UI.fmtPct(p) + "</span></div>";
+      }).join("") + '<p class="muted note">Total: ' + UI.fmtMoney(total(cur.rows, "settled")) + " settled of " + UI.fmtMoney(total(cur.rows, "cashCard")) + " sold in cash and card.</p>";
+
+      // Receivables / payables ladder
+      const ar = cur.ar, od = total(cur.rows, "overdue");
+      const ap = total(cur.rows, "ap"), apw = cur.apWeek;
+      document.getElementById("arap").innerHTML =
+        '<div class="ladder-row total"><span>Receivables</span><span class="num">' + UI.fmtMoney(ar) + "</span></div>" +
+        '<div class="ladder-row indent"><span>Current</span><span class="num">' + UI.fmtMoney(ar - od) + "</span></div>" +
+        '<div class="ladder-row indent"><span>Overdue (' + UI.fmtPct(od / ar) + ')</span><span class="num neg">' + UI.fmtMoney(od) + "</span></div>" +
+        '<div class="ladder-row total" style="margin-top:8px"><span>Payables</span><span class="num">' + UI.fmtMoney(ap) + "</span></div>" +
+        '<div class="ladder-row indent"><span>Due this week</span><span class="num">' + UI.fmtMoney(apw) + "</span></div>" +
+        '<div class="ladder-row indent"><span>Due later</span><span class="num">' + UI.fmtMoney(ap - apw) + "</span></div>" +
+        '<div class="ladder-row result"><span>Receivables − payables</span><span class="num ' + (ar - ap >= 0 ? "pos" : "neg") + '">' + UI.fmtMoney(ar - ap) + "</span></div>";
+
+      // Inventory
+      const stock = total(cur.rows, "stock"), over = cur.overstock;
+      document.getElementById("inventory").innerHTML = cur.rows.map(r => {
+        const p = r.overstock / r.stock;
+        return '<div class="stat-row"><span>' + r.branch + '</span><div class="bar-track"><span style="width:' + Math.min(p / 0.2, 1) * 100 + '%;background:var(--warning)"></span></div><span class="num" style="text-align:right">' + r.shortages + " short</span></div>";
+      }).join("") + '<p class="muted note">Stock value ' + UI.fmtMoney(stock) + ", of which " + UI.fmtMoney(over) + " (" + UI.fmtPct(over / stock) + ") is overstock. " + cur.shortages + " items are below their reorder point. Bars show the overstock share of each branch.</p>";
+
+      // Payables due this week
+      const r = UI.rng(Math.floor(day.getTime() / DAY) * 7);
+      const due = D.suppliers.map((s, i) => ({ s, d: new Date(day.getTime() + Math.floor(UI.between(r, 0, 6)) * DAY), a: apw * [0.24, 0.2, 0.18, 0.15, 0.13, 0.1][i] }))
+        .sort((a, b) => a.d - b.d);
+      document.querySelector("#dueTable tbody").innerHTML = due.map(x => "<tr><td>" + x.s + '</td><td class="num">' + UI.fmtDate(x.d) + '</td><td class="r num">' + UI.fmtMoney(x.a) + "</td></tr>").join("");
+      document.querySelector("#dueTable tfoot").innerHTML = '<tr><td>Total</td><td></td><td class="r num">' + UI.fmtMoney(due.reduce((a, x) => a + x.a, 0)) + "</td></tr>";
+
+      // Branch comparison
+      const tb = document.querySelector("#branches tbody");
+      tb.innerHTML = cur.rows.map((x, i) => {
+        const p = prev.rows[i];
+        const vs = (x.sales - p.sales) / p.sales;
+        const st = x.settled / x.cashCard, odp = x.overdue / x.ar;
+        const issues = (st < 0.9 ? 1 : 0) + (odp > 0.2 ? 1 : 0) + (x.shortages > 18 ? 1 : 0);
+        const status = issues === 0 ? '<span class="chip chip-pos">✓ On track</span>' : issues === 1 ? '<span class="chip chip-warn">! 1 alert</span>' : '<span class="chip chip-neg">!! ' + issues + " alerts</span>";
+        let html = '<tr class="branch-row" tabindex="0" data-i="' + i + '" aria-expanded="' + (openBranch === i) + '"><td>' + x.branch + '</td><td class="r num">' + UI.fmtMoney(x.sales) +
+          '</td><td class="r num ' + (vs >= 0 ? "pos" : "neg") + '">' + (vs >= 0 ? "▲ +" : "▼ ") + UI.fmtPct(vs) + '</td><td class="r num">' + UI.fmtPct(st) + '</td><td class="r num">' + UI.fmtPct(odp) +
+          '</td><td class="r num">' + x.shortages + "</td><td>" + status + "</td></tr>";
+        if (openBranch === i) {
+          html += '<tr class="drill"><td colspan="7"><div class="drill-grid">' +
+            "<div>Cash and card sold<strong>" + UI.fmtMoney(x.cashCard) + "</strong></div>" +
+            "<div>Settled<strong>" + UI.fmtMoney(x.settled) + "</strong></div>" +
+            "<div>Pending deposit<strong>" + UI.fmtMoney(x.cashCard - x.settled) + "</strong></div>" +
+            "<div>Receivables<strong>" + UI.fmtMoney(x.ar) + "</strong></div>" +
+            "<div>Overdue<strong>" + UI.fmtMoney(x.overdue) + "</strong></div>" +
+            "<div>Payables due this week<strong>" + UI.fmtMoney(x.apWeek) + "</strong></div>" +
+            "<div>Stock<strong>" + UI.fmtMoney(x.stock) + "</strong></div>" +
+            "<div>Overstock<strong>" + UI.fmtMoney(x.overstock) + "</strong></div>" +
+            "</div></td></tr>";
+        }
+        return html;
+      }).join("");
+      const ps = total(prev.rows, "sales"), cs = cur.sales;
+      document.querySelector("#branches tfoot").innerHTML = '<tr><td>Total</td><td class="r num">' + UI.fmtMoney(cs) + '</td><td class="r num ' + (cs >= ps ? "pos" : "neg") + '">' + (cs >= ps ? "▲ +" : "▼ ") + UI.fmtPct((cs - ps) / ps) +
+        '</td><td class="r num">' + UI.fmtPct(cur.settledPct) + '</td><td class="r num">' + UI.fmtPct(cur.overduePct) + '</td><td class="r num">' + cur.shortages + "</td><td></td></tr>";
+    }
+
+    document.querySelector("#branches tbody").addEventListener("click", e => {
+      const tr = e.target.closest("tr.branch-row"); if (!tr) return;
+      const i = +tr.dataset.i; openBranch = openBranch === i ? null : i; render();
+      const again = document.querySelector('#branches tr.branch-row[data-i="' + i + '"]'); if (again) again.focus();
+    });
+    document.querySelector("#branches tbody").addEventListener("keydown", e => {
+      if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr.branch-row")) { e.preventDefault(); e.target.click(); }
+    });
+    sel.addEventListener("change", () => { openBranch = null; render(); });
+    document.addEventListener("themechange", render);
+    render();
+  });
+  </script>
+</body>
+</html>

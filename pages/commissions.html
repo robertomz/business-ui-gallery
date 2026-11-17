@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commissions · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .tier-table input { min-height: 34px; }
+    .tier-table td { vertical-align: top; }
+    .tier-table .field-error { display: block; }
+    .row-err td { background: var(--negative-bg); }
+    .head-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+    .locked-note { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--info-bg); color: var(--info); font-size: .88rem; }
+    .locked-note svg, .chip svg { width: 15px; height: 15px; }
+    .tier-pill { font-family: var(--font-mono); font-size: .8rem; }
+    #calc td, #calc th { white-space: nowrap; }
+    .del-btn { width: 34px; min-height: 34px; padding: 0; }
+    @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="commissions" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Commissions</h1>
+        <p class="muted">Sellers earn on goal achievement and on what they collect. Close the month to freeze the result.</p>
+      </div>
+      <div class="head-actions">
+        <div class="field" style="width:190px">
+          <label for="month">Month</label>
+          <select class="input" id="month"></select>
+        </div>
+        <span id="monthChip"></span>
+        <button class="btn btn-primary" id="closeBtn" type="button">Close month</button>
+      </div>
+    </div>
+
+    <div class="locked-note" id="lockedNote" hidden role="status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span>This month is closed. Tiers and results are frozen as they were at closing.</span>
+    </div>
+
+    <section class="kpis" aria-label="Month totals">
+      <div class="card kpi"><div class="kpi-label">Sellers</div><div class="kpi-value" id="kSellers"></div></div>
+      <div class="card kpi"><div class="kpi-label">Sales commission</div><div class="kpi-value" id="kSales"></div></div>
+      <div class="card kpi"><div class="kpi-label">Collection commission</div><div class="kpi-value" id="kColl"></div></div>
+      <div class="card kpi"><div class="kpi-label">Total to pay</div><div class="kpi-value" id="kTotal"></div><div class="kpi-delta muted" id="kTotalD"></div></div>
+    </section>
+
+    <section class="two">
+      <div class="card">
+        <div class="card-head"><h2>Sales tiers</h2><button class="btn" id="addTier" type="button">Add tier</button></div>
+        <div class="card-body">
+          <p class="muted" style="font-size:.84rem;margin-bottom:8px">Commission % on net sales by goal achievement. Ranges must start at 0%, have no gaps and no overlaps.</p>
+          <div class="table-wrap">
+            <table class="grid tier-table" id="tiers">
+              <thead><tr><th>From %</th><th>To %</th><th>Commission %</th><th><span class="sr-only">Remove</span></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="field-error" id="tierErr" role="alert"></p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Collection component</h2></div>
+        <div class="card-body">
+          <p class="muted" style="font-size:.84rem;margin-bottom:8px">Extra % on what was collected, by the share of the seller's receivables collected in the month.</p>
+          <div class="table-wrap">
+            <table class="grid tier-table" id="coll">
+              <thead><tr><th>Collected at least</th><th>Commission % on collected</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="field-error" id="collErr" role="alert"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Calculation by seller</h2><span class="muted" style="font-size:.82rem">Recalculated as you edit the tiers</span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="calc">
+          <thead><tr>
+            <th>Seller</th><th class="r">Sales goal</th><th class="r">Sold</th><th class="r">Achievement</th><th>Tier</th>
+            <th class="r">Sales comm.</th><th class="r">Collected</th><th class="r">Collected %</th><th class="r">Collection comm.</th><th class="r">Total</th>
+          </tr></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Closed months</h2></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="history">
+          <thead><tr><th>Month</th><th>Closed on</th><th class="r">Sellers</th><th class="r">Sales comm.</th><th class="r">Collection comm.</th><th class="r">Total paid</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Tiers are validated as a whole: they must start at 0%, connect without gaps and never overlap, and every error appears on the row that causes it.</li>
+        <li>The commission has two parts: sales against the goal and collection of the seller's receivables, so selling on credit that never gets collected pays less.</li>
+        <li>Closing the month recalculates everything on the server side in the real system and freezes the tiers used, so later changes to the tiers never rewrite what was paid.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="closeModal" role="dialog" aria-modal="true" aria-labelledby="closeTitle">
+    <div class="modal" style="width:min(520px,100%)">
+      <div class="modal-head"><h2 id="closeTitle">Close month</h2></div>
+      <div class="modal-body">
+        <p id="closeText"></p>
+        <p class="muted" style="font-size:.85rem;margin-top:8px">After closing, the tiers and results of this month can no longer be edited.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="confirmClose" type="button">Close month</button>
+        <button class="btn" id="cancelClose" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+    const OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>';
+
+    const months = [
+      { key: "2026-11", label: "November 2026" }, { key: "2026-10", label: "October 2026" },
+      { key: "2026-09", label: "September 2026" }, { key: "2026-08", label: "August 2026" }
+    ];
+    const defaultTiers = () => [
+      { from: 0, to: 80, pct: 0 }, { from: 80, to: 90, pct: 0.8 }, { from: 90, to: 100, pct: 1.2 },
+      { from: 100, to: 110, pct: 1.6 }, { from: 110, to: 999, pct: 2.0 }
+    ];
+    const defaultColl = () => [{ min: 0, pct: 0 }, { min: 60, pct: 0.5 }, { min: 80, pct: 0.8 }, { min: 95, pct: 1.0 }];
+
+    // State per month; earlier months are already closed with frozen results.
+    const state = {};
+    months.forEach((m, i) => {
+      state[m.key] = { tiers: defaultTiers(), coll: defaultColl(), closed: i > 0, closedOn: i > 0 ? "2026-" + String(12 - i).padStart(2, "0") + "-02" : null, frozen: null };
+    });
+
+    function sellerData(monthKey) {
+      const r = UI.rng(parseInt(monthKey.replace("-", ""), 10));
+      return D.sellers.map(s => {
+        const goal = Math.round(UI.between(r, 180, 320)) * 1000;
+        const sold = goal * UI.between(r, 0.68, 1.22);
+        const receivable = sold * UI.between(r, 0.35, 0.6);
+        const collected = receivable * UI.between(r, 0.5, 1);
+        return { seller: s, goal, sold, receivable, collected };
+      });
+    }
+
+    function validateTiers(tiers) {
+      const errs = tiers.map(() => []);
+      let general = "";
+      const sorted = tiers.map((t, i) => ({ ...t, i })).sort((a, b) => a.from - b.from);
+      tiers.forEach((t, i) => {
+        if (!(t.to > t.from)) errs[i].push("To must be greater than From");
+        if (t.pct < 0 || t.pct > 20) errs[i].push("Commission must be between 0 and 20");
+      });
+      if (!sorted.length || sorted[0].from !== 0) general = "The first tier must start at 0%.";
+      for (let k = 1; k < sorted.length; k++) {
+        const prev = sorted[k - 1], cur = sorted[k];
+        if (cur.from > prev.to) errs[cur.i].push("Gap: " + prev.to + "% to " + cur.from + "% is not covered");
+        if (cur.from < prev.to) errs[cur.i].push("Overlaps the tier " + prev.from + "–" + prev.to + "%");
+      }
+      return { errs, general, ok: !general && errs.every(e => !e.length) };
+    }
+
+    function tierFor(tiers, ach) {
+      const pctAch = ach * 100;
+      return tiers.find(t => pctAch >= t.from && pctAch < t.to) || tiers[tiers.length - 1];
+    }
+    function collFor(coll, share) {
+      const pct = share * 100;
+      return coll.slice().sort((a, b) => b.min - a.min).find(c => pct >= c.min) || { pct: 0 };
+    }
+
+    function calc(monthKey) {
+      const st = state[monthKey];
+      if (st.closed && st.frozen) return st.frozen;
+      const tiers = st.tiers.slice().sort((a, b) => a.from - b.from);
+      return sellerData(monthKey).map(x => {
+        const ach = x.sold / x.goal;
+        const t = tierFor(tiers, ach);
+        const share = x.collected / x.receivable;
+        const c = collFor(st.coll, share);
+        const salesComm = x.sold * t.pct / 100;
+        const collComm = x.collected * c.pct / 100;
+        return { ...x, ach, tier: t.from + "–" + (t.to >= 999 ? "+" : t.to) + "% · " + t.pct + "%", salesComm, share, collComm, total: salesComm + collComm };
+      });
+    }
+
+    const monthSel = document.getElementById("month");
+    monthSel.innerHTML = months.map(m => '<option value="' + m.key + '">' + m.label + "</option>").join("");
+    // Freeze the closed months with their original result.
+    months.slice(1).forEach(m => { state[m.key].frozen = calc(m.key); });
+
+    function cur() { return state[monthSel.value]; }
+
+    function renderTiers() {
+      const st = cur();
+      const v = validateTiers(st.tiers);
+      const dis = st.closed ? " disabled" : "";
+      document.querySelector("#tiers tbody").innerHTML = st.tiers.map((t, i) => {
+        const e = v.errs[i];
+        const inv = e.length ? ' aria-invalid="true"' : "";
+        return '<tr class="' + (e.length ? "row-err" : "") + '">' +
+          '<td><label class="sr-only" for="tf' + i + '">From % tier ' + (i + 1) + '</label><input class="input num" id="tf' + i + '" data-i="' + i + '" data-k="from" inputmode="decimal" value="' + t.from + '"' + inv + dis + '></td>' +
+          '<td><label class="sr-only" for="tt' + i + '">To % tier ' + (i + 1) + '</label><input class="input num" id="tt' + i + '" data-i="' + i + '" data-k="to" inputmode="decimal" value="' + t.to + '"' + inv + dis + '></td>' +
+          '<td><label class="sr-only" for="tp' + i + '">Commission % tier ' + (i + 1) + '</label><input class="input num" id="tp' + i + '" data-i="' + i + '" data-k="pct" inputmode="decimal" value="' + t.pct + '"' + dis + '>' +
+            (e.length ? '<span class="field-error">' + e.join(". ") + "</span>" : "") + "</td>" +
+          '<td><button class="btn del-btn" type="button" data-del="' + i + '" aria-label="Remove tier ' + (i + 1) + '"' + (st.closed || st.tiers.length <= 1 ? " disabled" : "") + '>×</button></td></tr>';
+      }).join("");
+      document.getElementById("tierErr").textContent = v.general;
+      document.getElementById("addTier").disabled = st.closed;
+
+      document.querySelector("#coll tbody").innerHTML = st.coll.map((c, i) =>
+        '<tr><td><label class="sr-only" for="cm' + i + '">Collected at least row ' + (i + 1) + '</label><input class="input num" id="cm' + i + '" data-c="' + i + '" data-k="min" inputmode="decimal" value="' + c.min + '"' + dis + "></td>" +
+        '<td><label class="sr-only" for="cp' + i + '">Commission row ' + (i + 1) + '</label><input class="input num" id="cp' + i + '" data-c="' + i + '" data-k="pct" inputmode="decimal" value="' + c.pct + '"' + dis + "></td></tr>").join("");
+      return v;
+    }
+
+    function renderCalc(valid) {
+      const st = cur();
+      const rows = valid ? calc(monthSel.value) : null;
+      const body = document.querySelector("#calc tbody");
+      if (!rows) {
+        body.innerHTML = '<tr><td colspan="10" class="muted">Fix the tiers to see the calculation.</td></tr>';
+        document.querySelector("#calc tfoot").innerHTML = "";
+        ["kSellers", "kSales", "kColl", "kTotal"].forEach(id => document.getElementById(id).textContent = "–");
+        document.getElementById("closeBtn").disabled = true;
+        return;
+      }
+      body.innerHTML = rows.slice().sort((a, b) => b.total - a.total).map(x =>
+        "<tr><td>" + x.seller + '</td><td class="r num">' + UI.fmtMoney(x.goal) + '</td><td class="r num">' + UI.fmtMoney(x.sold) +
+        '</td><td class="r num ' + (x.ach >= 1 ? "pos" : x.ach < 0.8 ? "neg" : "") + '">' + UI.fmtPct(x.ach) +
+        '</td><td><span class="tier-pill">' + x.tier + '</span></td><td class="r num">' + UI.fmtMoney(x.salesComm) +
+        '</td><td class="r num">' + UI.fmtMoney(x.collected) + '</td><td class="r num">' + UI.fmtPct(x.share) +
+        '</td><td class="r num">' + UI.fmtMoney(x.collComm) + '</td><td class="r num"><strong>' + UI.fmtMoney(x.total) + "</strong></td></tr>").join("");
+      const sum = k => rows.reduce((a, x) => a + x[k], 0);
+      const goal = sum("goal"), sold = sum("sold"), col = sum("collected"), rec = sum("receivable");
+      document.querySelector("#calc tfoot").innerHTML = '<tr><td>Total</td><td class="r num">' + UI.fmtMoney(goal) + '</td><td class="r num">' + UI.fmtMoney(sold) +
+        '</td><td class="r num">' + UI.fmtPct(sold / goal) + '</td><td></td><td class="r num">' + UI.fmtMoney(sum("salesComm")) +
+        '</td><td class="r num">' + UI.fmtMoney(col) + '</td><td class="r num">' + UI.fmtPct(col / rec) + '</td><td class="r num">' + UI.fmtMoney(sum("collComm")) +
+        '</td><td class="r num">' + UI.fmtMoney(sum("total")) + "</td></tr>";
+      document.getElementById("kSellers").textContent = rows.length;
+      document.getElementById("kSales").textContent = UI.fmtMoney(sum("salesComm"));
+      document.getElementById("kColl").textContent = UI.fmtMoney(sum("collComm"));
+      document.getElementById("kTotal").textContent = UI.fmtMoney(sum("total"));
+      document.getElementById("kTotalD").textContent = UI.fmtPct(sum("total") / sold, 2) + " of net sales";
+      document.getElementById("closeBtn").disabled = st.closed;
+    }
+
+    function renderHead() {
+      const st = cur();
+      document.getElementById("monthChip").innerHTML = st.closed
+        ? '<span class="chip chip-info">' + LOCK + "Closed</span>"
+        : '<span class="chip chip-warn">' + OPEN + "Open</span>";
+      document.getElementById("lockedNote").hidden = !st.closed;
+      document.getElementById("closeBtn").hidden = st.closed;
+    }
+
+    function renderHistory() {
+      document.querySelector("#history tbody").innerHTML = months.filter(m => state[m.key].closed).map(m => {
+        const rows = state[m.key].frozen;
+        const sum = k => rows.reduce((a, x) => a + x[k], 0);
+        return "<tr><td>" + m.label + '</td><td class="num">' + state[m.key].closedOn + '</td><td class="r num">' + rows.length +
+          '</td><td class="r num">' + UI.fmtMoney(sum("salesComm")) + '</td><td class="r num">' + UI.fmtMoney(sum("collComm")) +
+          '</td><td class="r num">' + UI.fmtMoney(sum("total")) + "</td></tr>";
+      }).join("") || '<tr><td colspan="6" class="muted">No closed months yet</td></tr>';
+    }
+
+    function render() {
+      renderHead();
+      const v = renderTiers();
+      renderCalc(v.ok);
+      renderHistory();
+    }
+
+    // Edit tiers; re-render on change (not on every key, so focus is kept while typing).
+    document.getElementById("tiers").addEventListener("change", e => {
+      const el = e.target;
+      if (el.dataset.i == null) return;
+      const v = parseFloat(el.value);
+      cur().tiers[+el.dataset.i][el.dataset.k] = isNaN(v) ? NaN : v;
+      render();
+    });
+    document.getElementById("tiers").addEventListener("click", e => {
+      const b = e.target.closest("[data-del]");
+      if (!b || b.disabled) return;
+      cur().tiers.splice(+b.dataset.del, 1);
+      render();
+    });
+    document.getElementById("coll").addEventListener("change", e => {
+      const el = e.target;
+      if (el.dataset.c == null) return;
+      const v = parseFloat(el.value);
+      const c = cur().coll[+el.dataset.c];
+      c[el.dataset.k] = isNaN(v) ? 0 : v;
+      const bad = c.min < 0 || c.min > 100 || c.pct < 0 || c.pct > 10;
+      document.getElementById("collErr").textContent = bad ? "Collected must be 0–100% and commission 0–10%." : "";
+      render();
+    });
+    document.getElementById("addTier").addEventListener("click", () => {
+      const t = cur().tiers;
+      const last = t.slice().sort((a, b) => a.to - b.to).pop();
+      t.push({ from: last ? last.to : 0, to: (last ? last.to : 0) + 10, pct: 0 });
+      render();
+    });
+    monthSel.addEventListener("change", render);
+
+    document.getElementById("closeBtn").addEventListener("click", () => {
+      const rows = calc(monthSel.value);
+      const total = rows.reduce((a, x) => a + x.total, 0);
+      document.getElementById("closeText").innerHTML = "Close <strong>" + monthSel.options[monthSel.selectedIndex].text + "</strong> with " + rows.length +
+        ' sellers and a total commission of <span class="num">' + UI.fmtMoney(total) + "</span>?";
+      UI.openModal("closeModal");
+    });
+    document.getElementById("cancelClose").addEventListener("click", () => UI.closeModal("closeModal"));
+    document.getElementById("confirmClose").addEventListener("click", () => {
+      const st = cur();
+      st.frozen = calc(monthSel.value);   // recalculated at closing, then frozen
+      st.closed = true;
+      st.closedOn = "2026-11-17";
+      UI.closeModal("closeModal");
+      render();
+      UI.toast(monthSel.options[monthSel.selectedIndex].text + " closed");
+    });
+
+    render();
+  });
+  </script>
+</body>
+</html>

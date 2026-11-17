@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Service Desk · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); align-items: start; }
+    .col { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; min-height: 200px; }
+    .col.drop { outline: 2px dashed var(--primary); outline-offset: -4px; }
+    .col-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .col-body { padding: 8px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
+    .tk { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; box-shadow: var(--shadow); cursor: grab; display: flex; flex-direction: column; gap: 6px; }
+    .tk.dragging { opacity: .5; }
+    .tk-top { display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+    .tk-id { font-family: var(--font-mono); font-size: .75rem; color: var(--text-muted); }
+    .tk-title { font-weight: 500; font-size: .9rem; line-height: 1.3; background: none; border: 0; padding: 0; color: var(--text); text-align: left; cursor: pointer; font-family: inherit; }
+    .tk-title:hover { text-decoration: underline; }
+    .tk-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .avatar { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; font-size: .7rem; font-weight: 600; background: var(--info-bg); color: var(--info); flex: none; }
+    .sla { display: inline-flex; align-items: center; gap: 4px; font-size: .76rem; font-family: var(--font-mono); }
+    .sla svg { width: 13px; height: 13px; }
+    .moves { display: flex; gap: 4px; }
+    .moves .btn { min-height: 28px; height: 28px; width: 28px; padding: 0; }
+    .p-Critical { background: var(--negative-bg); color: var(--negative); }
+    .p-High { background: var(--warning-bg); color: var(--warning); }
+    .p-Medium { background: var(--info-bg); color: var(--info); }
+    .p-Low { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+    .modal.small { width: min(680px, 100%); }
+    textarea.input { min-height: 90px; resize: vertical; }
+    .timeline { list-style: none; margin: 0; padding: 0 0 0 16px; border-left: 2px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
+    .timeline li { position: relative; font-size: .88rem; }
+    .timeline li::before { content: ""; position: absolute; left: -22px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+    .timeline li.sys::before { background: var(--text-muted); }
+    .tl-meta { font-size: .76rem; color: var(--text-muted); }
+    .detail-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; font-size: .85rem; margin-bottom: 14px; }
+    .detail-grid div span { display: block; color: var(--text-muted); font-size: .76rem; }
+    @media (max-width: 1100px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px) { .board { grid-template-columns: 1fr; } .form-grid, .detail-grid { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body data-page="service-desk" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Service desk</h1>
+        <p class="muted">IT tickets from every branch, with the time left to meet each priority's response target.</p>
+      </div>
+      <button class="btn btn-primary" id="newTicket" type="button">New ticket</button>
+    </div>
+
+    <section class="kpis" aria-label="Ticket figures">
+      <div class="card kpi"><div class="kpi-label">Open tickets</div><div class="kpi-value" id="kOpen"></div><div class="kpi-delta muted">New, in progress and waiting</div></div>
+      <div class="card kpi"><div class="kpi-label">SLA breached</div><div class="kpi-value neg" id="kBreach"></div><div class="kpi-delta muted">Open and past their target</div></div>
+      <div class="card kpi"><div class="kpi-label">Avg resolution time</div><div class="kpi-value" id="kAvg"></div><div class="kpi-delta muted" id="kAvgD"></div></div>
+      <div class="card kpi"><div class="kpi-label">Resolved within SLA</div><div class="kpi-value pos" id="kWithin"></div><div class="kpi-delta muted">Of resolved tickets</div></div>
+    </section>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fAssignee">Assignee</label><select class="input" id="fAssignee"><option value="">Everyone</option></select></div>
+        <div class="field"><label for="fPriority">Priority</label><select class="input" id="fPriority"><option value="">All priorities</option></select></div>
+        <div class="field"><label for="fSearch">Search</label><input class="input" id="fSearch" type="search" placeholder="Ticket number or title" autocomplete="off"></div>
+      </div>
+      <p class="muted" style="font-size:.8rem;margin-top:8px">Drag a card to another column, or use the arrow buttons on each card to move it.</p>
+    </section>
+
+    <section class="board" id="board" aria-label="Ticket board"></section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>Each priority has a response target: Critical 4 hours, High 8, Medium 24 and Low 72. The timer counts live and turns into "breached" when it runs out.</li>
+        <li>Cards can be dragged, but every move also has a button, so the board works with a keyboard and on a phone.</li>
+        <li>Every status change is written to the ticket's timeline, so the history explains how long each step took.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- New ticket -->
+  <div class="modal-backdrop" id="mNew" role="dialog" aria-modal="true" aria-labelledby="mNewTitle">
+    <div class="modal small">
+      <div class="modal-head"><h2 id="mNewTitle">New ticket</h2></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field" style="grid-column:1/-1"><label for="nTitle">Title</label><input class="input" id="nTitle" maxlength="90" autocomplete="off"><span class="field-error" id="eTitle"></span></div>
+          <div class="field"><label for="nCat">Category</label><select class="input" id="nCat"></select><span class="field-error" id="eCat"></span></div>
+          <div class="field"><label for="nPri">Priority</label><select class="input" id="nPri"></select><span class="field-error" id="ePri"></span></div>
+          <div class="field"><label for="nBranch">Branch</label><select class="input" id="nBranch"></select><span class="field-error" id="eBranch"></span></div>
+          <div class="field"><label for="nAssignee">Assign to</label><select class="input" id="nAssignee"></select></div>
+          <div class="field" style="grid-column:1/-1"><label for="nDesc">Description</label><textarea class="input" id="nDesc"></textarea><span class="field-error" id="eDesc"></span></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="nSave" type="button">Create ticket</button>
+        <button class="btn" id="nClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticket detail -->
+  <div class="modal-backdrop" id="mDetail" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <div class="modal small">
+      <div class="modal-head"><div><div class="tk-id" id="dId"></div><h2 id="dTitle"></h2></div><span id="dSla"></span></div>
+      <div class="modal-body">
+        <div class="detail-grid" id="dGrid"></div>
+        <p id="dDesc" style="font-size:.9rem"></p>
+        <h3 style="margin:16px 0 10px">Timeline</h3>
+        <ul class="timeline" id="dTimeline"></ul>
+        <div class="field" style="margin-top:16px"><label for="dComment">Add a comment</label><textarea class="input" id="dComment"></textarea><span class="field-error" id="eComment"></span></div>
+        <div class="field" style="margin-top:10px;max-width:260px"><label for="dStatus">Status</label><select class="input" id="dStatus"></select></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="dSave" type="button">Save</button>
+        <button class="btn" id="dClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const H = 3600000;
+    const LOAD = Date.now();
+    const BASE = Date.UTC(2026, 10, 16, 15, 0, 0); // sample "now"
+    const now = () => BASE + (Date.now() - LOAD);
+
+    const STATUSES = ["New", "In progress", "Waiting", "Resolved"];
+    const PRIORITIES = { Critical: 4, High: 8, Medium: 24, Low: 72 };
+    const CATS = ["Hardware", "Software", "Network", "Access", "Printer", "Email"];
+    const r = UI.rng(5150);
+    const agents = ["Ana Torres", "Luis Ramos", "Sofia Castro", "Diego Molina", "Paula Reyes"];
+    const initials = n => n.split(" ").map(x => x[0]).join("");
+    const TITLES = {
+      Hardware: ["Laptop does not turn on", "Monitor flickers", "Keyboard keys stuck", "Barcode scanner not reading"],
+      Software: ["ERP report shows an error", "Cannot open invoice PDF", "Spreadsheet macro fails", "Update stuck at 40%"],
+      Network: ["No internet at the register", "Wi-Fi drops every few minutes", "VPN does not connect", "Slow connection to the server"],
+      Access: ["Reset password for new hire", "Needs access to payables screen", "Account locked after failed logins", "Remove access for transferred user"],
+      Printer: ["Receipt printer jams", "Label printer prints blank", "Toner replacement", "Printer offline in the office"],
+      Email: ["Mailbox full", "Emails going to spam", "Shared calendar not syncing", "Signature does not show"]
+    };
+    const ICONS = {
+      clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+      breach: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>',
+      ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
+      left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
+      right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
+    };
+
+    // ---------- Sample tickets ----------
+    const tickets = [];
+    let seq = 1041;
+    for (let i = 0; i < 26; i++) {
+      const cat = UI.pick(r, CATS);
+      const xp = r(), xs = r();
+      const pr = xp < 0.12 ? "Critical" : xp < 0.35 ? "High" : xp < 0.75 ? "Medium" : "Low";
+      const st = xs < 0.2 ? "New" : xs < 0.48 ? "In progress" : xs < 0.6 ? "Waiting" : "Resolved";
+      // Open tickets were mostly created inside their target window, so only some are breached.
+      const created = st === "Resolved" ? BASE - (6 + r() * 66) * H : BASE - (0.1 + r() * 1.15) * PRIORITIES[pr] * H;
+      const t = { id: "T-" + seq++, title: UI.pick(r, TITLES[cat]), cat, priority: pr, status: st, created, branch: UI.pick(r, UI.DATA.branches),
+        assignee: st === "New" && r() < 0.5 ? "" : UI.pick(r, agents), desc: "Reported by the branch supervisor. The issue started this morning and affects daily work.", log: [] };
+      t.log.push({ at: created, sys: true, text: "Ticket created · priority " + pr });
+      if (st !== "New") t.log.push({ at: created + H * (0.3 + r()), sys: true, text: "Moved to In progress" + (t.assignee ? " · " + t.assignee : "") });
+      if (st === "Waiting") t.log.push({ at: created + H * (1.5 + r() * 3), sys: false, who: t.assignee, text: "Waiting for the user to confirm a time to visit." });
+      if (st === "Resolved") {
+        const took = PRIORITIES[pr] * (0.25 + r() * 1.6);
+        t.resolvedAt = Math.min(created + took * H, BASE - H * 0.2);
+        t.log.push({ at: t.resolvedAt, sys: true, text: "Resolved" });
+      }
+      tickets.push(t);
+    }
+
+    // ---------- Helpers ----------
+    function fmtDur(ms) {
+      const m = Math.round(Math.abs(ms) / 60000);
+      const h = Math.floor(m / 60), d = Math.floor(h / 24);
+      if (d) return d + "d " + (h % 24) + "h";
+      return h ? h + "h " + String(m % 60).padStart(2, "0") + "m" : (m % 60) + "m";
+    }
+    function slaInfo(t) {
+      const due = t.created + PRIORITIES[t.priority] * H;
+      if (t.status === "Resolved") {
+        const within = t.resolvedAt <= due;
+        return { breached: !within, html: '<span class="sla ' + (within ? "pos" : "neg") + '">' + (within ? ICONS.ok + "Within SLA" : ICONS.breach + "Late by " + fmtDur(t.resolvedAt - due)) + "</span>" };
+      }
+      const left = due - now();
+      if (left < 0) return { breached: true, html: '<span class="sla neg">' + ICONS.breach + "Breached " + fmtDur(left) + " ago</span>" };
+      const warn = left < PRIORITIES[t.priority] * H * 0.25;
+      return { breached: false, html: '<span class="sla" style="color:' + (warn ? "var(--warning)" : "var(--text-muted)") + '">' + ICONS.clock + fmtDur(left) + " left</span>" };
+    }
+    const fmtTime = ms => new Date(ms).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+
+    // ---------- Filters ----------
+    const fAssignee = document.getElementById("fAssignee"), fPriority = document.getElementById("fPriority"), fSearch = document.getElementById("fSearch");
+    fAssignee.insertAdjacentHTML("beforeend", agents.map(a => "<option>" + a + "</option>").join("") + '<option value="__none">Unassigned</option>');
+    fPriority.insertAdjacentHTML("beforeend", Object.keys(PRIORITIES).map(p => "<option>" + p + "</option>").join(""));
+    function passes(t) {
+      if (fAssignee.value === "__none" && t.assignee) return false;
+      if (fAssignee.value && fAssignee.value !== "__none" && t.assignee !== fAssignee.value) return false;
+      if (fPriority.value && t.priority !== fPriority.value) return false;
+      const q = fSearch.value.trim().toLowerCase();
+      if (q && !(t.id.toLowerCase().includes(q) || t.title.toLowerCase().includes(q))) return false;
+      return true;
+    }
+    [fAssignee, fPriority].forEach(el => el.addEventListener("change", render));
+    fSearch.addEventListener("input", render);
+
+    // ---------- Board ----------
+    const board = document.getElementById("board");
+    const order = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    function cardHtml(t) {
+      const i = STATUSES.indexOf(t.status);
+      return '<article class="tk" draggable="true" data-id="' + t.id + '" aria-label="' + t.id + " " + t.title + '">' +
+        '<div class="tk-top"><span class="tk-id">' + t.id + '</span><span class="chip p-' + t.priority + '">' + t.priority + "</span></div>" +
+        '<button type="button" class="tk-title" data-open="' + t.id + '">' + t.title + "</button>" +
+        '<div class="muted" style="font-size:.78rem">' + t.cat + " · " + t.branch + "</div>" +
+        '<div class="tk-foot">' + slaInfo(t).html +
+          '<span style="display:flex;align-items:center;gap:6px">' +
+            (t.assignee ? '<span class="avatar" title="' + t.assignee + '" aria-label="Assigned to ' + t.assignee + '">' + initials(t.assignee) + "</span>" : '<span class="chip chip-warn">Unassigned</span>') +
+            '<span class="moves">' +
+              '<button class="btn" type="button" data-move="-1" data-id="' + t.id + '" aria-label="Move ' + t.id + " to " + (STATUSES[i - 1] || "") + '"' + (i === 0 ? " disabled" : "") + ">" + ICONS.left + "</button>" +
+              '<button class="btn" type="button" data-move="1" data-id="' + t.id + '" aria-label="Move ' + t.id + " to " + (STATUSES[i + 1] || "") + '"' + (i === STATUSES.length - 1 ? " disabled" : "") + ">" + ICONS.right + "</button>" +
+            "</span>" +
+          "</span>" +
+        "</div></article>";
+    }
+    function render() {
+      const list = tickets.filter(passes);
+      board.innerHTML = STATUSES.map(s => {
+        const items = list.filter(t => t.status === s).sort((a, b) => s === "Resolved" ? b.resolvedAt - a.resolvedAt : order[a.priority] - order[b.priority] || a.created - b.created);
+        return '<div class="col" data-status="' + s + '" role="region" aria-label="' + s + '"><div class="col-head"><h2 style="font-size:.92rem">' + s + '</h2><span class="chip chip-info num">' + items.length + "</span></div>" +
+          '<div class="col-body">' + (items.length ? items.map(cardHtml).join("") : '<p class="muted" style="font-size:.82rem;padding:8px">No tickets.</p>') + "</div></div>";
+      }).join("");
+      renderKpis();
+    }
+    function renderKpis() {
+      const open = tickets.filter(t => t.status !== "Resolved");
+      const resolved = tickets.filter(t => t.status === "Resolved");
+      document.getElementById("kOpen").textContent = open.length;
+      document.getElementById("kBreach").textContent = open.filter(t => slaInfo(t).breached).length;
+      const avg = resolved.length ? resolved.reduce((a, t) => a + (t.resolvedAt - t.created), 0) / resolved.length : 0;
+      document.getElementById("kAvg").textContent = resolved.length ? fmtDur(avg) : "—";
+      document.getElementById("kAvgD").textContent = resolved.length + " resolved tickets";
+      const within = resolved.filter(t => !slaInfo(t).breached).length;
+      document.getElementById("kWithin").textContent = resolved.length ? UI.fmtPct(within / resolved.length, 0) : "—";
+    }
+
+    function moveTo(t, status, who) {
+      if (!t || t.status === status) return;
+      const from = t.status;
+      t.status = status;
+      if (status === "Resolved") t.resolvedAt = now();
+      else t.resolvedAt = undefined;
+      if (status === "In progress" && !t.assignee) t.assignee = agents[0];
+      t.log.push({ at: now(), sys: true, text: "Moved from " + from + " to " + status + (who ? " · " + who : "") });
+      render();
+      UI.toast(t.id + " moved to " + status + ".");
+    }
+
+    // Button moves (keyboard friendly) and opening details
+    board.addEventListener("click", e => {
+      const mv = e.target.closest("[data-move]");
+      if (mv) {
+        const t = tickets.find(x => x.id === mv.dataset.id);
+        const i = STATUSES.indexOf(t.status) + +mv.dataset.move;
+        if (i >= 0 && i < STATUSES.length) {
+          moveTo(t, STATUSES[i]);
+          const again = board.querySelector('[data-move="' + mv.dataset.move + '"][data-id="' + t.id + '"]');
+          if (again && !again.disabled) again.focus(); else { const card = board.querySelector('[data-open="' + t.id + '"]'); if (card) card.focus(); }
+        }
+        return;
+      }
+      const op = e.target.closest("[data-open]");
+      if (op) openDetail(op.dataset.open);
+    });
+
+    // Drag and drop
+    let dragId = null;
+    board.addEventListener("dragstart", e => {
+      const c = e.target.closest(".tk");
+      if (!c) return;
+      dragId = c.dataset.id;
+      c.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", dragId);
+    });
+    board.addEventListener("dragend", e => { const c = e.target.closest(".tk"); if (c) c.classList.remove("dragging"); board.querySelectorAll(".col").forEach(c => c.classList.remove("drop")); });
+    board.addEventListener("dragover", e => {
+      const col = e.target.closest(".col");
+      if (!col || !dragId) return;
+      e.preventDefault();
+      board.querySelectorAll(".col").forEach(c => c.classList.toggle("drop", c === col));
+    });
+    board.addEventListener("drop", e => {
+      const col = e.target.closest(".col");
+      if (!col || !dragId) return;
+      e.preventDefault();
+      moveTo(tickets.find(x => x.id === dragId), col.dataset.status);
+      dragId = null;
+    });
+
+    // ---------- New ticket ----------
+    const nTitle = document.getElementById("nTitle"), nCat = document.getElementById("nCat"), nPri = document.getElementById("nPri"), nBranch = document.getElementById("nBranch"), nAssignee = document.getElementById("nAssignee"), nDesc = document.getElementById("nDesc");
+    nCat.innerHTML = '<option value="">Choose a category</option>' + CATS.map(c => "<option>" + c + "</option>").join("");
+    nPri.innerHTML = '<option value="">Choose a priority</option>' + Object.keys(PRIORITIES).map(p => '<option value="' + p + '">' + p + " · respond within " + PRIORITIES[p] + " h</option>").join("");
+    nBranch.innerHTML = '<option value="">Choose a branch</option>' + UI.DATA.branches.map(b => "<option>" + b + "</option>").join("");
+    nAssignee.innerHTML = '<option value="">Leave unassigned</option>' + agents.map(a => "<option>" + a + "</option>").join("");
+    const newFields = [[nTitle, "eTitle"], [nCat, "eCat"], [nPri, "ePri"], [nBranch, "eBranch"], [nDesc, "eDesc"]];
+    document.getElementById("newTicket").addEventListener("click", () => {
+      newFields.forEach(([el, e]) => { el.value = ""; el.removeAttribute("aria-invalid"); document.getElementById(e).textContent = ""; });
+      nAssignee.value = "";
+      UI.openModal("mNew");
+    });
+    document.getElementById("nClose").addEventListener("click", () => UI.closeModal("mNew"));
+    document.getElementById("nSave").addEventListener("click", () => {
+      let ok = true;
+      const msgs = { eTitle: "Write a short title.", eCat: "Choose a category.", ePri: "Choose a priority.", eBranch: "Choose the branch.", eDesc: "Describe the problem in at least 10 characters." };
+      newFields.forEach(([el, e]) => {
+        const bad = e === "eDesc" ? el.value.trim().length < 10 : !el.value.trim();
+        el.toggleAttribute("aria-invalid", bad);
+        if (bad) el.setAttribute("aria-invalid", "true");
+        document.getElementById(e).textContent = bad ? msgs[e] : "";
+        if (bad) ok = false;
+      });
+      if (!ok) { document.querySelector('#mNew [aria-invalid="true"]').focus(); return; }
+      const t = { id: "T-" + seq++, title: nTitle.value.trim(), cat: nCat.value, priority: nPri.value, status: "New", created: now(), branch: nBranch.value, assignee: nAssignee.value, desc: nDesc.value.trim(), log: [] };
+      t.log.push({ at: t.created, sys: true, text: "Ticket created · priority " + t.priority + (t.assignee ? " · assigned to " + t.assignee : "") });
+      tickets.push(t);
+      UI.closeModal("mNew");
+      fAssignee.value = ""; fPriority.value = ""; fSearch.value = "";
+      render();
+      UI.toast(t.id + " created. Respond within " + PRIORITIES[t.priority] + " hours.");
+    });
+
+    // ---------- Detail ----------
+    let current = null;
+    const dStatus = document.getElementById("dStatus"), dComment = document.getElementById("dComment");
+    dStatus.innerHTML = STATUSES.map(s => "<option>" + s + "</option>").join("");
+    function renderTimeline(t) {
+      document.getElementById("dTimeline").innerHTML = t.log.slice().sort((a, b) => a.at - b.at).map(l =>
+        '<li class="' + (l.sys ? "sys" : "") + '"><div class="tl-meta">' + fmtTime(l.at) + (l.who ? " · " + l.who : "") + "</div>" + l.text + "</li>").join("");
+    }
+    function openDetail(id) {
+      const t = tickets.find(x => x.id === id);
+      if (!t) return;
+      current = t;
+      document.getElementById("dId").textContent = t.id;
+      document.getElementById("dTitle").textContent = t.title;
+      document.getElementById("dSla").innerHTML = slaInfo(t).html;
+      document.getElementById("dGrid").innerHTML =
+        "<div><span>Priority</span>" + t.priority + "</div><div><span>Category</span>" + t.cat + "</div><div><span>Branch</span>" + t.branch + "</div><div><span>Assignee</span>" + (t.assignee || "Unassigned") + "</div>" +
+        '<div><span>Created</span><span class="num" style="color:var(--text);font-size:.85rem">' + fmtTime(t.created) + "</span></div><div><span>Target</span>" + PRIORITIES[t.priority] + " h</div>";
+      document.getElementById("dDesc").textContent = t.desc;
+      renderTimeline(t);
+      dComment.value = "";
+      document.getElementById("eComment").textContent = "";
+      dStatus.value = t.status;
+      UI.openModal("mDetail");
+    }
+    document.getElementById("dClose").addEventListener("click", () => UI.closeModal("mDetail"));
+    document.getElementById("dSave").addEventListener("click", () => {
+      const t = current;
+      const text = dComment.value.trim();
+      if (!text && dStatus.value === t.status) {
+        document.getElementById("eComment").textContent = "Write a comment or change the status to save.";
+        dComment.focus();
+        return;
+      }
+      if (text) t.log.push({ at: now(), sys: false, who: "You", text });
+      UI.closeModal("mDetail");
+      if (dStatus.value !== t.status) moveTo(t, dStatus.value, "You");
+      else { render(); UI.toast("Comment added to " + t.id + "."); }
+    });
+
+    render();
+    setInterval(() => { board.querySelectorAll(".tk").forEach(c => { const t = tickets.find(x => x.id === c.dataset.id); const s = c.querySelector(".sla"); if (t && s) s.outerHTML = slaInfo(t).html; }); renderKpis(); }, 30000);
+  });
+  </script>
+</body>
+</html>

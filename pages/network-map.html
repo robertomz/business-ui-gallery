@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Network Map · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .map-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--space-4); }
+    #map { height: 520px; border-top: 1px solid var(--border); }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; color: var(--text-muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .shape { width: 12px; height: 12px; display: inline-block; background: var(--text-muted); }
+    .detail dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 12px 0 0; font-size: .88rem; }
+    .detail dt { color: var(--text-muted); }
+    .detail dd { margin: 0; text-align: right; }
+    .st { display: inline-flex; align-items: center; gap: 4px; }
+    .st svg { width: 14px; height: 14px; }
+    .scan-row { display: flex; align-items: center; gap: 10px; }
+    .scan-row .progress { flex: 1; }
+    #devTable td .btn { white-space: nowrap; }
+    #devTable td { white-space: nowrap; }
+    tr.new-dev td:first-child::after { content: " New"; font-size: .7rem; font-weight: 600; color: var(--info); }
+    @media (max-width: 1000px) { .map-layout { grid-template-columns: 1fr; } #map { height: 420px; } }
+  </style>
+</head>
+<body data-page="network-map" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Network map</h1>
+        <p class="muted">How the branches connect to the core, and which devices need attention right now.</p>
+      </div>
+      <button class="btn btn-primary" id="scanBtn" type="button">Scan network</button>
+    </div>
+
+    <section class="kpis" aria-label="Device status">
+      <div class="card kpi"><div class="kpi-label">Devices</div><div class="kpi-value" id="kAll"></div><div class="kpi-delta muted">Across 6 branches</div></div>
+      <div class="card kpi"><div class="kpi-label">Up</div><div class="kpi-value pos" id="kUp"></div><div class="kpi-delta muted">Answering pings</div></div>
+      <div class="card kpi"><div class="kpi-label">Warning</div><div class="kpi-value" style="color:var(--warning)" id="kWarn"></div><div class="kpi-delta muted">High latency or packet loss</div></div>
+      <div class="card kpi"><div class="kpi-label">Down</div><div class="kpi-value neg" id="kDown"></div><div class="kpi-delta muted">No answer in the last 5 minutes</div></div>
+    </section>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fBranch">Branch</label><select class="input" id="fBranch"><option value="">All branches</option></select></div>
+        <div class="field"><label for="fType">Device type</label><select class="input" id="fType"><option value="">All types</option></select></div>
+        <div class="field"><label for="fSearch">Find by name or IP</label><input class="input" id="fSearch" type="search" placeholder="e.g. 10.20.3.21 or sw-harbor-1" autocomplete="off"></div>
+      </div>
+      <p class="field-error" id="searchMsg" aria-live="polite"></p>
+      <div class="scan-row" id="scanRow" hidden>
+        <div class="progress" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="scanBar"></span></div>
+        <span class="muted num" id="scanText" style="font-size:.82rem">0%</span>
+      </div>
+    </section>
+
+    <section class="map-layout">
+      <div class="card">
+        <div class="card-head" style="padding-bottom:12px">
+          <h2>Topology</h2>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div id="map" role="img" aria-label="Network topology diagram. The device table below lists the same devices as text."></div>
+      </div>
+      <aside class="card card-body detail" aria-live="polite" id="detail">
+        <h2>Device</h2>
+        <p class="muted" style="margin-top:8px;font-size:.88rem">Select a device on the map or in the table to see its details.</p>
+      </aside>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Devices</h2><span class="muted" style="font-size:.82rem" id="tCount"></span></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="devTable">
+          <thead><tr><th>Name</th><th>Type</th><th>Branch</th><th>IP</th><th>Status</th><th class="r">Ports</th><th>Last seen</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The real tool discovers switches and the devices behind each port, then keeps polling them, so the map draws itself instead of being maintained by hand.</li>
+        <li>Shape tells the device type and color tells the status; the status is also written in the label, the side panel and the table.</li>
+        <li>The table under the map is the same data as text, so it works with a screen reader and on a small phone.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(4242);
+    const TYPES = {
+      router:   { label: "Core router", shape: "diamond", size: 22 },
+      firewall: { label: "Firewall", shape: "hexagon", size: 18 },
+      switch:   { label: "Switch", shape: "square", size: 15 },
+      ap:       { label: "Access point", shape: "triangle", size: 11 },
+      printer:  { label: "Printer", shape: "triangleDown", size: 11 },
+      pos:      { label: "POS terminal", shape: "dot", size: 10 },
+      camera:   { label: "Camera", shape: "star", size: 12 }
+    };
+    const STATUS = {
+      up:   { text: "Up", cls: "pos", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>' },
+      warn: { text: "Warning", cls: "", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>' },
+      down: { text: "Down", cls: "neg", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg>' }
+    };
+    const MODELS = { router: "CR-4400", firewall: "FG-80X", switch: ["SW-24P", "SW-48P"], ap: "AP-610", printer: "LP-M404", pos: "POS-T2", camera: "CAM-4MP" };
+    const slug = s => s.toLowerCase().replace(/[^a-z]+/g, "-").replace(/-$/, "");
+    const mac = () => Array.from({ length: 6 }, () => Math.floor(r() * 256).toString(16).padStart(2, "0")).join(":").toUpperCase();
+    const pickStatus = () => { const x = r(); return x < 0.82 ? "up" : x < 0.93 ? "warn" : "down"; };
+
+    // ---------- Build the sample inventory ----------
+    const devices = [], links = [];
+    let nextId = 1;
+    function add(dev, parent) {
+      dev.id = nextId++;
+      devices.push(dev);
+      if (parent) links.push({ from: parent.id, to: dev.id });
+      return dev;
+    }
+    const core = add({ name: "core-01", type: "router", branch: "Data center", ip: "10.20.0.1", status: "up", ports: [6, 8] });
+    D.branches.forEach((b, bi) => {
+      const net = "10.20." + (bi + 1) + ".";
+      const fw = add({ name: "fw-" + slug(b), type: "firewall", branch: b, ip: net + "1", status: bi === 4 ? "warn" : "up", ports: [2, 8] }, core);
+      const nSw = bi === 0 || bi === 2 ? 2 : 1;
+      let host = 10;
+      for (let s = 0; s < nSw; s++) {
+        const sw = add({ name: "sw-" + slug(b) + "-" + (s + 1), type: "switch", branch: b, ip: net + (2 + s), status: pickStatus(), ports: [0, s ? 48 : 24] }, fw);
+        const kinds = ["ap", "ap", "printer", "pos", "pos", "pos", "camera", "camera"];
+        const n = 5 + Math.floor(r() * 4);
+        for (let i = 0; i < n; i++) {
+          const t = kinds[Math.floor(r() * kinds.length)];
+          const count = devices.filter(d => d.branch === b && d.type === t).length + 1;
+          add({ name: t + "-" + slug(b) + "-" + String(count).padStart(2, "0"), type: t, branch: b, ip: net + (host++), status: pickStatus(), ports: null }, sw);
+          sw.ports[0]++;
+        }
+      }
+    });
+    devices.forEach(d => {
+      const m = MODELS[d.type];
+      d.model = Array.isArray(m) ? (d.ports && d.ports[1] === 48 ? m[1] : m[0]) : m;
+      d.mac = mac();
+      d.uptimeH = d.status === "down" ? 0 : Math.floor(2 + r() * 2000);
+      d.lastSeenMin = d.status === "down" ? 6 + Math.floor(r() * 300) : Math.floor(r() * 2);
+    });
+
+    // ---------- Formatting ----------
+    function uptime(h) { if (!h) return "—"; const d = Math.floor(h / 24); return (d ? d + "d " : "") + (h % 24) + "h"; }
+    function lastSeen(m) { return m < 1 ? "Just now" : m < 60 ? m + " min ago" : Math.floor(m / 60) + " h " + (m % 60) + " min ago"; }
+    function statusHtml(s) { const x = STATUS[s]; return '<span class="st ' + x.cls + '"' + (s === "warn" ? ' style="color:var(--warning)"' : "") + ">" + x.icon + x.text + "</span>"; }
+
+    // ---------- Colors from the theme ----------
+    function palette() {
+      return { up: UI.cssVar("--positive"), warn: UI.cssVar("--warning"), down: UI.cssVar("--negative"), text: UI.cssVar("--text"), muted: UI.cssVar("--text-muted"), edge: UI.cssVar("--border"), surface: UI.cssVar("--surface"), focus: UI.cssVar("--primary") };
+    }
+    let P = palette();
+    function nodeFor(d) {
+      const t = TYPES[d.type];
+      const c = P[d.status];
+      const isNew = !!d.isNew;
+      return {
+        id: d.id, shape: t.shape, size: t.size,
+        label: d.name + (d.status !== "up" ? "\n(" + STATUS[d.status].text.toLowerCase() + ")" : ""),
+        color: { background: c, border: isNew ? P.focus : c, highlight: { background: c, border: P.text }, hover: { background: c, border: P.text } },
+        borderWidth: isNew ? 4 : 1, shapeProperties: { borderDashes: d.status === "down" ? [4, 3] : false },
+        font: { color: P.text, size: 11, face: "Fira Sans", strokeWidth: 3, strokeColor: P.surface },
+        hidden: !visible(d)
+      };
+    }
+
+    // ---------- Filters ----------
+    const fBranch = document.getElementById("fBranch"), fType = document.getElementById("fType"), fSearch = document.getElementById("fSearch");
+    ["Data center"].concat(D.branches).forEach(b => fBranch.insertAdjacentHTML("beforeend", "<option>" + b + "</option>"));
+    Object.keys(TYPES).forEach(t => fType.insertAdjacentHTML("beforeend", '<option value="' + t + '">' + TYPES[t].label + "</option>"));
+    function visible(d) {
+      if (fType.value && d.type !== fType.value && !["router", "firewall", "switch"].includes(d.type)) return false;
+      if (fBranch.value && d.branch !== fBranch.value && d.type !== "router") return false;
+      return true;
+    }
+
+    // ---------- Legend ----------
+    const shapeCss = { diamond: "transform:rotate(45deg) scale(.8)", hexagon: "clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%)", square: "", triangle: "clip-path:polygon(50% 0,100% 100%,0 100%)", triangleDown: "clip-path:polygon(0 0,100% 0,50% 100%)", dot: "border-radius:50%", star: "clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)" };
+    document.getElementById("legend").innerHTML =
+      Object.keys(TYPES).map(t => '<span><i class="shape" style="' + shapeCss[TYPES[t].shape] + '"></i>' + TYPES[t].label + "</span>").join("") +
+      Object.keys(STATUS).map(s => "<span>" + statusHtml(s) + "</span>").join("");
+
+    // ---------- Map ----------
+    const nodes = new vis.DataSet(devices.map(nodeFor));
+    const edges = new vis.DataSet(links.map((l, i) => ({ id: i + 1, from: l.from, to: l.to })));
+    const network = new vis.Network(document.getElementById("map"), { nodes, edges }, {
+      layout: { improvedLayout: true },
+      physics: { solver: "forceAtlas2Based", forceAtlas2Based: { gravitationalConstant: -60, springLength: 70 }, stabilization: { iterations: 250 } },
+      edges: { color: { color: P.edge, highlight: P.focus }, width: 1.2, smooth: false },
+      interaction: { hover: true, tooltipDelay: 150, keyboard: { enabled: true, bindToWindow: false } }
+    });
+    network.once("stabilizationIterationsDone", () => network.setOptions({ physics: false }));
+
+    function refreshNodes() { nodes.update(devices.map(nodeFor)); }
+    function refreshEdges() { edges.update(edges.get().map(e => ({ id: e.id, color: { color: P.edge, highlight: P.focus } }))); }
+
+    // ---------- Detail panel ----------
+    let selectedId = null;
+    function showDetail(id) {
+      const d = devices.find(x => x.id === id);
+      if (!d) return;
+      selectedId = id;
+      const parentLink = links.find(l => l.to === id);
+      const parent = parentLink ? devices.find(x => x.id === parentLink.from) : null;
+      document.getElementById("detail").innerHTML =
+        "<h2>" + d.name + "</h2>" +
+        '<p style="margin-top:6px">' + statusHtml(d.status) + (d.isNew ? ' <span class="chip chip-info">Found in last scan</span>' : "") + "</p>" +
+        "<dl>" +
+          "<dt>Type</dt><dd>" + TYPES[d.type].label + "</dd>" +
+          "<dt>Branch</dt><dd>" + d.branch + "</dd>" +
+          '<dt>IP address</dt><dd class="num">' + d.ip + "</dd>" +
+          '<dt>MAC address</dt><dd class="num" style="font-size:.8rem">' + d.mac + "</dd>" +
+          "<dt>Model</dt><dd>" + d.model + "</dd>" +
+          '<dt>Uptime</dt><dd class="num">' + uptime(d.uptimeH) + "</dd>" +
+          (d.ports ? '<dt>Ports used</dt><dd class="num">' + d.ports[0] + " / " + d.ports[1] + "</dd>" : "") +
+          "<dt>Connected to</dt><dd>" + (parent ? parent.name : "—") + "</dd>" +
+          "<dt>Last seen</dt><dd>" + lastSeen(d.lastSeenMin) + "</dd>" +
+        "</dl>" +
+        (d.ports ? '<div class="bar-track" style="margin-top:10px" aria-hidden="true"><span style="width:' + Math.round(d.ports[0] / d.ports[1] * 100) + '%;background:var(--primary)"></span></div>' : "");
+      document.querySelectorAll("#devTable tbody tr").forEach(tr => tr.setAttribute("aria-selected", String(+tr.dataset.id === id)));
+    }
+    network.on("click", p => { if (p.nodes.length) showDetail(p.nodes[0]); });
+
+    function focusDevice(id) {
+      network.selectNodes([id]);
+      network.focus(id, { scale: 1.3, animation: { duration: 500, easingFunction: "easeInOutQuad" } });
+      showDetail(id);
+    }
+
+    // ---------- Table + KPIs ----------
+    function render() {
+      const list = devices.filter(visible);
+      document.getElementById("kAll").textContent = devices.length;
+      document.getElementById("kUp").textContent = devices.filter(d => d.status === "up").length;
+      document.getElementById("kWarn").textContent = devices.filter(d => d.status === "warn").length;
+      document.getElementById("kDown").textContent = devices.filter(d => d.status === "down").length;
+      document.getElementById("tCount").textContent = list.length + " shown";
+      const order = { down: 0, warn: 1, up: 2 };
+      list.sort((a, b) => order[a.status] - order[b.status] || a.branch.localeCompare(b.branch) || a.name.localeCompare(b.name));
+      document.querySelector("#devTable tbody").innerHTML = list.map(d =>
+        '<tr data-id="' + d.id + '" class="' + (d.isNew ? "new-dev" : "") + '"><td><button class="btn" style="min-height:28px;padding:0 8px;font-size:.82rem" data-focus="' + d.id + '" type="button">' + d.name + "</button></td><td>" + TYPES[d.type].label + "</td><td>" + d.branch +
+        '</td><td class="num">' + d.ip + "</td><td>" + statusHtml(d.status) + '</td><td class="r num">' + (d.ports ? d.ports[0] + "/" + d.ports[1] : "—") + "</td><td>" + lastSeen(d.lastSeenMin) + "</td></tr>").join("");
+      refreshNodes();
+    }
+    document.querySelector("#devTable tbody").addEventListener("click", e => {
+      const b = e.target.closest("[data-focus]");
+      if (b) { focusDevice(+b.dataset.focus); document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" }); }
+    });
+    fBranch.addEventListener("change", () => { render(); network.fit({ animation: true }); });
+    fType.addEventListener("change", render);
+
+    // ---------- Search ----------
+    const msg = document.getElementById("searchMsg");
+    fSearch.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      const q = fSearch.value.trim().toLowerCase();
+      if (!q) { msg.textContent = ""; return; }
+      const hit = devices.find(d => d.ip === q) || devices.find(d => d.name.toLowerCase().includes(q));
+      if (!hit) { msg.textContent = "No device matches “" + fSearch.value.trim() + "”."; return; }
+      if (!visible(hit)) { fBranch.value = ""; fType.value = ""; render(); }
+      msg.textContent = "";
+      focusDevice(hit.id);
+    });
+    fSearch.addEventListener("input", () => { msg.textContent = fSearch.value ? "Press Enter to find the device." : ""; msg.style.color = "var(--text-muted)"; });
+
+    // ---------- Simulated scan ----------
+    const scanBtn = document.getElementById("scanBtn");
+    let scans = 0;
+    scanBtn.addEventListener("click", () => {
+      scanBtn.disabled = true;
+      devices.forEach(d => { d.isNew = false; });
+      const row = document.getElementById("scanRow"), bar = document.getElementById("scanBar"), txt = document.getElementById("scanText");
+      row.hidden = false;
+      const rs = UI.rng(900 + scans++);
+      const switches = devices.filter(d => d.type === "switch");
+      let pct = 0;
+      const tick = setInterval(() => {
+        pct = Math.min(100, pct + 4 + Math.floor(rs() * 8));
+        bar.style.width = pct + "%";
+        row.querySelector(".progress").setAttribute("aria-valuenow", pct);
+        txt.textContent = pct + "% · checking " + switches[Math.min(switches.length - 1, Math.floor(pct / 100 * switches.length))].name;
+        if (pct < 100) return;
+        clearInterval(tick);
+        const found = [];
+        const n = 2 + Math.floor(rs() * 2);
+        for (let i = 0; i < n; i++) {
+          const sw = switches[Math.floor(rs() * switches.length)];
+          const t = ["ap", "printer", "pos", "camera"][Math.floor(rs() * 4)];
+          const used = devices.filter(d => d.branch === sw.branch && d.ip.startsWith(sw.ip.split(".").slice(0, 3).join("."))).map(d => +d.ip.split(".")[3]);
+          const host = Math.max.apply(null, used) + 1;
+          const dev = add({ name: t + "-" + slug(sw.branch) + "-n" + (devices.length + 1), type: t, branch: sw.branch, ip: sw.ip.split(".").slice(0, 3).join(".") + "." + host, status: "up", ports: null, isNew: true }, sw);
+          dev.model = MODELS[t]; dev.mac = mac(); dev.uptimeH = 1; dev.lastSeenMin = 0;
+          sw.ports[0]++;
+          // Physics is off after the first layout, so place the new device next to its switch.
+          const pos = network.getPosition(sw.id);
+          const ang = rs() * Math.PI * 2;
+          nodes.add(Object.assign(nodeFor(dev), { x: pos.x + Math.cos(ang) * 70, y: pos.y + Math.sin(ang) * 70 }));
+          edges.add({ id: edges.length + 1 + i * 1000 + scans * 10000, from: sw.id, to: dev.id, color: { color: P.edge } });
+          found.push(dev);
+        }
+        txt.textContent = "Scan complete · " + found.length + " new devices";
+        render();
+        network.selectNodes(found.map(d => d.id));
+        network.fit({ nodes: found.map(d => d.id).concat(found.map(d => links.find(l => l.to === d.id).from)), animation: { duration: 600 } });
+        showDetail(found[0].id);
+        UI.toast("Scan complete: " + found.length + " new devices found and highlighted.");
+        scanBtn.disabled = false;
+      }, 120);
+    });
+
+    document.addEventListener("themechange", () => {
+      P = palette();
+      refreshNodes(); refreshEdges();
+    });
+    render();
+  });
+  </script>
+</body>
+</html>

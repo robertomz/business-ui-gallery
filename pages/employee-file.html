@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Employee File · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: var(--space-4); align-items: start; }
+    .layout > * { min-width: 0; }
+    .list { max-height: 640px; overflow-y: auto; }
+    .emp { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px var(--space-4); background: none; border: 0; border-bottom: 1px solid var(--border); color: var(--text); font: inherit; cursor: pointer; min-height: 52px; }
+    .emp:hover { background: var(--surface-2); }
+    .emp[aria-current="true"] { background: var(--info-bg); }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--info-bg); color: var(--info); font-weight: 600; font-size: .85rem; flex: none; }
+    .avatar.lg { width: 72px; height: 72px; font-size: 1.4rem; }
+    .emp small { display: block; color: var(--text-muted); font-size: .78rem; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); overflow-x: auto; }
+    .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font: inherit; font-size: .9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; min-height: 44px; }
+    .tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
+    .prof-head { display: flex; gap: var(--space-4); align-items: center; padding: var(--space-4); flex-wrap: wrap; }
+    .prof-head .actions { margin-left: auto; }
+    .dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px var(--space-5); }
+    .dl div span { display: block; font-size: .78rem; color: var(--text-muted); }
+    .timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); }
+    .timeline li { position: relative; padding: 0 0 14px 16px; }
+    .timeline li::before { content: ""; position: absolute; left: -6px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+    .timeline small { color: var(--text-muted); display: block; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
+    .form-grid .span-2 { grid-column: 1 / -1; }
+    .modal.md { width: min(760px, 100%); }
+    .new-inline { display: flex; gap: 6px; margin-top: 6px; }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } .list { max-height: 320px; } }
+    @media (max-width: 640px) { .dl, .form-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="employee-file" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Employee file</h1>
+        <p class="muted">One record per employee: contract, position, vacations, documents and every change made to it.</p>
+      </div>
+    </div>
+
+    <section class="layout">
+      <div class="card">
+        <div class="card-body" style="display:grid;gap:10px">
+          <div class="field"><label for="fQ">Search</label><input class="input" id="fQ" type="search" placeholder="Name or employee code"></div>
+          <div class="field"><label for="fDept">Department</label><select class="input" id="fDept"><option value="">All departments</option></select></div>
+          <div class="field"><label for="fPos">Position</label><select class="input" id="fPos"><option value="">All positions</option></select></div>
+          <p class="muted" style="font-size:.8rem" id="count" aria-live="polite"></p>
+        </div>
+        <div class="list" id="list" role="list"></div>
+      </div>
+
+      <div class="card" id="profile" aria-live="polite">
+        <div class="prof-head">
+          <div class="avatar lg" id="pAvatar" aria-hidden="true"></div>
+          <div>
+            <h2 id="pName" style="font-size:1.2rem"></h2>
+            <p class="muted" id="pSub"></p>
+            <div id="pChips" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"></div>
+          </div>
+          <div class="actions"><button class="btn btn-primary" id="editBtn" type="button">Edit</button></div>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Employee record">
+          <button class="tab" role="tab" id="t-general" aria-controls="p-general" aria-selected="true">General</button>
+          <button class="tab" role="tab" id="t-contract" aria-controls="p-contract" aria-selected="false" tabindex="-1">Contract</button>
+          <button class="tab" role="tab" id="t-position" aria-controls="p-position" aria-selected="false" tabindex="-1">Position</button>
+          <button class="tab" role="tab" id="t-vacations" aria-controls="p-vacations" aria-selected="false" tabindex="-1">Vacations</button>
+          <button class="tab" role="tab" id="t-documents" aria-controls="p-documents" aria-selected="false" tabindex="-1">Documents</button>
+          <button class="tab" role="tab" id="t-history" aria-controls="p-history" aria-selected="false" tabindex="-1">History</button>
+        </div>
+        <div class="card-body" role="tabpanel" id="p-general" aria-labelledby="t-general"></div>
+        <div class="card-body table-wrap" role="tabpanel" id="p-contract" aria-labelledby="t-contract" hidden></div>
+        <div class="card-body" role="tabpanel" id="p-position" aria-labelledby="t-position" hidden></div>
+        <div class="card-body" role="tabpanel" id="p-vacations" aria-labelledby="t-vacations" hidden></div>
+        <div class="card-body table-wrap" role="tabpanel" id="p-documents" aria-labelledby="t-documents" hidden></div>
+        <div class="card-body table-wrap" role="tabpanel" id="p-history" aria-labelledby="t-history" hidden></div>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The real record has dozens of fields; here they are grouped in tabs so the person only sees what the task needs.</li>
+        <li>Department and position are cascading: the positions offered are only those of the chosen department, and a new one can be created without leaving the form.</li>
+        <li>Fixed-term contracts show their extensions in order, and documents warn 30 days before they expire.</li>
+        <li>Every save writes a line to the History tab with who changed what, from which value to which.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="edModal" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="modal md">
+      <div class="modal-head"><h2 id="edTitle">Edit employee</h2></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field"><label for="eFirst">First name</label><input class="input" id="eFirst" aria-describedby="eFirstErr"><div class="field-error" id="eFirstErr"></div></div>
+          <div class="field"><label for="eLast">Last name</label><input class="input" id="eLast" aria-describedby="eLastErr"><div class="field-error" id="eLastErr"></div></div>
+          <div class="field"><label for="eEmail">Work email</label><input class="input" id="eEmail" type="email" aria-describedby="eEmailErr"><div class="field-error" id="eEmailErr"></div></div>
+          <div class="field"><label for="ePhone">Phone</label><input class="input" id="ePhone" inputmode="tel" placeholder="0000-0000" aria-describedby="ePhoneErr"><div class="field-error" id="ePhoneErr"></div></div>
+          <div class="field"><label for="eDept">Department</label><select class="input" id="eDept"></select></div>
+          <div class="field">
+            <label for="ePos">Position</label><select class="input" id="ePos" aria-describedby="ePosErr"></select>
+            <div class="new-inline" id="newPosBox" hidden>
+              <label class="sr-only" for="newPos">New position name</label>
+              <input class="input" id="newPos" placeholder="New position name">
+              <button class="btn" id="addPos" type="button">Add</button>
+            </div>
+            <div class="field-error" id="ePosErr"></div>
+          </div>
+          <div class="field"><label for="eSalary">Monthly salary</label><input class="input num" id="eSalary" inputmode="decimal" aria-describedby="eSalaryErr"><div class="field-error" id="eSalaryErr"></div></div>
+          <div class="field"><label for="eCenter">Cost center</label><select class="input" id="eCenter"></select></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="edSave" type="button">Save</button>
+        <button class="btn" id="edClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(1907);
+    const DEPTS = {
+      "Sales": ["Seller", "Sales supervisor", "Key account manager"],
+      "Warehouse": ["Warehouse assistant", "Forklift operator", "Inventory clerk", "Warehouse supervisor"],
+      "Logistics": ["Driver", "Delivery assistant", "Route coordinator"],
+      "Finance": ["Accountant", "Accounts payable clerk", "Treasury analyst", "Finance manager"],
+      "Human resources": ["HR assistant", "Payroll analyst"],
+      "IT": ["Support technician", "Software developer", "IT manager"]
+    };
+    const CT_TYPES = ["Permanent", "Fixed term", "Probation"];
+    const DOCS = ["ID card", "Driver's license", "Health certificate", "Criminal record check", "Signed contract"];
+    const TODAY = new Date(Date.UTC(2026, 10, 16));
+    const day = 86400000;
+    const fmtD = d => UI.fmtDate(d);
+
+    const emps = [];
+    for (let i = 0; i < 60; i++) {
+      const dept = UI.pick(r, Object.keys(DEPTS));
+      const first = UI.pick(r, D.firstNames), l1 = UI.pick(r, D.lastNames);
+      const l2 = D.lastNames[(D.lastNames.indexOf(l1) + 1 + Math.floor(r() * (D.lastNames.length - 1))) % D.lastNames.length];
+      const last = l1 + " " + l2;
+      const start = new Date(TODAY.getTime() - Math.floor(UI.between(r, 60, 3200)) * day);
+      const type = UI.pick(r, CT_TYPES);
+      const ext = [];
+      if (type === "Fixed term") { let d = start; for (let k = 0; k < Math.floor(r() * 3) + 1; k++) { const to = new Date(d.getTime() + 180 * day); ext.push({ from: d, to }); d = to; } }
+      const vac = [];
+      for (let k = 0; k < Math.floor(r() * 4); k++) { const f = new Date(TODAY.getTime() - Math.floor(UI.between(r, 10, 500)) * day); const n = Math.floor(UI.between(r, 1, 8)); vac.push({ from: f, days: n, status: UI.pick(r, ["Approved", "Approved", "Taken", "Pending"]) }); }
+      vac.sort((a, b) => b.from - a.from);
+      emps.push({
+        code: "E-" + String(1040 + i).padStart(5, "0"), first, last, dept, pos: UI.pick(r, DEPTS[dept]), center: UI.pick(r, D.costCenters),
+        email: (first[0] + last.split(" ")[0]).toLowerCase() + "@example.com", phone: String(Math.floor(UI.between(r, 3000, 9999))) + "-" + String(Math.floor(UI.between(r, 1000, 9999))),
+        birth: new Date(Date.UTC(1970 + Math.floor(r() * 32), Math.floor(r() * 12), 1 + Math.floor(r() * 28))),
+        start, type, ext, salary: Math.round(UI.between(r, 9000, 42000) / 50) * 50, bank: "****" + Math.floor(UI.between(r, 1000, 9999)),
+        status: r() < 0.93 ? "Active" : "On leave",
+        vac, docs: DOCS.map(d => ({ name: d, expires: d === "Signed contract" ? null : new Date(TODAY.getTime() + Math.floor(UI.between(r, -40, 700)) * day) })),
+        hist: [{ when: start, who: "HR assistant", what: "Employee created", from: "", to: "" }]
+      });
+    }
+    let current = emps[0];
+
+    // ---------- Filters ----------
+    const fDept = document.getElementById("fDept"), fPos = document.getElementById("fPos");
+    Object.keys(DEPTS).forEach(d => fDept.insertAdjacentHTML("beforeend", "<option>" + d + "</option>"));
+    function fillPos(sel, dept, withAll, value) {
+      const list = dept ? DEPTS[dept] : [].concat(...Object.values(DEPTS));
+      sel.innerHTML = (withAll ? "<option value=''>All positions</option>" : "") + list.map(p => "<option" + (p === value ? " selected" : "") + ">" + p + "</option>").join("") + (withAll ? "" : "<option value='__new'>+ Create new position…</option>");
+    }
+    fillPos(fPos, "", true);
+    fDept.addEventListener("change", () => { fillPos(fPos, fDept.value, true); renderList(); });
+    fPos.addEventListener("change", renderList);
+    document.getElementById("fQ").addEventListener("input", renderList);
+
+    const initials = e => e.first[0] + e.last[0];
+    function renderList() {
+      const q = document.getElementById("fQ").value.trim().toLowerCase();
+      const f = emps.filter(e => (!fDept.value || e.dept === fDept.value) && (!fPos.value || e.pos === fPos.value) && (!q || (e.first + " " + e.last + " " + e.code).toLowerCase().includes(q)));
+      document.getElementById("count").textContent = f.length + " of " + emps.length + " employees";
+      document.getElementById("list").innerHTML = f.map(e => "<div role='listitem'><button class='emp' type='button' data-code='" + e.code + "'" + (e === current ? " aria-current='true'" : "") + "><span class='avatar' aria-hidden='true'>" + initials(e) + "</span><span>" + e.first + " " + e.last + "<small>" + e.pos + " · " + e.dept + "</small></span></button></div>").join("") || "<p class='muted card-body'>No employees match.</p>";
+    }
+    document.getElementById("list").addEventListener("click", ev => {
+      const b = ev.target.closest(".emp");
+      if (!b) return;
+      current = emps.find(e => e.code === b.dataset.code);
+      renderList(); renderProfile();
+      document.getElementById("profile").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    // ---------- Profile ----------
+    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px">' + p + "</svg>";
+    function years(d) { return ((TODAY - d) / (365.25 * day)); }
+    function renderProfile() {
+      const e = current;
+      document.getElementById("pAvatar").textContent = initials(e);
+      document.getElementById("pName").textContent = e.first + " " + e.last;
+      document.getElementById("pSub").textContent = e.code + " · " + e.pos + " · " + e.dept;
+      const expiring = e.docs.filter(d => d.expires && d.expires - TODAY < 30 * day).length;
+      document.getElementById("pChips").innerHTML = '<span class="chip ' + (e.status === "Active" ? "chip-pos" : "chip-warn") + '">' + e.status + '</span><span class="chip chip-info">' + e.type + "</span>" +
+        (expiring ? '<span class="chip chip-neg">' + SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4"/>') + expiring + " document(s) to renew</span>" : "");
+
+      const dl = pairs => "<div class='dl'>" + pairs.map(p => "<div><span>" + p[0] + "</span>" + p[1] + "</div>").join("") + "</div>";
+      document.getElementById("p-general").innerHTML = dl([["Full name", e.first + " " + e.last], ["Employee code", "<span class='num'>" + e.code + "</span>"], ["Date of birth", "<span class='num'>" + fmtD(e.birth) + "</span> (" + Math.floor(years(e.birth)) + " years)"], ["Work email", e.email], ["Phone", "<span class='num'>" + e.phone + "</span>"], ["Cost center", e.center]]);
+
+      const contractRows = [["Contract type", e.type], ["Start date", "<span class='num'>" + fmtD(e.start) + "</span> · " + years(e.start).toFixed(1) + " years"], ["Monthly salary", "<span class='num'>" + UI.fmtMoney(e.salary) + "</span>"], ["Payroll account", "<span class='num'>" + e.bank + "</span>"]];
+      let ext = "";
+      if (e.type === "Fixed term") {
+        const last = e.ext[e.ext.length - 1];
+        const left = Math.round((last.to - TODAY) / day);
+        ext = "<h3 style='margin:var(--space-4) 0 6px'>Extensions</h3><table class='grid'><thead><tr><th>#</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>" +
+          e.ext.map((x, i) => "<tr><td class='num'>" + (i + 1) + "</td><td class='num'>" + fmtD(x.from) + "</td><td class='num'>" + fmtD(x.to) + "</td><td>" + (x.to < TODAY ? "<span class='chip chip-info'>Completed</span>" : "<span class='chip chip-pos'>Current</span>") + "</td></tr>").join("") + "</tbody></table>" +
+          "<p class='muted' style='font-size:.82rem;margin-top:6px'>" + (left >= 0 ? "Current term ends in " + left + " days." : "The last term ended " + (-left) + " days ago; a new extension is needed.") + "</p>";
+      }
+      document.getElementById("p-contract").innerHTML = dl(contractRows) + ext;
+
+      document.getElementById("p-position").innerHTML = dl([["Department", e.dept], ["Position", e.pos], ["Cost center", e.center], ["Reports to", e.dept + " " + (e.dept === "IT" ? "manager" : "supervisor")]]) +
+        "<p class='muted' style='font-size:.82rem;margin-top:var(--space-4)'>Use Edit to change the department and position; positions follow the department.</p>";
+
+      const earned = Math.min(20, Math.floor(years(e.start)) * 10 + 10), used = e.vac.filter(v => v.status !== "Pending").reduce((a, v) => a + v.days, 0);
+      const bal = Math.max(0, earned - used);
+      document.getElementById("p-vacations").innerHTML = "<div class='kpis' style='grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:var(--space-4)'><div class='card kpi'><div class='kpi-label'>Days earned this period</div><div class='kpi-value'>" + earned + "</div></div><div class='card kpi'><div class='kpi-label'>Days used</div><div class='kpi-value'>" + used + "</div></div><div class='card kpi'><div class='kpi-label'>Balance</div><div class='kpi-value'>" + bal + "</div></div></div>" +
+        (e.vac.length ? "<ul class='timeline'>" + e.vac.map(v => "<li><strong>" + v.days + " day(s)</strong> from <span class='num'>" + fmtD(v.from) + "</span> <span class='chip " + (v.status === "Pending" ? "chip-warn" : v.status === "Taken" ? "chip-info" : "chip-pos") + "'>" + v.status + "</span><small>Request linked to an HR ticket</small></li>").join("") + "</ul>" : "<p class='muted'>No vacation requests yet.</p>");
+
+      document.getElementById("p-documents").innerHTML = "<table class='grid'><thead><tr><th>Document</th><th>Expires</th><th>Status</th></tr></thead><tbody>" + e.docs.map(d => {
+        let st;
+        if (!d.expires) st = "<span class='chip chip-info'>" + SVG('<path d="M5 12l5 5 9-10"/>') + "On file</span>";
+        else if (d.expires < TODAY) st = "<span class='chip chip-neg'>" + SVG('<path d="M6 6l12 12M18 6L6 18"/>') + "Expired " + Math.round((TODAY - d.expires) / day) + " days ago</span>";
+        else if (d.expires - TODAY < 30 * day) st = "<span class='chip chip-warn'>" + SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4"/>') + "Expires in " + Math.round((d.expires - TODAY) / day) + " days</span>";
+        else st = "<span class='chip chip-pos'>" + SVG('<path d="M5 12l5 5 9-10"/>') + "Valid</span>";
+        return "<tr><td>" + d.name + "</td><td class='num'>" + (d.expires ? fmtD(d.expires) : "—") + "</td><td>" + st + "</td></tr>";
+      }).join("") + "</tbody></table>";
+
+      document.getElementById("p-history").innerHTML = "<table class='grid'><thead><tr><th>When</th><th>Who</th><th>Change</th><th>From</th><th>To</th></tr></thead><tbody>" +
+        e.hist.slice().sort((a, b) => b.when - a.when).map(h => "<tr><td class='num'>" + fmtD(h.when) + "</td><td>" + h.who + "</td><td>" + h.what + "</td><td>" + (h.from || "—") + "</td><td>" + (h.to || "—") + "</td></tr>").join("") + "</tbody></table>";
+    }
+
+    // Tabs
+    const tabs = [...document.querySelectorAll(".tab")];
+    function selectTab(t, focus) {
+      tabs.forEach(x => { const on = x === t; x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute("aria-controls")).hidden = !on; });
+      if (focus) t.focus();
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => selectTab(t, true));
+      t.addEventListener("keydown", ev => {
+        if (ev.key === "ArrowRight") selectTab(tabs[(i + 1) % tabs.length], true);
+        if (ev.key === "ArrowLeft") selectTab(tabs[(i - 1 + tabs.length) % tabs.length], true);
+        if (ev.key === "Home") selectTab(tabs[0], true);
+        if (ev.key === "End") selectTab(tabs[tabs.length - 1], true);
+      });
+    });
+
+    // ---------- Edit modal ----------
+    const eDept = document.getElementById("eDept"), ePos = document.getElementById("ePos"), eCenter = document.getElementById("eCenter");
+    Object.keys(DEPTS).forEach(d => eDept.insertAdjacentHTML("beforeend", "<option>" + d + "</option>"));
+    D.costCenters.forEach(c => eCenter.insertAdjacentHTML("beforeend", "<option>" + c + "</option>"));
+    UI.maskMoney(document.getElementById("eSalary"));
+    eDept.addEventListener("change", () => { fillPos(ePos, eDept.value, false); document.getElementById("newPosBox").hidden = true; });
+    ePos.addEventListener("change", () => {
+      const isNew = ePos.value === "__new";
+      document.getElementById("newPosBox").hidden = !isNew;
+      if (isNew) document.getElementById("newPos").focus();
+    });
+    document.getElementById("addPos").addEventListener("click", () => {
+      const name = document.getElementById("newPos").value.trim();
+      const err = document.getElementById("ePosErr");
+      if (name.length < 3) { err.textContent = "Write a position name of at least 3 letters."; return; }
+      if (DEPTS[eDept.value].some(p => p.toLowerCase() === name.toLowerCase())) { err.textContent = "That position already exists in " + eDept.value + "."; return; }
+      DEPTS[eDept.value].push(name);
+      fillPos(ePos, eDept.value, false, name);
+      fillPos(fPos, fDept.value, true, fPos.value);
+      err.textContent = "";
+      document.getElementById("newPos").value = "";
+      document.getElementById("newPosBox").hidden = true;
+      UI.toast("Position “" + name + "” created in " + eDept.value);
+    });
+
+    document.getElementById("editBtn").addEventListener("click", () => {
+      const e = current;
+      document.getElementById("eFirst").value = e.first;
+      document.getElementById("eLast").value = e.last;
+      document.getElementById("eEmail").value = e.email;
+      document.getElementById("ePhone").value = e.phone;
+      eDept.value = e.dept; fillPos(ePos, e.dept, false, e.pos);
+      eCenter.value = e.center;
+      document.getElementById("eSalary").value = UI.fmtMoney(e.salary);
+      document.getElementById("newPosBox").hidden = true;
+      document.querySelectorAll("#edModal .field-error").forEach(x => x.textContent = "");
+      document.querySelectorAll("#edModal [aria-invalid]").forEach(x => x.removeAttribute("aria-invalid"));
+      document.getElementById("edTitle").textContent = "Edit " + e.first + " " + e.last;
+      UI.openModal("edModal");
+    });
+    document.getElementById("edClose").addEventListener("click", () => UI.closeModal("edModal"));
+    document.getElementById("edSave").addEventListener("click", () => {
+      const v = id => document.getElementById(id).value.trim();
+      const errs = {};
+      if (v("eFirst").length < 2) errs.eFirst = "Enter the first name.";
+      if (v("eLast").length < 2) errs.eLast = "Enter the last name.";
+      if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(v("eEmail"))) errs.eEmail = "Enter a valid email, like name@example.com.";
+      if (!/^\d{4}-\d{4}$/.test(v("ePhone"))) errs.ePhone = "Use the format 0000-0000.";
+      if (!ePos.value || ePos.value === "__new") errs.ePos = "Choose a position or create it first.";
+      const sal = UI.parseMoney(v("eSalary"));
+      if (!(sal >= 8000 && sal <= 200000)) errs.eSalary = "Salary must be between 8,000.00 and 200,000.00.";
+      ["eFirst", "eLast", "eEmail", "ePhone", "ePos", "eSalary"].forEach(id => {
+        document.getElementById(id + "Err").textContent = errs[id] || "";
+        document.getElementById(id).setAttribute("aria-invalid", errs[id] ? "true" : "false");
+      });
+      const firstErr = Object.keys(errs)[0];
+      if (firstErr) { document.getElementById(firstErr).focus(); return; }
+      const e = current, changes = [];
+      const set = (label, key, val, show) => { if (e[key] !== val) { changes.push({ what: label, from: show ? show(e[key]) : e[key], to: show ? show(val) : val }); e[key] = val; } };
+      set("First name", "first", v("eFirst")); set("Last name", "last", v("eLast")); set("Email", "email", v("eEmail")); set("Phone", "phone", v("ePhone"));
+      set("Department", "dept", eDept.value); set("Position", "pos", ePos.value); set("Cost center", "center", eCenter.value);
+      set("Salary", "salary", sal, UI.fmtMoney);
+      changes.forEach(c => e.hist.push({ when: TODAY, who: "You", what: c.what + " changed", from: String(c.from), to: String(c.to) }));
+      UI.closeModal("edModal");
+      renderList(); renderProfile();
+      UI.toast(changes.length ? changes.length + " change(s) saved and logged in History" : "Nothing changed");
+    });
+
+    renderList(); renderProfile();
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expense Verification · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--space-4); align-items: start; }
+    .layout > * { min-width: 0; }
+    .center-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: .88rem; }
+    .center-row .bar-track { grid-column: 1 / -1; height: 8px; }
+    .st { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+    .st svg { width: 14px; height: 14px; }
+    .st-ok { background: var(--positive-bg); color: var(--positive); }
+    .st-rev { background: var(--warning-bg); color: var(--warning); }
+    .st-bad { background: var(--negative-bg); color: var(--negative); }
+    .st-none { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+    #exp td { vertical-align: middle; }
+    .ocr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+    .check-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: .9rem; }
+    .modal.sm { width: min(680px, 100%); }
+    .drop { border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: var(--space-4); text-align: center; background: var(--surface-2); }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .ocr { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="expense-verification" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Expense verification</h1>
+        <p class="muted">Every posted expense is checked against its receipt before the month is closed for each cost center.</p>
+      </div>
+    </div>
+
+    <section class="card card-body" aria-label="Filters">
+      <div class="filters">
+        <div class="field"><label for="fCenter">Cost center</label><select class="input" id="fCenter"><option value="">All centers</option></select></div>
+        <div class="field"><label for="fStatus">Status</label>
+          <select class="input" id="fStatus"><option value="">All</option><option value="none">Pending receipt</option><option value="ok">Verified</option><option value="rev">Needs review</option><option value="bad">Mismatch</option></select></div>
+        <div class="field"><label for="fQ">Search</label><input class="input" id="fQ" type="search" placeholder="Supplier, document, account"></div>
+      </div>
+    </section>
+
+    <section class="kpis" aria-label="Totals for the filtered expenses" aria-live="polite">
+      <div class="card kpi"><div class="kpi-label">Expenses</div><div class="kpi-value" id="kCount"></div><div class="kpi-delta muted" id="kAmount"></div></div>
+      <div class="card kpi"><div class="kpi-label">Verified amount</div><div class="kpi-value" id="kVer"></div><div class="kpi-delta muted" id="kVerPct"></div></div>
+      <div class="card kpi"><div class="kpi-label">Needs review</div><div class="kpi-value" id="kRev"></div><div class="kpi-delta muted">a person has to look at it</div></div>
+      <div class="card kpi"><div class="kpi-label">Pending receipt</div><div class="kpi-value" id="kNone"></div><div class="kpi-delta muted">no file attached yet</div></div>
+    </section>
+
+    <section class="layout">
+      <div class="card">
+        <div class="card-head"><h2>Posted expenses, October 2026</h2><span class="muted" style="font-size:.82rem">Attach a receipt to verify a line</span></div>
+        <div class="card-body table-wrap">
+          <table class="grid" id="exp">
+            <thead><tr><th>Document</th><th>Date</th><th>Center</th><th>Account</th><th>Supplier</th><th class="r">Amount</th><th>Status</th><th class="r">Verified</th><th><span class="sr-only">Action</span></th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+      <aside class="card">
+        <div class="card-head"><h2>Score by cost center</h2></div>
+        <div class="card-body" id="centers"></div>
+        <p class="muted card-body" style="font-size:.8rem;padding-top:0">Share of each center's expense value that is verified. It follows the search and status filters.</p>
+      </aside>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>The real screen stores the scanned receipt and reads it; here the reading is simulated from the file you pick, only its name is used.</li>
+        <li>Supplier names never match exactly ("Northwind Foods Inc." vs "NORTHWIND FOODS"), so the check compares words and gives a similarity score instead of a yes or no.</li>
+        <li>A line is Verified when supplier ≥ 80%, the amount matches to the cent and the date is within 3 days. Small gaps go to Needs review; big ones are a Mismatch.</li>
+        <li>The verification is informative: it does not change the accounting, it tells each center how much of its spending is backed by a receipt.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="rcModal" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
+    <div class="modal sm">
+      <div class="modal-head"><h2 id="rcTitle">Attach receipt</h2><span class="muted num" id="rcDoc" style="font-size:.85rem"></span></div>
+      <div class="modal-body">
+        <div class="drop">
+          <label for="rcFile" class="btn">Choose file</label>
+          <input id="rcFile" type="file" accept="image/*,.pdf" class="sr-only">
+          <p class="muted" style="font-size:.85rem;margin-top:8px" id="rcName">PDF or image of the receipt</p>
+        </div>
+        <div id="rcResult" hidden style="margin-top:var(--space-4)">
+          <h3 style="margin-bottom:8px">Read from the receipt</h3>
+          <div class="ocr">
+            <div class="field"><label>Supplier</label><div id="oSup"></div></div>
+            <div class="field"><label>Amount</label><div class="num" id="oAmt"></div></div>
+            <div class="field"><label>Date</label><div class="num" id="oDate"></div></div>
+          </div>
+          <h3 style="margin:var(--space-4) 0 4px">Checks against the posted expense</h3>
+          <div id="checks"></div>
+          <div style="margin-top:var(--space-3)" id="rcStatus"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="rcSave" type="button" disabled>Save verification</button>
+        <button class="btn" id="rcClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(4242);
+    const CENTERS = D.costCenters;
+    const ACCOUNTS = ["6-01 Fuel", "6-02 Vehicle repairs", "6-03 Office supplies", "6-04 Cleaning services", "6-05 Electricity", "6-06 Telephone and internet", "6-07 Travel", "6-08 Equipment repairs"];
+    const SUPPLIERS = ["Northwind Fuel Station", "Contoso Auto Parts", "Fabrikam Office Supply", "Litware Cleaning Services", "City Power Company", "Tailspin Telecom", "Adventure Travel Agency", "Proseware Repairs"];
+    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
+    const ST = {
+      none: { cls: "st-none", text: "Pending receipt", icon: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>') },
+      ok: { cls: "st-ok", text: "Verified", icon: SVG('<path d="M5 12l5 5 9-10"/>') },
+      rev: { cls: "st-rev", text: "Needs review", icon: SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>') },
+      bad: { cls: "st-bad", text: "Mismatch", icon: SVG('<path d="M6 6l12 12M18 6L6 18"/>') }
+    };
+    const chip = s => '<span class="st ' + ST[s].cls + '">' + ST[s].icon + ST[s].text + "</span>";
+
+    const rows = [];
+    for (let i = 0; i < 64; i++) {
+      const ai = Math.floor(r() * ACCOUNTS.length);
+      const d = new Date(Date.UTC(2026, 9, 1 + Math.floor(r() * 31)));
+      const row = { doc: "EXP-" + (10230 + i), date: d, center: UI.pick(r, CENTERS), account: ACCOUNTS[ai], supplier: SUPPLIERS[ai], amount: Math.round(UI.between(r, 180, 9800) * 100) / 100, status: "none", verified: 0, ocr: null };
+      // About two thirds already verified with the receipt on file.
+      if (r() < 0.66) applyOcr(row, simulateOcr(row, r));
+      rows.push(row);
+    }
+
+    function tokens(s) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(t => t && !["inc", "llc", "co", "the", "company", "sa"].includes(t)); }
+    function similarity(a, b) {
+      const A = new Set(tokens(a)), B = new Set(tokens(b));
+      if (!A.size || !B.size) return 0;
+      let inter = 0; A.forEach(t => { if (B.has(t)) inter++; });
+      return (2 * inter) / (A.size + B.size);
+    }
+    function simulateOcr(row, rr) {
+      const x = rr();
+      const words = row.supplier.split(" ");
+      let sup = row.supplier.toUpperCase() + (rr() < 0.5 ? " INC." : "");
+      let amt = row.amount, date = row.date;
+      if (x > 0.8) { amt = Math.round(row.amount * UI.between(rr, 1.02, 1.12) * 100) / 100; }
+      else if (x > 0.7) { date = new Date(row.date.getTime() + Math.round(UI.between(rr, 4, 9)) * 86400000); }
+      else if (x > 0.62) { sup = words[0].toUpperCase() + " " + UI.pick(rr, ["SERVICES", "GROUP", "STORE"]); }
+      else if (x > 0.58) { sup = UI.pick(rr, ["QUICK MART", "LAKESIDE SHOP"]); amt = Math.round(row.amount * 0.6 * 100) / 100; }
+      return { supplier: sup, amount: amt, date };
+    }
+    function evaluate(row, o) {
+      const sim = similarity(row.supplier, o.supplier);
+      const diff = Math.abs(o.amount - row.amount);
+      const days = Math.abs(o.date - row.date) / 86400000;
+      const supOk = sim >= 0.8, amtOk = diff < 0.005, dateOk = days <= 3;
+      let status;
+      if (supOk && amtOk && dateOk) status = "ok";
+      else if (sim < 0.4 || diff / row.amount > 0.2) status = "bad";
+      else status = "rev";
+      return { sim, diff, days, supOk, amtOk, dateOk, status };
+    }
+    function applyOcr(row, o) {
+      row.ocr = o;
+      const ev = evaluate(row, o);
+      row.status = ev.status;
+      row.verified = ev.status === "ok" ? row.amount : 0;
+    }
+
+    const fCenter = document.getElementById("fCenter");
+    CENTERS.forEach(c => fCenter.insertAdjacentHTML("beforeend", "<option>" + c + "</option>"));
+
+    function filtered() {
+      const c = fCenter.value, s = document.getElementById("fStatus").value, q = document.getElementById("fQ").value.trim().toLowerCase();
+      return rows.filter(x => (!c || x.center === c) && (!s || x.status === s) &&
+        (!q || (x.doc + " " + x.supplier + " " + x.account + " " + x.center).toLowerCase().includes(q)));
+    }
+
+    function render() {
+      const f = filtered();
+      const sum = (arr, k) => arr.reduce((a, x) => a + x[k], 0);
+      const amount = sum(f, "amount"), ver = sum(f, "verified");
+      document.getElementById("kCount").textContent = UI.fmtInt(f.length);
+      document.getElementById("kAmount").textContent = UI.fmtMoney(amount) + " posted";
+      document.getElementById("kVer").textContent = UI.fmtMoney(ver);
+      document.getElementById("kVerPct").textContent = amount ? UI.fmtPct(ver / amount) + " of the posted value" : "—";
+      document.getElementById("kRev").textContent = f.filter(x => x.status === "rev" || x.status === "bad").length;
+      document.getElementById("kNone").textContent = f.filter(x => x.status === "none").length;
+
+      const tb = document.querySelector("#exp tbody");
+      tb.innerHTML = f.length ? f.sort((a, b) => a.date - b.date).map(x =>
+        "<tr><td class='num'>" + x.doc + "</td><td class='num'>" + UI.fmtDate(x.date) + "</td><td>" + x.center + "</td><td>" + x.account + "</td><td>" + x.supplier +
+        "</td><td class='r num'>" + UI.fmtMoney(x.amount) + "</td><td>" + chip(x.status) + "</td><td class='r num'>" + (x.verified ? UI.fmtMoney(x.verified) : "—") +
+        "</td><td><button class='btn' type='button' data-doc='" + x.doc + "' style='min-height:32px'>" + (x.ocr ? "Review" : "Attach receipt") + "</button></td></tr>").join("")
+        : "<tr><td colspan='9' class='muted'>No expenses match these filters.</td></tr>";
+      document.querySelector("#exp tfoot").innerHTML = "<tr><td colspan='5'>Total (filtered)</td><td class='r num'>" + UI.fmtMoney(amount) + "</td><td></td><td class='r num'>" + UI.fmtMoney(ver) + "</td><td></td></tr>";
+
+      // Score per center follows the search and status filters (not the center filter, so they can be compared).
+      const s = document.getElementById("fStatus").value, q = document.getElementById("fQ").value.trim().toLowerCase();
+      const base = rows.filter(x => (!s || x.status === s) && (!q || (x.doc + " " + x.supplier + " " + x.account + " " + x.center).toLowerCase().includes(q)));
+      const byC = CENTERS.map(c => { const a = base.filter(x => x.center === c); return { c, amt: sum(a, "amount"), ver: sum(a, "verified") }; }).filter(x => x.amt > 0).sort((a, b) => b.ver / b.amt - a.ver / a.amt);
+      document.getElementById("centers").innerHTML = byC.length ? byC.map(x => {
+        const p = x.ver / x.amt;
+        const color = p >= 0.8 ? "var(--positive)" : p >= 0.5 ? "var(--warning)" : "var(--negative)";
+        return "<div class='center-row'><span>" + x.c + "</span><span class='num'>" + UI.fmtPct(p, 0) + "</span><div class='bar-track'><span style='width:" + (p * 100) + "%;background:" + color + "'></span></div><span class='muted' style='font-size:.78rem;grid-column:1/-1'>" + UI.fmtMoney(x.ver) + " of " + UI.fmtMoney(x.amt) + "</span></div>";
+      }).join("") : "<p class='muted'>Nothing to score.</p>";
+    }
+
+    // ---------- Receipt modal ----------
+    let current = null, pending = null;
+    const rcR = UI.rng(777);
+    function showResult(row, o) {
+      const ev = evaluate(row, o);
+      document.getElementById("rcResult").hidden = false;
+      document.getElementById("oSup").textContent = o.supplier;
+      document.getElementById("oAmt").textContent = UI.fmtMoney(o.amount);
+      document.getElementById("oDate").textContent = UI.fmtDate(o.date);
+      const line = (ok, label, detail) => "<div class='check-line'><span>" + label + " <span class='muted' style='font-size:.82rem'>" + detail + "</span></span>" + chip(ok ? "ok" : "rev").replace("Verified", "Match").replace("Needs review", "Differs") + "</div>";
+      document.getElementById("checks").innerHTML =
+        line(ev.supOk, "Supplier", "similarity " + UI.fmtPct(ev.sim, 0) + " with “" + row.supplier + "” (80% needed)") +
+        line(ev.amtOk, "Amount", ev.amtOk ? "same amount" : "differs by " + UI.fmtMoney(ev.diff)) +
+        line(ev.dateOk, "Date", ev.days === 0 ? "same day" : Math.round(ev.days) + " day(s) apart (3 allowed)");
+      document.getElementById("rcStatus").innerHTML = "Result: " + chip(ev.status);
+    }
+    document.querySelector("#exp tbody").addEventListener("click", e => {
+      const b = e.target.closest("button[data-doc]");
+      if (!b) return;
+      current = rows.find(x => x.doc === b.dataset.doc);
+      pending = null;
+      document.getElementById("rcDoc").textContent = current.doc + " · " + current.supplier + " · " + UI.fmtMoney(current.amount);
+      document.getElementById("rcFile").value = "";
+      document.getElementById("rcName").textContent = current.ocr ? "A receipt is on file. Choose another file to read it again." : "PDF or image of the receipt";
+      document.getElementById("rcResult").hidden = !current.ocr;
+      if (current.ocr) showResult(current, current.ocr);
+      document.getElementById("rcSave").disabled = true;
+      UI.openModal("rcModal");
+    });
+    document.getElementById("rcFile").addEventListener("change", e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      document.getElementById("rcName").textContent = "Reading " + f.name + "…";
+      setTimeout(() => {
+        pending = simulateOcr(current, rcR);
+        document.getElementById("rcName").textContent = f.name;
+        showResult(current, pending);
+        document.getElementById("rcSave").disabled = false;
+        document.getElementById("rcSave").focus();
+      }, 600);
+    });
+    document.getElementById("rcSave").addEventListener("click", () => {
+      applyOcr(current, pending);
+      UI.closeModal("rcModal");
+      render();
+      UI.toast(current.doc + ": " + ST[current.status].text.toLowerCase());
+    });
+    document.getElementById("rcClose").addEventListener("click", () => UI.closeModal("rcModal"));
+
+    ["fCenter", "fStatus"].forEach(id => document.getElementById(id).addEventListener("change", render));
+    document.getElementById("fQ").addEventListener("input", render);
+    render();
+  });
+  </script>
+</body>
+</html>

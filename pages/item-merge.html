@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Legacy Item Matching · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .kpis-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .kpi .bar-track { margin-top: 6px; }
+    #match td, #match th { white-space: nowrap; }
+    #match td.wrap { white-space: normal; min-width: 180px; }
+    .score { display: flex; align-items: center; gap: 6px; }
+    .score .bar-track { width: 60px; min-width: 60px; }
+    .parts { font-size: .72rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .acts { display: flex; gap: 6px; }
+    .acts .btn { min-height: 32px; padding: 0 10px; font-size: .82rem; }
+    .st-chip svg { width: 13px; height: 13px; }
+    .match-scroll { max-height: 520px; overflow: auto; }
+    .match-scroll thead th { z-index: 1; }
+    .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-3); }
+    .cmp > div { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; background: var(--surface-2); font-size: .88rem; }
+    @media (max-width: 1200px) { .kpis-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .kpis-6 .kpi { min-width: 0; }
+    @media (max-width: 640px) { .kpis-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpis-6 .kpi-value { font-size: 1.1rem; } .cmp { grid-template-columns: 1fr; } }
+    .steps { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: var(--space-4); }
+    .step { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--text-muted); }
+    .step .dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border); font-family: var(--font-mono); font-size: .8rem; }
+    .step[aria-current="step"] { color: var(--text); font-weight: 600; }
+    .step[aria-current="step"] .dot { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    .step.done .dot { background: var(--positive-bg); color: var(--positive); border-color: transparent; }
+    .step-sep { width: 28px; height: 1px; background: var(--border); }
+    .pair-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--space-4); align-items: stretch; }
+    .item-card { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); background: var(--surface-2); }
+    .item-card h3 { margin: 4px 0; }
+    .arrow { display: grid; place-items: center; color: var(--text-muted); }
+    .arrow svg { width: 28px; height: 28px; }
+    .tag { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+    .tag.a { color: var(--negative); }
+    .tag.b { color: var(--positive); }
+    .chip svg, .lock svg { width: 14px; height: 14px; }
+    .sim { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+    .sim .bar-track { flex: 1; }
+    #pairs td, #pairs th, #moves td, #moves th { white-space: nowrap; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .conflict { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: var(--radius-sm); margin-bottom: 6px; font-size: .88rem; }
+    .conflict svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+    .conflict.warn { background: var(--warning-bg); color: var(--warning); }
+    .conflict.info { background: var(--info-bg); color: var(--info); }
+    .code-box { font-family: var(--font-mono); font-size: 1.3rem; letter-spacing: .12em; padding: 10px 14px; border: 1px dashed var(--border); border-radius: var(--radius-sm); display: inline-block; background: var(--surface-2); }
+    .lock { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: .82rem; font-weight: 500; }
+    .log { font-family: var(--font-mono); font-size: .8rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; max-height: 260px; overflow: auto; white-space: pre-wrap; margin: 0; }
+    .check { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; }
+    .check input { width: 18px; height: 18px; margin-top: 2px; }
+    .wiz-foot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: var(--space-4); border-top: 1px solid var(--border); }
+    @media (max-width: 900px) { .pair-grid, .grid2 { grid-template-columns: 1fr; } .arrow svg { transform: rotate(90deg); } }
+  </style>
+</head>
+<body data-page="item-merge" data-root="../">
+  <main class="content" id="content">
+    <div class="page-head">
+      <div>
+        <h1>Legacy item matching</h1>
+        <p class="muted">Every item of the old system must point to one item of the new catalog before its stock and history can move.</p>
+      </div>
+      <button class="btn" id="toMerge" type="button">Merge duplicates in the new catalog</button>
+    </div>
+
+    <section class="kpis kpis-6" aria-label="Matching progress" aria-live="polite" id="mkpis"></section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Old system → new catalog</h2>
+        <button class="btn" id="acceptAll" type="button">Confirm all suggestions ≥ 80%</button>
+      </div>
+      <div class="card-body">
+        <div class="filters" style="margin-bottom:12px">
+          <div class="field"><label for="mState">State</label>
+            <select class="input" id="mState"><option value="">All states</option><option>Matched</option><option>Suggested</option><option>No match</option><option>Duplicate</option><option>New item</option></select></div>
+          <div class="field"><label for="mCat">Category</label><select class="input" id="mCat"><option value="">All categories</option></select></div>
+          <div class="field"><label for="mQ">Search</label><input class="input" type="search" id="mQ" placeholder="Old code or name…"></div>
+        </div>
+        <div class="table-wrap match-scroll">
+          <table class="grid" id="match">
+            <thead><tr><th>Old code</th><th>Old name</th><th>Presentation</th><th class="r">Stock</th><th class="r">Stock value</th><th>New catalog item</th><th>Score</th><th>State</th><th><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="mergeCard">
+      <div class="card-head"><h2>Merge duplicates in the new catalog</h2><span class="muted" style="font-size:.82rem">Secondary tool: two new items that are the same product</span></div>
+      <nav class="steps" aria-label="Merge steps" id="steps">
+        <span class="step" data-s="1"><span class="dot">1</span>Choose items</span><span class="step-sep" aria-hidden="true"></span>
+        <span class="step" data-s="2"><span class="dot">2</span>Preview</span><span class="step-sep" aria-hidden="true"></span>
+        <span class="step" data-s="3"><span class="dot">3</span>Confirm and run</span>
+      </nav>
+
+      <!-- Step 1 -->
+      <div class="card-body" id="s1">
+        <div class="filters" style="margin-bottom:12px">
+          <div class="field"><label for="q">Search possible duplicates</label><input class="input" type="search" id="q" placeholder="Product name…"></div>
+          <div class="field"><label for="minSim">Minimum similarity</label>
+            <select class="input" id="minSim"><option value="0.5">50%</option><option value="0.6" selected>60%</option><option value="0.75">75%</option></select></div>
+        </div>
+        <div class="table-wrap">
+          <table class="grid" id="pairs">
+            <thead><tr><th>Item A</th><th>Item B</th><th>Similarity</th><th class="r">Stock A / B</th><th><span class="sr-only">Choose</span></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="choice" hidden style="margin-top:var(--space-4)">
+          <div class="pair-grid">
+            <div class="item-card" id="cardA"></div>
+            <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            <div class="item-card" id="cardB"></div>
+          </div>
+          <button class="btn" id="swap" type="button" style="margin-top:10px">Swap: keep the other one</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="card-body" id="s2" hidden>
+        <p class="muted" style="margin-bottom:12px" id="s2Lead"></p>
+        <div class="grid2">
+          <div>
+            <h3 style="margin-bottom:8px">Stock that moves, by warehouse</h3>
+            <div class="table-wrap"><table class="grid" id="moves"><thead><tr><th>Warehouse</th><th class="r">A</th><th class="r">B now</th><th class="r">B after</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+          </div>
+          <div>
+            <h3 style="margin-bottom:8px">History and documents</h3>
+            <table class="grid" id="hist"><tbody></tbody></table>
+            <h3 style="margin:14px 0 8px">Presentations</h3>
+            <div id="pres"></div>
+          </div>
+        </div>
+        <h3 style="margin:16px 0 8px">Things to review</h3>
+        <div id="conflicts"></div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="card-body" id="s3" hidden>
+        <div id="confirmArea">
+          <p style="margin-bottom:10px">To merge, type the code below. It changes every time this step opens.</p>
+          <div class="code-box" id="code" aria-label="Confirmation code"></div>
+          <div class="field" style="max-width:320px;margin-top:12px">
+            <label for="typed">Type the code</label>
+            <input class="input" id="typed" autocomplete="off" aria-describedby="typedErr">
+            <span class="field-error" id="typedErr" role="alert"></span>
+          </div>
+          <label class="check" style="margin-top:8px"><input type="checkbox" id="dry" checked> <span><strong>Dry run (rollback).</strong> Run every step and show the result, then undo it. Nothing is saved.</span></label>
+        </div>
+        <div id="runArea" hidden style="margin-top:var(--space-4)">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <span class="lock" id="lockBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Item locked while merging</span>
+            <span class="num" id="pct" aria-live="polite">0%</span>
+          </div>
+          <div class="progress" role="progressbar" aria-label="Merge progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar"><span></span></div>
+          <h3 style="margin:14px 0 6px">Log</h3>
+          <pre class="log" id="log" aria-live="polite"></pre>
+          <div id="result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div class="wiz-foot">
+        <button class="btn btn-primary" id="next" type="button">Next</button>
+        <button class="btn" id="back" type="button">Back</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Merge history</h2></div>
+      <div class="card-body table-wrap">
+        <table class="grid" id="history"><thead><tr><th>Date</th><th>Retired (A)</th><th>Kept (B)</th><th class="r">Units moved</th><th>Mode</th><th>Status</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="card card-body about">
+      <h2>About this screen</h2>
+      <ul class="muted">
+        <li>This screen was used to migrate the catalog of a legacy ERP to a new one without losing stock or sales history: nothing moves until every old item points to a new item, or is marked to be created as new.</li>
+        <li>Suggestions combine three signals (same code, name similarity and same presentation) into one score; the user confirms, changes or rejects each one, and progress is measured by items and by stock value.</li>
+        <li>When two old items point to the same new item they are flagged as duplicates, because their stock would be added together.</li>
+        <li>Duplicates found later in the new catalog are merged with a locked process: preview, dry run inside a transaction that is rolled back, a typed confirmation code, and the retired item kept as not available so old documents still open.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="pickModal" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+    <div class="modal" style="width:min(680px,100%)">
+      <div class="modal-head"><h2 id="pickTitle">Change match</h2></div>
+      <div class="modal-body">
+        <p class="muted" id="pickOld" style="font-size:.9rem"></p>
+        <div class="field" style="margin-top:10px">
+          <label for="pickSel">New catalog item</label>
+          <select id="pickSel"></select>
+          <span class="field-error" id="pickErr" role="alert"></span>
+        </div>
+        <div class="cmp" id="pickCmp"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="pickSave" type="button">Save match</button>
+        <button class="btn" id="pickClose" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const D = UI.DATA;
+    const r = UI.rng(4821);
+    const WAREHOUSES = ["Main warehouse", "North Plaza", "Harbor", "Central Market", "Riverside"];
+    const ICON_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>';
+    const ICON_INFO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/></svg>';
+    const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>';
+    const ICON_UNDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>';
+
+    // ---- Items: originals plus near-duplicates with typing variations ----
+    const variants = [
+      s => s.toUpperCase(), s => s.replace(/ (\d)/, " x$1"), s => s.replace("ml", " ML").replace(" g", "g"),
+      s => s.replace(/(\w+) (\w+)/, "$2 $1"), s => s + " (old code)", s => s.replace(/e/, "")
+    ];
+    let code = 10200;
+    const items = [];
+    D.products.forEach((p, i) => {
+      const base = { code: "IT-" + (code += 3), name: p[0], cat: p[1], pres: ["Unit", i % 2 ? "Box x12" : "Pack x6"], retired: false };
+      items.push(base);
+      if (i % 2 === 0 || i % 5 === 0) items.push({ dupOf: base, code: "IT-" + (code += 3), name: variants[i % variants.length](p[0]), cat: p[1], pres: ["Unit", i % 3 ? "Box x12" : "Case x24", "Display x48"].slice(0, 2 + (i % 2)), retired: false });
+    });
+    items.forEach(it => {
+      it.stock = WAREHOUSES.map(() => r() < 0.3 ? 0 : Math.floor(UI.between(r, 4, 160)));
+      it.sales = Math.floor(UI.between(r, 20, 900));
+      it.openDocs = r() < 0.4 ? Math.floor(UI.between(r, 1, 6)) : 0;
+      it.cost = Math.round(UI.between(r, 8, 120) * 100) / 100;
+    });
+    // A duplicate code was created for the same product, so its cost is close to the original's.
+    items.forEach(it => { if (it.dupOf) it.cost = Math.round(it.dupOf.cost * UI.between(r, 0.85, 1.3) * 100) / 100; });
+
+    // Similarity: bigram Dice coefficient on normalized names.
+    function norm(s) { return s.toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z0-9]/g, ""); }
+    function bigrams(s) { const b = new Map(); for (let i = 0; i < s.length - 1; i++) { const k = s.slice(i, i + 2); b.set(k, (b.get(k) || 0) + 1); } return b; }
+    function sim(a, b) {
+      const x = bigrams(norm(a)), y = bigrams(norm(b));
+      let inter = 0, nx = 0, ny = 0;
+      x.forEach((v, k) => { nx += v; if (y.has(k)) inter += Math.min(v, y.get(k)); });
+      y.forEach(v => ny += v);
+      return nx + ny ? 2 * inter / (nx + ny) : 0;
+    }
+    function allPairs() {
+      const out = [];
+      const live = items.filter(i => !i.retired);
+      for (let i = 0; i < live.length; i++) for (let j = i + 1; j < live.length; j++) {
+        if (live[i].cat !== live[j].cat) continue;
+        const s = sim(live[i].name, live[j].name);
+        if (s >= 0.5) out.push({ a: live[i], b: live[j], s });
+      }
+      return out.sort((p, q) => q.s - p.s);
+    }
+    const total = it => it.stock.reduce((a, v) => a + v, 0);
+
+    // =================== Legacy item matching (main flow) ===================
+    const rm = UI.rng(1987);
+    const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    const ICON_DUP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
+    const ICON_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+    const ICON_Q = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17h.01"/></svg>';
+    const LEG_PRES = { "Unit": "UND", "Box x12": "CJA12", "Pack x6": "PAQ6", "Case x24": "CJA24", "Display x48": "EXH48" };
+    const abbreviate = [s => s.toUpperCase(), s => s.toUpperCase().replace(/ (\d)/, " $1").replace(/ML/, "ML."), s => s.toUpperCase().replace(/[AEIOU](?=[A-Z]{2})/, ""), s => s.toUpperCase().split(" ").reverse().join(" ")];
+    const catalog = items; // the new catalog
+    const legacy = [];
+    let lc = 3100;
+    catalog.forEach((it, i) => {
+      const pres = rm() < 0.8 ? it.pres[0] : it.pres[1];
+      const sameCode = rm() < 0.45;
+      legacy.push({ src: it, code: sameCode ? "FX-" + it.code.slice(3) : "FX-" + (lc += 7), name: abbreviate[i % abbreviate.length](it.name), cat: it.cat, pres: LEG_PRES[pres] || pres.toUpperCase(),
+        stock: Math.floor(UI.between(rm, 0, 320)), cost: it.cost * UI.between(rm, 0.9, 1.1) });
+      if (i % 9 === 4) legacy.push({ code: "FX-" + (lc += 7), name: it.name.toUpperCase() + " PROMO", cat: it.cat, pres: "UND", stock: Math.floor(UI.between(rm, 0, 60)), cost: it.cost });
+    });
+    ["GIFT BASKET XMAS 2019", "OLD DISPLAY RACK", "SAMPLE SACHET 10G", "PLASTIC BAG LARGE", "DISCONTINUED SODA 355"].forEach((n, i) =>
+      legacy.push({ code: "FX-" + (9001 + i), name: n, cat: UI.pick(rm, D.categories), pres: "UND", stock: Math.floor(UI.between(rm, 0, 40)), cost: UI.between(rm, 2, 20) }));
+    legacy.forEach(l => { l.value = l.stock * l.cost; });
+
+    function scoreOf(l, it) {
+      const code = l.code.slice(3) === it.code.slice(3) ? 1 : 0;
+      const name = sim(l.name, it.name);
+      const pres = it.pres.some(p => (LEG_PRES[p] || p.toUpperCase()) === l.pres) ? 1 : 0;
+      return { total: 0.3 * code + 0.5 * name + 0.2 * pres, code, name, pres };
+    }
+    function bestFor(l) {
+      let best = null;
+      catalog.forEach(it => {
+        if (it.retired || it.cat !== l.cat) return;
+        const s = scoreOf(l, it);
+        if (!best || s.total > best.s.total) best = { it, s };
+      });
+      return best;
+    }
+    // Initial suggestion; high scores are matched automatically.
+    legacy.forEach(l => {
+      let b = bestFor(l);
+      // In the sample, each old item was derived from one new item; prefer it when the scores are close.
+      if (l.src && b) { const s = scoreOf(l, l.src); if (s.total >= b.s.total - 0.12) b = { it: l.src, s }; }
+      if (b && b.s.total >= 0.45) { l.target = b.it; l.sc = b.s; l.base = b.s.total >= 0.92 ? "Matched" : "Suggested"; }
+      else { l.target = null; l.sc = b ? b.s : null; l.base = "No match"; }
+    });
+
+    function stateOf(l, counts) {
+      if (l.base === "New item") return "New item";
+      if (l.target && counts.get(l.target) > 1) return "Duplicate";
+      return l.base;
+    }
+    const STATE_CHIP = {
+      "Matched": ["chip-pos", ICON_OK], "Suggested": ["chip-info", ICON_Q], "No match": ["chip-neg", ICON_X],
+      "Duplicate": ["chip-warn", ICON_DUP], "New item": ["chip-info", ICON_PLUS]
+    };
+    function chip(st) { return '<span class="chip st-chip ' + STATE_CHIP[st][0] + '">' + STATE_CHIP[st][1] + st + "</span>"; }
+
+    $("#mCat").append(D.categories.map(c => '<option value="' + c + '">' + c + "</option>").join(""));
+
+    function renderMatch() {
+      const counts = new Map();
+      legacy.forEach(l => { if (l.target && l.base !== "New item") counts.set(l.target, (counts.get(l.target) || 0) + 1); });
+      legacy.forEach(l => { l.state = stateOf(l, counts); });
+      const fs = $("#mState").val(), fc = $("#mCat").val(), q = $("#mQ").val().trim().toLowerCase();
+      const list = legacy.filter(l => (!fs || l.state === fs) && (!fc || l.cat === fc) && (!q || l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q)));
+      document.querySelector("#match tbody").innerHTML = list.map(l => {
+        const idx = legacy.indexOf(l);
+        const target = l.base === "New item" ? '<span class="muted">Will be created as a new item</span>'
+          : l.target ? l.target.name + '<div class="muted num" style="font-size:.76rem">' + l.target.code + "</div>" : '<span class="muted">No candidate</span>';
+        const sc = l.sc && l.base !== "New item" ? '<div class="score"><div class="bar-track"><span style="width:' + l.sc.total * 100 + "%;background:" + (l.sc.total >= 0.8 ? "var(--positive)" : l.sc.total >= 0.6 ? "var(--warning)" : "var(--negative)") +
+          '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(l.sc.total, 0) + '</span></div><div class="parts">code ' + (l.sc.code ? "✓" : "✗") + " · name " + Math.round(l.sc.name * 100) + "% · pres " + (l.sc.pres ? "✓" : "✗") + "</div>" : '<span class="muted">–</span>';
+        const acts = (l.state === "Suggested" || l.state === "Duplicate" ? '<button class="btn" type="button" data-ok="' + idx + '"' + (l.state === "Duplicate" ? " disabled" : "") + ">Confirm</button>" : "") +
+          '<button class="btn" type="button" data-chg="' + idx + '">' + (l.target ? "Change" : "Choose") + "</button>" +
+          (l.base !== "New item" ? '<button class="btn" type="button" data-new="' + idx + '">Create as new</button>' : '<button class="btn" type="button" data-undo="' + idx + '">Undo</button>');
+        return '<tr><td class="num">' + l.code + '</td><td class="wrap">' + l.name + "</td><td>" + l.pres + '</td><td class="r num">' + UI.fmtInt(l.stock) + '</td><td class="r num">' + UI.fmtMoney(l.value) +
+          '</td><td class="wrap">' + target + "</td><td>" + sc + "</td><td>" + chip(l.state) + '</td><td><div class="acts">' + acts + "</div></td></tr>";
+      }).join("") || '<tr><td colspan="9" class="muted">No items match the filters</td></tr>';
+      const stockF = list.reduce((a, l) => a + l.stock, 0), valF = list.reduce((a, l) => a + l.value, 0);
+      document.querySelector("#match tfoot").innerHTML = '<tr><td colspan="3">' + UI.fmtInt(list.length) + ' items shown</td><td class="r num">' + UI.fmtInt(stockF) + '</td><td class="r num">' + UI.fmtMoney(valF) + '</td><td colspan="4"></td></tr>';
+
+      // KPIs on the whole migration (not the filter): progress is about everything that must move.
+      const by = st => legacy.filter(l => l.state === st);
+      const resolved = legacy.filter(l => l.state === "Matched" || l.state === "New item");
+      const totVal = legacy.reduce((a, l) => a + l.value, 0);
+      const resVal = resolved.reduce((a, l) => a + l.value, 0);
+      const pI = resolved.length / legacy.length, pV = resVal / totVal;
+      const k = (label, val, sub) => '<div class="card kpi"><div class="kpi-label">' + label + '</div><div class="kpi-value">' + val + "</div>" + sub + "</div>";
+      const bar = p => '<div class="bar-track"><span style="width:' + p * 100 + '%;background:var(--positive)"></span></div>';
+      document.getElementById("mkpis").innerHTML =
+        k("Old items", UI.fmtInt(legacy.length), '<div class="kpi-delta muted">' + UI.fmtMoney(totVal) + " in stock</div>") +
+        k("Matched", UI.fmtInt(by("Matched").length), '<div class="kpi-delta muted">+ ' + by("New item").length + " to create as new</div>") +
+        k("Suggested", UI.fmtInt(by("Suggested").length), '<div class="kpi-delta muted">waiting for a decision</div>') +
+        k("No match / Duplicate", by("No match").length + " / " + by("Duplicate").length, '<div class="kpi-delta ' + (by("Duplicate").length ? "neg" : "muted") + '">must be solved first</div>') +
+        k("Done by items", UI.fmtPct(pI), bar(pI)) +
+        k("Done by stock value", UI.fmtPct(pV), bar(pV));
+    }
+
+    document.getElementById("match").addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b || b.disabled) return;
+      if (b.dataset.ok != null) { const l = legacy[+b.dataset.ok]; l.base = "Matched"; renderMatch(); UI.toast(l.code + " matched to " + l.target.code); }
+      else if (b.dataset.new != null) { const l = legacy[+b.dataset.new]; l.prev = { target: l.target, base: l.base }; l.base = "New item"; renderMatch(); UI.toast(l.code + " will be created as a new item"); }
+      else if (b.dataset.undo != null) { const l = legacy[+b.dataset.undo]; const p = l.prev || { target: null, base: "No match" }; l.target = p.target; l.base = p.target ? "Suggested" : "No match"; renderMatch(); }
+      else if (b.dataset.chg != null) openPick(+b.dataset.chg);
+    });
+    document.getElementById("acceptAll").addEventListener("click", () => {
+      let n = 0;
+      legacy.forEach(l => { if (l.state === "Suggested" && l.sc && l.sc.total >= 0.8) { l.base = "Matched"; n++; } });
+      renderMatch();
+      UI.toast(n ? n + " suggestions confirmed" : "No suggestions of 80% or more left");
+    });
+    $("#mState, #mCat").on("change", renderMatch);
+    let mt;
+    $("#mQ").on("input", () => { clearTimeout(mt); mt = setTimeout(renderMatch, 160); });
+
+    // Change match modal: search the whole new catalog.
+    let picking = null;
+    $("#pickSel").select2({ width: "100%", dropdownParent: $("#pickModal"), placeholder: "Search code or name…" });
+    function openPick(i) {
+      picking = legacy[i];
+      document.getElementById("pickOld").innerHTML = "Old item <strong class='num'>" + picking.code + "</strong> " + picking.name + " · " + picking.pres + " · stock " + UI.fmtInt(picking.stock);
+      const ranked = catalog.filter(it => !it.retired).map(it => ({ it, s: scoreOf(picking, it) })).sort((a, b) => b.s.total - a.s.total);
+      $("#pickSel").html('<option value=""></option>' + ranked.map(x => '<option value="' + x.it.code + '">' + x.it.code + " · " + x.it.name + " (" + Math.round(x.s.total * 100) + "%)</option>").join(""))
+        .val(picking.target ? picking.target.code : "").trigger("change");
+      document.getElementById("pickErr").textContent = "";
+      showCmp();
+      UI.openModal("pickModal");
+    }
+    function showCmp() {
+      const code = $("#pickSel").val();
+      const it = catalog.find(x => x.code === code);
+      document.getElementById("pickCmp").innerHTML = '<div><div class="kpi-label">Old system</div><strong>' + picking.name + '</strong><div class="num muted">' + picking.code + " · " + picking.pres + "</div></div>" +
+        (it ? '<div><div class="kpi-label">New catalog</div><strong>' + it.name + '</strong><div class="num muted">' + it.code + " · " + it.pres.join(", ") + '</div><div class="parts" style="margin-top:4px">score ' + Math.round(scoreOf(picking, it).total * 100) + "%</div></div>"
+          : '<div class="muted">Choose an item to compare.</div>');
+    }
+    $("#pickSel").on("change", showCmp);
+    document.getElementById("pickClose").addEventListener("click", () => UI.closeModal("pickModal"));
+    document.getElementById("pickSave").addEventListener("click", () => {
+      const it = catalog.find(x => x.code === $("#pickSel").val());
+      if (!it) { document.getElementById("pickErr").textContent = "Choose a new catalog item, or close and use Create as new."; return; }
+      picking.target = it; picking.sc = scoreOf(picking, it); picking.base = "Matched";
+      UI.closeModal("pickModal");
+      renderMatch();
+      UI.toast(picking.code + " matched to " + it.code);
+    });
+    document.getElementById("toMerge").addEventListener("click", () => {
+      document.getElementById("mergeCard").scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("q").focus({ preventScroll: true });
+    });
+
+    // =================== Duplicate merge (secondary) ===================
+    let step = 1, A = null, B = null, running = false, confirmCode = "", history = [];
+
+    function renderPairs() {
+      const q = document.getElementById("q").value.trim().toLowerCase();
+      const min = +document.getElementById("minSim").value;
+      const list = allPairs().filter(p => p.s >= min && (!q || p.a.name.toLowerCase().includes(q) || p.b.name.toLowerCase().includes(q)));
+      document.querySelector("#pairs tbody").innerHTML = list.map((p, i) => {
+        const chosen = (A === p.a && B === p.b) || (A === p.b && B === p.a);
+        return "<tr" + (chosen ? ' style="background:var(--info-bg)"' : "") + "><td>" + p.a.name + '<div class="muted num" style="font-size:.76rem">' + p.a.code + "</div></td><td>" + p.b.name + '<div class="muted num" style="font-size:.76rem">' + p.b.code +
+          '</div></td><td><div class="sim"><div class="bar-track"><span style="width:' + p.s * 100 + "%;background:" + (p.s >= 0.75 ? "var(--positive)" : "var(--warning)") + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(p.s, 0) +
+          '</span></div></td><td class="r num">' + total(p.a) + " / " + total(p.b) + '</td><td><button class="btn" type="button" data-pair="' + p.a.code + "|" + p.b.code + '">' + (chosen ? "Selected" : "Choose") + "</button></td></tr>";
+      }).join("") || '<tr><td colspan="5" class="muted">No possible duplicates with these filters</td></tr>';
+    }
+
+    function cardHtml(it, role) {
+      return '<div class="tag ' + (role === "A" ? "a" : "b") + '">' + (role === "A" ? "A · will be retired" : "B · will be kept") + "</div><h3>" + it.name + '</h3><div class="muted num" style="font-size:.82rem">' + it.code + " · " + it.cat +
+        '</div><div style="margin-top:8px;font-size:.88rem">Stock <span class="num">' + total(it) + '</span> · Sales lines <span class="num">' + it.sales + '</span> · Open docs <span class="num">' + it.openDocs +
+        '</span></div><div class="muted" style="font-size:.82rem;margin-top:4px">Presentations: ' + it.pres.join(", ") + "</div>";
+    }
+    function renderChoice() {
+      document.getElementById("choice").hidden = !A;
+      if (!A) return;
+      document.getElementById("cardA").innerHTML = cardHtml(A, "A");
+      document.getElementById("cardB").innerHTML = cardHtml(B, "B");
+    }
+
+    function renderPreview() {
+      document.getElementById("s2Lead").innerHTML = "Everything recorded under <strong>" + A.code + " " + A.name + "</strong> moves to <strong>" + B.code + " " + B.name + "</strong>. Nothing changes until step 3.";
+      document.querySelector("#moves tbody").innerHTML = WAREHOUSES.map((w, i) =>
+        "<tr><td>" + w + '</td><td class="r num">' + A.stock[i] + '</td><td class="r num">' + B.stock[i] + '</td><td class="r num"><strong>' + (A.stock[i] + B.stock[i]) + "</strong></td></tr>").join("");
+      document.querySelector("#moves tfoot").innerHTML = '<tr><td>Total</td><td class="r num">' + total(A) + '</td><td class="r num">' + total(B) + '</td><td class="r num">' + (total(A) + total(B)) + "</td></tr>";
+      document.querySelector("#hist tbody").innerHTML =
+        '<tr><td>Sales history lines</td><td class="r num">' + A.sales + "</td></tr>" +
+        '<tr><td>Inventory movements (kardex)</td><td class="r num">' + Math.round(A.sales * 1.6) + "</td></tr>" +
+        '<tr><td>Open documents (orders, transfers)</td><td class="r num">' + A.openDocs + "</td></tr>" +
+        '<tr><td>Opening balance records</td><td class="r num">' + WAREHOUSES.filter((w, i) => A.stock[i] > 0).length + "</td></tr>";
+      const missing = A.pres.filter(p => !B.pres.includes(p));
+      document.getElementById("pres").innerHTML = missing.length
+        ? '<div class="conflict info">' + ICON_INFO + "<span>B does not have " + missing.map(m => "<strong>" + m + "</strong>").join(", ") + ". " + (missing.length === 1 ? "It" : "They") + " will be created in B with the same factor.</span></div>"
+        : '<div class="conflict info">' + ICON_OK + "<span>B already has every presentation of A.</span></div>";
+      const conf = [];
+      if (A.openDocs) conf.push(["warn", A.openDocs + " open document" + (A.openDocs > 1 ? "s" : "") + " still reference A. They will be pointed to B."]);
+      if (Math.abs(A.cost - B.cost) / B.cost > 0.2) conf.push(["warn", "Unit cost differs by " + UI.fmtPct(Math.abs(A.cost - B.cost) / B.cost, 0) + " (" + UI.fmtMoney(A.cost) + " vs " + UI.fmtMoney(B.cost) + "). B's cost will be the weighted average: " + UI.fmtMoney((A.cost * total(A) + B.cost * total(B)) / Math.max(1, total(A) + total(B))) + "."]);
+      if (total(A) > total(B) * 2) conf.push(["warn", "A has more stock than B. Check you are keeping the right item."]);
+      conf.push(["info", "A will stay in the catalog as retired and not available, so old invoices still show it."]);
+      document.getElementById("conflicts").innerHTML = conf.map(c => '<div class="conflict ' + c[0] + '">' + (c[0] === "warn" ? ICON_WARN : ICON_INFO) + "<span>" + c[1] + "</span></div>").join("");
+    }
+
+    function newCode() {
+      confirmCode = "CONFIRM " + String(1000 + Math.floor(Math.random() * 9000));
+      document.getElementById("code").textContent = confirmCode;
+      document.getElementById("typed").value = "";
+      document.getElementById("typedErr").textContent = "";
+    }
+
+    function setStep(s) {
+      step = s;
+      [1, 2, 3].forEach(n => document.getElementById("s" + n).hidden = n !== s);
+      document.querySelectorAll(".step").forEach(el => {
+        const n = +el.dataset.s;
+        el.classList.toggle("done", n < s);
+        if (n === s) el.setAttribute("aria-current", "step"); else el.removeAttribute("aria-current");
+      });
+      const next = document.getElementById("next"), back = document.getElementById("back");
+      back.hidden = s === 1;
+      next.textContent = s === 3 ? "Run merge" : "Next";
+      next.disabled = (s === 1 && !A);
+      if (s === 2) renderPreview();
+      if (s === 3) {
+        newCode();
+        document.getElementById("confirmArea").hidden = false;
+        document.getElementById("runArea").hidden = true;
+        document.getElementById("typed").focus();
+      }
+    }
+
+    document.getElementById("pairs").addEventListener("click", e => {
+      const b = e.target.closest("[data-pair]");
+      if (!b) return;
+      const [ca, cb] = b.dataset.pair.split("|");
+      const x = items.find(i => i.code === ca), y = items.find(i => i.code === cb);
+      // Keep the one with more sales history by default.
+      if (x.sales >= y.sales) { B = x; A = y; } else { B = y; A = x; }
+      renderPairs(); renderChoice(); setStep(1);
+    });
+    document.getElementById("swap").addEventListener("click", () => { const t = A; A = B; B = t; renderChoice(); });
+    document.getElementById("q").addEventListener("input", renderPairs);
+    document.getElementById("minSim").addEventListener("change", renderPairs);
+
+    document.getElementById("back").addEventListener("click", () => { if (!running) setStep(step - 1); });
+    document.getElementById("next").addEventListener("click", () => {
+      if (step < 3) { setStep(step + 1); return; }
+      const typed = document.getElementById("typed");
+      if (typed.value.trim().toUpperCase() !== confirmCode) {
+        typed.setAttribute("aria-invalid", "true");
+        document.getElementById("typedErr").textContent = "The code does not match. Type " + confirmCode + ".";
+        typed.focus();
+        return;
+      }
+      typed.removeAttribute("aria-invalid");
+      run(document.getElementById("dry").checked);
+    });
+
+    function run(dry) {
+      running = true;
+      const next = document.getElementById("next"), back = document.getElementById("back");
+      next.disabled = true; back.disabled = true;
+      document.getElementById("confirmArea").hidden = true;
+      document.getElementById("runArea").hidden = false;
+      document.getElementById("result").innerHTML = "";
+      const log = document.getElementById("log");
+      log.textContent = "";
+      const bar = document.getElementById("bar");
+      const moved = total(A);
+      const missing = A.pres.filter(p => !B.pres.includes(p));
+      const tasks = [
+        "Lock " + A.code + " and " + B.code,
+        dry ? "Begin transaction (dry run)" : "Begin transaction",
+        ...missing.map(m => "Create presentation " + m + " in " + B.code),
+        ...WAREHOUSES.map((w, i) => A.stock[i] ? "Move " + A.stock[i] + " units in " + w : null).filter(Boolean),
+        "Move " + Math.round(A.sales * 1.6) + " inventory movements",
+        "Move " + A.sales + " sales history lines",
+        A.openDocs ? "Repoint " + A.openDocs + " open documents" : "No open documents to repoint",
+        "Recalculate average cost of " + B.code,
+        "Mark " + A.code + " as retired and not available",
+        dry ? "Rollback: undo every change" : "Commit",
+        "Unlock items"
+      ];
+      let i = 0;
+      const tick = () => {
+        const line = tasks[i];
+        log.textContent += "[" + String(i + 1).padStart(2, "0") + "/" + tasks.length + "] " + line + " … ok\n";
+        log.scrollTop = log.scrollHeight;
+        i++;
+        const pct = Math.round(i / tasks.length * 100);
+        bar.firstElementChild.style.width = pct + "%";
+        bar.setAttribute("aria-valuenow", pct);
+        document.getElementById("pct").textContent = pct + "%";
+        if (i < tasks.length) { setTimeout(tick, 260); return; }
+        finish(dry, moved);
+      };
+      setTimeout(tick, 200);
+    }
+
+    function finish(dry, moved) {
+      running = false;
+      document.getElementById("lockBadge").innerHTML = ICON_OK + "Items unlocked";
+      document.getElementById("lockBadge").className = "chip chip-pos";
+      const res = document.getElementById("result");
+      history.unshift({ date: "2026-11-16", a: A.code + " " + A.name, b: B.code + " " + B.name, units: moved, dry });
+      if (dry) {
+        res.innerHTML = '<div class="conflict info">' + ICON_UNDO + "<span><strong>Dry run finished and rolled back.</strong> Every step worked; nothing was saved. Uncheck dry run to merge for real.</span></div>";
+      } else {
+        A.retired = true;
+        B.stock = B.stock.map((v, i) => v + A.stock[i]);
+        A.pres.forEach(p => { if (!B.pres.includes(p)) B.pres.push(p); });
+        A.stock = A.stock.map(() => 0);
+        // Old-system items that pointed to the retired item now point to the kept one.
+        legacy.forEach(l => { if (l.target === A) { l.target = B; l.sc = scoreOf(l, B); } });
+        renderMatch();
+        renderPairs();
+        res.innerHTML = '<div class="conflict info" style="background:var(--positive-bg);color:var(--positive)">' + ICON_OK + "<span><strong>Merged.</strong> " + B.code + " now has " + total(B) + " units. " + A.code + ' is <span class="chip chip-neg">Retired · not available</span></span></div>';
+        UI.toast(A.code + " merged into " + B.code);
+      }
+      renderHistory();
+      const next = document.getElementById("next"), back = document.getElementById("back");
+      back.disabled = false;
+      next.disabled = false;
+      next.textContent = dry ? "Run again" : "Start a new merge";
+      next.onclick = null;
+      const handler = (ev) => {
+        ev.stopImmediatePropagation();
+        next.removeEventListener("click", handler, true);
+        document.getElementById("lockBadge").className = "lock";
+        document.getElementById("lockBadge").innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Item locked while merging';
+        if (dry) { setStep(3); }
+        else { A = null; B = null; renderPairs(); renderChoice(); setStep(1); }
+      };
+      next.addEventListener("click", handler, true);
+    }
+
+    function renderHistory() {
+      document.querySelector("#history tbody").innerHTML = history.map(h =>
+        '<tr><td class="num">' + h.date + "</td><td>" + h.a + "</td><td>" + h.b + '</td><td class="r num">' + h.units + "</td><td>" + (h.dry ? "Dry run" : "Real") +
+        "</td><td>" + (h.dry ? '<span class="chip chip-info">' + ICON_UNDO + "Rolled back</span>" : '<span class="chip chip-pos">' + ICON_OK + "Merged</span>") + "</td></tr>").join("") ||
+        '<tr><td colspan="6" class="muted">No merges yet in this session</td></tr>';
+    }
+
+    renderMatch(); renderPairs(); renderChoice(); renderHistory(); setStep(1);
+  });
+  </script>
+</body>
+</html>
