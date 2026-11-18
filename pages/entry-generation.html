@@ -3,346 +3,279 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Automatic Entries · Business UI Gallery</title>
+  <title>Automatic entries · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--space-2); margin-top: var(--space-3); }
-    .src { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface-2); }
-    .src input { width: 18px; height: 18px; accent-color: var(--primary); }
-    .actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
-    .run { display: grid; gap: var(--space-3); }
-    .run-top { display: flex; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; font-size: .9rem; }
-    .src-status { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-2); }
-    .src-status > div { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: .85rem; }
-    .modal.wide { width: min(1100px, 100%); max-height: 92vh; }
-    tr.sel { background: var(--info-bg) !important; }
+    .src-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px solid var(--mc-line); border-radius: 8px; }
+    .src-tabs .mc-tab { display: inline-flex; align-items: center; gap: 6px; }
+    .src-tabs .mc-tab .cnt { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 10px; background: rgba(148,163,184,.16); color: var(--mc-muted); }
+    .run { display: grid; gap: 8px; }
+    .run-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+    .run-top b { font-variant-numeric: tabular-nums; }
     tr.clickable { cursor: pointer; }
-    .small { font-size: .82rem; }
+    tr.sel td { background: rgba(20,184,166,.12) !important; }
   </style>
 </head>
 <body data-page="entry-generation" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Automatic entries</h1>
-        <p class="muted">Creates the accounting entries for a date range from the documents each area already recorded.</p>
-      </div>
-    </div>
-
-    <section class="card card-body">
-      <div class="filters">
-        <div class="field"><label for="from">From</label><input class="input" type="date" id="from" value="2026-11-09"></div>
-        <div class="field"><label for="to">To</label><input class="input" type="date" id="to" value="2026-11-16"></div>
-      </div>
-      <fieldset style="border:none;padding:0;margin:0">
-        <legend class="muted" style="font-size:.8rem;font-weight:500;margin-top:var(--space-3)">Sources to generate</legend>
-        <div class="sources" id="sources"></div>
-      </fieldset>
-      <div class="actions">
-        <button class="btn btn-primary" id="genBtn" type="button">Generate entries</button>
-        <button class="btn" id="cancelBtn" type="button" disabled>Cancel</button>
-        <button class="btn" id="delBtn" type="button">Delete generated</button>
-      </div>
-      <p class="field-error" id="formErr" style="margin-top:8px"></p>
-    </section>
-
-    <section class="card card-body run" id="runCard" hidden aria-live="polite">
-      <div class="run-top"><h2 id="runTitle">Generating</h2><span class="num" id="runCount"></span></div>
-      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar"><span></span></div>
-      <div class="src-status" id="srcStatus"></div>
-    </section>
-
-    <section class="card">
-      <div class="card-head"><h2>Generated entries</h2><span class="muted small" id="genSummary"></span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="results">
-          <thead><tr><th>Day</th><th>Source</th><th>Entry</th><th class="r">Documents</th><th class="r">Debit</th><th class="r">Credit</th><th>Status</th><th><span class="sr-only">Preview</span></th></tr></thead>
-          <tbody></tbody>
-        </table>
+  <main id="content">
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">date_range</span><span data-i18n="allRange"></span></h3></div>
+      <div class="mc-filters">
+        <div class="mc-field" style="max-width:170px"><label for="gFrom" data-i18n="fromAll"></label><input type="date" id="gFrom"></div>
+        <div class="mc-field" style="max-width:170px"><label for="gTo" data-i18n="toAll"></label><input type="date" id="gTo"></div>
+        <button type="button" class="btn btn-outline-teal" id="btnApplyAll"><span class="material-icons" aria-hidden="true">done_all</span><span data-i18n="applyAll"></span></button>
       </div>
     </section>
 
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Generation runs one day and one source at a time, so a long range shows progress and can be cancelled without leaving half a day posted.</li>
-        <li>Days that already have an entry for a source are skipped, so running the same range twice never duplicates anything.</li>
-        <li>Each entry keeps one line per account and side, with the amounts added up. The documents behind each line are in a separate detail table.</li>
-        <li>In production each step is one request to a stored procedure, and the browser drives the loop.</li>
-      </ul>
+    <div class="src-tabs" role="tablist" id="tabs" aria-label="Sources"></div>
+
+    <section class="mc-panel" role="tabpanel" id="panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true" id="srcIcon"></span><span id="srcTitle"></span></h3><span class="mc-hint" id="srcHint"></span></div>
+      <form class="mc-filters" id="srcForm">
+        <div class="mc-field" style="max-width:170px"><label for="sFrom" data-i18n="from"></label><input type="date" id="sFrom"></div>
+        <div class="mc-field" style="max-width:170px"><label for="sTo" data-i18n="to"></label><input type="date" id="sTo"></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="preview"></span></button>
+        <button class="btn btn-violet" type="button" id="btnGen"><span class="material-icons" aria-hidden="true">auto_mode</span><span data-i18n="generate"></span></button>
+        <button class="btn btn-danger" type="button" id="btnDel"><span class="material-icons" aria-hidden="true">delete_sweep</span><span data-i18n="deleteGen"></span></button>
+      </form>
+      <div class="run" id="run" hidden style="margin-top:12px" aria-live="polite">
+        <div class="run-top"><span id="runText"></span><b id="runPct"></b></div>
+        <div class="progress"><span id="runBar"></span></div>
+        <div><button type="button" class="btn btn-sm" id="btnCancel"><span class="material-icons" aria-hidden="true">stop_circle</span><span data-i18n="cancel"></span></button></div>
+      </div>
+      <div class="mc-kpis" id="kpis" style="margin-top:12px"></div>
+      <div class="table-wrap" style="margin-top:10px;max-height:460px"><table class="grid" id="tDays"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
     </section>
+
+    <div id="about"></div>
   </main>
 
-  <!-- Preview -->
-  <div class="modal-backdrop" id="prevModal" role="dialog" aria-modal="true" aria-labelledby="prevTitle">
-    <div class="modal wide">
-      <div class="modal-head"><h2 id="prevTitle">Entry</h2><span class="muted small" id="prevSub"></span></div>
+  <div class="modal-backdrop" id="mPrev">
+    <div class="modal modal-full" role="dialog" aria-modal="true" aria-labelledby="prevTitle">
+      <div class="modal-head"><h3 id="prevTitle"><span class="material-icons" aria-hidden="true">receipt_long</span><span id="prevTitleTxt"></span></h3><span id="prevChip"></span></div>
       <div class="modal-body">
-        <h3 style="margin-bottom:8px">Entry lines <span class="muted small">(select a line to see its documents)</span></h3>
-        <div class="table-wrap">
-          <table class="grid" id="prevLines"><thead><tr><th>Account</th><th class="r">Documents</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
-        </div>
-        <h3 style="margin:var(--space-4) 0 8px" id="detTitle">Source documents</h3>
-        <div class="table-wrap" style="max-height:300px;overflow:auto">
-          <table class="grid" id="prevDocs"><thead><tr><th>Document</th><th>Account</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody></tbody></table>
-        </div>
+        <p class="mc-hint" data-i18n="prevHint" style="margin-bottom:8px"></p>
+        <div class="table-wrap"><table class="grid" id="tAcc"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div class="mc-panel-title" style="margin-top:14px"><h3><span class="material-icons" aria-hidden="true">list_alt</span><span id="detTitle"></span></h3><button type="button" class="btn btn-sm" id="btnAllDocs" hidden data-i18n="showAll"></button></div>
+        <div class="table-wrap" style="max-height:320px"><table class="grid" id="tDet"><thead></thead><tbody></tbody></table></div>
       </div>
-      <div class="modal-foot"><button class="btn" type="button" id="closePrev">Close</button></div>
+      <div class="modal-foot"><button type="button" class="btn btn-danger" id="btnClosePrev"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
     </div>
   </div>
 
-  <!-- Confirm delete -->
-  <div class="modal-backdrop" id="delModal" role="dialog" aria-modal="true" aria-labelledby="delTitle">
-    <div class="modal" style="width:min(480px,100%)">
-      <div class="modal-head"><h2 id="delTitle">Delete generated entries</h2></div>
-      <div class="modal-body"><p id="delText"></p></div>
+  <div class="modal-backdrop" id="mDel">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="delTitle">
+      <div class="modal-head"><h3 id="delTitle"><span class="material-icons" aria-hidden="true">delete_sweep</span><span data-i18n="deleteGen"></span></h3></div>
+      <div class="modal-body"><p id="delText" style="font-size:13px;line-height:1.55"></p></div>
       <div class="modal-foot">
-        <button class="btn btn-primary" type="button" id="delOk" style="background:var(--negative);border-color:var(--negative)">Delete</button>
-        <button class="btn" type="button" id="delClose">Close</button>
+        <button type="button" class="btn btn-danger" id="btnDelOk"><span class="material-icons" aria-hidden="true">delete</span><span data-i18n="deleteConfirm"></span></button>
+        <button type="button" class="btn" id="btnDelClose"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
       </div>
     </div>
   </div>
 
   <script src="../assets/js/common.js"></script>
   <script>
+  UI.strings({
+    en: {
+      allRange: "Range for every source", fromAll: "Start date (all)", toAll: "End date (all)", applyAll: "Apply to all tabs", preview: "Preview", generate: "Generate entry", deleteGen: "Delete generated entries", deleteConfirm: "Delete",
+      s_sales: "Sales invoices", s_cost: "Cost of sales", s_purch: "Purchases", s_ret: "Returns", s_notes: "Debit / credit notes", s_bank: "Bank movements", s_payroll: "Payroll",
+      h_sales: "One entry per day and branch: cash, receivables, sales and sales tax.", h_cost: "Cost of what was invoiced, at average cost.", h_purch: "Supplier invoices received in the day.", h_ret: "Customer returns confirmed in the day.",
+      h_notes: "Debit and credit notes to customers.", h_bank: "Checks, transfers and deposits recorded in the bank module.", h_payroll: "Payroll applied in the period: salaries, contributions and withholdings.",
+      colDay: "Day", colDocs: "Documents", colEntry: "Entry", debit: "Debit", credit: "Credit", colState: "Status", actions: "Actions",
+      stNew: "New", stDone: "Generated", stNone: "No documents", stRunning: "Generating…", stUnbal: "Unbalanced",
+      kDays: "Days", kNew: "To generate", kDone: "Generated", kDocs: "Documents", kDebit: "Debit generated",
+      running: "Generating {s} · day {d} ({i} of {n})", deleting: "Deleting {s} · day {d} ({i} of {n})", finished: "Done: {g} entries generated, {k} days skipped (already generated or without documents).",
+      finishedDel: "Done: {g} entries deleted.", cancelled: "Cancelled. The days already processed keep their result.", nothingToGen: "There is nothing to generate in this range: every day is generated or has no documents.",
+      delText: "Delete the {n} generated entries of <b>{s}</b> between {f} and {t}? The documents stay; you can generate them again.", nothingToDel: "There are no generated entries in this range.",
+      prevTitle: "Entry {n} · {s} · {d}", prevHint: "One line per account and side: the amounts are accumulated. Select a line to see the documents behind it.",
+      account: "Account", accountName: "Account name", detAll: "Documents of the entry", detFor: "Documents behind {a}", showAll: "Show all", docNo: "Document", customer: "Customer / supplier", amount: "Amount",
+      balanced: "Balanced", view: "View",
+      aboutText: "Automatic entries are generated from the source documents, <b>one tab per source</b> (sales, cost of sales, purchases, returns, notes, bank movements, payroll) with a shared date range. <b>Preview</b> shows each day with its documents and status. <b>Generate</b> runs <b>one day at a time</b> with a progress bar and can be cancelled; days already generated or without documents are skipped. Each entry keeps <b>one line per account and side</b> with the amounts accumulated; the breakdown by document lives in the detail table. <b>Delete generated entries</b> asks for confirmation and runs with the same progress. All data is generated."
+    },
+    es: {
+      allRange: "Rango para todas las fuentes", fromAll: "Fecha inicio (todas)", toAll: "Fecha final (todas)", applyAll: "Aplicar a todas las pestañas", preview: "Vista previa", generate: "Generar partida", deleteGen: "Eliminar partidas generadas", deleteConfirm: "Eliminar",
+      s_sales: "Facturas de venta", s_cost: "Costo de ventas", s_purch: "Compras", s_ret: "Devoluciones", s_notes: "Notas de débito / crédito", s_bank: "Movimientos bancarios", s_payroll: "Planilla",
+      h_sales: "Una partida por día y sucursal: caja, clientes, ventas e impuesto.", h_cost: "Costo de lo facturado, a costo promedio.", h_purch: "Facturas de proveedor recibidas en el día.", h_ret: "Devoluciones de clientes confirmadas en el día.",
+      h_notes: "Notas de débito y crédito a clientes.", h_bank: "Cheques, transferencias y depósitos registrados en Bancario.", h_payroll: "Planilla aplicada en el período: sueldos, aportes y retenciones.",
+      colDay: "Día", colDocs: "Documentos", colEntry: "Partida", debit: "Debe", credit: "Haber", colState: "Estado", actions: "Acciones",
+      stNew: "Nueva", stDone: "Generada", stNone: "Sin documentos", stRunning: "Generando…", stUnbal: "Descuadrada",
+      kDays: "Días", kNew: "Por generar", kDone: "Generadas", kDocs: "Documentos", kDebit: "Debe generado",
+      running: "Generando {s} · día {d} ({i} de {n})", deleting: "Eliminando {s} · día {d} ({i} de {n})", finished: "Listo: {g} partidas generadas, {k} días saltados (ya generados o sin documentos).",
+      finishedDel: "Listo: {g} partidas eliminadas.", cancelled: "Cancelado. Los días ya procesados conservan su resultado.", nothingToGen: "No hay nada que generar en este rango: todos los días están generados o no tienen documentos.",
+      delText: "¿Eliminar las {n} partidas generadas de <b>{s}</b> entre el {f} y el {t}? Los documentos se conservan; puede volver a generarlas.", nothingToDel: "No hay partidas generadas en este rango.",
+      prevTitle: "Partida {n} · {s} · {d}", prevHint: "Una línea por cuenta y lado: los montos se acumulan. Elija una línea para ver los documentos que la forman.",
+      account: "Cuenta", accountName: "Nombre de la cuenta", detAll: "Documentos de la partida", detFor: "Documentos detrás de {a}", showAll: "Ver todos", docNo: "Documento", customer: "Cliente / proveedor", amount: "Monto",
+      balanced: "Cuadrada", view: "Ver",
+      aboutText: "Las partidas automáticas se generan desde los documentos de origen, <b>una pestaña por fuente</b> (ventas, costo de ventas, compras, devoluciones, notas, movimientos bancarios, planilla) con un rango de fechas común. <b>Vista previa</b> muestra cada día con sus documentos y su estado. <b>Generar</b> trabaja <b>un día a la vez</b> con barra de progreso y se puede cancelar; los días ya generados o sin documentos se saltan. Cada partida tiene <b>una línea por cuenta y lado</b> con los montos acumulados; el detalle por documento queda en la tabla de detalle. <b>Eliminar partidas generadas</b> pide confirmación y corre con el mismo progreso. Todos los datos son generados."
+    }
+  });
+
   document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const ACC = {
-      cash: ["1-01-01-01-001", "Cash on hand"], bank: ["1-01-02-01-001", "Bank checking account"], ar: ["1-02-01-01-001", "Accounts receivable, customers"],
-      inv: ["1-03-01-01-001", "Merchandise inventory"], ap: ["2-01-01-01-001", "Accounts payable, suppliers"], salPay: ["2-01-02-01-001", "Salaries payable"],
-      ssPay: ["2-01-02-01-002", "Social security payable"], tax: ["2-01-03-01-001", "Sales tax payable"], sales: ["4-01-01-01-001", "Sales revenue"],
-      ret: ["4-01-01-02-001", "Sales returns"], cogs: ["5-01-01-01-001", "Cost of goods sold"], sal: ["6-01-01-01-001", "Salaries expense"], emp: ["6-01-01-01-002", "Employer contributions"]
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi, D = UI.DATA;
+    const SOURCES = [["s_sales", "point_of_sale"], ["s_cost", "inventory"], ["s_purch", "shopping_bag"], ["s_ret", "assignment_return"], ["s_notes", "note_alt"], ["s_bank", "account_balance"], ["s_payroll", "payments"]];
+    const ACCN = {
+      "1-01-01-001": ["Cash on hand", "Caja general"], "1-01-02-001": ["Bank – First Harbor", "Banco First Harbor"], "1-01-03-001": ["Accounts receivable", "Clientes"], "1-01-04-001": ["Merchandise inventory", "Inventario de mercadería"],
+      "1-01-05-001": ["Sales tax credit", "Impuesto por acreditar"], "2-01-01-001": ["Accounts payable", "Proveedores"], "2-01-02-001": ["Sales tax payable", "Impuesto sobre ventas por pagar"],
+      "2-01-03-001": ["Salaries payable", "Sueldos por pagar"], "2-01-03-002": ["Withholdings payable", "Retenciones por pagar"], "4-01-01-001": ["Sales", "Ventas"], "4-01-02-001": ["Sales returns", "Devoluciones sobre ventas"],
+      "4-01-03-001": ["Other income", "Otros ingresos"], "5-01-01-001": ["Cost of sales", "Costo de ventas"], "6-01-01-001": ["Salaries", "Sueldos y salarios"], "6-01-01-002": ["Employer contributions", "Aportes patronales"], "6-01-07-001": ["Bank fees", "Comisiones bancarias"]
     };
-    const r2 = n => Math.round(n * 100) / 100;
-    const SOURCES = [
-      { id: "sales", name: "Sales invoices", prefix: "INV" },
-      { id: "cogs", name: "Cost of sales", prefix: "INV" },
-      { id: "purch", name: "Purchases", prefix: "PUR" },
-      { id: "ret", name: "Returns", prefix: "RET" },
-      { id: "bank", name: "Bank movements", prefix: "BNK" },
-      { id: "payroll", name: "Payroll", prefix: "PAY" }
-    ];
+    const an = c => ACCN[c] ? ACCN[c][UI.lang === "es" ? 1 : 0] : c;
+    let src = "s_sales";
+    const state = {};   // key src|date -> { gen: bool, no }
+    let nextNo = 2410, busy = false, cancel = false;
+    const range = { s_sales: ["2026-11-01", "2026-11-16"] };
+    SOURCES.forEach(s => range[s[0]] = ["2026-11-01", "2026-11-16"]);
 
-    // Builds the documents of one source on one day; each document posts to several accounts.
-    function documents(src, day) {
-      const seed = Math.floor(day.getTime() / 86400000) * 13 + SOURCES.findIndex(s => s.id === src.id);
+    // Documents of a source and day (deterministic)
+    function docs(s, d) {
+      const day = new Date(d + "T00:00:00Z");
+      const seed = Math.floor(day.getTime() / 86400000) * 31 + SOURCES.findIndex(x => x[0] === s) * 7;
       const r = UI.rng(seed);
-      const dd = day.getUTCDate();
-      let n = { sales: 18, cogs: 18, purch: 5, ret: 3, bank: 7, payroll: 0 }[src.id];
-      if (src.id === "payroll" && (dd === 15 || dd === 30)) n = 1;
-      if (src.id === "ret" && r() < 0.25) n = 0;
-      const docs = [];
-      for (let i = 0; i < n; i++) {
-        const no = src.prefix + "-" + String(seed % 9000 + 1000 + i * 7).padStart(5, "0");
-        const p = [];
-        if (src.id === "sales") {
-          const net = r2(UI.between(r, 300, 9000)), tax = r2(net * 0.15), credit = r() < 0.35;
-          p.push([credit ? ACC.ar : ACC.cash, net + tax, 0], [ACC.sales, 0, net], [ACC.tax, 0, tax]);
-        } else if (src.id === "cogs") {
-          const c = r2(UI.between(r, 200, 6500));
-          p.push([ACC.cogs, c, 0], [ACC.inv, 0, c]);
-        } else if (src.id === "purch") {
-          const c = r2(UI.between(r, 2000, 28000));
-          p.push([ACC.inv, c, 0], [ACC.ap, 0, c]);
-        } else if (src.id === "ret") {
-          const net = r2(UI.between(r, 80, 900)), tax = r2(net * 0.15);
-          p.push([ACC.ret, net, 0], [ACC.tax, tax, 0], [ACC.ar, 0, net + tax]);
-        } else if (src.id === "bank") {
-          const c = r2(UI.between(r, 1500, 30000));
-          if (r() < 0.55) p.push([ACC.bank, c, 0], [ACC.cash, 0, c]); else p.push([ACC.ap, c, 0], [ACC.bank, 0, c]);
-        } else if (src.id === "payroll") {
-          const gross = r2(UI.between(r, 180000, 210000)), emp = r2(gross * 0.11), ss = r2(gross * 0.035 + emp);
-          p.push([ACC.sal, gross, 0], [ACC.emp, emp, 0], [ACC.salPay, 0, r2(gross - gross * 0.035)], [ACC.ssPay, 0, r2(ss)]);
-          // keep it balanced to the cent
-          const d = r2(p.reduce((a, x) => a + x[1] - x[2], 0));
-          p[2][2] = r2(p[2][2] + d);
-        }
-        docs.push({ no, posts: p.map(x => ({ acc: x[0], debit: r2(x[1]), credit: r2(x[2]) })) });
-      }
-      return docs;
-    }
-    // Same account + same side = one accumulated line.
-    function accumulate(docs) {
-      const map = new Map();
-      docs.forEach(d => d.posts.forEach(p => {
-        const side = p.debit ? "D" : "C";
-        const k = p.acc[0] + side;
-        if (!map.has(k)) map.set(k, { acc: p.acc, side, amount: 0, docs: new Set() });
-        const l = map.get(k); l.amount = r2(l.amount + (p.debit || p.credit)); l.docs.add(d.no);
-      }));
-      return [...map.values()].sort((a, b) => (a.side === b.side ? a.acc[0].localeCompare(b.acc[0]) : a.side === "D" ? -1 : 1));
-    }
-
-    // Already generated before this visit (to show the "skipped" path).
-    const generated = new Map();
-    let entrySeq = 9120;
-    function key(day, src) { return UI.fmtDate(day) + "|" + src.id; }
-    function generate(day, src) {
-      const docs = documents(src, day);
-      if (!docs.length) return null;
-      const lines = accumulate(docs);
-      const e = { day: UI.fmtDate(day), src, no: "AE-" + (entrySeq++), docs, lines,
-        debit: r2(lines.filter(l => l.side === "D").reduce((a, l) => a + l.amount, 0)),
-        credit: r2(lines.filter(l => l.side === "C").reduce((a, l) => a + l.amount, 0)) };
-      generated.set(key(day, src), e);
-      return e;
-    }
-    ["2026-11-09", "2026-11-10", "2026-11-11"].forEach(d => SOURCES.slice(0, 2).forEach(s => generate(new Date(d + "T00:00:00Z"), s)));
-
-    document.getElementById("sources").innerHTML = SOURCES.map(s =>
-      '<label class="src"><input type="checkbox" value="' + s.id + '" checked><span>' + s.name + "</span></label>").join("");
-
-    function days() {
-      const a = new Date(document.getElementById("from").value + "T00:00:00Z"), b = new Date(document.getElementById("to").value + "T00:00:00Z");
+      if (day.getUTCDay() === 0) return [];
+      let n = { s_sales: 18, s_cost: 18, s_purch: 4, s_ret: 2, s_notes: 1, s_bank: 3, s_payroll: 0 }[s];
+      if (s === "s_payroll") n = day.getUTCDate() === 15 ? 1 : 0;
+      if (s === "s_notes" && r() < .6) n = 0;
+      if (s === "s_ret" && r() < .35) n = 0;
       const out = [];
-      for (let d = a; d <= b; d = new Date(d.getTime() + 86400000)) out.push(d);
+      for (let i = 0; i < n; i++) {
+        const who = s === "s_purch" || s === "s_bank" ? UI.pick(r, D.suppliers) : s === "s_payroll" ? (UI.lang === "es" ? "120 empleados" : "120 employees") : UI.pick(r, D.customers);
+        const amt = s === "s_payroll" ? 240000 : s === "s_purch" ? UI.between(r, 15000, 90000) : s === "s_bank" ? UI.between(r, 8000, 60000) : UI.between(r, 600, 9000);
+        out.push({ no: { s_sales: "FA-", s_cost: "FA-", s_purch: "FC-", s_ret: "DV-", s_notes: "NC-", s_bank: "DB-", s_payroll: "PL-" }[s] + (Math.floor(seed * 37 + i * 101) % 90000 + 10000), who, amt: Math.round(amt * 100) / 100, branch: UI.pick(r, D.branches), cashShare: r() });
+      }
       return out;
     }
-    function chosen() { return [...document.querySelectorAll("#sources input:checked")].map(i => SOURCES.find(s => s.id === i.value)); }
-    function checkForm() {
-      const err = document.getElementById("formErr");
-      const f = document.getElementById("from").value, t = document.getElementById("to").value;
-      if (!f || !t) { err.textContent = "Choose both dates."; return false; }
-      if (f > t) { err.textContent = "The start date must be on or before the end date."; return false; }
-      if (days().length > 62) { err.textContent = "Choose a range of 62 days or less."; return false; }
-      if (!chosen().length) { err.textContent = "Choose at least one source."; return false; }
-      err.textContent = ""; return true;
+    // Lines of the entry: same account and side = one accumulated line; each line remembers its documents.
+    function entryLines(s, ds) {
+      const acc = {};
+      const add = (a, side, v, doc) => { const k = a + "|" + side; acc[k] = acc[k] || { acc: a, side, v: 0, docs: [] }; acc[k].v += v; acc[k].docs.push({ doc, v }); };
+      ds.forEach(x => {
+        if (s === "s_sales") { const tax = x.amt * .15; add(x.cashShare > .5 ? "1-01-01-001" : "1-01-03-001", "d", x.amt + tax, x); add("4-01-01-001", "c", x.amt, x); add("2-01-02-001", "c", tax, x); }
+        else if (s === "s_cost") { add("5-01-01-001", "d", x.amt * .7, x); add("1-01-04-001", "c", x.amt * .7, x); }
+        else if (s === "s_purch") { add("1-01-04-001", "d", x.amt, x); add("1-01-05-001", "d", x.amt * .15, x); add("2-01-01-001", "c", x.amt * 1.15, x); }
+        else if (s === "s_ret") { add("4-01-02-001", "d", x.amt, x); add("1-01-03-001", "c", x.amt, x); }
+        else if (s === "s_notes") { add("1-01-03-001", "d", x.amt, x); add("4-01-03-001", "c", x.amt, x); }
+        else if (s === "s_bank") { add("2-01-01-001", "d", x.amt, x); add("6-01-07-001", "d", 45, x); add("1-01-02-001", "c", x.amt + 45, x); }
+        else { const ded = x.amt * .12, emp = x.amt * .09; add("6-01-01-001", "d", x.amt, x); add("6-01-01-002", "d", emp, x); add("2-01-03-002", "c", ded + emp, x); add("2-01-03-001", "c", x.amt - ded, x); }
+      });
+      return Object.values(acc).sort((a, b) => (a.side === b.side ? a.acc.localeCompare(b.acc) : a.side === "d" ? -1 : 1));
+    }
+    function days(f, to) { const out = []; let d = new Date(f + "T00:00:00Z"); const e = new Date(to + "T00:00:00Z"); while (d <= e) { out.push(UI.fmtDate(d)); d = new Date(d.getTime() + 86400000); } return out; }
+    // Some days are already generated in the sample
+    SOURCES.forEach(s => days("2026-11-01", "2026-11-09").forEach(d => { if (docs(s[0], d).length) state[s[0] + "|" + d] = { gen: true, no: nextNo++ }; }));
+
+    function stChip(st) {
+      return st === "done" ? '<span class="chip chip-pos">' + mi("check_circle") + t("stDone") + "</span>" : st === "none" ? '<span class="chip">' + mi("remove_circle_outline") + t("stNone") + "</span>" :
+        st === "run" ? '<span class="chip chip-warn">' + mi("autorenew") + t("stRunning") + "</span>" : '<span class="chip chip-info">' + mi("fiber_new") + t("stNew") + "</span>";
+    }
+    function renderTabs() {
+      document.getElementById("tabs").innerHTML = SOURCES.map(s => { const n = days(range[s[0]][0], range[s[0]][1]).filter(d => docs(s[0], d).length && !(state[s[0] + "|" + d] || {}).gen).length;
+        return '<button type="button" class="mc-tab" role="tab" aria-selected="' + (s[0] === src) + '" aria-controls="panel" data-src="' + s[0] + '"' + (busy && s[0] !== src ? " disabled" : "") + ">" + mi(s[1]) + t(s[0]) + '<span class="cnt" title="' + t("kNew") + '">' + n + "</span></button>"; }).join("");
+    }
+    let running = null;
+    function render() {
+      const s = SOURCES.find(x => x[0] === src);
+      document.getElementById("srcIcon").textContent = s[1];
+      document.getElementById("srcTitle").textContent = t(src);
+      document.getElementById("srcHint").textContent = t("h" + src.slice(1));
+      document.getElementById("sFrom").value = range[src][0]; document.getElementById("sTo").value = range[src][1];
+      const list = days(range[src][0], range[src][1]).map(d => { const ds = docs(src, d), st = state[src + "|" + d]; const ls = ds.length ? entryLines(src, ds) : [];
+        return { d, ds, st: running === d ? "run" : !ds.length ? "none" : st && st.gen ? "done" : "new", no: st && st.gen ? st.no : null, deb: ls.filter(l => l.side === "d").reduce((a, l) => a + l.v, 0), cre: ls.filter(l => l.side === "c").reduce((a, l) => a + l.v, 0) }; });
+      document.querySelector("#tDays thead").innerHTML = "<tr><th>" + t("colDay") + '</th><th class="r">' + t("colDocs") + "</th><th>" + t("colEntry") + '</th><th class="r">' + t("debit") + '</th><th class="r">' + t("credit") + "</th><th>" + t("colState") + "</th><th>" + t("actions") + "</th></tr>";
+      document.querySelector("#tDays tbody").innerHTML = list.map(x => "<tr><td>" + UI.fmtDay(new Date(x.d + "T00:00:00Z")) + '</td><td class="r">' + x.ds.length + "</td><td>" + (x.no ? "P-" + x.no : "—") + '</td><td class="r">' + (x.ds.length ? M(x.deb) : "") + '</td><td class="r">' + (x.ds.length ? M(x.cre) : "") + "</td><td>" + stChip(x.st) +
+        "</td><td>" + (x.st === "done" ? '<button type="button" class="btn btn-sm" data-prev="' + x.d + '">' + mi("visibility") + t("view") + "</button>" : "") + "</td></tr>").join("");
+      const done = list.filter(x => x.st === "done");
+      document.querySelector("#tDays tfoot").innerHTML = "<tr><td>" + t("total") + '</td><td class="r">' + list.reduce((a, x) => a + x.ds.length, 0) + '</td><td></td><td class="r">' + M(list.reduce((a, x) => a + x.deb, 0)) + '</td><td class="r">' + M(list.reduce((a, x) => a + x.cre, 0)) + '</td><td colspan="2"></td></tr>';
+      document.getElementById("kpis").innerHTML =
+        '<div class="mc-kpi"><div class="k-label">' + t("kDays") + '</div><div class="k-value">' + list.length + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:var(--mc-cyan)"><div class="k-label">' + t("kNew") + '</div><div class="k-value">' + list.filter(x => x.st === "new").length + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:var(--mc-good)"><div class="k-label">' + t("kDone") + '</div><div class="k-value">' + done.length + "</div></div>" +
+        '<div class="mc-kpi"><div class="k-label">' + t("kDocs") + '</div><div class="k-value">' + UI.fmtInt(list.reduce((a, x) => a + x.ds.length, 0)) + "</div></div>" +
+        '<div class="mc-kpi"><div class="k-label">' + t("kDebit") + '</div><div class="k-value num">' + M(done.reduce((a, x) => a + x.deb, 0)) + "</div></div>";
+      renderTabs();
+      ["btnGen", "btnDel"].forEach(id => document.getElementById(id).disabled = busy);
     }
 
-    const ICON_OK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>';
-    function renderResults() {
-      const list = [...generated.values()].sort((a, b) => a.day === b.day ? SOURCES.indexOf(a.src) - SOURCES.indexOf(b.src) : a.day < b.day ? 1 : -1);
-      document.querySelector("#results tbody").innerHTML = list.length ? list.map(e => {
-        const bal = Math.abs(e.debit - e.credit) < 0.005;
-        return '<tr><td class="num">' + e.day + "</td><td>" + e.src.name + '</td><td class="num">' + e.no + '</td><td class="r num">' + e.docs.length + '</td><td class="r num">' + UI.fmtMoney(e.debit) +
-          '</td><td class="r num">' + UI.fmtMoney(e.credit) + '</td><td><span class="chip ' + (bal ? "chip-pos" : "chip-neg") + '">' + (bal ? ICON_OK + " Balanced" : "Unbalanced") +
-          '</span></td><td><button class="btn" type="button" data-k="' + e.day + "|" + e.src.id + '">Preview</button></td></tr>';
-      }).join("") : '<tr><td colspan="8" class="muted">No entries generated yet.</td></tr>';
-      document.getElementById("genSummary").textContent = list.length + " entries";
-    }
-    renderResults();
-
-    // ---------- Async runner (generate / delete) ----------
-    let cancel = false, running = false;
-    function setRunning(on) {
-      running = on;
-      document.getElementById("genBtn").disabled = on;
-      document.getElementById("delBtn").disabled = on;
-      document.getElementById("cancelBtn").disabled = !on;
-    }
-    function run(mode) {
-      if (!checkForm()) return;
-      const ds = days(), srcs = chosen();
-      const queue = [];
-      ds.forEach(d => srcs.forEach(s => queue.push([d, s])));
-      const stat = {};
-      srcs.forEach(s => stat[s.id] = { done: 0, skipped: 0, empty: 0, total: ds.length, state: "Pending" });
-      const card = document.getElementById("runCard");
-      card.hidden = false;
-      document.getElementById("runTitle").textContent = mode === "gen" ? "Generating entries" : "Deleting generated entries";
-      const bar = document.getElementById("bar");
-      const paint = (i) => {
-        const pct = Math.round(i / queue.length * 100);
-        bar.firstElementChild.style.width = pct + "%";
-        bar.setAttribute("aria-valuenow", String(pct));
-        document.getElementById("runCount").textContent = i + " of " + queue.length + " steps · " + pct + "%";
-        document.getElementById("srcStatus").innerHTML = srcs.map(s => {
-          const st = stat[s.id];
-          const chip = st.state === "Done" ? "chip-pos" : st.state === "Running" ? "chip-info" : st.state === "Cancelled" ? "chip-warn" : "";
-          const detail = mode === "gen"
-            ? st.done + " new · " + st.skipped + " already generated · " + st.empty + " without documents"
-            : st.done + " deleted · " + st.empty + " had nothing";
-          return "<div><span><strong>" + s.name + '</strong><br><span class="muted small">' + detail + '</span></span><span class="chip ' + chip + '">' + st.state + "</span></div>";
-        }).join("");
-      };
-      cancel = false;
-      setRunning(true);
-      let i = 0;
-      paint(0);
+    function runDays(mode) {
+      const list = days(range[src][0], range[src][1]);
+      const todo = mode === "gen" ? list.filter(d => docs(src, d).length && !(state[src + "|" + d] || {}).gen) : list.filter(d => (state[src + "|" + d] || {}).gen);
+      if (!todo.length) { UI.toast(t(mode === "gen" ? "nothingToGen" : "nothingToDel")); return; }
+      busy = true; cancel = false; let i = 0, g = 0;
+      const run = document.getElementById("run"); run.hidden = false;
       const step = () => {
-        if (cancel) {
-          srcs.forEach(s => { if (stat[s.id].state !== "Done") stat[s.id].state = "Cancelled"; });
-          paint(i); setRunning(false); renderResults();
-          UI.toast("Stopped after " + i + " of " + queue.length + " steps. Finished days are kept.");
+        if (cancel || i >= todo.length) {
+          busy = false; running = null; render();
+          document.getElementById("runText").textContent = cancel ? t("cancelled") : mode === "gen" ? t("finished", { g, k: list.length - g }) : t("finishedDel", { g });
+          document.getElementById("btnCancel").hidden = true;
           return;
         }
-        if (i >= queue.length) {
-          paint(i); setRunning(false); renderResults();
-          UI.toast(mode === "gen" ? "Generation finished" : "Deletion finished");
-          return;
-        }
-        const [d, s] = queue[i];
-        const st = stat[s.id];
-        st.state = "Running";
-        const k = key(d, s);
-        if (mode === "gen") {
-          if (generated.has(k)) st.skipped++;
-          else if (generate(d, s)) st.done++;
-          else st.empty++;
-        } else {
-          if (generated.delete(k)) st.done++; else st.empty++;
-        }
-        i++;
-        if (st.done + st.skipped + st.empty === st.total) st.state = "Done";
-        paint(i);
-        if (i % 6 === 0) renderResults();
-        setTimeout(step, 150);
+        const d = todo[i];
+        running = mode === "gen" ? d : null;
+        document.getElementById("runText").textContent = t(mode === "gen" ? "running" : "deleting", { s: t(src), d: UI.fmtDay(new Date(d + "T00:00:00Z")), i: i + 1, n: todo.length });
+        render();
+        setTimeout(() => {
+          if (mode === "gen") state[src + "|" + d] = { gen: true, no: nextNo++ }; else delete state[src + "|" + d];
+          g++; i++;
+          const p = Math.round(i / todo.length * 100);
+          document.getElementById("runBar").style.width = p + "%"; document.getElementById("runPct").textContent = p + "%";
+          step();
+        }, 220);
       };
-      setTimeout(step, 150);
+      document.getElementById("runBar").style.width = "0%"; document.getElementById("runPct").textContent = "0%";
+      document.getElementById("btnCancel").hidden = false;
+      step();
     }
-    document.getElementById("genBtn").addEventListener("click", () => run("gen"));
-    document.getElementById("cancelBtn").addEventListener("click", () => { cancel = true; });
-    document.getElementById("delBtn").addEventListener("click", () => {
-      if (!checkForm()) return;
-      const ds = days(), srcs = chosen();
-      let n = 0; ds.forEach(d => srcs.forEach(s => { if (generated.has(key(d, s))) n++; }));
-      document.getElementById("delText").innerHTML = "This deletes <strong>" + n + "</strong> generated entries from " + document.getElementById("from").value + " to " + document.getElementById("to").value +
-        " for: " + srcs.map(s => s.name).join(", ") + ". The source documents are not touched, so the entries can be generated again.";
-      document.getElementById("delOk").disabled = n === 0;
-      UI.openModal("delModal");
+    document.getElementById("btnGen").addEventListener("click", () => runDays("gen"));
+    document.getElementById("btnCancel").addEventListener("click", () => { cancel = true; });
+    document.getElementById("btnDel").addEventListener("click", () => {
+      const n = days(range[src][0], range[src][1]).filter(d => (state[src + "|" + d] || {}).gen).length;
+      if (!n) { UI.toast(t("nothingToDel")); return; }
+      document.getElementById("delText").innerHTML = t("delText", { n, s: t(src), f: UI.fmtDay(new Date(range[src][0] + "T00:00:00Z")), t: UI.fmtDay(new Date(range[src][1] + "T00:00:00Z")) });
+      UI.openModal("mDel");
     });
-    document.getElementById("delOk").addEventListener("click", () => { UI.closeModal("delModal"); run("del"); });
-    document.getElementById("delClose").addEventListener("click", () => UI.closeModal("delModal"));
+    document.getElementById("btnDelOk").addEventListener("click", () => { UI.closeModal("mDel"); runDays("del"); });
+    document.getElementById("btnDelClose").addEventListener("click", () => UI.closeModal("mDel"));
 
-    // ---------- Preview ----------
-    let current = null;
-    function showDocs(line) {
-      const rows = [];
-      current.docs.forEach(d => d.posts.forEach(p => {
-        if (line && (p.acc[0] !== line.acc[0] || (p.debit ? "D" : "C") !== line.side)) return;
-        rows.push('<tr><td class="num">' + d.no + '</td><td><span class="num">' + p.acc[0] + "</span> " + p.acc[1] + '</td><td class="r num">' + (p.debit ? UI.fmtMoney(p.debit) : "") + '</td><td class="r num">' + (p.credit ? UI.fmtMoney(p.credit) : "") + "</td></tr>");
-      }));
-      document.querySelector("#prevDocs tbody").innerHTML = rows.join("");
-      document.getElementById("detTitle").textContent = line ? "Documents behind " + line.acc[1] + " (" + (line.side === "D" ? "debit" : "credit") + ") · " + rows.length : "All source documents · " + current.docs.length + " documents";
-    }
-    document.querySelector("#results tbody").addEventListener("click", ev => {
-      const b = ev.target.closest("[data-k]");
-      if (!b) return;
-      const [d, s] = b.dataset.k.split("|");
-      current = generated.get(d + "|" + s);
-      document.getElementById("prevTitle").textContent = "Entry " + current.no;
-      document.getElementById("prevSub").textContent = current.src.name + " · " + current.day;
-      const tb = document.querySelector("#prevLines tbody");
-      tb.innerHTML = current.lines.map((l, i) => '<tr class="clickable" tabindex="0" data-i="' + i + '"><td><span class="num">' + l.acc[0] + "</span> " + l.acc[1] + '</td><td class="r num">' + l.docs.size +
-        '</td><td class="r num">' + (l.side === "D" ? UI.fmtMoney(l.amount) : "") + '</td><td class="r num">' + (l.side === "C" ? UI.fmtMoney(l.amount) : "") + "</td></tr>").join("");
-      document.querySelector("#prevLines tfoot").innerHTML = '<tr><td>Total</td><td></td><td class="r num">' + UI.fmtMoney(current.debit) + '</td><td class="r num">' + UI.fmtMoney(current.credit) + "</td></tr>";
-      showDocs(null);
-      UI.openModal("prevModal");
+    document.getElementById("srcForm").addEventListener("submit", e => { e.preventDefault(); if (busy) return; range[src] = [document.getElementById("sFrom").value, document.getElementById("sTo").value]; document.getElementById("run").hidden = true; render(); });
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-src]"); if (!b || busy) return; src = b.dataset.src; document.getElementById("run").hidden = true; render(); });
+    document.getElementById("tabs").addEventListener("keydown", e => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const tabs = [...document.querySelectorAll("#tabs [data-src]")]; let i = tabs.findIndex(x => x.dataset.src === src);
+      i = (i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length; if (busy) return; src = tabs[i].dataset.src; render(); document.querySelector('#tabs [data-src="' + src + '"]').focus();
     });
-    function pickLine(tr) {
-      const sel = tr.classList.contains("sel");
-      document.querySelectorAll("#prevLines tr.sel").forEach(x => x.classList.remove("sel"));
-      if (sel) { showDocs(null); return; }
-      tr.classList.add("sel");
-      showDocs(current.lines[+tr.dataset.i]);
+    const gFrom = document.getElementById("gFrom"), gTo = document.getElementById("gTo");
+    gFrom.value = "2026-11-01"; gTo.value = "2026-11-16";
+    document.getElementById("btnApplyAll").addEventListener("click", () => { if (busy) return; SOURCES.forEach(s => range[s[0]] = [gFrom.value, gTo.value]); render(); });
+
+    // Preview of one generated entry
+    let prev = null, selLine = null;
+    function renderPrev() {
+      const ds = docs(src, prev), ls = entryLines(src, ds), st = state[src + "|" + prev];
+      document.getElementById("prevTitleTxt").textContent = t("prevTitle", { n: "P-" + st.no, s: t(src), d: UI.fmtDay(new Date(prev + "T00:00:00Z")) });
+      const td = ls.filter(l => l.side === "d").reduce((a, l) => a + l.v, 0), tc = ls.filter(l => l.side === "c").reduce((a, l) => a + l.v, 0);
+      document.getElementById("prevChip").innerHTML = Math.abs(td - tc) < .01 ? '<span class="chip chip-pos">' + mi("check_circle") + t("balanced") + "</span>" : '<span class="chip chip-neg">' + mi("error") + t("stUnbal") + "</span>";
+      document.querySelector("#tAcc thead").innerHTML = "<tr><th>" + t("account") + "</th><th>" + t("accountName") + '</th><th class="r">' + t("colDocs") + '</th><th class="r">' + t("debit") + '</th><th class="r">' + t("credit") + "</th></tr>";
+      document.querySelector("#tAcc tbody").innerHTML = ls.map((l, i) => '<tr class="clickable' + (selLine === i ? " sel" : "") + '" tabindex="0" data-line="' + i + '"><td>' + l.acc + "</td><td>" + an(l.acc) + '</td><td class="r">' + l.docs.length + '</td><td class="r">' + (l.side === "d" ? M(l.v) : "") + '</td><td class="r">' + (l.side === "c" ? M(l.v) : "") + "</td></tr>").join("");
+      document.querySelector("#tAcc tfoot").innerHTML = '<tr><td colspan="3">' + t("total") + '</td><td class="r">' + M(td) + '</td><td class="r">' + M(tc) + "</td></tr>";
+      const det = selLine == null ? ds.map(x => ({ doc: x, v: x.amt })) : ls[selLine].docs;
+      document.getElementById("detTitle").textContent = selLine == null ? t("detAll") : t("detFor", { a: ls[selLine].acc + " · " + an(ls[selLine].acc) });
+      document.getElementById("btnAllDocs").hidden = selLine == null;
+      document.querySelector("#tDet thead").innerHTML = "<tr><th>" + t("docNo") + "</th><th>" + t("customer") + "</th><th>" + t("branch") + '</th><th class="r">' + t("amount") + "</th></tr>";
+      document.querySelector("#tDet tbody").innerHTML = det.map(x => "<tr><td>" + x.doc.no + "</td><td>" + x.doc.who + "</td><td>" + x.doc.branch + '</td><td class="r">' + M(x.v) + "</td></tr>").join("");
     }
-    const tbl = document.querySelector("#prevLines tbody");
-    tbl.addEventListener("click", ev => { const tr = ev.target.closest("tr[data-i]"); if (tr) pickLine(tr); });
-    tbl.addEventListener("keydown", ev => { const tr = ev.target.closest("tr[data-i]"); if (tr && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); pickLine(tr); } });
-    document.getElementById("closePrev").addEventListener("click", () => UI.closeModal("prevModal"));
+    document.getElementById("tDays").addEventListener("click", e => { const b = e.target.closest("[data-prev]"); if (!b) return; prev = b.dataset.prev; selLine = null; renderPrev(); UI.openModal("mPrev"); });
+    document.getElementById("tAcc").addEventListener("click", e => { const tr = e.target.closest("[data-line]"); if (!tr) return; const i = Number(tr.dataset.line); selLine = selLine === i ? null : i; renderPrev(); });
+    document.getElementById("tAcc").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.closest("[data-line]")) { e.preventDefault(); e.target.click(); } });
+    document.getElementById("btnAllDocs").addEventListener("click", () => { selLine = null; renderPrev(); });
+    document.getElementById("btnClosePrev").addEventListener("click", () => UI.closeModal("mPrev"));
+
+    function about() { document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); }
+    document.addEventListener("langchange", () => { render(); if (document.getElementById("mPrev").classList.contains("open")) renderPrev(); about(); });
+    render(); about();
   });
   </script>
 </body>

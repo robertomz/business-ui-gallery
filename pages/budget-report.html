@@ -3,89 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Budget vs Actual · Business UI Gallery</title>
+  <title>Budget vs actual · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-    .seg button { background: var(--surface); border: 0; padding: 0 12px; min-height: 38px; font: inherit; font-size: .88rem; color: var(--text); cursor: pointer; }
-    .seg button + button { border-left: 1px solid var(--border); }
-    .seg button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
-    .matrix-wrap { overflow: auto; max-height: 560px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
-    table.matrix { border-collapse: separate; border-spacing: 0; font-size: .84rem; min-width: 100%; }
-    table.matrix th, table.matrix td { padding: 6px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    table.matrix thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-2); font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); text-align: right; }
-    table.matrix th:first-child, table.matrix td:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); text-align: left; border-right: 1px solid var(--border); min-width: 200px; }
-    table.matrix thead th:first-child { z-index: 3; background: var(--surface-2); }
-    table.matrix td { text-align: right; }
-    table.matrix tfoot td { position: sticky; bottom: 0; background: var(--surface-2); font-weight: 600; }
-    table.matrix tfoot td:first-child { background: var(--surface-2); z-index: 2; }
-    table.matrix td.total, table.matrix th.total { background: var(--surface-2); font-weight: 600; }
-    .cell-btn { background: none; border: 0; padding: 2px 4px; font: inherit; color: inherit; cursor: pointer; border-radius: 4px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-    .cell-btn:hover { background: var(--info-bg); }
-    .chart-box { position: relative; height: 300px; }
-    .legend-note { font-size: .8rem; }
-    .rep-filters { grid-template-columns: 140px minmax(220px, 2fr) auto auto; }
-    @media (max-width: 900px) { .rep-filters { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 560px) { .rep-filters { grid-template-columns: 1fr; } .seg { flex-wrap: wrap; } }
+    .matrix-wrap { max-height: 520px; }
+    .matrix th:first-child, .matrix td:first-child { position: sticky; left: 0; z-index: 2; min-width: 210px; max-width: 260px; white-space: normal; }
+    .matrix th:first-child { z-index: 3; }
+    .matrix td:first-child { background: var(--mc-panel); }
+    .matrix tfoot td:first-child { background: var(--mc-panel-2); }
+    .matrix td.cell { cursor: pointer; }
+    .matrix td.cell:hover, .matrix td.cell:focus-visible { background: var(--mc-row-hover); outline: none; box-shadow: inset 0 0 0 2px var(--mc-cyan); }
+    .var-up { color: var(--mc-good); } .var-down { color: var(--mc-bad); }
+    .seg { display: inline-flex; border: 1px solid var(--mc-line); border-radius: 6px; overflow: hidden; }
+    .seg button { min-height: 34px; padding: 0 12px; border: 0; background: transparent; color: var(--mc-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: rgba(20, 184, 166, .18); color: var(--mc-text); }
+    .chart-box { position: relative; height: 290px; }
   </style>
 </head>
 <body data-page="budget-report" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Budget vs actual</h1>
-        <p class="muted">Expenses by account and month for the selected cost centers.</p>
-      </div>
-    </div>
-
-    <section class="card card-body">
-      <div class="filters rep-filters">
-        <div class="field"><label for="year">Year</label><select class="input" id="year"><option>2026</option><option>2025</option></select></div>
-        <div class="field"><label for="centers">Cost centers</label><select id="centers" multiple></select></div>
-        <div class="field"><span style="font-size:.8rem;color:var(--text-muted);font-weight:500" id="viewLbl">Rows</span>
-          <div class="seg" role="group" aria-labelledby="viewLbl"><button type="button" data-view="account" aria-pressed="true">By account</button><button type="button" data-view="center" aria-pressed="false">By center</button></div></div>
-        <div class="field"><span style="font-size:.8rem;color:var(--text-muted);font-weight:500" id="measLbl">Show</span>
-          <div class="seg" role="group" aria-labelledby="measLbl"><button type="button" data-meas="budget" aria-pressed="false">Budget</button><button type="button" data-meas="actual" aria-pressed="false">Actual</button><button type="button" data-meas="variance" aria-pressed="true">Variance</button></div></div>
-      </div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field" style="max-width:130px"><label for="fYear" data-i18n="fYear"></label><select id="fYear"></select></div>
+        <div class="mc-field w-lg"><label for="fCenters" data-i18n="fCenters"></label><select id="fCenters" multiple></select></div>
+        <div class="mc-field" style="flex:0 0 auto;min-width:0"><span class="mc-label" data-i18n="fView"></span><div class="seg" id="segView" role="group"></div></div>
+        <div class="mc-field" style="flex:0 0 auto;min-width:0"><span class="mc-label" data-i18n="fMeasure"></span><div class="seg" id="segMeasure" role="group"></div></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
     </section>
 
-    <section class="kpis" aria-label="Year totals">
-      <div class="card kpi"><div class="kpi-label">Budget (closed months)</div><div class="kpi-value" id="kB"></div></div>
-      <div class="card kpi"><div class="kpi-label">Actual</div><div class="kpi-value" id="kA"></div></div>
-      <div class="card kpi"><div class="kpi-label">Variance</div><div class="kpi-value" id="kV"></div><div class="kpi-delta" id="kVd"></div></div>
-      <div class="card kpi"><div class="kpi-label">Annual budget</div><div class="kpi-value" id="kY"></div><div class="kpi-delta muted" id="kYd"></div></div>
+    <div class="mc-kpis" id="kpis"></div>
+
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">grid_on</span><span id="mTitle"></span></h3><span class="mc-hint" data-i18n="cellHint"></span></div>
+      <div class="table-wrap matrix-wrap"><table class="grid matrix" id="matrix"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2 id="mTitle">Variance by account</h2><span class="muted legend-note">Select a figure to see the documents behind it. Variance = budget − actual: ▲ under budget, ▼ over budget.</span></div>
-      <div class="card-body"><div class="matrix-wrap" tabindex="0" aria-label="Budget matrix, scrolls horizontally"><table class="matrix" id="matrix"></table></div></div>
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">bar_chart</span><span data-i18n="chartTitle"></span></h3></div>
+      <div class="chart-box"><canvas id="chart" role="img"></canvas></div>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2>Monthly budget vs actual</h2><span class="muted legend-note">Line: cumulative variance</span></div>
-      <div class="card-body"><div class="chart-box"><canvas id="chart" role="img" aria-label="Monthly budget and actual bars with cumulative variance line"></canvas></div></div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>The same numbers can be read by account or by center, and as budget, actual or variance, without leaving the page.</li>
-        <li>The first column and the header stay in place while scrolling through twelve months.</li>
-        <li>Every figure opens the documents that make it up, so a variance can be explained on the spot.</li>
-        <li>Variances carry a sign and an arrow, not only a color.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
-  <div class="modal-backdrop" id="docModal" role="dialog" aria-modal="true" aria-labelledby="docTitle">
-    <div class="modal" style="width:min(820px,100%)">
-      <div class="modal-head"><div><h2 id="docTitle">Documents</h2><p class="muted" id="docSub" style="font-size:.85rem"></p></div></div>
-      <div class="modal-body table-wrap"><table class="grid" id="docTable"><thead><tr><th>Document</th><th>Date</th><th>Center</th><th>Description</th><th class="r">Amount</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
-      <div class="modal-foot"><button class="btn" id="docClose" type="button">Close</button></div>
+  <div class="modal-backdrop" id="mDocs">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mDocsT">
+      <div class="modal-head"><h3 id="mDocsT"><span class="material-icons" aria-hidden="true">receipt_long</span><span id="mDocsTxt"></span></h3></div>
+      <div class="modal-body"><p class="mc-hint" id="mDocsSub" style="margin-bottom:8px"></p><div class="table-wrap"><table class="grid" id="tDocs"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+      <div class="modal-foot"><button class="btn" type="button" id="mDocsClose" data-i18n="close"></button></div>
     </div>
   </div>
 
@@ -94,169 +65,120 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const ACCOUNTS = ["6-01 Salaries and wages", "6-02 Fuel and travel", "6-03 Rent", "6-04 Utilities", "6-05 Maintenance", "6-06 Office supplies", "6-07 IT services", "6-08 Administration services"];
-    const BASE = [180000, 24000, 30000, 9000, 7000, 3500, 6000, 8000];
-    const SCALE = [1, 0.9, 0.95, 0.8, 0.7, 0.55, 0.5];
-    const VENDORS = ["Northwind Foods", "Fabrikam Home", "Metro Power & Light", "Rapid Courier", "Summit Office Rentals", "Litware Services", "Payroll"];
-
-    // data[year][center][account] = { budget[12], actual[12] }
-    const data = {};
-    [2025, 2026].forEach(y => {
-      data[y] = D.costCenters.map((c, ci) => ACCOUNTS.map((a, ai) => {
-        const r = UI.rng(y * 1000 + ci * 37 + ai);
-        const base = BASE[ai] * SCALE[ci] * UI.between(r, 0.8, 1.2) * (y === 2026 ? 1.06 : 1);
-        const drift = UI.between(r, 0.9, 1.16);
-        const closed = y === 2026 ? 10 : 12;
-        const budget = MONTHS.map((_, m) => Math.round(base * (m === 11 ? 1.15 : 1) * UI.between(r, 0.96, 1.04)));
-        const actual = MONTHS.map((_, m) => m < closed ? Math.round(budget[m] * drift * UI.between(r, 0.88, 1.12)) : null);
-        return { budget, actual };
-      }));
-    });
-
-    const $c = $("#centers");
-    $c.html(D.costCenters.map((c, i) => '<option value="' + i + '" selected>' + c + "</option>").join(""));
-    $c.select2({ width: "100%", placeholder: "All cost centers", closeOnSelect: false });
-
-    let view = "account", measure = "variance", chart;
-
-    function selCenters() { const v = $c.val() || []; return (v.length ? v : D.costCenters.map((_, i) => String(i))).map(Number); }
-    function year() { return +document.getElementById("year").value; }
-
-    // rows: [{label, key, cells:[{b,a}]}]
-    function build() {
-      const y = year(), cs = selCenters();
-      const keys = view === "account" ? ACCOUNTS.map((a, i) => ({ label: a, ai: [i], ci: cs })) : cs.map(ci => ({ label: D.costCenters[ci], ai: ACCOUNTS.map((_, i) => i), ci: [ci] }));
-      return keys.map(k => ({
-        label: k.label, ai: k.ai, ci: k.ci,
-        cells: MONTHS.map((_, m) => {
-          let b = 0, a = 0, hasA = false;
-          k.ci.forEach(ci => k.ai.forEach(ai => { const d = data[y][ci][ai]; b += d.budget[m]; if (d.actual[m] != null) { a += d.actual[m]; hasA = true; } }));
-          return { b, a: hasA ? a : null };
-        })
-      }));
+  UI.strings({
+    en: {
+      fYear: "Year", fCenters: "Management centers", fView: "Rows", fMeasure: "Show", byCenter: "By center", byAccount: "By account", mBudget: "Budget", mActual: "Actual", mVar: "Variance",
+      allCenters: "All centers", cellHint: "Select an amount to see the documents behind it",
+      mTitleC: "{m} by center and month", mTitleA: "{m} by account and month", colRow: "Center", colRowA: "Account", colTotal: "Total year",
+      kBudget: "Budget for the year", kActual: "Actual to date", kVar: "Variance to date", kExec: "Execution to date", kOver: "Accounts over budget",
+      chartTitle: "Budget vs actual by month and cumulative variance", cBudget: "Budget", cActual: "Actual", cCum: "Cumulative variance",
+      docsTitle: "{r} · {m}", docsSub: "Actual {a} against a budget of {b}.", colDoc: "Document", colDate: "Date", colSupplier: "Supplier", colDesc: "Description", colAmount: "Amount",
+      d1: "Purchase invoice", d2: "Payment request", d3: "Petty cash", d4: "Journal entry",
+      aboutText: "Mirrors the budget reports of the management control module (budget balance by center and by account, annual reports and projections). The matrix shows <b>budget</b>, <b>actual</b> or <b>variance</b> (budget − actual) per month with the first column fixed while scrolling. A positive variance means money left; a negative one means the budget was exceeded, shown with ▲/▼ and the sign, not only color. <b>Actual</b> only counts closed months (up to October) plus November to date. Every amount opens the documents that add up to it. All data is generated."
+    },
+    es: {
+      fYear: "Año", fCenters: "Centros de gestión", fView: "Filas", fMeasure: "Mostrar", byCenter: "Por centro", byAccount: "Por cuenta", mBudget: "Presupuesto", mActual: "Real", mVar: "Variación",
+      allCenters: "Todos los centros", cellHint: "Elija un monto para ver los documentos que lo forman",
+      mTitleC: "{m} por centro y mes", mTitleA: "{m} por cuenta y mes", colRow: "Centro", colRowA: "Cuenta", colTotal: "Total año",
+      kBudget: "Presupuesto del año", kActual: "Real a la fecha", kVar: "Variación a la fecha", kExec: "Ejecución a la fecha", kOver: "Cuentas sobregiradas",
+      chartTitle: "Presupuesto vs real por mes y variación acumulada", cBudget: "Presupuesto", cActual: "Real", cCum: "Variación acumulada",
+      docsTitle: "{r} · {m}", docsSub: "Real {a} contra un presupuesto de {b}.", colDoc: "Documento", colDate: "Fecha", colSupplier: "Proveedor", colDesc: "Descripción", colAmount: "Monto",
+      d1: "Factura de compra", d2: "Solicitud de pago", d3: "Caja chica", d4: "Partida manual",
+      aboutText: "Replica los reportes de presupuesto del módulo de control de gestión (balance de presupuesto por centro y por cuenta, reportes anuales y proyecciones). La matriz muestra <b>presupuesto</b>, <b>real</b> o <b>variación</b> (presupuesto − real) por mes, con la primera columna fija al desplazarse. Una variación positiva es lo que sobró; una negativa es lo que se pasó del presupuesto, con ▲/▼ y signo, no solo color. El <b>real</b> solo cuenta los meses cerrados (hasta octubre) más lo que va de noviembre. Cada monto abre los documentos que lo suman. Todos los datos son generados."
     }
+  });
 
-    function fmtCell(c) {
-      if (measure === "budget") return UI.fmtMoney(c.b);
-      if (c.a == null) return "—";
-      if (measure === "actual") return UI.fmtMoney(c.a);
-      const v = c.b - c.a;
-      return '<span class="' + (v < 0 ? "neg" : "pos") + '">' + (v < 0 ? "▼ " : "▲ +") + UI.fmtMoney(v).replace("-", "−") + "</span>";
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const ACC = [["6-01-01-001", { en: "Salaries", es: "Sueldos y salarios" }], ["6-02-03-001", { en: "Fuel", es: "Combustible" }], ["6-02-03-005", { en: "Vehicle maintenance", es: "Mantenimiento de vehículos" }],
+      ["6-03-01-002", { en: "Rent", es: "Alquileres" }], ["6-03-02-001", { en: "Electricity", es: "Energía eléctrica" }], ["6-03-02-003", { en: "Telephone and internet", es: "Teléfono e internet" }],
+      ["6-04-01-001", { en: "Office supplies", es: "Papelería y útiles" }], ["6-05-01-002", { en: "IT services", es: "Servicios de TI" }]];
+    const LAST = 10; // November is the current month (index 10)
+    function data(year) {
+      return D.costCenters.map((c, ci) => ACC.map((a, ai) => {
+        const r = UI.rng(year * 7 + ci * 31 + ai * 3);
+        const base = UI.between(r, 4000, 22000) * (ai === 0 ? 3 : 1);
+        const bud = Array.from({ length: 12 }, (_, m) => Math.round(base * (1 + (m === 11 ? .25 : 0)) * UI.between(r, .92, 1.08)));
+        const act = bud.map((b, m) => year < 2026 || m < LAST ? Math.round(b * UI.between(r, .72, 1.2)) : m === LAST ? Math.round(b * UI.between(r, .4, .65)) : null);
+        return { ci, ai, bud, act };
+      })).flat();
     }
-    function sumCells(list) {
-      let b = 0, a = 0, hasA = false;
-      list.forEach(c => { b += c.b; if (c.a != null) { a += c.a; hasA = true; } });
-      return { b, a: hasA ? a : null, bClosed: list.filter(c => c.a != null).reduce((x, c) => x + c.b, 0) };
+    let view = "center", measure = "var", chart, rows = [];
+    function fill() {
+      const y = $("#fYear").val() || "2026", cs = $("#fCenters").val() || [];
+      $("#fYear").empty(); ["2025", "2026"].forEach(v => $("#fYear").append(new Option(v, v))); $("#fYear").val(y).select2({ width: "100%", minimumResultsForSearch: Infinity });
+      $("#fCenters").empty(); D.costCenters.forEach((c, i) => $("#fCenters").append(new Option(UI.L(c), String(i)))); $("#fCenters").val(cs).select2({ width: "100%", placeholder: t("allCenters"), closeOnSelect: false });
+      document.getElementById("segView").innerHTML = [["center", "byCenter"], ["account", "byAccount"]].map(x => '<button type="button" data-v="' + x[0] + '" aria-pressed="' + (view === x[0]) + '">' + t(x[1]) + "</button>").join("");
+      document.getElementById("segMeasure").innerHTML = [["bud", "mBudget"], ["act", "mActual"], ["var", "mVar"]].map(x => '<button type="button" data-m="' + x[0] + '" aria-pressed="' + (measure === x[0]) + '">' + t(x[1]) + "</button>").join("");
     }
-    function fmtTotal(s) {
-      // Variance totals compare actual only against the budget of closed months.
-      if (measure === "variance") return s.a == null ? "—" : fmtCell({ b: s.bClosed, a: s.a });
-      return fmtCell(s);
-    }
-
+    const sum = a => a.reduce((s, v) => s + (v || 0), 0);
     function render() {
-      const rows = build();
-      const label = { budget: "Budget", actual: "Actual", variance: "Variance" }[measure];
-      document.getElementById("mTitle").textContent = label + " by " + view;
-      let html = "<thead><tr><th scope=\"col\">" + (view === "account" ? "Account" : "Cost center") + "</th>" + MONTHS.map(m => '<th scope="col">' + m + "</th>").join("") + '<th scope="col" class="total">Year</th></tr></thead><tbody>';
-      rows.forEach((r, ri) => {
-        html += '<tr><th scope="row" style="font-weight:500">' + r.label + "</th>" + r.cells.map((c, m) =>
-          '<td><button type="button" class="cell-btn" data-r="' + ri + '" data-m="' + m + '" aria-label="' + r.label + ", " + MONTHS[m] + ": show documents\"" + (c.a == null && measure !== "budget" ? " disabled" : "") + ">" + fmtCell(c) + "</button></td>").join("") +
-          '<td class="total num">' + fmtTotal(sumCells(r.cells)) + "</td></tr>";
-      });
-      const colTot = MONTHS.map((_, m) => sumCells(rows.map(r => r.cells[m])));
-      html += '</tbody><tfoot><tr><td>Total</td>' + colTot.map(s => '<td class="num">' + fmtCell(s) + "</td>").join("") + '<td class="num total">' + fmtTotal(sumCells(colTot)) + "</td></tr></tfoot>";
-      const t = document.getElementById("matrix");
-      t.innerHTML = html;
-      t._rows = rows;
-
-      const all = sumCells(colTot);
-      const v = all.bClosed - (all.a || 0);
-      document.getElementById("kB").textContent = UI.fmtMoney(all.bClosed);
-      document.getElementById("kA").textContent = UI.fmtMoney(all.a || 0);
-      document.getElementById("kV").innerHTML = '<span class="' + (v < 0 ? "neg" : "pos") + '">' + (v < 0 ? "▼ " : "▲ ") + UI.fmtMoney(v) + "</span>";
-      document.getElementById("kVd").innerHTML = '<span class="muted">' + (v < 0 ? "Over" : "Under") + " budget by " + UI.fmtPct(Math.abs(v) / all.bClosed) + "</span>";
-      document.getElementById("kY").textContent = UI.fmtMoney(all.b);
-      const closed = colTot.filter(s => s.a != null).length;
-      document.getElementById("kYd").textContent = closed + " of 12 months closed";
-      renderChart(colTot);
-    }
-
-    function renderChart(colTot) {
-      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
-      let cum = 0;
-      const cumVar = colTot.map(s => { if (s.a == null) return null; cum += s.b - s.a; return cum; });
+      const year = Number($("#fYear").val()), cs = ($("#fCenters").val() || []).map(Number);
+      const all = data(year).filter(x => !cs.length || cs.includes(x.ci));
+      const keyOf = x => view === "center" ? x.ci : x.ai;
+      const groups = {};
+      all.forEach(x => { const k = keyOf(x); if (!groups[k]) groups[k] = { k, items: [], bud: Array(12).fill(0), act: Array(12).fill(null) }; const g = groups[k]; g.items.push(x); x.bud.forEach((v, m) => g.bud[m] += v); x.act.forEach((v, m) => { if (v != null) g.act[m] = (g.act[m] || 0) + v; }); });
+      rows = Object.values(groups);
+      const lim = year < 2026 ? 11 : LAST;
+      const val = (g, m) => measure === "bud" ? g.bud[m] : measure === "act" ? g.act[m] : (g.act[m] == null ? null : g.bud[m] - g.act[m]);
+      const fmtCell = v => v == null ? '<span class="muted">—</span>' : measure !== "var" ? M(v) : '<span class="' + (v >= 0 ? "var-up" : "var-down") + '">' + (v >= 0 ? "▲ " : "▼ ") + M(v) + "</span>";
+      document.getElementById("mTitle").textContent = t(view === "center" ? "mTitleC" : "mTitleA", { m: t({ bud: "mBudget", act: "mActual", var: "mVar" }[measure]) });
+      document.querySelector("#matrix thead").innerHTML = "<tr><th>" + t(view === "center" ? "colRow" : "colRowA") + "</th>" + Array.from({ length: 12 }, (_, m) => '<th class="r">' + UI.monthName(m, true) + "</th>").join("") + '<th class="r">' + t("colTotal") + "</th></tr>";
+      const name = g => view === "center" ? UI.L(D.costCenters[g.k]) : ACC[g.k][0] + " · " + UI.L(ACC[g.k][1]);
+      document.querySelector("#matrix tbody").innerHTML = rows.map((g, ri) => "<tr><td><b>" + name(g) + "</b></td>" + Array.from({ length: 12 }, (_, m) => { const v = val(g, m); return '<td class="r cell" tabindex="0" data-r="' + ri + '" data-m="' + m + '">' + fmtCell(v) + "</td>"; }).join("") +
+        '<td class="r"><b>' + fmtCell(measure === "bud" ? sum(g.bud) : measure === "act" ? sum(g.act) : sum(g.bud.slice(0, lim + 1)) - sum(g.act)) + "</b></td></tr>").join("");
+      const colTot = m => { const vs = rows.map(g => val(g, m)); return vs.every(v => v == null) ? null : sum(vs); };
+      const grand = measure === "bud" ? sum(rows.map(g => sum(g.bud))) : measure === "act" ? sum(rows.map(g => sum(g.act))) : sum(rows.map(g => sum(g.bud.slice(0, lim + 1)) - sum(g.act)));
+      document.querySelector("#matrix tfoot").innerHTML = "<tr><td>" + t("total") + "</td>" + Array.from({ length: 12 }, (_, m) => '<td class="r">' + fmtCell(colTot(m)) + "</td>").join("") + '<td class="r">' + fmtCell(grand) + "</td></tr>";
+      // KPIs
+      const B = sum(rows.map(g => sum(g.bud))), Bto = sum(rows.map(g => sum(g.bud.slice(0, lim + 1)))), A = sum(rows.map(g => sum(g.act)));
+      const over = all.filter(x => sum(x.act) > sum(x.bud.slice(0, lim + 1))).length;
+      document.getElementById("kpis").innerHTML = [["kBudget", M(B)], ["kActual", M(A)], ["kVar", '<span class="' + (Bto - A >= 0 ? "pos" : "neg") + '">' + M(Bto - A) + "</span>"], ["kExec", UI.fmtPct(A / Bto)], ["kOver", UI.fmtInt(over)]]
+        .map(k => '<div class="mc-kpi"><div class="k-label">' + t(k[0]) + '</div><div class="k-value">' + k[1] + "</div></div>").join("");
+      // Chart
+      const bud = Array.from({ length: 12 }, (_, m) => sum(rows.map(g => g.bud[m]))), act = Array.from({ length: 12 }, (_, m) => colTotRaw(m));
+      function colTotRaw(m) { const vs = rows.map(g => g.act[m]); return vs.every(v => v == null) ? null : sum(vs); }
+      let cum = 0; const cumv = bud.map((b, m) => act[m] == null ? null : (cum += b - act[m]));
+      const tx = UI.cssVar("--mc-muted"), grid = UI.cssVar("--mc-line");
       if (chart) chart.destroy();
       chart = new Chart(document.getElementById("chart"), {
-        data: {
-          labels: MONTHS,
-          datasets: [
-            { type: "bar", label: "Budget", data: colTot.map(s => s.b), backgroundColor: UI.cssVar("--chart-1"), borderRadius: 3, yAxisID: "y", order: 2 },
-            { type: "bar", label: "Actual", data: colTot.map(s => s.a), backgroundColor: UI.cssVar("--chart-3"), borderRadius: 3, yAxisID: "y", order: 2 },
-            { type: "line", label: "Cumulative variance", data: cumVar, borderColor: UI.cssVar("--chart-2"), backgroundColor: UI.cssVar("--chart-2"), tension: .25, pointRadius: 3, yAxisID: "y2", order: 1 }
-          ]
-        },
-        options: {
-          maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
-          plugins: { legend: { labels: { color: text, boxWidth: 14 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + (c.parsed.y == null ? "—" : UI.fmtMoney(c.parsed.y)) } } },
-          scales: {
-            x: { ticks: { color: text }, grid: { display: false } },
-            y: { position: "left", ticks: { color: text, callback: v => (v / 1000) + "k" }, grid: { color: grid } },
-            y2: { position: "right", ticks: { color: text, callback: v => (v / 1000) + "k" }, grid: { display: false } }
-          }
-        }
+        data: { labels: Array.from({ length: 12 }, (_, m) => UI.monthName(m, true)), datasets: [
+          { type: "bar", label: t("cBudget"), data: bud, backgroundColor: "rgba(56,189,248,.45)", borderColor: "#38bdf8", borderWidth: 1, yAxisID: "y" },
+          { type: "bar", label: t("cActual"), data: act, backgroundColor: "rgba(20,184,166,.75)", yAxisID: "y" },
+          { type: "line", label: t("cCum"), data: cumv, borderColor: "#f59e0b", backgroundColor: "#f59e0b", pointRadius: 3, tension: .25, yAxisID: "y2" }
+        ] },
+        options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+          plugins: { legend: { labels: { color: tx, boxWidth: 12 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + (c.parsed.y == null ? "—" : M(c.parsed.y)) } } },
+          scales: { x: { ticks: { color: tx }, grid: { display: false } }, y: { ticks: { color: tx, callback: v => (v / 1000) + "k" }, grid: { color: grid } }, y2: { position: "right", ticks: { color: tx, callback: v => (v / 1000) + "k" }, grid: { display: false } } } }
       });
+      document.getElementById("chart").setAttribute("aria-label", t("chartTitle"));
     }
-
-    // Documents behind a cell (generated to add up exactly to the actual).
-    document.getElementById("matrix").addEventListener("click", e => {
-      const b = e.target.closest(".cell-btn");
-      if (!b) return;
-      const row = document.getElementById("matrix")._rows[+b.dataset.r], m = +b.dataset.m, y = year();
-      const docs = [];
-      row.ci.forEach(ci => row.ai.forEach(ai => {
-        const amt = data[y][ci][ai].actual[m];
-        if (!amt) return;
-        const r = UI.rng(y * 7 + ci * 131 + ai * 17 + m);
-        const n = 1 + Math.floor(r() * 3);
-        let left = amt;
-        for (let k = 0; k < n; k++) {
-          const part = k === n - 1 ? left : Math.round(amt * UI.between(r, 0.2, 0.5));
-          left -= part;
-          const day = 1 + Math.floor(r() * 27);
-          docs.push({ no: (ai === 0 ? "PAY-" : "AP-") + (y % 100) + String(m + 1).padStart(2, "0") + "-" + (100 + Math.floor(r() * 899)), date: y + "-" + String(m + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0"),
-            center: D.costCenters[ci], desc: ACCOUNTS[ai].slice(5) + (ai === 0 ? " · payroll" : " · " + UI.pick(r, VENDORS)), amount: part });
-        }
-      }));
-      docs.sort((a, b2) => a.date < b2.date ? -1 : 1);
-      const bud = row.cells[m].b, act = row.cells[m].a;
-      document.getElementById("docTitle").textContent = row.label + " · " + MONTHS[m] + " " + y;
-      document.getElementById("docSub").textContent = "Budget " + UI.fmtMoney(bud) + " · Actual " + (act == null ? "—" : UI.fmtMoney(act)) + (act == null ? "" : " · Variance " + UI.fmtMoney(bud - act));
-      const shown = docs.slice(0, 60);
-      document.querySelector("#docTable tbody").innerHTML = docs.length ? shown.map(d => '<tr><td class="num">' + d.no + '</td><td class="num">' + d.date + "</td><td>" + d.center + "</td><td>" + d.desc + '</td><td class="r num">' + UI.fmtMoney(d.amount) + "</td></tr>").join("") :
-        '<tr><td colspan="5" class="muted">This month is still open: there are no posted documents yet.</td></tr>';
-      document.querySelector("#docTable tfoot").innerHTML = docs.length ? '<tr><td colspan="4">' + docs.length + " documents" + (docs.length > shown.length ? " (first " + shown.length + " shown)" : "") + '</td><td class="r num">' + UI.fmtMoney(docs.reduce((a, d) => a + d.amount, 0)) + "</td></tr>" : "";
-      UI.openModal("docModal");
-    });
-    document.getElementById("docClose").addEventListener("click", () => UI.closeModal("docModal"));
-
-    document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
-      view = b.dataset.view;
-      document.querySelectorAll("[data-view]").forEach(x => x.setAttribute("aria-pressed", x === b));
-      render();
-    }));
-    document.querySelectorAll("[data-meas]").forEach(b => b.addEventListener("click", () => {
-      measure = b.dataset.meas;
-      document.querySelectorAll("[data-meas]").forEach(x => x.setAttribute("aria-pressed", x === b));
-      render();
-    }));
-    document.getElementById("year").addEventListener("change", render);
-    $c.on("change", render);
+    function openDocs(ri, m) {
+      const g = rows[ri], a = g.act[m];
+      if (a == null) return;
+      const r = UI.rng(ri * 97 + m * 13 + Number($("#fYear").val()));
+      const n = 3 + Math.floor(r() * 5);
+      const parts = Array.from({ length: n }, () => r() + .2), tot = sum(parts);
+      let acc = 0;
+      const docs = parts.map((p, i) => { const v = i === n - 1 ? Math.round((a - acc) * 100) / 100 : Math.round(a * p / tot * 100) / 100; acc += v; const k = UI.pick(r, ["d1", "d2", "d3", "d4"]); return { doc: { d1: "FC-", d2: "SP-", d3: "CC-", d4: "PM-" }[k] + (10200 + Math.floor(r() * 800)), k, day: 1 + Math.floor(r() * 27), sup: UI.pick(r, D.suppliers), v }; });
+      const nm = view === "center" ? UI.L(D.costCenters[g.k]) : UI.L(ACC[g.k][1]);
+      document.getElementById("mDocsTxt").textContent = t("docsTitle", { r: nm, m: UI.monthName(m) + " " + $("#fYear").val() });
+      document.getElementById("mDocsSub").textContent = t("docsSub", { a: M(a), b: M(g.bud[m]) });
+      document.querySelector("#tDocs thead").innerHTML = "<tr><th>" + t("colDoc") + "</th><th>" + t("colDate") + "</th><th>" + t("colDesc") + "</th><th>" + t("colSupplier") + '</th><th class="r">' + t("colAmount") + "</th></tr>";
+      document.querySelector("#tDocs tbody").innerHTML = docs.sort((x, y) => x.day - y.day).map(d => "<tr><td>" + d.doc + "</td><td>" + UI.fmtDay(new Date(Date.UTC(Number($("#fYear").val()), m, d.day))) + "</td><td>" + t(d.k) + "</td><td>" + d.sup + '</td><td class="r">' + M(d.v) + "</td></tr>").join("");
+      document.querySelector("#tDocs tfoot").innerHTML = '<tr><td colspan="4">' + t("total") + '</td><td class="r">' + M(a) + "</td></tr>";
+      UI.openModal("mDocs");
+    }
+    document.getElementById("matrix").addEventListener("click", e => { const c = e.target.closest("td.cell"); if (c) openDocs(Number(c.dataset.r), Number(c.dataset.m)); });
+    document.getElementById("matrix").addEventListener("keydown", e => { const c = e.target.closest("td.cell"); if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openDocs(Number(c.dataset.r), Number(c.dataset.m)); } });
+    document.getElementById("mDocsClose").addEventListener("click", () => UI.closeModal("mDocs"));
+    document.getElementById("segView").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (b) { view = b.dataset.v; fill(); render(); } });
+    document.getElementById("segMeasure").addEventListener("click", e => { const b = e.target.closest("[data-m]"); if (b) { measure = b.dataset.m; fill(); render(); } });
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); render(); });
+    const about = () => document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    document.addEventListener("langchange", () => { fill(); render(); about(); });
     document.addEventListener("themechange", render);
-    render();
+    fill(); about(); render();
   });
   </script>
 </body>

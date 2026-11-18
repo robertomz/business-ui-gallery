@@ -6,295 +6,227 @@
   <title>Attendance · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .import { display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; }
-    .import .progress { flex: 1; min-width: 200px; }
-    .inc { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; margin: 1px 2px 1px 0; }
-    .inc svg { width: 13px; height: 13px; }
-    .i-late { background: var(--warning-bg); color: var(--warning); }
-    .i-early { background: var(--warning-bg); color: var(--warning); }
-    .i-ot { background: var(--info-bg); color: var(--info); }
-    .i-miss { background: var(--negative-bg); color: var(--negative); }
-    .i-abs { background: var(--negative-bg); color: var(--negative); }
-    .i-ok { background: var(--positive-bg); color: var(--positive); }
-    .switch { display: flex; align-items: center; gap: 8px; min-height: 38px; font-size: .9rem; }
-    .switch input { width: 18px; height: 18px; }
-    .lock { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-    .modal.sm { width: min(640px, 100%); }
-    #sheet td, #week td { white-space: nowrap; }
+    .imp-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .imp-list li { display: flex; align-items: center; gap: 6px; font-size: 12px; border: 1px solid var(--mc-line); border-radius: 6px; padding: 6px 8px; min-width: 0; overflow-wrap: anywhere; }
+    .lock-banner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    @media (max-width: 760px) { .imp-list { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body data-page="attendance" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Attendance</h1>
-        <p class="muted">Clock-ins come from the devices at each branch. Here they are checked against the schedule before the payroll cut-off.</p>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field" style="max-width:170px"><label for="fFrom" data-i18n="from"></label><input type="date" id="fFrom"></div>
+        <div class="mc-field" style="max-width:170px"><label for="fTo" data-i18n="to"></label><input type="date" id="fTo"></div>
+        <div class="mc-field"><label for="fDept" data-i18n="department"></label><select id="fDept"></select></div>
+        <div class="mc-field"><label for="fSearch" data-i18n="search"></label><input id="fSearch" data-i18n-ph="searchPh"></div>
+        <label class="mc-check"><input type="checkbox" id="fOnly"><span data-i18n="onlyInc"></span></label>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+        <button class="btn btn-cyan" type="button" id="btnImport"><span class="material-icons" aria-hidden="true">fingerprint</span><span data-i18n="import"></span></button>
+      </form>
+      <div id="impBox" hidden style="margin-top:12px">
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="impBar"><span></span></div>
+        <ul class="imp-list" id="impList" aria-live="polite"></ul>
       </div>
-    </div>
-
-    <section class="card card-body">
-      <div class="import">
-        <div>
-          <h2>Import from devices</h2>
-          <p class="muted" style="font-size:.85rem" id="impInfo">Week of Nov 9 – 15, 2026 not imported yet.</p>
-        </div>
-        <div class="progress" aria-label="Import progress"><span id="impBar"></span></div>
-        <button class="btn btn-primary" id="impBtn" type="button">Import clock-ins</button>
-      </div>
-      <p class="muted" style="font-size:.8rem;margin-top:8px;font-family:var(--font-mono)" id="impLog" aria-live="polite"></p>
     </section>
 
-    <div id="afterImport" hidden>
-      <section class="card card-body lock" id="lockBar"></section>
+    <div class="mc-kpis" id="kpis"></div>
 
-      <section class="card card-body" aria-label="Filters" style="margin-top:var(--space-5)">
-        <div class="filters">
-          <div class="field"><label for="fDay">Day</label><select class="input" id="fDay"></select></div>
-          <div class="field"><label for="fDept">Department</label><select class="input" id="fDept"><option value="">All departments</option></select></div>
-          <div class="field"><label for="fQ">Search</label><input class="input" id="fQ" type="search" placeholder="Employee"></div>
-          <label class="switch"><input type="checkbox" id="fInc"> Only incidents</label>
-        </div>
-      </section>
-
-      <section class="kpis" style="margin-top:var(--space-5)" aria-label="Totals for the filtered day" aria-live="polite">
-        <div class="card kpi"><div class="kpi-label">Employees</div><div class="kpi-value" id="kEmp"></div><div class="kpi-delta muted" id="kPresent"></div></div>
-        <div class="card kpi"><div class="kpi-label">Late arrivals</div><div class="kpi-value" id="kLate"></div><div class="kpi-delta muted" id="kLateMin"></div></div>
-        <div class="card kpi"><div class="kpi-label">Overtime</div><div class="kpi-value" id="kOt"></div><div class="kpi-delta muted">hours on the filtered day</div></div>
-        <div class="card kpi"><div class="kpi-label">Missing punches</div><div class="kpi-value" id="kMiss"></div><div class="kpi-delta muted">need a manual correction</div></div>
-      </section>
-
-      <section class="card" style="margin-top:var(--space-5)">
-        <div class="card-head"><h2 id="sheetTitle">Daily timesheet</h2></div>
-        <div class="card-body table-wrap">
-          <table class="grid" id="sheet">
-            <thead><tr><th>Employee</th><th>Department</th><th>Scheduled</th><th>In</th><th>Out</th><th class="r">Late min</th><th class="r">Early leave min</th><th class="r">Overtime h</th><th>Incidents</th><th><span class="sr-only">Action</span></th></tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
-        </div>
-      </section>
-
-      <section class="card" style="margin-top:var(--space-5)">
-        <div class="card-head"><h2>Weekly summary</h2><span class="muted" style="font-size:.82rem">Follows the department and search filters</span></div>
-        <div class="card-body table-wrap">
-          <table class="grid" id="week">
-            <thead><tr><th>Employee</th><th class="r">Days worked</th><th class="r">Absences</th><th class="r">Late arrivals</th><th class="r">Late min</th><th class="r">Overtime h</th><th class="r">Missing punches</th></tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
-        </div>
-      </section>
-    </div>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>The devices only record punches; the schedule decides what each punch means. A 10-minute grace period applies before a late arrival counts.</li>
-        <li>Overtime counts only after 30 extra minutes and in half-hour blocks, the way payroll pays it.</li>
-        <li>A day with only one punch is a missing punch: it cannot be paid until someone corrects it, so the cut-off is blocked while any remain.</li>
-        <li>Closing the cut-off locks the week and sends overtime hours and absences to the payroll run; after that, corrections go through a payroll adjustment.</li>
-      </ul>
+    <section class="mc-panel">
+      <div class="mc-panel-title">
+        <h3><span class="material-icons" aria-hidden="true">schedule</span><span data-i18n="title"></span></h3>
+        <div class="mc-tabs" role="tablist" id="tabs"></div>
+      </div>
+      <div id="lockBanner"></div>
+      <div class="table-wrap" style="max-height:560px"><table class="grid" id="tAtt"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
+        <button class="btn btn-amber" type="button" id="btnMissing"><span class="material-icons" aria-hidden="true">report</span><span data-i18n="showMissing"></span></button>
+        <button class="btn btn-violet" type="button" id="btnClose"><span class="material-icons" aria-hidden="true">lock</span><span data-i18n="closeCut"></span></button>
+        <span class="mc-hint" id="closeHint"></span>
+      </div>
     </section>
+
+    <section class="mc-panel" id="sentBox" hidden>
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">send</span><span data-i18n="sentTitle"></span></h3></div>
+      <div class="table-wrap"><table class="grid" id="tSent"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+    </section>
+
+    <div id="about"></div>
   </main>
 
-  <div class="modal-backdrop" id="fixModal" role="dialog" aria-modal="true" aria-labelledby="fixTitle">
-    <div class="modal sm">
-      <div class="modal-head"><h2 id="fixTitle">Correct missing punch</h2></div>
-      <div class="modal-body">
-        <p class="muted" id="fixInfo" style="margin-bottom:var(--space-3)"></p>
-        <div class="filters">
-          <div class="field"><label for="fxIn">In</label><input class="input num" id="fxIn" type="time"></div>
-          <div class="field"><label for="fxOut">Out</label><input class="input num" id="fxOut" type="time" aria-describedby="fxErr"></div>
+  <div class="modal-backdrop" id="mFix">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mFixT">
+      <div class="modal-head"><h3 id="mFixT"><span class="material-icons" aria-hidden="true">edit_calendar</span><span data-i18n="fixTitle"></span></h3></div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+        <p class="mc-hint" id="fixInfo"></p>
+        <div class="grid-2">
+          <div class="mc-field"><label for="fixIn" data-i18n="colInMarked"></label><input type="time" id="fixIn"></div>
+          <div class="mc-field"><label for="fixOut" data-i18n="colOutMarked"></label><input type="time" id="fixOut"><span class="mc-field-error" id="fixTimeErr"></span></div>
         </div>
-        <div class="field" style="margin-top:var(--space-3)"><label for="fxReason">Reason</label><input class="input" id="fxReason" placeholder="Forgot to clock out, device offline…" aria-describedby="fxErr"></div>
-        <div class="field-error" id="fxErr" style="margin-top:6px"></div>
+        <div class="mc-field"><label for="fixReason" data-i18n="reason"></label><textarea id="fixReason"></textarea><span class="mc-field-error" id="fixErr"></span></div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="fxSave" type="button">Save correction</button>
-        <button class="btn" id="fxClose" type="button">Close</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="fixSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button><button class="btn" type="button" id="fixClose" data-i18n="close"></button></div>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const r = UI.rng(31415);
-    const DEPTS = ["Sales", "Warehouse", "Logistics", "Finance", "IT"];
-    const DAYS = [];
-    for (let i = 0; i < 7; i++) DAYS.push(new Date(Date.UTC(2026, 10, 9 + i)));
-    const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const SCHED = { Warehouse: [6 * 60, 15 * 60], Logistics: [6 * 60, 15 * 60], Sales: [8 * 60, 17 * 60], Finance: [8 * 60, 17 * 60], IT: [8 * 60, 17 * 60] };
-    const GRACE = 10;
-    const hm = m => m == null ? "—" : String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
-    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
-    const I = {
-      late: ["i-late", SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), "Late"],
-      early: ["i-early", SVG('<path d="M15 6l-6 6 6 6"/>'), "Left early"],
-      ot: ["i-ot", SVG('<path d="M12 5v14M5 12h14"/>'), "Overtime"],
-      miss: ["i-miss", SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'), "Missing punch"],
-      abs: ["i-abs", SVG('<path d="M6 6l12 12M18 6L6 18"/>'), "Absent"],
-      ok: ["i-ok", SVG('<path d="M5 12l5 5 9-10"/>'), "On time"]
-    };
-    const inc = k => '<span class="inc ' + I[k][0] + '">' + I[k][1] + I[k][2] + "</span>";
-
-    const emps = [];
-    for (let i = 0; i < 48; i++) emps.push({ name: UI.pick(r, D.firstNames) + " " + UI.pick(r, D.lastNames), dept: DEPTS[i % DEPTS.length] });
-    emps.sort((a, b) => a.name.localeCompare(b.name));
-
-    // Punches per employee and day (Sunday off; Saturday half day for some).
-    let records = [];
-    function buildRecords() {
-      records = [];
-      emps.forEach((e, ei) => DAYS.forEach((d, di) => {
-        const dow = d.getUTCDay();
-        if (dow === 0) return;
-        const [s, en0] = SCHED[e.dept];
-        const en = dow === 6 ? s + 5 * 60 : en0;
-        const x = r();
-        let tin = null, tout = null;
-        if (x < 0.04) { /* absent */ }
-        else {
-          tin = s - Math.round(UI.between(r, 0, 20)) + (x > 0.82 ? Math.round(UI.between(r, 12, 55)) : 0);
-          tout = en + Math.round(UI.between(r, -5, 25)) + (x > 0.6 && x < 0.72 ? Math.round(UI.between(r, 40, 150)) : 0) - (x > 0.94 ? Math.round(UI.between(r, 30, 90)) : 0);
-          if (x > 0.05 && x < 0.075) tout = null;
-        }
-        records.push({ emp: e, day: d, dayIdx: di, sched: [s, en], tin, tout, fixed: null });
-      }));
+  UI.strings({
+    en: {
+      department: "Department", allDepts: "All departments", searchPh: "Employee name…", onlyInc: "Only incidents", import: "Import from devices",
+      title: "Employee attendance", tabDaily: "Daily timesheet", tabWeek: "Weekly summary", showMissing: "Show missing punches", closeCut: "Close cut-off for payroll",
+      kEmp: "Employees", kLate: "Late arrivals", kLateMin: "Late minutes", kOver: "Overtime hours", kMissing: "Missing punches", kAbs: "Absences",
+      colEmp: "Employee", colDate: "Date", colDay: "Weekday", colIn: "Scheduled in", colOut: "Scheduled out", colInMarked: "Marked in", colOutMarked: "Marked out", colReq: "Required min.", colTol: "Tolerance", colWorked: "Worked min.", colIncType: "Incident", colIncDesc: "Incident detail", colDayType: "Day type", colStatus: "Overall status", colAct: "Action",
+      dWork: "Working day", dRest: "Rest day", iLate: "Late arrival", iEarly: "Early leave", iMissing: "Missing punch", iAbsent: "Absent", iOver: "Overtime", iNone: "No incident",
+      sOk: "Complete", sInc: "With incident", sFixed: "Corrected", fix: "Correct",
+      dLate: "{m} min late", dEarly: "Left {m} min early", dOver: "{h} h overtime", dMissing: "No exit punch", dAbsent: "No punches",
+      wDays: "Days worked", wLate: "Late min.", wOver: "Overtime h", wAbs: "Absences", wMiss: "Missing",
+      devices: "Device {n}", reading: "Reading {f}…", readDone: "{f}: {n} punches", importDone: "Import finished: {n} punches from 6 devices.",
+      fixTitle: "Correct punch", fixInfo: "{e} · {d}", errReason: "The reason is required.", errTime: "The exit must be after the entry.", fixed: "Punch corrected for {e}.",
+      cantClose: "There are {n} missing punches: correct them before closing.", closedOk: "Cut-off {f} – {t} closed and sent to payroll.", lockedTxt: "Cut-off closed on {d}: the period is locked.",
+      sentTitle: "Totals sent to payroll", colOverH: "Overtime hours", colAbsD: "Absence days", colLateM: "Late minutes",
+      aboutText: "Mirrors the attendance screen: punches are <b>imported from the clock devices</b> and compared with each employee's schedule. Each day shows scheduled and marked in/out, required and worked minutes, the <b>tolerance</b> (10 minutes of grace), and the <b>incident</b>: late arrival, early leave, missing punch, absence or overtime (counted from 30 minutes, in half hours), always with icon and text. A missing punch is corrected with a mandatory reason. The <b>cut-off for payroll</b> can only be closed when nothing is missing; closing locks the period and sends overtime, absences and late minutes to payroll. All data is generated."
+    },
+    es: {
+      department: "Departamento", allDepts: "Todos los departamentos", searchPh: "Nombre del empleado…", onlyInc: "Solo incidencias", import: "Importar de relojes",
+      title: "Asistencia de empleados", tabDaily: "Hoja diaria", tabWeek: "Resumen semanal", showMissing: "Ver marcas faltantes", closeCut: "Cerrar corte para planilla",
+      kEmp: "Empleados", kLate: "Llegadas tarde", kLateMin: "Minutos de tardanza", kOver: "Horas extra", kMissing: "Marcas faltantes", kAbs: "Ausencias",
+      colEmp: "Nombre empleado", colDate: "Fecha", colDay: "Día semana", colIn: "Hora entrada", colOut: "Hora salida", colInMarked: "Hora entrada marcada", colOutMarked: "Hora salida marcada", colReq: "Minutos requeridos", colTol: "Tolerancia", colWorked: "Minutos trabajados", colIncType: "Tipo incidencia", colIncDesc: "Descripción incidencia", colDayType: "Tipo día", colStatus: "Estado general", colAct: "Acción",
+      dWork: "Laboral", dRest: "Descanso", iLate: "Llegada tarde", iEarly: "Salida anticipada", iMissing: "Marca faltante", iAbsent: "Ausente", iOver: "Horas extra", iNone: "Sin incidencia",
+      sOk: "Completo", sInc: "Con incidencia", sFixed: "Corregido", fix: "Corregir",
+      dLate: "{m} min tarde", dEarly: "Salió {m} min antes", dOver: "{h} h extra", dMissing: "Sin marca de salida", dAbsent: "Sin marcas",
+      wDays: "Días trabajados", wLate: "Min. tardanza", wOver: "Horas extra", wAbs: "Ausencias", wMiss: "Faltantes",
+      devices: "Reloj {n}", reading: "Leyendo {f}…", readDone: "{f}: {n} marcas", importDone: "Importación terminada: {n} marcas de 6 relojes.",
+      fixTitle: "Corregir marca", fixInfo: "{e} · {d}", errReason: "El motivo es obligatorio.", errTime: "La salida debe ser después de la entrada.", fixed: "Marca corregida para {e}.",
+      cantClose: "Hay {n} marcas faltantes: corríjalas antes de cerrar.", closedOk: "Corte {f} – {t} cerrado y enviado a planilla.", lockedTxt: "Corte cerrado el {d}: el período está bloqueado.",
+      sentTitle: "Totales enviados a planilla", colOverH: "Horas extra", colAbsD: "Días de ausencia", colLateM: "Minutos de tardanza",
+      aboutText: "Replica la pantalla de asistencia: las marcas se <b>importan de los relojes</b> y se comparan con el horario de cada empleado. Cada día muestra entrada y salida programadas y marcadas, minutos requeridos y trabajados, la <b>tolerancia</b> (10 minutos de gracia) y la <b>incidencia</b>: llegada tarde, salida anticipada, marca faltante, ausencia u horas extra (desde 30 minutos, en medias horas), siempre con ícono y texto. Una marca faltante se corrige con motivo obligatorio. El <b>corte para planilla</b> solo se cierra cuando no falta nada; al cerrar se bloquea el período y se envían a planilla las horas extra, ausencias y minutos de tardanza. Todos los datos son generados."
     }
-    function calc(rec) {
-      const [s, en] = rec.sched;
-      const res = { late: 0, early: 0, ot: 0, incs: [] };
-      if (rec.tin == null && rec.tout == null) { res.incs.push("abs"); res.absent = true; return res; }
-      if (rec.tin == null || rec.tout == null) { res.incs.push("miss"); res.miss = true; }
-      if (rec.tin != null && rec.tin > s + GRACE) { res.late = rec.tin - s; res.incs.push("late"); }
-      if (rec.tout != null && rec.tout < en) { res.early = en - rec.tout; res.incs.push("early"); }
-      if (rec.tout != null && rec.tout - en >= 30) { res.ot = Math.floor((rec.tout - en) / 30) * 0.5; res.incs.push("ot"); }
-      if (!res.incs.length) res.incs.push("ok");
-      return res;
-    }
+  });
 
-    // ---------- Import ----------
-    let imported = false, locked = false;
-    document.getElementById("impBtn").addEventListener("click", () => {
-      const btn = document.getElementById("impBtn");
-      btn.disabled = true;
-      buildRecords();
-      const files = ["North Plaza", "Harbor", "Central Market", "Riverside", "Hillcrest", "West Gate"];
-      const total = records.reduce((a, x) => a + (x.tin != null) + (x.tout != null), 0);
-      let i = 0;
-      const step = () => {
-        i++;
-        document.getElementById("impBar").style.width = (i / files.length * 100) + "%";
-        document.getElementById("impLog").textContent = "Reading device at " + files[i - 1] + "… " + Math.round(total * i / files.length) + " of " + total + " punches";
-        if (i < files.length) setTimeout(step, 260);
-        else {
-          imported = true;
-          document.getElementById("impInfo").textContent = "Week of Nov 9 – 15, 2026 imported: " + total + " punches from " + files.length + " devices.";
-          document.getElementById("impLog").textContent = "Done. Duplicated punches within 2 minutes were merged.";
-          btn.textContent = "Imported";
-          document.getElementById("afterImport").hidden = false;
-          render();
+  $(function () {
+    const D = UI.DATA, t = UI.t, mi = UI.mi;
+    const DEPTS = [{ en: "Sales", es: "Ventas" }, { en: "Operations", es: "Operaciones" }, { en: "Finance", es: "Finanzas" }, { en: "IT", es: "TI" }];
+    const EMP = Array.from({ length: 28 }, (_, i) => { let l2 = D.lastNames[(i * 3 + 4) % 15]; if (l2 === D.lastNames[(i * 7) % 15]) l2 = D.lastNames[(i * 3 + 6) % 15]; return { name: D.firstNames[i % 20] + " " + D.lastNames[(i * 7) % 15] + " " + l2, dept: i % 4, start: i % 5 === 0 ? 420 : 480, end: i % 5 === 0 ? 1020 : 1080 }; });
+    const FROM = new Date(Date.UTC(2026, 10, 9)), TO = new Date(Date.UTC(2026, 10, 15));
+    let recs = [], imported = false, locked = null, tab = "daily", onlyMissing = false;
+    const hhmm = m => m == null ? "—" : String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+    const toMin = s => { const p = s.split(":"); return Number(p[0]) * 60 + Number(p[1]); };
+    function build() {
+      recs = [];
+      EMP.forEach((e, ei) => {
+        for (let d = new Date(FROM); d <= TO; d = new Date(d.getTime() + 86400000)) {
+          const r = UI.rng(ei * 1000 + d.getUTCDate());
+          const rest = d.getUTCDay() === 0;
+          const rec = { ei, d, rest, req: rest ? 0 : (d.getUTCDay() === 6 ? 240 : e.end - e.start), sIn: rest ? null : e.start, sOut: rest ? null : (d.getUTCDay() === 6 ? e.start + 240 : e.end) };
+          if (rest) { rec.mIn = rec.mOut = null; recs.push(rec); continue; }
+          const x = r();
+          rec.mIn = x < .04 ? null : rec.sIn + Math.round(UI.between(r, -12, x < .2 ? 38 : 8));
+          rec.mOut = rec.mIn == null ? null : (r() < .05 ? null : rec.sOut + Math.round(x > .85 ? UI.between(r, 35, 150) : UI.between(r, -25, 15)));
+          recs.push(rec);
         }
-      };
-      setTimeout(step, 200);
-    });
-
-    const fDay = document.getElementById("fDay"), fDept = document.getElementById("fDept");
-    DAYS.forEach((d, i) => { if (d.getUTCDay() !== 0) fDay.insertAdjacentHTML("beforeend", "<option value='" + i + "'" + (i === 3 ? " selected" : "") + ">" + DOW[d.getUTCDay()] + " " + UI.fmtDate(d) + "</option>"); });
-    DEPTS.forEach(d => fDept.insertAdjacentHTML("beforeend", "<option>" + d + "</option>"));
-
-    function empFilter(e) { const q = document.getElementById("fQ").value.trim().toLowerCase(); return (!fDept.value || e.dept === fDept.value) && (!q || e.name.toLowerCase().includes(q)); }
-
-    function render() {
-      if (!imported) return;
-      const di = +fDay.value, only = document.getElementById("fInc").checked;
-      const day = records.filter(x => x.dayIdx === di && empFilter(x.emp)).map(x => ({ rec: x, c: calc(x) }));
-      const shown = only ? day.filter(x => !x.c.incs.includes("ok")) : day;
-      document.getElementById("sheetTitle").textContent = "Daily timesheet · " + DOW[DAYS[di].getUTCDay()] + " " + UI.fmtDate(DAYS[di]);
-      document.querySelector("#sheet tbody").innerHTML = shown.length ? shown.map(({ rec, c }) => {
-        const idx = records.indexOf(rec);
-        return "<tr><td>" + rec.emp.name + (rec.fixed ? " <span class='muted' style='font-size:.75rem'>(corrected)</span>" : "") + "</td><td>" + rec.emp.dept + "</td><td class='num'>" + hm(rec.sched[0]) + "–" + hm(rec.sched[1]) +
-          "</td><td class='num'>" + hm(rec.tin) + "</td><td class='num'>" + hm(rec.tout) + "</td><td class='r num'>" + (c.late || "—") + "</td><td class='r num'>" + (c.early || "—") + "</td><td class='r num'>" + (c.ot ? c.ot.toFixed(1) : "—") +
-          "</td><td>" + c.incs.map(inc).join("") + "</td><td>" + (c.miss && !locked ? "<button class='btn' type='button' data-i='" + idx + "' style='min-height:32px'>Correct</button>" : "") + "</td></tr>";
-      }).join("") : "<tr><td colspan='10' class='muted'>No rows for these filters.</td></tr>";
-      const s = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
-      document.querySelector("#sheet tfoot").innerHTML = "<tr><td colspan='5'>Total (" + shown.length + " shown)</td><td class='r num'>" + s(shown, x => x.c.late) + "</td><td class='r num'>" + s(shown, x => x.c.early) + "</td><td class='r num'>" + s(shown, x => x.c.ot).toFixed(1) + "</td><td colspan='2'></td></tr>";
-
-      document.getElementById("kEmp").textContent = shown.length;
-      document.getElementById("kPresent").textContent = shown.filter(x => !x.c.absent).length + " present, " + shown.filter(x => x.c.absent).length + " absent";
-      document.getElementById("kLate").textContent = shown.filter(x => x.c.late).length;
-      document.getElementById("kLateMin").textContent = s(shown, x => x.c.late) + " minutes in total";
-      document.getElementById("kOt").textContent = s(shown, x => x.c.ot).toFixed(1);
-      document.getElementById("kMiss").textContent = shown.filter(x => x.c.miss).length;
-
-      // Weekly summary (all days, department and search filters).
-      const wk = emps.filter(empFilter).map(e => {
-        const recs = records.filter(x => x.emp === e).map(calc);
-        return { e, worked: recs.filter(c => !c.absent).length, abs: recs.filter(c => c.absent).length, lateN: recs.filter(c => c.late).length, late: s(recs, c => c.late), ot: s(recs, c => c.ot), miss: recs.filter(c => c.miss).length };
       });
-      document.querySelector("#week tbody").innerHTML = wk.map(w => "<tr><td>" + w.e.name + "</td><td class='r num'>" + w.worked + "</td><td class='r num" + (w.abs ? " neg" : "") + "'>" + w.abs + "</td><td class='r num'>" + w.lateN + "</td><td class='r num'>" + w.late + "</td><td class='r num'>" + w.ot.toFixed(1) + "</td><td class='r num" + (w.miss ? " neg" : "") + "'>" + w.miss + "</td></tr>").join("");
-      document.querySelector("#week tfoot").innerHTML = "<tr><td>Total</td><td class='r num'>" + s(wk, w => w.worked) + "</td><td class='r num'>" + s(wk, w => w.abs) + "</td><td class='r num'>" + s(wk, w => w.lateN) + "</td><td class='r num'>" + s(wk, w => w.late) + "</td><td class='r num'>" + s(wk, w => w.ot).toFixed(1) + "</td><td class='r num'>" + s(wk, w => w.miss) + "</td></tr>";
-      renderLock();
     }
-
-    function renderLock() {
-      const all = records.map(calc);
-      const miss = all.filter(c => c.miss).length;
-      const bar = document.getElementById("lockBar");
-      if (locked) {
-        const ot = all.reduce((a, c) => a + c.ot, 0), abs = all.filter(c => c.absent).length, late = all.reduce((a, c) => a + c.late, 0);
-        bar.innerHTML = "<span class='chip chip-warn'>" + SVG('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>').replace('aria-hidden="true"', 'aria-hidden="true" style="width:14px;height:14px"') + "Cut-off closed</span>" +
-          "<span>Sent to the payroll run of Nov 16 – 30: <strong class='num'>" + ot.toFixed(1) + "</strong> overtime hours, <strong class='num'>" + abs + "</strong> absences and <strong class='num'>" + late + "</strong> late minutes for " + emps.length + " employees.</span>";
+    function incident(rc) {
+      if (rc.rest) return { k: "iNone", cls: "", icon: "weekend", desc: "" };
+      if (rc.mIn == null) return { k: "iAbsent", cls: "chip-neg", icon: "person_off", desc: t("dAbsent") };
+      if (rc.mOut == null) return { k: "iMissing", cls: "chip-neg", icon: "report", desc: t("dMissing") };
+      const late = rc.mIn - rc.sIn, early = rc.sOut - rc.mOut, over = rc.mOut - rc.sOut;
+      if (late > 10) return { k: "iLate", cls: "chip-warn", icon: "running_with_errors", desc: t("dLate", { m: late }), late };
+      if (early > 10) return { k: "iEarly", cls: "chip-warn", icon: "logout", desc: t("dEarly", { m: early }) };
+      if (over >= 30) return { k: "iOver", cls: "chip-info", icon: "more_time", desc: t("dOver", { h: Math.floor(over / 30) / 2 }), over: Math.floor(over / 30) / 2 };
+      return { k: "iNone", cls: "chip-pos", icon: "check_circle", desc: "" };
+    }
+    function fillFilters() { const v = $("#fDept").val() || "all"; $("#fDept").empty().append(new Option(t("allDepts"), "all")); DEPTS.forEach((d, i) => $("#fDept").append(new Option(UI.L(d), String(i)))); $("#fDept").val(v).select2({ width: "100%", minimumResultsForSearch: Infinity }); }
+    function list() {
+      const dp = $("#fDept").val(), q = document.getElementById("fSearch").value.trim().toLowerCase(), only = document.getElementById("fOnly").checked;
+      const f = new Date(document.getElementById("fFrom").value + "T00:00:00Z"), to = new Date(document.getElementById("fTo").value + "T00:00:00Z");
+      return recs.filter(rc => rc.d >= f && rc.d <= to && (dp === "all" || EMP[rc.ei].dept === Number(dp)) && (!q || EMP[rc.ei].name.toLowerCase().includes(q)) && (!only || !["iNone"].includes(incident(rc).k)) && (!onlyMissing || incident(rc).k === "iMissing"));
+    }
+    function render() {
+      const L = list(), incs = L.map(incident);
+      const missing = recs.map(incident).filter(i => i.k === "iMissing").length;
+      document.getElementById("kpis").innerHTML = [["kEmp", new Set(L.map(r => r.ei)).size], ["kLate", incs.filter(i => i.k === "iLate").length], ["kLateMin", UI.fmtInt(incs.reduce((a, i) => a + (i.late || 0), 0))], ["kOver", incs.reduce((a, i) => a + (i.over || 0), 0).toFixed(1)], ["kMissing", '<span class="' + (missing ? "neg" : "pos") + '">' + missing + "</span>"], ["kAbs", incs.filter(i => i.k === "iAbsent").length]]
+        .map(k => '<div class="mc-kpi"><div class="k-label">' + t(k[0]) + '</div><div class="k-value">' + k[1] + "</div></div>").join("");
+      document.getElementById("tabs").innerHTML = [["daily", "tabDaily"], ["week", "tabWeek"]].map(x => '<button type="button" role="tab" class="mc-tab" aria-selected="' + (tab === x[0]) + '" data-tab="' + x[0] + '">' + t(x[1]) + "</button>").join("");
+      document.getElementById("lockBanner").innerHTML = locked ? '<p class="ig-nota lock-banner">' + mi("lock") + t("lockedTxt", { d: UI.fmtDay(locked) }) + "</p>" : "";
+      const thead = document.querySelector("#tAtt thead"), tbody = document.querySelector("#tAtt tbody"), tfoot = document.querySelector("#tAtt tfoot");
+      if (!imported) { thead.innerHTML = ""; tbody.innerHTML = '<tr><td class="muted">' + t("loadHint") + "</td></tr>"; tfoot.innerHTML = ""; }
+      else if (tab === "daily") {
+        thead.innerHTML = "<tr>" + ["colEmp", "colDate", "colDay", "colIn", "colOut", "colInMarked", "colOutMarked", "colReq", "colTol", "colWorked", "colIncType", "colIncDesc", "colDayType", "colStatus", "colAct"].map(c => "<th" + (["colReq", "colTol", "colWorked"].includes(c) ? ' class="r"' : "") + ">" + t(c) + "</th>").join("") + "</tr>";
+        tbody.innerHTML = L.map(rc => { const i = incident(rc), worked = rc.mIn != null && rc.mOut != null ? rc.mOut - rc.mIn : 0, wd = rc.d.toLocaleString(UI.lang, { weekday: "long", timeZone: "UTC" });
+          return "<tr><td>" + EMP[rc.ei].name + "</td><td>" + UI.fmtDay(rc.d) + "</td><td>" + wd.charAt(0).toUpperCase() + wd.slice(1) + "</td><td>" + hhmm(rc.sIn) + "</td><td>" + hhmm(rc.sOut) + "</td><td>" + hhmm(rc.mIn) + "</td><td>" + hhmm(rc.mOut) + '</td><td class="r">' + rc.req + '</td><td class="r">' + (rc.rest ? 0 : 10) + '</td><td class="r">' + worked + "</td><td>" +
+            (i.k === "iNone" && rc.rest ? "—" : '<span class="chip ' + i.cls + '">' + mi(i.icon) + t(i.k) + "</span>") + "</td><td>" + (i.desc || "—") + (rc.fixReason ? '<small class="muted" style="display:block">' + rc.fixReason + "</small>" : "") + "</td><td>" + t(rc.rest ? "dRest" : "dWork") + "</td><td>" +
+            (rc.fixReason ? '<span class="chip chip-info">' + mi("edit") + t("sFixed") + "</span>" : i.k === "iNone" || i.k === "iOver" ? '<span class="chip chip-pos">' + mi("check_circle") + t("sOk") + "</span>" : '<span class="chip chip-warn">' + mi("warning") + t("sInc") + "</span>") + "</td><td>" +
+            (i.k === "iMissing" && !locked ? '<button class="btn btn-sm btn-amber" type="button" data-fix="' + recs.indexOf(rc) + '">' + mi("edit") + t("fix") + "</button>" : "") + "</td></tr>"; }).join("") || '<tr><td colspan="15" class="muted">' + t("noData") + "</td></tr>";
+        tfoot.innerHTML = '<tr><td colspan="7">' + t("total") + " · " + L.length + '</td><td class="r">' + UI.fmtInt(L.reduce((a, r) => a + r.req, 0)) + '</td><td></td><td class="r">' + UI.fmtInt(L.reduce((a, r) => a + (r.mIn != null && r.mOut != null ? r.mOut - r.mIn : 0), 0)) + '</td><td colspan="5"></td></tr>';
       } else {
-        bar.innerHTML = "<div><h2>Payroll cut-off · Nov 9 – 15</h2><p class='muted' style='font-size:.85rem'>" + (miss ? miss + " missing punch(es) must be corrected before closing." : "All punches are complete. The week can be closed.") + "</p></div>" +
-          "<button class='btn btn-primary' id='lockBtn' type='button' style='margin-left:auto'" + (miss ? " disabled" : "") + ">Close cut-off for payroll</button>" +
-          (miss ? "<button class='btn' id='nextMiss' type='button'>Show missing punches</button>" : "");
-        const lb = document.getElementById("lockBtn");
-        lb.addEventListener("click", () => { locked = true; render(); UI.toast("Cut-off closed and sent to payroll"); });
-        const nm = document.getElementById("nextMiss");
-        if (nm) nm.addEventListener("click", () => {
-          const first = records.find(x => calc(x).miss);
-          fDay.value = first.dayIdx; fDept.value = ""; document.getElementById("fQ").value = ""; document.getElementById("fInc").checked = true;
-          render();
-          document.getElementById("sheet").scrollIntoView({ behavior: "smooth", block: "start" });
-        });
+        const by = {}; L.forEach(rc => { const i = incident(rc), b = by[rc.ei] = by[rc.ei] || { days: 0, late: 0, over: 0, abs: 0, miss: 0 }; if (!rc.rest && rc.mIn != null) b.days++; b.late += i.late || 0; b.over += i.over || 0; if (i.k === "iAbsent") b.abs++; if (i.k === "iMissing") b.miss++; });
+        thead.innerHTML = "<tr><th>" + t("colEmp") + "</th><th>" + t("department") + '</th><th class="r">' + t("wDays") + '</th><th class="r">' + t("wLate") + '</th><th class="r">' + t("wOver") + '</th><th class="r">' + t("wAbs") + '</th><th class="r">' + t("wMiss") + "</th></tr>";
+        const keys = Object.keys(by);
+        tbody.innerHTML = keys.map(k => { const b = by[k]; return "<tr><td>" + EMP[k].name + "</td><td>" + UI.L(DEPTS[EMP[k].dept]) + '</td><td class="r">' + b.days + '</td><td class="r">' + b.late + '</td><td class="r">' + b.over.toFixed(1) + '</td><td class="r">' + b.abs + '</td><td class="r ' + (b.miss ? "neg" : "") + '">' + b.miss + "</td></tr>"; }).join("");
+        const S = f => keys.reduce((a, k) => a + by[k][f], 0);
+        tfoot.innerHTML = '<tr><td colspan="2">' + t("total") + '</td><td class="r">' + S("days") + '</td><td class="r">' + S("late") + '</td><td class="r">' + S("over").toFixed(1) + '</td><td class="r">' + S("abs") + '</td><td class="r">' + S("miss") + "</td></tr>";
       }
+      document.getElementById("btnClose").disabled = !imported || !!locked;
+      document.getElementById("btnMissing").disabled = !imported || !!locked;
+      document.getElementById("closeHint").textContent = imported && !locked && missing ? t("cantClose", { n: missing }) : "";
     }
-
-    // ---------- Correct missing punch ----------
+    // Import from devices (simulated)
+    document.getElementById("btnImport").addEventListener("click", () => {
+      const box = document.getElementById("impBox"), ul = document.getElementById("impList"), bar = document.querySelector("#impBar span");
+      box.hidden = false; ul.innerHTML = ""; document.getElementById("btnImport").disabled = true;
+      let k = 0, total = 0;
+      const step = () => {
+        if (k > 0) { const n = 140 + (k * 37) % 90; total += n; ul.lastChild.innerHTML = mi("check_circle", "pos") + t("readDone", { f: t("devices", { n: k }), n }); }
+        bar.style.width = (k / 6 * 100) + "%"; document.getElementById("impBar").setAttribute("aria-valuenow", String(Math.round(k / 6 * 100)));
+        if (k < 6) { k++; const li = document.createElement("li"); li.innerHTML = mi("sync") + t("reading", { f: t("devices", { n: k }) }); ul.appendChild(li); setTimeout(step, 350); return; }
+        imported = true; build(); document.getElementById("btnImport").disabled = false; render(); UI.toast(t("importDone", { n: total }));
+      };
+      step();
+    });
+    // Correct missing punch
     let fixing = null;
-    document.querySelector("#sheet tbody").addEventListener("click", e => {
-      const b = e.target.closest("button[data-i]");
-      if (!b) return;
-      fixing = records[+b.dataset.i];
-      document.getElementById("fixInfo").textContent = fixing.emp.name + " · " + UI.fmtDate(fixing.day) + " · scheduled " + hm(fixing.sched[0]) + "–" + hm(fixing.sched[1]);
-      document.getElementById("fxIn").value = fixing.tin != null ? hm(fixing.tin) : "";
-      document.getElementById("fxOut").value = fixing.tout != null ? hm(fixing.tout) : "";
-      document.getElementById("fxReason").value = "";
-      document.getElementById("fxErr").textContent = "";
-      UI.openModal("fixModal");
+    document.getElementById("tAtt").addEventListener("click", e => { const b = e.target.closest("[data-fix]"); if (!b) return; fixing = recs[Number(b.dataset.fix)];
+      document.getElementById("fixInfo").textContent = t("fixInfo", { e: EMP[fixing.ei].name, d: UI.fmtDay(fixing.d) });
+      document.getElementById("fixIn").value = hhmm(fixing.mIn); document.getElementById("fixOut").value = hhmm(fixing.sOut); document.getElementById("fixReason").value = "";
+      ["fixErr", "fixTimeErr"].forEach(id => document.getElementById(id).textContent = ""); UI.openModal("mFix"); });
+    document.getElementById("fixSave").addEventListener("click", () => {
+      const reason = document.getElementById("fixReason").value.trim(), a = toMin(document.getElementById("fixIn").value || "00:00"), b = toMin(document.getElementById("fixOut").value || "00:00");
+      let ok = true;
+      if (b <= a) { document.getElementById("fixTimeErr").textContent = t("errTime"); ok = false; } else document.getElementById("fixTimeErr").textContent = "";
+      if (!reason) { document.getElementById("fixErr").textContent = t("errReason"); document.getElementById("fixReason").setAttribute("aria-invalid", "true"); ok = false; } else { document.getElementById("fixErr").textContent = ""; document.getElementById("fixReason").removeAttribute("aria-invalid"); }
+      if (!ok) return;
+      fixing.mIn = a; fixing.mOut = b; fixing.fixReason = reason; UI.closeModal("mFix"); render(); UI.toast(t("fixed", { e: EMP[fixing.ei].name }));
     });
-    const toMin = v => { if (!v) return null; const [h, m] = v.split(":").map(Number); return h * 60 + m; };
-    document.getElementById("fxSave").addEventListener("click", () => {
-      const tin = toMin(document.getElementById("fxIn").value), tout = toMin(document.getElementById("fxOut").value), reason = document.getElementById("fxReason").value.trim();
-      const err = document.getElementById("fxErr");
-      if (tin == null || tout == null) { err.textContent = "Both In and Out are needed."; return; }
-      if (tout <= tin) { err.textContent = "Out must be later than In."; return; }
-      if (reason.length < 5) { err.textContent = "Write the reason for the correction."; document.getElementById("fxReason").focus(); return; }
-      fixing.tin = tin; fixing.tout = tout; fixing.fixed = reason;
-      UI.closeModal("fixModal");
-      render();
-      UI.toast("Punch corrected for " + fixing.emp.name);
+    document.getElementById("fixClose").addEventListener("click", () => UI.closeModal("mFix"));
+    document.getElementById("btnMissing").addEventListener("click", () => { onlyMissing = !onlyMissing; tab = "daily"; render(); });
+    document.getElementById("btnClose").addEventListener("click", () => {
+      const missing = recs.map(incident).filter(i => i.k === "iMissing").length;
+      if (missing) { UI.toast(t("cantClose", { n: missing })); onlyMissing = true; tab = "daily"; render(); return; }
+      locked = new Date(Date.UTC(2026, 10, 16)); onlyMissing = false;
+      const by = {}; recs.forEach(rc => { const i = incident(rc), b = by[rc.ei] = by[rc.ei] || { over: 0, abs: 0, late: 0 }; b.over += i.over || 0; b.late += i.late || 0; if (i.k === "iAbsent") b.abs++; });
+      document.querySelector("#tSent thead").innerHTML = "<tr><th>" + t("colEmp") + '</th><th class="r">' + t("colOverH") + '</th><th class="r">' + t("colAbsD") + '</th><th class="r">' + t("colLateM") + "</th></tr>";
+      const ks = Object.keys(by);
+      document.querySelector("#tSent tbody").innerHTML = ks.map(k => "<tr><td>" + EMP[k].name + '</td><td class="r">' + by[k].over.toFixed(1) + '</td><td class="r">' + by[k].abs + '</td><td class="r">' + by[k].late + "</td></tr>").join("");
+      document.querySelector("#tSent tfoot").innerHTML = "<tr><td>" + t("total") + '</td><td class="r">' + ks.reduce((a, k) => a + by[k].over, 0).toFixed(1) + '</td><td class="r">' + ks.reduce((a, k) => a + by[k].abs, 0) + '</td><td class="r">' + ks.reduce((a, k) => a + by[k].late, 0) + "</td></tr>";
+      document.getElementById("sentBox").hidden = false; render(); UI.toast(t("closedOk", { f: UI.fmtDay(FROM), t: UI.fmtDay(TO) }));
     });
-    document.getElementById("fxClose").addEventListener("click", () => UI.closeModal("fixModal"));
-
-    [fDay, fDept, document.getElementById("fInc")].forEach(x => x.addEventListener("change", render));
-    document.getElementById("fQ").addEventListener("input", render);
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; render(); } });
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); if (!imported) { imported = true; build(); } render(); });
+    ["fSearch", "fOnly", "fFrom", "fTo"].forEach(id => document.getElementById(id).addEventListener(id === "fSearch" ? "input" : "change", () => imported && render()));
+    $("#fDept").on("change", () => imported && render());
+    document.getElementById("fFrom").value = UI.fmtDate(FROM); document.getElementById("fTo").value = UI.fmtDate(TO);
+    const about = () => document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    document.addEventListener("langchange", () => { fillFilters(); render(); about(); });
+    fillFilters(); about(); imported = true; build(); render();
   });
   </script>
 </body>

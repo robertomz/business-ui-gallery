@@ -3,476 +3,373 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cost Centers · Business UI Gallery</title>
+  <title>Cost centers · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    #centers tbody tr { cursor: pointer; }
-    #centers tbody tr[aria-selected="true"] { background: var(--info-bg); }
-    .exec { display: flex; align-items: center; gap: 8px; min-width: 140px; }
-    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); overflow-x: auto; }
-    .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font: inherit; font-size: .9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; min-height: 44px; }
-    .tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
-    .count { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: .75rem; margin-left: 4px; }
-    .detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-4); }
-    .mini-kpis { display: flex; gap: var(--space-5); flex-wrap: wrap; }
-    .mini-kpis div span { display: block; }
-    .mini-kpis .v { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
-    .steps { display: flex; gap: var(--space-2); list-style: none; margin: 0 0 var(--space-4); padding: 0; flex-wrap: wrap; }
-    .steps li { display: flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--text-muted); }
-    .steps li .dot { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border); font-family: var(--font-mono); font-size: .8rem; }
-    .steps li[aria-current="step"] { color: var(--text); font-weight: 500; }
-    .steps li[aria-current="step"] .dot { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
-    .steps li.done .dot { background: var(--positive-bg); color: var(--positive); border-color: transparent; }
-    .steps li + li::before { content: ""; width: 24px; height: 1px; background: var(--border); }
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
-    .form-grid .span-2 { grid-column: 1 / -1; }
-    textarea.input { min-height: 80px; resize: vertical; }
-    .modal.sm { width: min(620px, 100%); }
-    .foot-left { margin-right: auto; }
-    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    tr.drill { cursor: pointer; }
+    tr.drill.is-sel td { background: rgba(20, 184, 166, .12); }
+    .cc-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .cc-head h3 { font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: .3px; }
+    .pbar { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+    .pbar .bar-track { flex: 1; height: 6px; }
+    .wiz-step[hidden] { display: none; }
+    .tab-panel { margin-top: 10px; }
   </style>
 </head>
 <body data-page="cost-centers" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Cost centers</h1>
-        <p class="muted">Budget, actual and projection for each cost center, January to October 2026 closed.</p>
-      </div>
-      <button class="btn btn-primary" id="newCenterBtn" type="button">New center</button>
-    </div>
-
-    <section class="card card-body">
-      <div class="filters">
-        <div class="field"><label for="q">Search</label><input class="input" id="q" placeholder="Center or responsible"></div>
-        <div class="field"><label for="fType">Type</label>
-          <select class="input" id="fType"><option value="">All types</option><option>Sales</option><option>Operations</option><option>Support</option></select></div>
-        <div class="field"><label for="fStatus">Status</label>
-          <select class="input" id="fStatus"><option value="">All</option><option value="over">Over budget</option><option value="within">Within budget</option></select></div>
-      </div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field w-sm"><label data-i18n="fCompany"></label><div class="static">DEMO</div></div>
+        <div class="mc-field" style="max-width:150px"><label for="fYear" data-i18n="fYear"></label><select id="fYear"></select></div>
+        <div class="mc-field" style="max-width:170px"><label for="fMonth" data-i18n="fMonth"></label><select id="fMonth"></select></div>
+        <div class="mc-field" style="max-width:200px"><label for="fType" data-i18n="fType"></label><select id="fType"></select></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+        <button class="btn btn-violet" type="button" id="btnNew"><span class="material-icons" aria-hidden="true">add_business</span><span data-i18n="newCenter"></span></button>
+      </form>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2>Centers</h2><span class="muted" style="font-size:.82rem">Select a row to see its detail</span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="centers">
-          <thead><tr>
-            <th>Center</th><th>Type</th><th class="r">Annual budget</th><th class="r">Budget to date</th><th class="r">Actual to date</th>
-            <th>Executed</th><th class="r">Difference</th><th class="r">Projected year</th><th>Responsible</th>
-          </tr></thead>
-          <tbody></tbody>
-          <tfoot></tfoot>
-        </table>
-      </div>
+    <div class="mc-kpis" id="kpis"></div>
+
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">hub</span><span data-i18n="centers"></span></h3><span class="mc-hint" data-i18n="centersHint"></span></div>
+      <div class="table-wrap"><table class="grid" id="tCenters"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
     </section>
 
-    <section class="card" id="detail" aria-live="polite">
-      <div class="detail-head">
-        <div>
-          <h2 id="dTitle"></h2>
-          <p class="muted" id="dSub" style="font-size:.85rem"></p>
+    <section class="mc-panel" id="detail" hidden>
+      <div class="cc-head">
+        <div><h3 id="dTitle"></h3><p class="mc-hint" id="dSub"></p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-amber" type="button" id="btnAdj"><span class="material-icons" aria-hidden="true">tune</span><span data-i18n="adjust"></span></button>
         </div>
-        <div class="mini-kpis" id="dKpis"></div>
-        <button class="btn" id="adjBtn" type="button">Request budget adjustment</button>
       </div>
-      <div class="tabs" role="tablist" aria-label="Center detail">
-        <button class="tab" role="tab" id="tab-monthly" aria-controls="panel-monthly" aria-selected="true">Monthly</button>
-        <button class="tab" role="tab" id="tab-accounts" aria-controls="panel-accounts" aria-selected="false" tabindex="-1">By account</button>
-        <button class="tab" role="tab" id="tab-approvals" aria-controls="panel-approvals" aria-selected="false" tabindex="-1">Approvals <span class="count" id="pendCount">0</span></button>
-      </div>
-      <div class="card-body table-wrap" role="tabpanel" id="panel-monthly" aria-labelledby="tab-monthly"></div>
-      <div class="card-body table-wrap" role="tabpanel" id="panel-accounts" aria-labelledby="tab-accounts" hidden></div>
-      <div class="card-body table-wrap" role="tabpanel" id="panel-approvals" aria-labelledby="tab-approvals" hidden></div>
+      <div class="mc-tabs" role="tablist" id="tabs"></div>
+      <div class="tab-panel" id="tabPanel"></div>
     </section>
 
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Budgets are kept per center, account and month. The projection is the actual to date plus the budget still to come.</li>
-        <li>Nobody edits a budget directly: a change is requested with a reason and becomes effective only after it is approved. Rejecting also needs a reason, so there is always a record.</li>
-        <li>Expenses are split into direct (charged to the center), indirect and shared (allocated from support centers).</li>
-        <li>A new center can copy the expense accounts of a similar one and scale its budget, which saves typing a hundred lines by hand.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
   <!-- Adjustment request -->
-  <div class="modal-backdrop" id="adjModal" role="dialog" aria-modal="true" aria-labelledby="adjTitle">
-    <div class="modal sm">
-      <div class="modal-head"><h2 id="adjTitle">Request budget adjustment</h2></div>
-      <div class="modal-body">
-        <div class="form-grid">
-          <div class="field span-2"><label for="aAcct">Account</label><select class="input" id="aAcct"></select></div>
-          <div class="field"><label for="aMonth">Month</label><select class="input" id="aMonth"></select></div>
-          <div class="field"><label for="aFrom">Current budget</label><input class="input num" id="aFrom" readonly></div>
-          <div class="field"><label for="aTo">New budget</label><input class="input num" id="aTo" inputmode="decimal" aria-describedby="aToErr"><div class="field-error" id="aToErr"></div></div>
-          <div class="field"><label>Change</label><div class="num" id="aDelta" style="padding-top:8px">—</div></div>
-          <div class="field span-2"><label for="aReason">Reason</label><textarea class="input" id="aReason" aria-describedby="aReasonErr"></textarea><div class="field-error" id="aReasonErr"></div></div>
+  <div class="modal-backdrop" id="mAdj">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mAdjT">
+      <div class="modal-head"><h3 id="mAdjT"><span class="material-icons" aria-hidden="true">tune</span><span data-i18n="adjTitle"></span></h3></div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+        <div class="mc-field"><label for="aAcc" data-i18n="colAccount"></label><select id="aAcc"></select></div>
+        <div class="mc-field"><label for="aMonth" data-i18n="fMonth"></label><select id="aMonth"></select></div>
+        <div class="grid-2">
+          <div class="mc-field"><label data-i18n="prevBudget"></label><input class="num" id="aPrev" readonly></div>
+          <div class="mc-field"><label for="aNew" data-i18n="newBudget"></label><input class="num" id="aNew" inputmode="decimal"><span class="mc-field-error" id="aNewErr"></span></div>
         </div>
+        <div class="mc-field"><label for="aObs" data-i18n="observation"></label><textarea id="aObs"></textarea><span class="mc-field-error" id="aObsErr"></span></div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="adjSave" type="button">Send request</button>
-        <button class="btn" id="adjClose" type="button">Close</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="aSave"><span class="material-icons" aria-hidden="true">send</span><span data-i18n="request"></span></button><button class="btn" type="button" data-close="mAdj" data-i18n="close"></button></div>
     </div>
   </div>
 
-  <!-- Reject -->
-  <div class="modal-backdrop" id="rejModal" role="dialog" aria-modal="true" aria-labelledby="rejTitle">
-    <div class="modal sm">
-      <div class="modal-head"><h2 id="rejTitle">Reject request</h2></div>
-      <div class="modal-body">
-        <p class="muted" id="rejInfo" style="margin-bottom:10px;font-size:.88rem"></p>
-        <div class="field"><label for="rReason">Reason for rejecting</label><textarea class="input" id="rReason" aria-describedby="rReasonErr"></textarea><div class="field-error" id="rReasonErr"></div></div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="rejSave" type="button">Reject request</button>
-        <button class="btn" id="rejClose" type="button">Close</button>
-      </div>
+  <!-- Reject reason -->
+  <div class="modal-backdrop" id="mRej">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mRejT">
+      <div class="modal-head"><h3 id="mRejT"><span class="material-icons" aria-hidden="true">block</span><span data-i18n="rejectTitle"></span></h3></div>
+      <div class="modal-body"><div class="mc-field"><label for="rReason" data-i18n="reason"></label><textarea id="rReason"></textarea><span class="mc-field-error" id="rErr"></span></div></div>
+      <div class="modal-foot"><button class="btn btn-danger" type="button" id="rSave" data-i18n="reject"></button><button class="btn" type="button" data-close="mRej" data-i18n="close"></button></div>
     </div>
   </div>
 
   <!-- New center wizard -->
-  <div class="modal-backdrop" id="wizModal" role="dialog" aria-modal="true" aria-labelledby="wizTitle">
-    <div class="modal">
-      <div class="modal-head"><h2 id="wizTitle">New cost center</h2></div>
+  <div class="modal-backdrop" id="mNew">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mNewT">
+      <div class="modal-head"><h3 id="mNewT"><span class="material-icons" aria-hidden="true">add_business</span><span data-i18n="newCenter"></span></h3><div class="mc-steps" id="wSteps"></div></div>
       <div class="modal-body">
-        <ol class="steps" id="wizSteps">
-          <li data-s="1"><span class="dot">1</span>Basics</li>
-          <li data-s="2"><span class="dot">2</span>Copy accounts</li>
-          <li data-s="3"><span class="dot">3</span>Confirm</li>
-        </ol>
-        <div id="wStep1">
-          <div class="form-grid">
-            <div class="field"><label for="wName">Name</label><input class="input" id="wName" aria-describedby="wNameErr"><div class="field-error" id="wNameErr"></div></div>
-            <div class="field"><label for="wCode">Code</label><input class="input" id="wCode" readonly></div>
-            <div class="field"><label for="wType">Type</label><select class="input" id="wType"><option>Sales</option><option>Operations</option><option>Support</option></select></div>
-            <div class="field"><label for="wResp">Responsible</label><select class="input" id="wResp"></select></div>
+        <div class="wiz-step" data-step="1">
+          <div class="grid-2">
+            <div class="mc-field"><label for="wName" data-i18n="name"></label><input id="wName"><span class="mc-field-error" id="wNameErr"></span></div>
+            <div class="mc-field"><label for="wType" data-i18n="fType"></label><select id="wType"></select></div>
+            <div class="mc-field"><label for="wBranch" data-i18n="branch"></label><select id="wBranch"></select></div>
+            <div class="mc-field"><label for="wDept" data-i18n="department"></label><select id="wDept"></select></div>
           </div>
         </div>
-        <div id="wStep2" hidden>
-          <div class="form-grid" style="margin-bottom:var(--space-3)">
-            <div class="field"><label for="wFrom">Copy expense accounts from</label><select class="input" id="wFrom"></select></div>
-            <div class="field"><label for="wScale">Scale budgets to (%)</label><input class="input num" id="wScale" value="100" inputmode="numeric"></div>
+        <div class="wiz-step" data-step="2" hidden>
+          <div class="mc-filters">
+            <div class="mc-field"><label for="wFrom" data-i18n="copyFrom"></label><select id="wFrom"></select></div>
+            <div class="mc-field" style="max-width:160px"><label for="wScale" data-i18n="scale"></label><input class="num" id="wScale" value="100" inputmode="numeric"></div>
           </div>
-          <div class="table-wrap">
-            <table class="grid" id="wPreview">
-              <thead><tr><th><span class="sr-only">Include</span></th><th>Account</th><th>Kind</th><th class="r">Source annual</th><th class="r">New, Nov–Dec</th></tr></thead>
-              <tbody></tbody><tfoot></tfoot>
-            </table>
-          </div>
+          <p class="mc-hint" style="margin:8px 0" data-i18n="copyHint"></p>
+          <div class="table-wrap" style="max-height:320px"><table class="grid" id="wPrev"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
         </div>
-        <div id="wStep3" hidden>
-          <div class="ladder" id="wSummary"></div>
-        </div>
+        <div class="wiz-step" data-step="3" hidden><div class="ladder" id="wSum"></div></div>
       </div>
       <div class="modal-foot">
-        <button class="btn foot-left" id="wBack" type="button">Back</button>
-        <button class="btn btn-primary" id="wNext" type="button">Next</button>
-        <button class="btn" id="wClose" type="button">Close</button>
+        <button class="btn btn-teal" type="button" id="wNext"></button>
+        <button class="btn" type="button" id="wBack" data-i18n="back"></button>
+        <button class="btn" type="button" data-close="mNew" data-i18n="close"></button>
       </div>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const CLOSED = 10; // Jan..Oct closed
+  UI.strings({
+    en: {
+      fCompany: "Company", fYear: "Budget year", fMonth: "Budget month", fType: "Center type", newCenter: "New center", centers: "Management centers",
+      centersHint: "Select a center to open its budget and expenses", adjust: "Balance adjustment", allTypes: "All types",
+      tSales: "Sales", tService: "Service", tAdmin: "Administrative",
+      kAuth: "Authorized budget", kProj: "Projected", kAch: "Achieved net", kPct: "% achieved", kDiff: "Difference (net)", kExp: "Expenses entered",
+      colCenter: "Center", colType: "Type", colBranch: "Branch", colAuth: "Authorized budget", colProj: "Projected", colAch: "Achieved net", colPct: "% achieved", colDiff: "Difference (net)", colExp: "Expenses entered", colResp: "Responsible",
+      dTitle: "{t} center – {n}", dSub: "Expense month: {m} · Responsible: {r}",
+      tabBudget: "Budget and expenses", tabProj: "Projected vs achieved", tabAdj: "Adjustment requests", tabMonths: "Months",
+      colAccNo: "Account no.", colAccount: "Account", colState: "Status", colAuthorized: "Authorized", colSpent: "Total spent", colAvail: "Available", colPctSpent: "% spent", colVerified: "Verified value", colKind: "Expense type",
+      kDirect: "Direct", kIndirect: "Indirect", kShared: "Shared", stOk: "Within budget", stNear: "Near the limit", stOver: "Over budget",
+      colSeller: "Seller", colSaleP: "Projected sales", colCostP: "Projected cost", colProfitP: "Projected profit", colMarginP: "Projected margin", colSaleA: "Net sales achieved", colProfitA: "Net profit achieved", colMarginA: "Net margin achieved", colSaleD: "Sales difference", colSalePct: "Sales %",
+      colReqCenter: "Requesting center", colReqBy: "Requested by", colReqVal: "Requested value", colAuthVal: "Authorized value", colActions: "Actions", colDate: "Date",
+      colMonth: "Month", colBudgetM: "Budget", colSpentM: "Spent", colAvailM: "Available",
+      adjTitle: "Balance adjustment request", prevBudget: "Previous budget", newBudget: "New budget requested", observation: "Observation", request: "Send request",
+      errAmount: "Enter an amount greater than zero.", errSame: "The new budget is equal to the previous one.", errObs: "Write why the adjustment is needed.",
+      reqSent: "Request {n} sent for approval.", approvedMsg: "Request {n} approved: the budget was updated.", rejectedMsg: "Request {n} rejected.",
+      rejectTitle: "Reject request", errReason: "The reason is required to reject.",
+      name: "Center name", department: "Department", copyFrom: "Replicate expense accounts from", scale: "Scale (%)", copyHint: "The accounts and monthly budget of the selected center are copied and scaled. Only the months still open (Nov and Dec) receive budget.",
+      next: "Next", create: "Create center", back: "Back", step1: "Data", step2: "Accounts", step3: "Confirm", errName: "Write a name.",
+      sumName: "Center", sumAccounts: "Expense accounts copied", sumBudget: "Budget for Nov–Dec", created: "Center «{n}» created with {a} accounts.",
+      d1: "Sales", d2: "Operations", d3: "Administration",
+      aboutText: "This screen mirrors the management control module: each <b>management center</b> (sales, service or administrative) has an authorized annual budget split by month and by expense account. <b>Achieved net</b> comes from the month's sales and expenses; <b>% achieved</b> = achieved ÷ projected. Expenses are classified as <b>direct, indirect or shared</b>. A center can request a <b>balance adjustment</b> for one account and month; it stays pending until it is approved (and then the budget changes) or rejected with a reason. A new center can be created by <b>replicating</b> another center's expense accounts with a scale. All data is generated."
+    },
+    es: {
+      fCompany: "Empresa", fYear: "Año presupuesto", fMonth: "Mes presupuesto", fType: "Tipo centro", newCenter: "Nuevo centro", centers: "Centros",
+      centersHint: "Elija un centro para abrir su presupuesto y gastos", adjust: "Ajuste de saldo", allTypes: "Todos los tipos",
+      tSales: "Ventas", tService: "Servicio", tAdmin: "Administrativo",
+      kAuth: "Presupuesto autorizado", kProj: "Proyectado", kAch: "Logrado neto", kPct: "% logrado", kDiff: "Diferencia (neta)", kExp: "Gastos ingresados",
+      colCenter: "Centro", colType: "Tipo", colBranch: "Sucursal", colAuth: "Presupuesto autorizado", colProj: "Proyectado", colAch: "Logrado neto", colPct: "% logrado", colDiff: "Diferencia (neta)", colExp: "Gastos ingresados", colResp: "Responsable",
+      dTitle: "Centro de {t} – {n}", dSub: "Mes gasto: {m} · Responsable: {r}",
+      tabBudget: "Presupuesto y gastos", tabProj: "Proyectado vs logrado", tabAdj: "Solicitudes de ajuste", tabMonths: "Meses",
+      colAccNo: "Número cuenta", colAccount: "Cuenta contable", colState: "Estado", colAuthorized: "Autorizado", colSpent: "Gasto total", colAvail: "Disponible", colPctSpent: "% gastado", colVerified: "Valor verificado", colKind: "Tipo de gasto",
+      kDirect: "Directo", kIndirect: "Indirecto", kShared: "Compartido", stOk: "Dentro del presupuesto", stNear: "Cerca del límite", stOver: "Sobregirado",
+      colSeller: "Vendedor", colSaleP: "Venta proy.", colCostP: "Costo proy.", colProfitP: "Utilidad proy.", colMarginP: "Margen proy.", colSaleA: "Venta neta log.", colProfitA: "Utilidad neta log.", colMarginA: "Margen neto log.", colSaleD: "Venta neta dif.", colSalePct: "Venta neta %",
+      colReqCenter: "Centro solicita", colReqBy: "Solicitado por", colReqVal: "Valor solicitado", colAuthVal: "Valor autorizado", colActions: "Acciones", colDate: "Fecha",
+      colMonth: "Mes", colBudgetM: "Presupuesto", colSpentM: "Gastado", colAvailM: "Disponible",
+      adjTitle: "Solicitud de ajuste de saldo", prevBudget: "Presupuesto anterior", newBudget: "Presupuesto nuevo solicitado", observation: "Observación", request: "Enviar solicitud",
+      errAmount: "Escriba un monto mayor que cero.", errSame: "El presupuesto nuevo es igual al anterior.", errObs: "Explique por qué se necesita el ajuste.",
+      reqSent: "Solicitud {n} enviada a aprobación.", approvedMsg: "Solicitud {n} aprobada: se actualizó el presupuesto.", rejectedMsg: "Solicitud {n} rechazada.",
+      rejectTitle: "Rechazar solicitud", errReason: "El motivo es obligatorio para rechazar.",
+      name: "Nombre del centro", department: "Departamento", copyFrom: "Replicar cuentas de gasto de", scale: "Escala (%)", copyHint: "Se copian las cuentas y el presupuesto mensual del centro elegido, escalados. Solo los meses abiertos (nov y dic) reciben presupuesto.",
+      next: "Siguiente", create: "Crear centro", back: "Atrás", step1: "Datos", step2: "Cuentas", step3: "Confirmar", errName: "Escriba un nombre.",
+      sumName: "Centro", sumAccounts: "Cuentas de gasto copiadas", sumBudget: "Presupuesto de nov–dic", created: "Centro «{n}» creado con {a} cuentas.",
+      d1: "Ventas", d2: "Operaciones", d3: "Administración",
+      aboutText: "Esta pantalla replica el módulo de control de gestión: cada <b>centro de gestión</b> (ventas, servicio o administrativo) tiene un presupuesto anual autorizado repartido por mes y por cuenta de gasto. El <b>logrado neto</b> sale de las ventas y gastos del mes; <b>% logrado</b> = logrado ÷ proyectado. Los gastos se clasifican en <b>directos, indirectos y compartidos</b>. Un centro puede pedir un <b>ajuste de saldo</b> para una cuenta y un mes; queda pendiente hasta que se aprueba (y entonces cambia el presupuesto) o se rechaza con motivo. Un centro nuevo se puede crear <b>replicando</b> las cuentas de gasto de otro con una escala. Todos los datos son generados."
+    }
+  });
+
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const TYPES = ["tSales", "tSales", "tSales", "tService", "tService", "tAdmin", "tAdmin"];
     const ACCOUNTS = [
-      ["6-01 Salaries and wages", "Direct"], ["6-02 Fuel and travel", "Direct"], ["6-03 Rent", "Direct"], ["6-04 Utilities", "Direct"],
-      ["6-05 Maintenance", "Direct"], ["6-06 Office supplies", "Indirect"], ["6-07 IT services", "Shared"], ["6-08 Administration services", "Shared"]
+      ["6-01-01-001", { en: "Salaries", es: "Sueldos y salarios" }, "kDirect"], ["6-01-01-004", { en: "Overtime", es: "Horas extra" }, "kDirect"],
+      ["6-02-03-001", { en: "Fuel", es: "Combustible" }, "kDirect"], ["6-02-03-005", { en: "Vehicle maintenance", es: "Mantenimiento de vehículos" }, "kDirect"],
+      ["6-03-01-002", { en: "Rent", es: "Alquileres" }, "kIndirect"], ["6-03-02-001", { en: "Electricity", es: "Energía eléctrica" }, "kIndirect"],
+      ["6-03-02-003", { en: "Telephone and internet", es: "Teléfono e internet" }, "kIndirect"], ["6-04-01-001", { en: "Office supplies", es: "Papelería y útiles" }, "kIndirect"],
+      ["6-05-01-002", { en: "IT services (shared)", es: "Servicios de TI (compartido)" }, "kShared"], ["6-05-01-004", { en: "Security (shared)", es: "Vigilancia (compartido)" }, "kShared"]
     ];
-    const TYPES = { "Sales North": "Sales", "Sales Center": "Sales", "Sales Coast": "Sales", "Warehouse": "Operations", "Logistics": "Operations", "Administration": "Support", "IT": "Support" };
-    const people = Array.from({ length: 12 }, (_, i) => D.firstNames[(i * 3) % D.firstNames.length] + " " + D.lastNames[(i * 5) % D.lastNames.length]);
+    let centers = D.costCenters.map((c, i) => {
+      const r = UI.rng(500 + i);
+      const accs = ACCOUNTS.map(a => ({ no: a[0], name: a[1], kind: a[2], months: Array.from({ length: 12 }, () => Math.round(UI.between(r, 3000, 26000) * (a[2] === "kDirect" ? 2 : 1))), spent: [] }));
+      accs.forEach(a => { a.spent = a.months.map((b, m) => m < 10 ? Math.round(b * UI.between(r, .6, 1.18)) : m === 10 ? Math.round(b * UI.between(r, .35, .7)) : 0); a.ver = a.spent.map(s => Math.round(s * UI.between(r, .55, 1))); });
+      const sales = TYPES[i] === "tSales";
+      const proj = sales ? Math.round(UI.between(r, 1200000, 2300000)) : 0;
+      return { id: i, name: UI.L(c), names: c, type: TYPES[i], branch: D.branches[i % D.branches.length], resp: D.firstNames[i * 2] + " " + D.lastNames[i], accs, proj, ach: sales ? proj * UI.between(r, .8, 1.08) : 0 };
+    });
+    let reqs = [
+      { n: "SA-0141", c: 0, acc: 2, m: 10, prev: 0, val: 0, by: "A. Torres", st: "pending", date: "2026-11-12" },
+      { n: "SA-0142", c: 3, acc: 5, m: 10, prev: 0, val: 0, by: "C. Ramos", st: "pending", date: "2026-11-13" },
+      { n: "SA-0139", c: 1, acc: 0, m: 9, prev: 0, val: 0, by: "B. Lopez", st: "approved", date: "2026-10-28" }
+    ];
+    reqs.forEach(q => { q.prev = centers[q.c].accs[q.acc].months[q.m]; q.val = Math.round(q.prev * 1.25); });
+    let sel = null, tab = "budget", rejecting = null, reqSeq = 143;
 
-    function makeCenter(name, idx, type, resp, copy) {
-      const r = UI.rng(700 + idx * 13);
-      const scale = { Sales: 1, Operations: 0.8, Support: 0.55 }[type];
-      const lines = ACCOUNTS.map((a, k) => {
-        const base = [180000, 24000, 30000, 9000, 7000, 3500, 6000, 8000][k] * scale * UI.between(r, 0.7, 1.3);
-        const budget = MONTHS.map((_, m) => Math.round(base * (m === 11 ? 1.15 : 1) * UI.between(r, 0.95, 1.05)));
-        const drift = UI.between(r, 0.85, 1.15);
-        const actual = MONTHS.map((_, m) => m < CLOSED ? Math.round(budget[m] * drift * UI.between(r, 0.9, 1.1)) : null);
-        return { acct: a[0], kind: a[1], budget, actual };
-      });
-      return { code: "CC-" + String(idx + 1).padStart(2, "0"), name, type, resp, lines: copy || lines };
+    const fillSel = (el, items, val) => { const $e = $(el); $e.empty(); items.forEach(x => $e.append(new Option(x[1], x[0]))); if (val != null) $e.val(String(val)); };
+    function fillFilters() {
+      const y = $("#fYear").val() || "2026", m = $("#fMonth").val() || "10", ty = $("#fType").val() || "all";
+      fillSel("#fYear", [["2025", "2025"], ["2026", "2026"]], y);
+      fillSel("#fMonth", Array.from({ length: 12 }, (_, i) => [i, UI.monthName(i)]), m);
+      fillSel("#fType", [["all", t("allTypes")], ["tSales", t("tSales")], ["tService", t("tService")], ["tAdmin", t("tAdmin")]], ty);
+      ["#fYear", "#fMonth", "#fType"].forEach(s => $(s).select2({ width: "100%", minimumResultsForSearch: Infinity }));
     }
-    const centers = D.costCenters.map((c, i) => makeCenter(c, i, TYPES[c], people[i]));
-
-    function totals(c) {
-      let annual = 0, btd = 0, atd = 0, rest = 0;
-      c.lines.forEach(l => l.budget.forEach((b, m) => { annual += b; if (m < CLOSED) { btd += b; atd += l.actual[m] || 0; } else rest += b; }));
-      return { annual, btd, atd, proj: atd + rest, diff: btd - atd, exec: btd ? atd / btd : 0 };
+    const month = () => Number($("#fMonth").val());
+    const sumTo = (arr, m) => arr.slice(0, m + 1).reduce((a, b) => a + b, 0);
+    function figures(c) {
+      const m = month();
+      const auth = c.accs.reduce((a, x) => a + sumTo(x.months, 11), 0);
+      const exp = c.accs.reduce((a, x) => a + x.spent[m], 0);
+      const budM = c.accs.reduce((a, x) => a + x.months[m], 0);
+      // Sales centers: projected net = projected sales margin − budgeted expenses; achieved net = real margin − real expenses.
+      // Service/administrative centers: projected = month budget, achieved = what was spent (execution), difference = what is left.
+      if (c.type === "tSales") {
+        const proj = c.proj * .22 - budM, ach = c.ach * .22 - exp;
+        return { auth, exp, proj, ach, pct: proj ? ach / proj : 0, diff: ach - proj };
+      }
+      return { auth, exp, proj: budM, ach: exp, pct: budM ? exp / budM : 0, diff: budM - exp };
     }
-
-    const requests = [];
-    let reqSeq = 101;
-    function seedRequest(c, acctIdx, m, to, reason) {
-      const l = centers[c].lines[acctIdx];
-      requests.push({ id: "ADJ-" + reqSeq++, center: centers[c].code, acct: l.acct, month: m, from: l.budget[m], to, reason, by: people[c], status: "Pending", note: "" });
+    function status(pct) {
+      if (pct > 1) return '<span class="chip chip-neg">' + mi("error") + t("stOver") + "</span>";
+      if (pct > .9) return '<span class="chip chip-warn">' + mi("warning") + t("stNear") + "</span>";
+      return '<span class="chip chip-pos">' + mi("check_circle") + t("stOk") + "</span>";
     }
-    seedRequest(0, 1, 10, 31000, "Two new delivery routes start in November.");
-    seedRequest(3, 4, 11, 12500, "Forklift overhaul moved from January.");
-    seedRequest(0, 5, 11, 4200, "Year-end promotional material.");
+    function bar(p, spend) { const c = spend ? (p > 1 ? "var(--mc-bad)" : p > .9 ? "var(--mc-amber)" : "var(--mc-good)") : (p >= 1 ? "var(--mc-good)" : p >= .85 ? "var(--mc-amber)" : "var(--mc-bad)"); return '<div class="pbar"><div class="bar-track"><span style="width:' + Math.max(0, Math.min(100, p * 100)) + "%;background:" + c + '"></span></div><span class="num">' + UI.fmtPct(p) + "</span></div>"; }
 
-    let selected = centers[0].code;
-    let tab = "monthly";
-
-    // ---------- List ----------
     function renderList() {
-      const q = document.getElementById("q").value.trim().toLowerCase();
-      const ft = document.getElementById("fType").value, fs = document.getElementById("fStatus").value;
-      const rows = centers.map(c => ({ c, t: totals(c) })).filter(x =>
-        (!q || (x.c.name + " " + x.c.resp).toLowerCase().includes(q)) && (!ft || x.c.type === ft) &&
-        (!fs || (fs === "over" ? x.t.diff < 0 : x.t.diff >= 0)));
-      const tb = document.querySelector("#centers tbody");
-      tb.innerHTML = rows.length ? rows.map(({ c, t }) => {
-        const over = t.exec > 1;
-        const color = over ? "var(--negative)" : t.exec > 0.95 ? "var(--warning)" : "var(--positive)";
-        return '<tr tabindex="0" data-code="' + c.code + '" aria-selected="' + (c.code === selected) + '"><td><strong>' + c.name + '</strong><div class="muted" style="font-size:.78rem">' + c.code + "</div></td><td>" + c.type +
-          '</td><td class="r num">' + UI.fmtMoney(t.annual) + '</td><td class="r num">' + UI.fmtMoney(t.btd) + '</td><td class="r num">' + UI.fmtMoney(t.atd) +
-          '</td><td><div class="exec"><div class="bar-track" style="flex:1"><span style="width:' + Math.min(t.exec, 1) * 100 + "%;background:" + color + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(t.exec, 0) + "</span></div></td>" +
-          '<td class="r num ' + (t.diff < 0 ? "neg" : "pos") + '">' + (t.diff < 0 ? "▼ " : "▲ ") + UI.fmtMoney(t.diff) + '</td><td class="r num">' + UI.fmtMoney(t.proj) + "</td><td>" + c.resp + "</td></tr>";
-      }).join("") : '<tr><td colspan="9" class="muted">No centers match these filters.</td></tr>';
-      const sum = rows.reduce((a, x) => { ["annual", "btd", "atd", "proj", "diff"].forEach(k => a[k] += x.t[k]); return a; }, { annual: 0, btd: 0, atd: 0, proj: 0, diff: 0 });
-      document.querySelector("#centers tfoot").innerHTML = rows.length ? '<tr><td colspan="2">Total (' + rows.length + ')</td><td class="r num">' + UI.fmtMoney(sum.annual) + '</td><td class="r num">' + UI.fmtMoney(sum.btd) +
-        '</td><td class="r num">' + UI.fmtMoney(sum.atd) + '</td><td class="num">' + UI.fmtPct(sum.btd ? sum.atd / sum.btd : 0, 0) + '</td><td class="r num ' + (sum.diff < 0 ? "neg" : "pos") + '">' + UI.fmtMoney(sum.diff) +
-        '</td><td class="r num">' + UI.fmtMoney(sum.proj) + "</td><td></td></tr>" : "";
+      const ty = $("#fType").val();
+      const list = centers.filter(c => ty === "all" || c.type === ty);
+      const rows = list.map(c => ({ c, f: figures(c) }));
+      const S = k => rows.reduce((a, r) => a + r.f[k], 0);
+      document.getElementById("kpis").innerHTML = [["kAuth", M(S("auth"))], ["kProj", M(S("proj"))], ["kAch", M(S("ach"))], ["kExp", M(S("exp"))], ["kDiff", M(S("diff"))]]
+        .map(k => '<div class="mc-kpi"><div class="k-label">' + t(k[0]) + '</div><div class="k-value' + (k[0] === "kDiff" && S("diff") < 0 ? " neg" : "") + '">' + k[1] + "</div></div>").join("");
+      document.querySelector("#tCenters thead").innerHTML = "<tr><th>" + t("colCenter") + "</th><th>" + t("colType") + "</th><th>" + t("colBranch") + '</th><th class="r">' + t("colAuth") + '</th><th class="r">' + t("colProj") + '</th><th class="r">' + t("colAch") + "</th><th>" + t("colPct") + '</th><th class="r">' + t("colDiff") + '</th><th class="r">' + t("colExp") + "</th><th>" + t("colResp") + "</th></tr>";
+      document.querySelector("#tCenters tbody").innerHTML = rows.map(r => '<tr class="drill' + (sel === r.c.id ? " is-sel" : "") + '" tabindex="0" data-id="' + r.c.id + '"><td><b>' + UI.L(r.c.names || r.c.name) + "</b></td><td>" + t(r.c.type) + "</td><td>" + r.c.branch + '</td><td class="r">' + M(r.f.auth) + '</td><td class="r">' + M(r.f.proj) + '</td><td class="r">' + M(r.f.ach) + "</td><td>" + bar(r.f.pct, r.c.type !== "tSales") + '</td><td class="r ' + (r.f.diff < 0 ? "neg" : "pos") + '">' + M(r.f.diff) + '</td><td class="r">' + M(r.f.exp) + "</td><td>" + r.c.resp + "</td></tr>").join("");
+      document.querySelector("#tCenters tfoot").innerHTML = "<tr><td colspan=\"3\">" + t("total") + '</td><td class="r">' + M(S("auth")) + '</td><td class="r">' + M(S("proj")) + '</td><td class="r">' + M(S("ach")) + "</td><td></td><td class=\"r\">" + M(S("diff")) + '</td><td class="r">' + M(S("exp")) + "</td><td></td></tr>";
+      if (sel != null) renderDetail();
     }
-    const tbody = document.querySelector("#centers tbody");
-    function pick(tr) { if (!tr || !tr.dataset.code) return; selected = tr.dataset.code; renderList(); renderDetail(); }
-    tbody.addEventListener("click", e => pick(e.target.closest("tr")));
-    tbody.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(e.target.closest("tr")); } });
-    ["q", "fType", "fStatus"].forEach(id => document.getElementById(id).addEventListener("input", renderList));
 
-    // ---------- Detail ----------
-    function center() { return centers.find(c => c.code === selected); }
     function renderDetail() {
-      const c = center(), t = totals(c);
-      document.getElementById("dTitle").textContent = c.name;
-      document.getElementById("dSub").textContent = c.code + " · " + c.type + " · Responsible: " + c.resp;
-      document.getElementById("dKpis").innerHTML =
-        '<div><span class="muted" style="font-size:.78rem">Budget to date</span><span class="v">' + UI.fmtMoney(t.btd) + "</span></div>" +
-        '<div><span class="muted" style="font-size:.78rem">Actual to date</span><span class="v">' + UI.fmtMoney(t.atd) + "</span></div>" +
-        '<div><span class="muted" style="font-size:.78rem">Projected year</span><span class="v">' + UI.fmtMoney(t.proj) + "</span></div>";
-
-      // Monthly
-      let cumB = 0, cumA = 0;
-      const mrows = MONTHS.map((m, i) => {
-        const b = c.lines.reduce((a, l) => a + l.budget[i], 0);
-        const a = i < CLOSED ? c.lines.reduce((s, l) => s + l.actual[i], 0) : null;
-        cumB += b; if (a != null) cumA += a;
-        const v = a == null ? null : b - a;
-        return "<tr><td>" + m + (i >= CLOSED ? ' <span class="chip chip-info">Open</span>' : "") + '</td><td class="r num">' + UI.fmtMoney(b) + '</td><td class="r num">' + (a == null ? "—" : UI.fmtMoney(a)) +
-          '</td><td class="r num ' + (v == null ? "" : v < 0 ? "neg" : "pos") + '">' + (v == null ? "—" : (v < 0 ? "▼ " : "▲ ") + UI.fmtMoney(v)) + '</td><td class="r num">' + (a == null || !b ? "—" : UI.fmtPct(a / b, 0)) + "</td></tr>";
-      }).join("");
-      document.getElementById("panel-monthly").innerHTML = '<table class="grid"><thead><tr><th>Month</th><th class="r">Budget</th><th class="r">Actual</th><th class="r">Variance</th><th class="r">Executed</th></tr></thead><tbody>' + mrows +
-        '</tbody><tfoot><tr><td>Year</td><td class="r num">' + UI.fmtMoney(t.annual) + '</td><td class="r num">' + UI.fmtMoney(t.atd) + '</td><td class="r num">' + UI.fmtMoney(t.diff) + '</td><td class="r num">' + UI.fmtPct(t.exec, 0) + "</td></tr></tfoot></table>" +
-        '<p class="muted" style="font-size:.8rem;margin-top:8px">Variance = budget − actual. ▲ means spending was below budget, ▼ above it.</p>';
-
-      // By account, grouped by kind
-      const groups = ["Direct", "Indirect", "Shared"];
-      let html = '<table class="grid"><thead><tr><th>Account</th><th class="r">Budget to date</th><th class="r">Actual to date</th><th class="r">Variance</th><th class="r">Annual budget</th></tr></thead><tbody>';
-      groups.forEach(g => {
-        const ls = c.lines.filter(l => l.kind === g);
-        if (!ls.length) return;
-        const gs = { b: 0, a: 0, y: 0 };
-        let body = "";
-        ls.forEach(l => {
-          const b = l.budget.slice(0, CLOSED).reduce((x, y) => x + y, 0), a = l.actual.slice(0, CLOSED).reduce((x, y) => x + y, 0), y = l.budget.reduce((x, z) => x + z, 0);
-          gs.b += b; gs.a += a; gs.y += y;
-          body += '<tr><td style="padding-left:24px">' + l.acct + '</td><td class="r num">' + UI.fmtMoney(b) + '</td><td class="r num">' + UI.fmtMoney(a) + '</td><td class="r num ' + (b - a < 0 ? "neg" : "pos") + '">' + UI.fmtMoney(b - a) + '</td><td class="r num">' + UI.fmtMoney(y) + "</td></tr>";
-        });
-        html += '<tr style="background:var(--surface-2)"><td><strong>' + g + ' expenses</strong></td><td class="r num"><strong>' + UI.fmtMoney(gs.b) + '</strong></td><td class="r num"><strong>' + UI.fmtMoney(gs.a) + '</strong></td><td class="r num"><strong>' + UI.fmtMoney(gs.b - gs.a) + '</strong></td><td class="r num"><strong>' + UI.fmtMoney(gs.y) + "</strong></td></tr>" + body;
-      });
-      html += '</tbody><tfoot><tr><td>Total</td><td class="r num">' + UI.fmtMoney(t.btd) + '</td><td class="r num">' + UI.fmtMoney(t.atd) + '</td><td class="r num">' + UI.fmtMoney(t.diff) + '</td><td class="r num">' + UI.fmtMoney(t.annual) + "</td></tr></tfoot></table>";
-      document.getElementById("panel-accounts").innerHTML = html;
-
-      renderApprovals();
-    }
-
-    function chip(s) { return '<span class="chip ' + (s === "Pending" ? "chip-warn" : s === "Approved" ? "chip-pos" : "chip-neg") + '">' + s + "</span>"; }
-    function renderApprovals() {
-      const c = center();
-      const list = requests.filter(q => q.center === c.code);
-      const pend = list.filter(q => q.status === "Pending").length;
-      document.getElementById("pendCount").textContent = pend;
-      document.getElementById("panel-approvals").innerHTML = list.length ? '<table class="grid"><thead><tr><th>Request</th><th>Account</th><th>Month</th><th class="r">From</th><th class="r">To</th><th>Reason</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody>' +
-        list.map(q => '<tr><td class="num">' + q.id + '<div class="muted" style="font-size:.75rem">' + q.by + "</div></td><td>" + q.acct + "</td><td>" + MONTHS[q.month] + '</td><td class="r num">' + UI.fmtMoney(q.from) + '</td><td class="r num">' + UI.fmtMoney(q.to) +
-          '<div class="' + (q.to > q.from ? "neg" : "pos") + '" style="font-size:.75rem">' + (q.to > q.from ? "+" : "") + UI.fmtMoney(q.to - q.from) + "</div></td><td>" + q.reason + (q.note ? '<div class="muted" style="font-size:.78rem">Rejected: ' + q.note + "</div>" : "") +
-          "</td><td>" + chip(q.status) + "</td><td>" + (q.status === "Pending" ? '<div style="display:flex;gap:6px"><button class="btn btn-primary" data-act="approve" data-id="' + q.id + '" type="button">Approve</button><button class="btn" data-act="reject" data-id="' + q.id + '" type="button">Reject</button></div>' : "") + "</td></tr>").join("") +
-        "</tbody></table>" : '<p class="muted">No adjustment requests for this center yet.</p>';
-    }
-    document.getElementById("panel-approvals").addEventListener("click", e => {
-      const b = e.target.closest("button[data-act]");
-      if (!b) return;
-      const q = requests.find(x => x.id === b.dataset.id);
-      if (b.dataset.act === "approve") {
-        const c = centers.find(x => x.code === q.center);
-        c.lines.find(l => l.acct === q.acct).budget[q.month] = q.to;
-        q.status = "Approved";
-        UI.toast(q.id + " approved. The " + MONTHS[q.month] + " budget is now " + UI.fmtMoney(q.to) + ".");
-        renderList(); renderDetail(); selectTab("approvals");
+      const c = centers[sel], m = month();
+      document.getElementById("detail").hidden = false;
+      document.getElementById("dTitle").textContent = t("dTitle", { t: t(c.type), n: UI.L(c.names || c.name) });
+      document.getElementById("dSub").textContent = t("dSub", { m: UI.monthName(m) + " " + $("#fYear").val(), r: c.resp });
+      const tabs = [["budget", "tabBudget"], ["proj", "tabProj"], ["adj", "tabAdj"], ["months", "tabMonths"]].filter(x => x[0] !== "proj" || c.type === "tSales");
+      if (!tabs.find(x => x[0] === tab)) tab = "budget";
+      document.getElementById("tabs").innerHTML = tabs.map(x => '<button type="button" role="tab" class="mc-tab" aria-selected="' + (tab === x[0]) + '" data-tab="' + x[0] + '">' + t(x[1]) + (x[0] === "adj" ? " (" + reqs.filter(q => q.c === c.id && q.st === "pending").length + ")" : "") + "</button>").join("");
+      const P = document.getElementById("tabPanel");
+      if (tab === "budget") {
+        let tot = [0, 0, 0, 0];
+        const body = ["kDirect", "kIndirect", "kShared"].map(k => {
+          const acc = c.accs.filter(a => a.kind === k);
+          return '<tr class="group"><td colspan="8">' + t(k) + "</td></tr>" + acc.map(a => {
+            const au = a.months[m], sp = a.spent[m], av = au - sp, p = au ? sp / au : 0;
+            tot[0] += au; tot[1] += sp; tot[2] += av; tot[3] += a.ver[m];
+            return "<tr><td>" + a.no + "</td><td>" + UI.L(a.name) + "</td><td>" + status(p) + '</td><td class="r">' + M(au) + '</td><td class="r">' + M(sp) + '</td><td class="r ' + (av < 0 ? "neg" : "") + '">' + M(av) + "</td><td>" + bar(p, true) + '</td><td class="r">' + M(a.ver[m]) + "</td></tr>";
+          }).join("");
+        }).join("");
+        P.innerHTML = '<div class="table-wrap"><table class="grid"><thead><tr><th>' + t("colAccNo") + "</th><th>" + t("colAccount") + "</th><th>" + t("colState") + '</th><th class="r">' + t("colAuthorized") + '</th><th class="r">' + t("colSpent") + '</th><th class="r">' + t("colAvail") + "</th><th>" + t("colPctSpent") + '</th><th class="r">' + t("colVerified") + "</th></tr></thead><tbody>" + body +
+          '</tbody><tfoot><tr><td colspan="3">' + t("total") + '</td><td class="r">' + M(tot[0]) + '</td><td class="r">' + M(tot[1]) + '</td><td class="r">' + M(tot[2]) + "</td><td>" + bar(tot[0] ? tot[1] / tot[0] : 0, true) + '</td><td class="r">' + M(tot[3]) + "</td></tr></tfoot></table></div>";
+      } else if (tab === "proj") {
+        const r = UI.rng(900 + c.id * 13 + m);
+        const sellers = D.sellers.slice(c.id, c.id + 5);
+        const rows = sellers.map(s => { const sp = c.proj / 5 * UI.between(r, .7, 1.3), cp = sp * .78, sa = sp * UI.between(r, .78, 1.12), ca = sa * UI.between(r, .76, .81); return { s, sp, cp, sa, ca }; });
+        const sum = k => rows.reduce((a, x) => a + x[k], 0);
+        P.innerHTML = '<div class="table-wrap"><table class="grid"><thead><tr><th>' + t("colSeller") + '</th><th class="r">' + t("colSaleP") + '</th><th class="r">' + t("colCostP") + '</th><th class="r">' + t("colProfitP") + '</th><th class="r">' + t("colMarginP") + '</th><th class="r">' + t("colSaleA") + '</th><th class="r">' + t("colProfitA") + '</th><th class="r">' + t("colMarginA") + '</th><th class="r">' + t("colSaleD") + '</th><th class="r">' + t("colSalePct") + "</th></tr></thead><tbody>" +
+          rows.map(x => "<tr><td>" + x.s + '</td><td class="r">' + M(x.sp) + '</td><td class="r">' + M(x.cp) + '</td><td class="r">' + M(x.sp - x.cp) + '</td><td class="r">' + UI.fmtPct((x.sp - x.cp) / x.sp) + '</td><td class="r">' + M(x.sa) + '</td><td class="r">' + M(x.sa - x.ca) + '</td><td class="r">' + UI.fmtPct((x.sa - x.ca) / x.sa) + '</td><td class="r ' + (x.sa - x.sp < 0 ? "neg" : "pos") + '">' + M(x.sa - x.sp) + '</td><td class="r">' + UI.fmtPct(x.sa / x.sp) + "</td></tr>").join("") +
+          '</tbody><tfoot><tr><td>' + t("total") + '</td><td class="r">' + M(sum("sp")) + '</td><td class="r">' + M(sum("cp")) + '</td><td class="r">' + M(sum("sp") - sum("cp")) + '</td><td class="r">' + UI.fmtPct((sum("sp") - sum("cp")) / sum("sp")) + '</td><td class="r">' + M(sum("sa")) + '</td><td class="r">' + M(sum("sa") - sum("ca")) + '</td><td class="r">' + UI.fmtPct((sum("sa") - sum("ca")) / sum("sa")) + '</td><td class="r">' + M(sum("sa") - sum("sp")) + '</td><td class="r">' + UI.fmtPct(sum("sa") / sum("sp")) + "</td></tr></tfoot></table></div>";
+      } else if (tab === "adj") {
+        const list = reqs.filter(q => q.c === c.id);
+        const chip = st => st === "pending" ? '<span class="chip chip-warn">' + mi("schedule") + t("pending") + "</span>" : st === "approved" ? '<span class="chip chip-pos">' + mi("check_circle") + t("approved") + "</span>" : '<span class="chip chip-neg">' + mi("cancel") + t("rejected") + "</span>";
+        P.innerHTML = '<div class="table-wrap"><table class="grid"><thead><tr><th>#</th><th>' + t("colDate") + "</th><th>" + t("colReqCenter") + "</th><th>" + t("colAccount") + "</th><th>" + t("colMonth") + "</th><th>" + t("colReqBy") + '</th><th class="r">' + t("prevBudget") + '</th><th class="r">' + t("colReqVal") + '</th><th class="r">' + t("colAuthVal") + "</th><th>" + t("colState") + "</th><th>" + t("colActions") + "</th></tr></thead><tbody>" +
+          (list.length ? list.map(q => "<tr><td>" + q.n + "</td><td>" + UI.fmtDay(new Date(q.date + "T00:00:00Z")) + "</td><td>" + UI.L(centers[q.c].names || centers[q.c].name) + "</td><td>" + UI.L(c.accs[q.acc].name) + "</td><td>" + UI.monthName(q.m) + "</td><td>" + q.by + '</td><td class="r">' + M(q.prev) + '</td><td class="r">' + M(q.val) + '</td><td class="r">' + (q.st === "approved" ? M(q.val) : "—") + "</td><td>" + chip(q.st) + (q.reason ? '<small class="muted" style="display:block">' + q.reason + "</small>" : "") + "</td><td>" +
+            (q.st === "pending" ? '<button class="btn btn-sm btn-teal" type="button" data-approve="' + q.n + '">' + mi("check") + t("approve") + '</button> <button class="btn btn-sm" type="button" data-reject="' + q.n + '">' + mi("close") + t("reject") + "</button>" : "") + "</td></tr>").join("")
+            : '<tr><td colspan="11" class="muted">' + t("noData") + "</td></tr>") + "</tbody></table></div>";
       } else {
-        rejecting = q;
-        document.getElementById("rejInfo").textContent = q.id + " · " + q.acct + " · " + MONTHS[q.month] + ": " + UI.fmtMoney(q.from) + " → " + UI.fmtMoney(q.to);
-        document.getElementById("rReason").value = "";
-        document.getElementById("rReasonErr").textContent = "";
-        UI.openModal("rejModal");
+        P.innerHTML = '<div class="table-wrap"><table class="grid"><thead><tr><th>' + t("colMonth") + '</th><th class="r">' + t("colBudgetM") + '</th><th class="r">' + t("colSpentM") + '</th><th class="r">' + t("colAvailM") + "</th><th>" + t("colPctSpent") + "</th></tr></thead><tbody>" +
+          Array.from({ length: 12 }, (_, i) => { const b = c.accs.reduce((a, x) => a + x.months[i], 0), s = c.accs.reduce((a, x) => a + x.spent[i], 0); return "<tr><td>" + UI.monthName(i) + '</td><td class="r">' + M(b) + '</td><td class="r">' + M(s) + '</td><td class="r ' + (b - s < 0 ? "neg" : "") + '">' + M(b - s) + "</td><td>" + bar(b ? s / b : 0, true) + "</td></tr>"; }).join("") + "</tbody></table></div>";
       }
-    });
-    let rejecting = null;
-    document.getElementById("rejSave").addEventListener("click", () => {
-      const v = document.getElementById("rReason").value.trim();
-      if (v.length < 5) { document.getElementById("rReasonErr").textContent = "Write why it is rejected (at least 5 characters)."; document.getElementById("rReason").focus(); return; }
-      rejecting.status = "Rejected"; rejecting.note = v;
-      UI.closeModal("rejModal");
-      UI.toast(rejecting.id + " rejected.");
-      renderApprovals();
-    });
-    document.getElementById("rejClose").addEventListener("click", () => UI.closeModal("rejModal"));
+    }
 
-    // Tabs (arrow keys move between them)
-    const tabs = Array.from(document.querySelectorAll(".tab"));
-    function selectTab(name, focus) {
-      tab = name;
-      tabs.forEach(t => {
-        const on = t.id === "tab-" + name;
-        t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1;
-        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
-        if (on && focus) t.focus();
-      });
+    // Adjustment modal
+    function fillAdj() {
+      const c = centers[sel];
+      fillSel("#aAcc", c.accs.map((a, i) => [i, a.no + " · " + UI.L(a.name)]), 0);
+      fillSel("#aMonth", [[10, UI.monthName(10)], [11, UI.monthName(11)]], 10);
+      $("#aAcc").select2({ width: "100%", dropdownParent: $("#mAdj") });
+      $("#aMonth").select2({ width: "100%", minimumResultsForSearch: Infinity, dropdownParent: $("#mAdj") });
+      updPrev();
     }
-    tabs.forEach((t, i) => {
-      t.addEventListener("click", () => selectTab(t.id.slice(4)));
-      t.addEventListener("keydown", e => {
-        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-          const n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
-          selectTab(n.id.slice(4), true);
-        }
-      });
+    function updPrev() { const c = centers[sel]; document.getElementById("aPrev").value = M(c.accs[Number($("#aAcc").val())].months[Number($("#aMonth").val())]); }
+    $("#aAcc, #aMonth").on("change", updPrev);
+    UI.maskMoney(document.getElementById("aNew"));
+    document.getElementById("btnAdj").addEventListener("click", () => {
+      ["aNew", "aObs"].forEach(id => { document.getElementById(id).value = ""; document.getElementById(id).removeAttribute("aria-invalid"); });
+      ["aNewErr", "aObsErr"].forEach(id => document.getElementById(id).textContent = "");
+      fillAdj(); UI.openModal("mAdj");
     });
-
-    // ---------- Adjustment request ----------
-    const aAcct = document.getElementById("aAcct"), aMonth = document.getElementById("aMonth"), aFrom = document.getElementById("aFrom"), aTo = document.getElementById("aTo"), aReason = document.getElementById("aReason");
-    UI.maskMoney(aTo);
-    function refreshFrom() {
-      const l = center().lines.find(x => x.acct === aAcct.value);
-      aFrom.value = l && aMonth.value !== "" ? UI.fmtMoney(l.budget[+aMonth.value]) : "";
-      refreshDelta();
-    }
-    function refreshDelta() {
-      const d = UI.parseMoney(aTo.value) - UI.parseMoney(aFrom.value);
-      const el = document.getElementById("aDelta");
-      el.textContent = aTo.value && aFrom.value ? (d > 0 ? "+" : "") + UI.fmtMoney(d) : "—";
-      el.className = "num " + (d > 0 ? "neg" : d < 0 ? "pos" : "");
-    }
-    document.getElementById("adjBtn").addEventListener("click", () => {
-      aAcct.innerHTML = '<option value="">Choose an account</option>' + center().lines.map(l => "<option>" + l.acct + "</option>").join("");
-      aMonth.innerHTML = '<option value="">Choose a month</option>' + MONTHS.map((m, i) => i >= CLOSED ? '<option value="' + i + '">' + m + " 2026</option>" : "").join("");
-      aFrom.value = ""; aTo.value = ""; aReason.value = "";
-      ["aToErr", "aReasonErr"].forEach(id => document.getElementById(id).textContent = "");
-      document.getElementById("aDelta").textContent = "—";
-      UI.openModal("adjModal");
-    });
-    aAcct.addEventListener("change", refreshFrom);
-    aMonth.addEventListener("change", refreshFrom);
-    aTo.addEventListener("input", refreshDelta);
-    aTo.addEventListener("blur", refreshDelta);
-    document.getElementById("adjSave").addEventListener("click", () => {
+    document.getElementById("aSave").addEventListener("click", () => {
+      const c = centers[sel], acc = Number($("#aAcc").val()), m = Number($("#aMonth").val());
+      const v = UI.parseMoney(document.getElementById("aNew").value), obs = document.getElementById("aObs").value.trim();
       let ok = true;
-      const to = UI.parseMoney(aTo.value), from = UI.parseMoney(aFrom.value);
-      document.getElementById("aToErr").textContent = "";
-      document.getElementById("aReasonErr").textContent = "";
-      if (!aAcct.value || aMonth.value === "") { document.getElementById("aToErr").textContent = "Choose the account and the month first."; ok = false; }
-      else if (!aTo.value || to === from) { document.getElementById("aToErr").textContent = "Enter a new amount different from the current budget."; ok = false; }
-      if (aReason.value.trim().length < 10) { document.getElementById("aReasonErr").textContent = "Explain the change (at least 10 characters)."; ok = false; }
+      const err = (id, eid, msg) => { document.getElementById(eid).textContent = msg; document.getElementById(id).setAttribute("aria-invalid", msg ? "true" : "false"); if (msg) ok = false; };
+      err("aNew", "aNewErr", v <= 0 ? t("errAmount") : v === c.accs[acc].months[m] ? t("errSame") : "");
+      err("aObs", "aObsErr", obs ? "" : t("errObs"));
       if (!ok) return;
-      const c = center();
-      requests.push({ id: "ADJ-" + reqSeq++, center: c.code, acct: aAcct.value, month: +aMonth.value, from, to, reason: aReason.value.trim(), by: "You", status: "Pending", note: "" });
-      UI.closeModal("adjModal");
-      UI.toast("Request sent. It waits for approval.");
-      renderApprovals(); selectTab("approvals");
+      const n = "SA-0" + (reqSeq++);
+      reqs.unshift({ n, c: sel, acc, m, prev: c.accs[acc].months[m], val: v, by: "R. Demo", st: "pending", date: "2026-11-16" });
+      UI.closeModal("mAdj"); tab = "adj"; renderDetail(); UI.toast(t("reqSent", { n }));
     });
-    document.getElementById("adjClose").addEventListener("click", () => UI.closeModal("adjModal"));
-
-    // ---------- New center wizard ----------
-    let step = 1, preview = [];
-    const wName = document.getElementById("wName"), wFrom = document.getElementById("wFrom"), wScale = document.getElementById("wScale");
-    function showStep() {
-      [1, 2, 3].forEach(s => document.getElementById("wStep" + s).hidden = s !== step);
-      document.querySelectorAll("#wizSteps li").forEach(li => {
-        const s = +li.dataset.s;
-        li.classList.toggle("done", s < step);
-        if (s === step) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
-        li.querySelector(".dot").textContent = s < step ? "✓" : s;
-      });
-      document.getElementById("wBack").disabled = step === 1;
-      document.getElementById("wNext").textContent = step === 3 ? "Create center" : "Next";
-    }
-    function buildPreview() {
-      const src = centers.find(c => c.code === wFrom.value);
-      const k = Math.max(0, parseFloat(wScale.value) || 0) / 100;
-      preview = src.lines.map((l, i) => ({ l, on: preview[i] ? preview[i].on : true, annual: l.budget.reduce((a, b) => a + b, 0), rest: l.budget.slice(CLOSED).reduce((a, b) => a + b, 0) }));
-      document.querySelector("#wPreview tbody").innerHTML = preview.map((p, i) =>
-        '<tr><td><input type="checkbox" data-i="' + i + '"' + (p.on ? " checked" : "") + ' aria-label="Include ' + p.l.acct + '"></td><td>' + p.l.acct + "</td><td>" + p.l.kind + '</td><td class="r num">' + UI.fmtMoney(p.annual) + '</td><td class="r num">' + (p.on ? UI.fmtMoney(p.rest * k) : "—") + "</td></tr>").join("");
-      const tot = preview.filter(p => p.on).reduce((a, p) => a + p.rest * k, 0);
-      document.querySelector("#wPreview tfoot").innerHTML = '<tr><td></td><td colspan="3">' + preview.filter(p => p.on).length + " accounts</td><td class='r num'>" + UI.fmtMoney(tot) + "</td></tr>";
-    }
-    document.querySelector("#wPreview tbody").addEventListener("change", e => { const i = e.target.dataset.i; if (i != null) { preview[i].on = e.target.checked; buildPreview(); } });
-    wFrom.addEventListener("change", () => { preview = []; buildPreview(); });
-    wScale.addEventListener("input", () => { wScale.value = wScale.value.replace(/\D/g, "").slice(0, 3); buildPreview(); });
-
-    document.getElementById("newCenterBtn").addEventListener("click", () => {
-      step = 1; preview = [];
-      wName.value = ""; document.getElementById("wNameErr").textContent = "";
-      document.getElementById("wCode").value = "CC-" + String(centers.length + 1).padStart(2, "0");
-      document.getElementById("wResp").innerHTML = people.map(p => "<option>" + p + "</option>").join("");
-      wFrom.innerHTML = centers.map(c => '<option value="' + c.code + '">' + c.name + "</option>").join("");
-      wScale.value = "100";
-      showStep();
-      UI.openModal("wizModal");
+    document.getElementById("tabPanel").addEventListener("click", e => {
+      const a = e.target.closest("[data-approve]"), r = e.target.closest("[data-reject]");
+      if (a) { const q = reqs.find(x => x.n === a.dataset.approve); q.st = "approved"; centers[q.c].accs[q.acc].months[q.m] = q.val; renderList(); UI.toast(t("approvedMsg", { n: q.n })); }
+      if (r) { rejecting = r.dataset.reject; document.getElementById("rReason").value = ""; document.getElementById("rErr").textContent = ""; UI.openModal("mRej"); }
     });
-    document.getElementById("wBack").addEventListener("click", () => { if (step > 1) { step--; showStep(); } });
-    document.getElementById("wClose").addEventListener("click", () => UI.closeModal("wizModal"));
+    document.getElementById("rSave").addEventListener("click", () => {
+      const v = document.getElementById("rReason").value.trim();
+      if (!v) { document.getElementById("rErr").textContent = t("errReason"); document.getElementById("rReason").setAttribute("aria-invalid", "true"); return; }
+      const q = reqs.find(x => x.n === rejecting); q.st = "rejected"; q.reason = v;
+      UI.closeModal("mRej"); renderDetail(); UI.toast(t("rejectedMsg", { n: q.n }));
+    });
+
+    // Wizard
+    let step = 1;
+    function fillWizard() {
+      fillSel("#wType", [["tSales", t("tSales")], ["tService", t("tService")], ["tAdmin", t("tAdmin")]], $("#wType").val() || "tSales");
+      fillSel("#wBranch", D.branches.map((b, i) => [i, b]), $("#wBranch").val() || 0);
+      fillSel("#wDept", [["d1", t("d1")], ["d2", t("d2")], ["d3", t("d3")]], $("#wDept").val() || "d1");
+      fillSel("#wFrom", centers.map(c => [c.id, UI.L(c.names || c.name)]), $("#wFrom").val() || 0);
+      ["#wType", "#wBranch", "#wDept", "#wFrom"].forEach(s => $(s).select2({ width: "100%", dropdownParent: $("#mNew") }));
+    }
+    function wizPreview() {
+      const c = centers[Number($("#wFrom").val())], sc = Math.max(0, Number(document.getElementById("wScale").value) || 0) / 100;
+      document.querySelector("#wPrev thead").innerHTML = "<tr><th>" + t("colAccNo") + "</th><th>" + t("colAccount") + "</th><th>" + t("colKind") + '</th><th class="r">' + UI.monthName(10, true) + '</th><th class="r">' + UI.monthName(11, true) + "</th></tr>";
+      let s = 0;
+      document.querySelector("#wPrev tbody").innerHTML = c.accs.map(a => { const n = Math.round(a.months[10] * sc), d = Math.round(a.months[11] * sc); s += n + d; return "<tr><td>" + a.no + "</td><td>" + UI.L(a.name) + "</td><td>" + t(a.kind) + '</td><td class="r">' + M(n) + '</td><td class="r">' + M(d) + "</td></tr>"; }).join("");
+      document.querySelector("#wPrev tfoot").innerHTML = '<tr><td colspan="3">' + t("total") + '</td><td class="r" colspan="2">' + M(s) + "</td></tr>";
+      return { c, sc, s };
+    }
+    function paintWizard() {
+      document.querySelectorAll(".wiz-step").forEach(el => el.hidden = Number(el.dataset.step) !== step);
+      document.getElementById("wSteps").innerHTML = ["step1", "step2", "step3"].map((k, i) => '<span class="mc-step ' + (i + 1 < step ? "done" : i + 1 === step ? "current" : "") + '"><i>' + (i + 1 < step ? "✓" : i + 1) + "</i>" + t(k) + "</span>").join("");
+      document.getElementById("wNext").textContent = step === 3 ? t("create") : t("next");
+      document.getElementById("wBack").hidden = step === 1;
+      if (step === 2) wizPreview();
+      if (step === 3) { const p = wizPreview(); document.getElementById("wSum").innerHTML = '<div class="ladder-row"><span>' + t("sumName") + "</span><b>" + document.getElementById("wName").value + " · " + t($("#wType").val()) + '</b></div><div class="ladder-row"><span>' + t("sumAccounts") + "</span><b>" + p.c.accs.length + '</b></div><div class="ladder-row result"><span>' + t("sumBudget") + '</span><b class="num">' + M(p.s) + "</b></div>"; }
+    }
+    document.getElementById("btnNew").addEventListener("click", () => { step = 1; document.getElementById("wName").value = ""; document.getElementById("wNameErr").textContent = ""; document.getElementById("wScale").value = "100"; fillWizard(); paintWizard(); UI.openModal("mNew"); });
+    document.getElementById("wBack").addEventListener("click", () => { step--; paintWizard(); });
     document.getElementById("wNext").addEventListener("click", () => {
-      if (step === 1) {
-        const n = wName.value.trim();
-        if (n.length < 3) { document.getElementById("wNameErr").textContent = "Give the center a name (at least 3 characters)."; wName.focus(); return; }
-        if (centers.some(c => c.name.toLowerCase() === n.toLowerCase())) { document.getElementById("wNameErr").textContent = "A center with this name already exists."; wName.focus(); return; }
-        document.getElementById("wNameErr").textContent = "";
-        step = 2; buildPreview(); showStep(); return;
-      }
-      if (step === 2) {
-        const k = (parseFloat(wScale.value) || 0) / 100;
-        const on = preview.filter(p => p.on);
-        if (!on.length) { UI.toast("Include at least one account."); return; }
-        document.getElementById("wSummary").innerHTML =
-          '<div class="ladder-row"><span>Name</span><span>' + wName.value.trim() + "</span></div>" +
-          '<div class="ladder-row"><span>Code / type</span><span>' + document.getElementById("wCode").value + " · " + document.getElementById("wType").value + "</span></div>" +
-          '<div class="ladder-row"><span>Responsible</span><span>' + document.getElementById("wResp").value + "</span></div>" +
-          '<div class="ladder-row"><span>Accounts copied from ' + centers.find(c => c.code === wFrom.value).name + '</span><span class="num">' + on.length + "</span></div>" +
-          '<div class="ladder-row result"><span>Budget Nov–Dec 2026 at ' + wScale.value + '%</span><span class="num">' + UI.fmtMoney(on.reduce((a, p) => a + p.rest * k, 0)) + "</span></div>";
-        step = 3; showStep(); return;
-      }
-      const k = (parseFloat(wScale.value) || 0) / 100;
-      const lines = preview.filter(p => p.on).map(p => ({ acct: p.l.acct, kind: p.l.kind, budget: p.l.budget.map((b, m) => m < CLOSED ? 0 : Math.round(b * k)), actual: p.l.budget.map((_, m) => m < CLOSED ? 0 : null) }));
-      const c = makeCenter(wName.value.trim(), centers.length, document.getElementById("wType").value, document.getElementById("wResp").value, lines);
-      c.code = document.getElementById("wCode").value;
-      centers.push(c);
-      selected = c.code;
-      UI.closeModal("wizModal");
-      UI.toast(c.name + " created with " + lines.length + " accounts.");
-      renderList(); renderDetail(); selectTab("monthly");
+      if (step === 1) { if (!document.getElementById("wName").value.trim()) { document.getElementById("wNameErr").textContent = t("errName"); document.getElementById("wName").setAttribute("aria-invalid", "true"); return; } document.getElementById("wName").removeAttribute("aria-invalid"); document.getElementById("wNameErr").textContent = ""; }
+      if (step < 3) { step++; paintWizard(); return; }
+      const p = wizPreview(), name = document.getElementById("wName").value.trim();
+      const accs = p.c.accs.map(a => ({ no: a.no, name: a.name, kind: a.kind, months: a.months.map((v, i) => i >= 10 ? Math.round(v * p.sc) : 0), spent: Array(12).fill(0), ver: Array(12).fill(0) }));
+      centers.push({ id: centers.length, name, type: $("#wType").val(), branch: D.branches[Number($("#wBranch").val())], resp: "R. Demo", accs, proj: 0, ach: 0 });
+      UI.closeModal("mNew"); renderList(); UI.toast(t("created", { n: name, a: accs.length }));
     });
+    $("#wFrom").on("change", wizPreview);
+    document.getElementById("wScale").addEventListener("input", wizPreview);
 
-    renderList();
-    renderDetail();
+    document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => UI.closeModal(b.dataset.close)));
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; renderDetail(); } });
+    document.getElementById("tabs").addEventListener("keydown", e => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const bs = [...document.querySelectorAll("#tabs .mc-tab")], i = bs.findIndex(b => b.dataset.tab === tab);
+      const n = bs[(i + (e.key === "ArrowRight" ? 1 : bs.length - 1)) % bs.length]; tab = n.dataset.tab; renderDetail(); document.querySelector('#tabs [data-tab="' + tab + '"]').focus();
+    });
+    const tc = document.getElementById("tCenters");
+    tc.addEventListener("click", e => { const tr = e.target.closest("tr.drill"); if (tr) { sel = Number(tr.dataset.id); renderList(); document.getElementById("detail").scrollIntoView({ behavior: "smooth", block: "start" }); } });
+    tc.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.closest("tr.drill")) { e.preventDefault(); e.target.closest("tr.drill").click(); } });
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); renderList(); });
+    $("#fType").on("change", renderList);
+    function about() { document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); }
+    document.addEventListener("langchange", () => { centers.forEach(c => { if (c.names) c.name = UI.L(c.names); }); fillFilters(); renderList(); about(); if (document.getElementById("mNew").classList.contains("open")) { fillWizard(); paintWizard(); } });
+    fillFilters(); about(); sel = 0; renderList();
   });
   </script>
 </body>

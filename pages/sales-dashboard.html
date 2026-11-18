@@ -3,205 +3,425 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sales Dashboard · Business UI Gallery</title>
+  <title>Sales dashboard · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .two { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-4); }
-    .chart-box { position: relative; height: 280px; }
-    th.sortable { cursor: pointer; user-select: none; }
-    th.sortable[aria-sort="ascending"]::after { content: " ▲"; }
-    th.sortable[aria-sort="descending"]::after { content: " ▼"; }
-    @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+    .dv-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .dv-kpi { background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+    :root[data-theme="light"] .dv-kpi { box-shadow: var(--mc-shadow); }
+    .dv-kpi h3 { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--mc-muted); }
+    .dv-kpi h3 .material-icons { color: var(--mc-teal); font-size: 19px; }
+    .dv-kpi strong { display: block; font-size: clamp(20px, 2vw, 28px); font-weight: 900; letter-spacing: -.5px; margin: 8px 0 4px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .dv-kpi p { font-size: 11.5px; color: var(--mc-muted); display: flex; justify-content: space-between; gap: 8px; }
+    .dv-kpi p b { color: var(--mc-text); font-variant-numeric: tabular-nums; }
+    .dv-ritmo { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; margin-bottom: 4px; }
+    .dv-ritmo.ok { color: var(--mc-good); background: rgba(45, 212, 191, .1); }
+    .dv-ritmo.bad { color: var(--mc-bad); background: rgba(251, 113, 133, .1); }
+    .dv-ruta { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 11.5px; color: var(--mc-muted); margin-bottom: 4px; }
+    .dv-ruta button { border: 0; background: none; color: var(--mc-cyan); cursor: pointer; padding: 2px 0; font: inherit; font-weight: 700; }
+    .dv-orden { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--mc-line); border-radius: 8px; }
+    .dv-orden button { min-height: 30px; padding: 4px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--mc-muted); font-size: 11.5px; font-weight: 700; cursor: pointer; }
+    .dv-orden button[aria-pressed="true"] { background: rgba(20, 184, 166, .16); color: var(--mc-text); }
+    .dv-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--mc-muted); margin: 4px 0 10px; }
+    .dv-key { display: inline-flex; align-items: center; gap: 6px; }
+    .dv-key::before { content: ""; width: 14px; height: 8px; border-radius: 3px; background: var(--k); }
+    .dv-key.line::before { height: 2px; }
+    .dv-key.dash::before { height: 0; border-top: 2px dashed var(--k); background: none; }
+    .dv-ranking { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+    .dv-group { text-align: left; background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-radius: 10px; padding: 12px; cursor: pointer; color: var(--mc-text); font: inherit; min-width: 0; }
+    :root[data-theme="light"] .dv-group { background: #fff; }
+    .dv-group:hover { border-color: var(--mc-teal); }
+    .dv-group[disabled] { cursor: default; }
+    .dv-group[disabled]:hover { border-color: var(--mc-line); }
+    .dv-group header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .dv-group header b { font-size: 13px; }
+    .dv-group header span { font-size: 11px; color: var(--mc-muted); }
+    .dv-bullet { position: relative; height: 14px; border-radius: 4px; background: rgba(148, 163, 184, .14); margin: 10px 0 6px; overflow: hidden; }
+    .dv-bullet .net { position: absolute; left: 0; top: 3px; bottom: 3px; border-radius: 3px; background: var(--mc-teal); }
+    .dv-bullet .net.low { background: var(--mc-bad); }
+    .dv-bullet .exp { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--mc-amber); }
+    .dv-group .nums { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; color: var(--mc-muted); }
+    .dv-group .nums b { color: var(--mc-text); font-variant-numeric: tabular-nums; }
+    .dv-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .dv-chart-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+    .dv-chart-head h3 { font-size: 13px; font-weight: 800; }
+    .dv-chart-head p { font-size: 11.5px; color: var(--mc-muted); margin-top: 2px; }
+    .dv-svg { width: 100%; height: 240px; display: block; }
+    .dv-svg text { fill: var(--mc-muted); font-size: 10px; font-family: var(--font); }
+    .dv-svg .grid line { stroke: var(--mc-line); }
+    details.dv-extras > summary, details.dv-numeric > summary { cursor: pointer; font-size: 12px; font-weight: 800; list-style: none; display: flex; align-items: center; gap: 6px; min-height: 32px; }
+    details.dv-extras > summary::-webkit-details-marker, details.dv-numeric > summary::-webkit-details-marker { display: none; }
+    details > summary .material-icons { transition: transform .15s; color: var(--mc-cyan); }
+    details[open] > summary .material-icons.chev { transform: rotate(90deg); }
+    details.dv-extras .dv-charts { margin-top: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .dv-heat { display: grid; gap: 2px; font-size: 10px; overflow-x: auto; }
+    .dv-heat .cell { height: 18px; border-radius: 3px; }
+    .dv-heat .lbl { color: var(--mc-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 4px; line-height: 18px; }
+    .dv-tip { position: fixed; z-index: 80; pointer-events: none; background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 6px; padding: 6px 8px; font-size: 11.5px; box-shadow: var(--mc-shadow); }
+    @media (max-width: 1100px) { .dv-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } details.dv-extras .dv-charts { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 900px) { .dv-charts { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 520px) { .dv-kpis { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body data-page="sales-dashboard" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Sales dashboard</h1>
-        <p class="muted">How the day went: what was sold, how it was paid and what is still to collect.</p>
-      </div>
-      <div class="field" style="width:200px">
-        <label for="day">Day</label>
-        <input class="input" type="date" id="day">
-      </div>
-    </div>
-
-    <section class="kpis" aria-label="Key figures">
-      <div class="card kpi"><div class="kpi-label">Gross sales</div><div class="kpi-value" id="kGross"></div><div class="kpi-delta" id="kGrossD"></div></div>
-      <div class="card kpi"><div class="kpi-label">Returns</div><div class="kpi-value" id="kRet"></div><div class="kpi-delta muted" id="kRetD"></div></div>
-      <div class="card kpi"><div class="kpi-label">Net sales</div><div class="kpi-value" id="kNet"></div><div class="kpi-delta" id="kNetD"></div></div>
-      <div class="card kpi"><div class="kpi-label">Cash collected</div><div class="kpi-value" id="kCash"></div><div class="kpi-delta muted" id="kCashD"></div></div>
+  <main id="content">
+    <section class="mc-panel no-print">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field w-sm"><label data-i18n="fCompany"></label><div class="static">DEMO</div></div>
+        <div class="mc-field" style="max-width:170px"><label for="fDate" data-i18n="fDate"></label><input type="date" id="fDate" required></div>
+        <div class="mc-field w-lg" style="max-width:420px"><label for="fGroup" data-i18n="fGroup"></label><select id="fGroup" multiple></select></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
     </section>
+    <p class="mc-hint" id="hint" role="status" aria-live="polite"></p>
 
-    <section class="two">
-      <div class="card">
-        <div class="card-head"><h2>Net sales, last 30 days</h2><span class="muted" style="font-size:.82rem">Same weekday a week before shown dashed</span></div>
-        <div class="card-body"><div class="chart-box"><canvas id="trend" aria-label="Net sales trend for the last 30 days" role="img"></canvas></div></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Day summary</h2></div>
-        <div class="card-body">
-          <div class="ladder" id="ladder"></div>
-          <p class="muted" style="font-size:.8rem;margin-top:10px">Each line adds up to the one above it, so the summary can be checked by hand.</p>
+    <div id="dash" hidden>
+      <div class="mc-head">
+        <div><nav class="dv-ruta" id="crumbs" aria-label="Level"></nav><h2 id="dTitle"></h2><p id="dSub"></p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="mc-chip-time" id="dOrigin"></span>
+          <button type="button" class="btn" id="back" hidden><span class="material-icons" aria-hidden="true">arrow_back</span><span data-i18n="back"></span></button>
         </div>
       </div>
-    </section>
 
-    <section class="card">
-      <div class="card-head"><h2>By branch</h2><span class="muted" style="font-size:.82rem">Select a column header to sort</span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="branches">
-          <thead><tr>
-            <th class="sortable" data-k="branch">Branch</th>
-            <th class="sortable" data-k="region">Region</th>
-            <th class="sortable r" data-k="tickets">Tickets</th>
-            <th class="sortable r" data-k="net">Net sales</th>
-            <th class="sortable r" data-k="card">Card share</th>
-            <th class="sortable r" data-k="vs">vs last week</th>
-            <th>Goal progress</th>
-          </tr></thead>
-          <tbody></tbody>
-          <tfoot></tfoot>
-        </table>
+      <div class="dv-kpis" id="kpis" style="margin-top:12px"></div>
+
+      <section class="mc-panel" style="margin-top:12px">
+        <div class="dv-chart-head">
+          <div><h3 id="rankTitle"></h3><p id="rankHelp"></p></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="mc-hint" id="rankCount"></span>
+            <div class="dv-orden" role="group" id="order"></div>
+          </div>
+        </div>
+        <div class="dv-legend"><span class="dv-key" style="--k:var(--mc-teal)" data-i18n="kNet"></span><span class="dv-key" style="--k:var(--mc-amber)" data-i18n="kExpected"></span><span data-i18n="kScale"></span></div>
+        <div class="dv-ranking" id="ranking"></div>
+      </section>
+
+      <div class="dv-charts" style="margin-top:12px">
+        <section class="mc-panel"><div class="dv-chart-head"><div><h3 data-i18n="cCum"></h3><p data-i18n="cCumSub"></p></div></div>
+          <div class="dv-legend"><span class="dv-key line" style="--k:var(--mc-teal)" data-i18n="kCumNet"></span><span class="dv-key dash" style="--k:var(--mc-amber)" data-i18n="kCumGoal"></span></div>
+          <svg class="dv-svg" id="svgCum" role="img"></svg></section>
+        <section class="mc-panel"><div class="dv-chart-head"><div><h3 data-i18n="cDaily"></h3><p data-i18n="cDailySub"></p></div></div>
+          <div class="dv-legend"><span class="dv-key" style="--k:var(--mc-teal)" data-i18n="kDayNet"></span><span class="dv-key" style="--k:var(--mc-cyan)" data-i18n="kLive"></span><span class="dv-key dash" style="--k:var(--mc-amber)" data-i18n="kDayGoal"></span></div>
+          <svg class="dv-svg" id="svgDaily" role="img"></svg></section>
       </div>
-    </section>
 
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>The real version is fed by a nightly job that closes each day, so past days load instantly and today is calculated live.</li>
-        <li>Comparisons use the same weekday of the previous week, because a Monday is not comparable with a Saturday.</li>
-        <li>The day summary works like a ladder: total, the parts that make it up, what is subtracted and the result.</li>
-      </ul>
-    </section>
+      <details class="mc-panel dv-extras" style="margin-top:12px">
+        <summary><span class="material-icons chev" aria-hidden="true">chevron_right</span><span data-i18n="moreCharts"></span></summary>
+        <div class="dv-charts">
+          <section><div class="dv-chart-head"><div><h3 data-i18n="cPath"></h3><p data-i18n="cPathSub"></p></div></div><svg class="dv-svg" id="svgPath" role="img"></svg></section>
+          <section><div class="dv-chart-head"><div><h3 data-i18n="cWater"></h3><p data-i18n="cWaterSub"></p></div></div><svg class="dv-svg" id="svgWater" role="img"></svg></section>
+          <section><div class="dv-chart-head"><div><h3 data-i18n="cHeat"></h3><p data-i18n="cHeatSub"></p></div></div><div class="dv-heat" id="heat"></div></section>
+        </div>
+      </details>
+
+      <details class="mc-panel dv-numeric" style="margin-top:12px">
+        <summary><span class="material-icons chev" aria-hidden="true">chevron_right</span><span data-i18n="numeric"></span> <small class="muted" data-i18n="numericSub"></small></summary>
+        <div class="table-wrap" style="margin-top:10px"><table class="grid" id="tNum"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </details>
+    </div>
+    <div id="about"></div>
   </main>
+  <div class="dv-tip" id="tip" role="tooltip" hidden></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const today = new Date(Date.UTC(2026, 10, 16));
-
-    // One deterministic record per branch and day.
-    function dayData(date) {
-      const seed = Math.floor(date.getTime() / 86400000);
-      const r = UI.rng(seed * 31);
-      const weekdayBoost = [0.75, 1, 1, 1.05, 1.1, 1.3, 1.2][date.getUTCDay()];
-      return D.branches.map((b, i) => {
-        const rb = UI.rng(seed * 97 + i);
-        const base = [52000, 38000, 61000, 29000, 33000, 24000][i] * weekdayBoost * UI.between(rb, 0.85, 1.15);
-        const cash = base * UI.between(rb, 0.38, 0.5);
-        const card = base * UI.between(rb, 0.22, 0.32);
-        const transfer = base * UI.between(rb, 0.05, 0.1);
-        const credit = base - cash - card - transfer;
-        const returns = base * UI.between(rb, 0.005, 0.025);
-        const collected = credit * UI.between(rb, 0.4, 0.9);
-        return { branch: b, region: D.regions[b], tickets: Math.round(base / UI.between(rb, 240, 380)), cash, card, transfer, credit, gross: base, returns, net: base - returns, collected, goal: [50000, 37000, 60000, 30000, 32000, 25000][i] * weekdayBoost };
-      });
+  UI.strings({
+    en: {
+      fCompany: "Company", fDate: "Cut-off date", fGroup: "Supervisor", back: "Back", hintStart: "Choose the cut-off and press Load. Then explore the teams and sellers from the charts.",
+      loaded: "Showing sales up to {d}.", origin: "Closed days use their close; {d} is live",
+      titleTop: "Sales by supervisor and seller", titleSup: "Sellers of {s}", titleSeller: "Customers of {s}",
+      sub: "{m}: working day {e} of {w}. Net = invoiced − returns − discounts.",
+      crumbAll: "Whole company",
+      kpiNet: "Net sales", kpiDay: "Net of the day", kpiGoal: "Month goal", kpiExpected: "Expected at cut-off", kpiGoalDay: "Goal of the day", kpiPct: "Achievement at cut-off",
+      kpiProj: "Projection at month end", kpiCover: "Goal coverage", kpiNoGoal: "Sellers without goal", kpiOk: "Sellers on pace",
+      ahead: "Ahead of pace", behind: "Behind pace",
+      rankSup: "Sales by supervisor", rankSel: "Sales by seller", rankCust: "Sales by customer", rankHelpSup: "Select a supervisor to explore their sellers", rankHelpSel: "Select a seller to see their customers", rankHelpCust: "Top customers of the seller this month",
+      count: "{n} shown", oNet: "Highest sales", oPct: "Highest achievement", oGap: "Largest gap",
+      kNet: "Net sold", kExpected: "Should have at cut-off", kScale: "Same scale on all cards",
+      cCum: "Cumulative sales against the goal", cCumSub: "Cumulative net sales against the expected pace", kCumNet: "Cumulative net", kCumGoal: "Expected pace",
+      cDaily: "Sales of each day against its goal", cDailySub: "Daily net sales; blue marks the live day", kDayNet: "Net of the day", kLive: "Live day", kDayGoal: "Goal of the day",
+      moreCharts: "More charts: path to goal, how the net is built and activity per day",
+      cPath: "Path to goal", cPathSub: "Month progress and the expected point at this date", cWater: "How the net is built", cWaterSub: "Invoiced minus returns and discounts", cHeat: "Activity map", cHeatSub: "Net sales intensity by group and day",
+      invoiced: "Invoiced", returns: "Returns", discounts: "Discounts", net: "Net", goal: "Goal", expected: "Expected", achieved: "Achieved",
+      numeric: "Optional numeric view", numericSub: "Sellers of the current selection",
+      colGroup: "Group", colSeller: "Seller", colBranch: "Branch", colInv: "Invoiced", colRet: "Returns", colDisc: "Discounts", colNet: "Net", colGoal: "Goal", colExp: "Expected", colPct: "% achieved",
+      noGoal: "No goal", sundayNote: "Sundays are not working days in the sample.",
+      aboutText: "<b>Net</b> = invoiced − returns − discounts by credit note. Each seller belongs to the supervisor of their active routes. <b>Should have</b> = the part of the month goal that corresponds to the working days up to the cut-off date. <b>Achievement</b> = net ÷ should have. Closed days use their saved close and the cut-off day is calculated live. The cards use the same scale, so a short bar is really a small team. Select a supervisor to see their sellers and a seller to see their customers; the breadcrumb takes you back. All the data on this page is generated."
+    },
+    es: {
+      fCompany: "Empresa", fDate: "Fecha de corte", fGroup: "Supervisor", back: "Volver", hintStart: "Elija el corte y pulse Cargar. Después explore los equipos y vendedores desde los gráficos.",
+      loaded: "Se muestran las ventas hasta el {d}.", origin: "Días cerrados usan su cierre; el {d} es en vivo",
+      titleTop: "Ventas por supervisor y vendedor", titleSup: "Vendedores de {s}", titleSeller: "Clientes de {s}",
+      sub: "{m}: día hábil {e} de {w}. Neto = facturado − devoluciones − descuentos.",
+      crumbAll: "Toda la empresa",
+      kpiNet: "Venta neta", kpiDay: "Neto del día", kpiGoal: "Meta del mes", kpiExpected: "Esperado al corte", kpiGoalDay: "Meta del día", kpiPct: "Cumplimiento al corte",
+      kpiProj: "Proyección al cierre del mes", kpiCover: "Cobertura de metas", kpiNoGoal: "Vendedores sin meta", kpiOk: "Vendedores al ritmo",
+      ahead: "Adelante del ritmo", behind: "Atrás del ritmo",
+      rankSup: "Ventas por supervisor", rankSel: "Ventas por vendedor", rankCust: "Ventas por cliente", rankHelpSup: "Pulse un supervisor para explorar sus vendedores", rankHelpSel: "Pulse un vendedor para ver sus clientes", rankHelpCust: "Clientes con más venta del vendedor en el mes",
+      count: "{n} visibles", oNet: "Mayor venta", oPct: "Mayor cumplimiento", oGap: "Mayor brecha",
+      kNet: "Vendido neto", kExpected: "Debería llevar al corte", kScale: "Misma escala en todas las tarjetas",
+      cCum: "Ventas acumuladas frente a la meta", cCumSub: "Venta neta acumulada frente al ritmo esperado", kCumNet: "Neto acumulado", kCumGoal: "Ritmo esperado",
+      cDaily: "Ventas de cada día frente a su meta", cDailySub: "Venta neta diaria; el azul marca el día en vivo", kDayNet: "Neto del día", kLive: "Día en vivo", kDayGoal: "Meta del día",
+      moreCharts: "Más gráficos: camino a la meta, cómo se forma el neto y actividad por día",
+      cPath: "Camino a la meta", cPathSub: "Avance del mes y el punto esperado a esta fecha", cWater: "Cómo se forma el neto", cWaterSub: "Facturado menos devoluciones y descuentos", cHeat: "Mapa de actividad", cHeatSub: "Intensidad de venta neta por grupo y día",
+      invoiced: "Facturado", returns: "Devoluciones", discounts: "Descuentos", net: "Neto", goal: "Meta", expected: "Esperado", achieved: "Logrado",
+      numeric: "Consulta numérica opcional", numericSub: "Vendedores de la selección actual",
+      colGroup: "Grupo", colSeller: "Vendedor", colBranch: "Sucursal", colInv: "Facturado", colRet: "Devoluciones", colDisc: "Descuentos", colNet: "Neto", colGoal: "Meta", colExp: "Esperado", colPct: "% logrado",
+      noGoal: "Sin meta", sundayNote: "Los domingos no son hábiles en el ejemplo.",
+      aboutText: "<b>Neto</b> = facturado − devoluciones − descuentos por nota de crédito. Cada vendedor va con el supervisor de sus rutas activas. <b>Debería llevar</b> = la parte de la meta del mes que corresponde a los días hábiles hasta la fecha de corte. <b>Cumplimiento</b> = neto ÷ debería llevar. Los días cerrados usan su cierre guardado y el día del corte se calcula en vivo. Las tarjetas usan la misma escala, así una barra corta es de verdad un equipo pequeño. Pulse un supervisor para ver sus vendedores y un vendedor para ver sus clientes; la ruta de arriba lo regresa. Todos los datos de esta página son generados."
     }
-    function sum(rows, k) { return rows.reduce((a, x) => a + x[k], 0); }
-    function shift(d, days) { return new Date(d.getTime() + days * 86400000); }
+  });
 
-    const dayInput = document.getElementById("day");
-    dayInput.value = UI.fmtDate(today);
-    dayInput.max = UI.fmtDate(today);
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const TODAY = new Date(Date.UTC(2026, 10, 16));
+    const SUPS = [
+      { name: "R. Castillo", sellers: [0, 1, 2], branch: 0 }, { name: "M. Paredes", sellers: [3, 4, 5], branch: 2 },
+      { name: "L. Fuentes", sellers: [6, 7], branch: 1 }, { name: "S. Navarro", sellers: [8, 9], branch: 4 }
+    ];
+    const isWork = d => d.getUTCDay() !== 0;
+    const dayUTC = (y, m, d) => new Date(Date.UTC(y, m, d));
 
-    let sortKey = "net", sortDir = -1, rows = [], prevRows = [];
-    let chart;
+    // Net sales per seller per day of the month (deterministic)
+    function month(y, m) {
+      const days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      const sellers = D.sellers.map((name, i) => {
+        const r = UI.rng(y * 100 + m * 7 + i * 13);
+        const base = UI.between(r, 9000, 21000);
+        const goal = i === 9 ? 0 : Math.round(base * 26 * UI.between(r, .95, 1.12) / 100) * 100;
+        const daily = [];
+        for (let d = 1; d <= days; d++) {
+          const dt = dayUTC(y, m, d);
+          if (!isWork(dt)) { daily.push(null); continue; }
+          const wd = [0, 1, 1, 1.05, 1.1, 1.3, 1.15][dt.getUTCDay()];
+          const inv = base * wd * UI.between(r, .7, 1.25);
+          daily.push({ inv, ret: inv * UI.between(r, .005, .03), disc: inv * UI.between(r, .004, .02) });
+        }
+        const sup = SUPS.findIndex(s => s.sellers.includes(i));
+        return { i, name, goal, daily, sup, branch: D.branches[(SUPS[sup].branch + i) % D.branches.length] };
+      });
+      return { y, m, days, sellers };
+    }
 
-    function deltaHtml(cur, prev) {
-      if (!prev) return "";
-      const d = (cur - prev) / prev;
-      const cls = d >= 0 ? "pos" : "neg";
-      return '<span class="' + cls + '">' + (d >= 0 ? "▲ " : "▼ ") + UI.fmtPct(Math.abs(d)) + "</span> <span class='muted'>vs same weekday last week</span>";
+    let state = null, level = { sup: null, seller: null }, order = "net";
+
+    // Filters
+    const $g = $("#fGroup");
+    function fillGroups() {
+      const v = $g.val();
+      $g.empty();
+      SUPS.forEach((s, i) => $g.append(new Option(s.name, String(i))));
+      $g.val(v || []).select2({ width: "100%", placeholder: t("all"), closeOnSelect: false });
+    }
+    fillGroups();
+    const dateIn = document.getElementById("fDate");
+    dateIn.value = UI.fmtDate(TODAY); dateIn.max = UI.fmtDate(TODAY);
+
+    function agg(mo, cut, sellerIdxs) {
+      const workTotal = [], series = [];
+      let we = 0, wt = 0;
+      for (let d = 1; d <= mo.days; d++) { const w = isWork(dayUTC(mo.y, mo.m, d)); if (w) { wt++; if (d <= cut) we++; } workTotal.push(w); }
+      const res = sellerIdxs.map(i => {
+        const s = mo.sellers[i];
+        let inv = 0, ret = 0, disc = 0, day = 0;
+        s.daily.forEach((x, k) => { if (x && k + 1 <= cut) { inv += x.inv; ret += x.ret; disc += x.disc; if (k + 1 === cut) day = x.inv - x.ret - x.disc; } });
+        const net = inv - ret - disc, exp = s.goal * we / wt;
+        return { s, inv, ret, disc, net, day, goal: s.goal, exp, pct: exp ? net / exp : null, goalDay: s.goal / wt };
+      });
+      for (let d = 1; d <= mo.days; d++) {
+        let net = 0, goalDay = 0;
+        res.forEach(x => { const v = x.s.daily[d - 1]; if (v && d <= cut) net += v.inv - v.ret - v.disc; if (workTotal[d - 1]) goalDay += x.goal / wt; });
+        series.push({ d, net, goalDay: workTotal[d - 1] ? goalDay : 0, work: workTotal[d - 1] });
+      }
+      return { res, series, we, wt };
+    }
+
+    function svgEl(id) { const s = document.getElementById(id); const w = s.clientWidth || 600, h = s.clientHeight || 240; s.setAttribute("viewBox", "0 0 " + w + " " + h); return { s, w, h }; }
+    const fmtK = v => Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(1) + "M" : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(0) + "k" : String(Math.round(v));
+    function axes(w, h, pad, max) {
+      let g = '<g class="grid">';
+      for (let k = 0; k <= 4; k++) { const y = pad.t + (h - pad.t - pad.b) * k / 4; g += '<line x1="' + pad.l + '" x2="' + (w - pad.r) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (pad.l - 6) + '" y="' + (y + 3) + '" text-anchor="end">' + fmtK(max * (1 - k / 4)) + "</text>"; }
+      return g + "</g>";
+    }
+
+    function drawCum(A, cut) {
+      const { s, w, h } = svgEl("svgCum"); const pad = { l: 44, r: 12, t: 10, b: 22 };
+      let acc = 0, accG = 0; const pts = [], gpts = [];
+      A.series.forEach(x => { accG += x.goalDay; if (x.d <= cut) { acc += x.net; pts.push([x.d, acc]); } gpts.push([x.d, accG]); });
+      const max = Math.max(accG, acc) * 1.05 || 1, n = A.series.length;
+      const X = d => pad.l + (w - pad.l - pad.r) * (d - 1) / (n - 1), Y = v => pad.t + (h - pad.t - pad.b) * (1 - v / max);
+      let out = axes(w, h, pad, max);
+      out += '<polyline fill="none" stroke="var(--mc-amber)" stroke-width="2" stroke-dasharray="5 4" points="' + gpts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + '"/>';
+      out += '<polygon fill="var(--mc-teal)" opacity=".12" points="' + X(1) + "," + Y(0) + " " + pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + " " + X(pts[pts.length - 1][0]) + "," + Y(0) + '"/>';
+      out += '<polyline fill="none" stroke="var(--mc-teal)" stroke-width="2.5" points="' + pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + '"/>';
+      const last = pts[pts.length - 1];
+      out += '<circle cx="' + X(last[0]) + '" cy="' + Y(last[1]) + '" r="5" fill="var(--mc-cyan)" data-tip="' + UI.fmtDayShort(dayUTC(state.mo.y, state.mo.m, last[0])) + ": " + M(last[1]) + '"/>';
+      [1, 8, 15, 22, n].forEach(d => { out += '<text x="' + X(d) + '" y="' + (h - 6) + '" text-anchor="middle">' + d + "</text>"; });
+      s.innerHTML = out; s.setAttribute("aria-label", t("cCum"));
+    }
+    function drawDaily(A, cut) {
+      const { s, w, h } = svgEl("svgDaily"); const pad = { l: 44, r: 12, t: 10, b: 22 };
+      const n = A.series.length, max = Math.max.apply(null, A.series.map(x => Math.max(x.net, x.goalDay))) * 1.1 || 1;
+      const bw = (w - pad.l - pad.r) / n;
+      const X = d => pad.l + bw * (d - 1), Y = v => pad.t + (h - pad.t - pad.b) * (1 - v / max);
+      let out = axes(w, h, pad, max);
+      A.series.forEach(x => {
+        if (x.d > cut || !x.work) return;
+        const live = x.d === cut;
+        out += '<rect x="' + (X(x.d) + 1) + '" y="' + Y(x.net) + '" width="' + Math.max(2, bw - 2) + '" height="' + (Y(0) - Y(x.net)) + '" rx="2" fill="' + (live ? "var(--mc-cyan)" : x.net >= x.goalDay ? "var(--mc-teal)" : "var(--mc-bad)") + '" data-tip="' + UI.fmtDayShort(dayUTC(state.mo.y, state.mo.m, x.d)) + ": " + M(x.net) + " / " + t("goal") + " " + M(x.goalDay) + '"/>';
+      });
+      out += '<polyline fill="none" stroke="var(--mc-amber)" stroke-width="2" stroke-dasharray="5 4" points="' + A.series.filter(x => x.work).map(x => (X(x.d) + bw / 2) + "," + Y(x.goalDay)).join(" ") + '"/>';
+      [1, 8, 15, 22, n].forEach(d => { out += '<text x="' + (X(d) + bw / 2) + '" y="' + (h - 6) + '" text-anchor="middle">' + d + "</text>"; });
+      s.innerHTML = out; s.setAttribute("aria-label", t("cDaily"));
+    }
+    function drawPath(T) {
+      const { s, w, h } = svgEl("svgPath");
+      const cx = w / 2, cy = h * .62, r = Math.min(w * .38, h * .5);
+      const arc = p => { const a = Math.PI * (1 - Math.min(p, 1)); return [cx + r * Math.cos(a), cy - r * Math.sin(a)]; };
+      const pNet = T.goal ? T.net / T.goal : 0, pExp = T.goal ? T.exp / T.goal : 0;
+      const e = arc(pNet), x = arc(pExp);
+      let out = '<path d="M' + (cx - r) + "," + cy + " A" + r + "," + r + " 0 0 1 " + (cx + r) + "," + cy + '" fill="none" stroke="rgba(148,163,184,.18)" stroke-width="16" stroke-linecap="round"/>';
+      out += '<path d="M' + (cx - r) + "," + cy + " A" + r + "," + r + " 0 0 1 " + e[0] + "," + e[1] + '" fill="none" stroke="' + (pNet >= pExp ? "var(--mc-teal)" : "var(--mc-bad)") + '" stroke-width="16" stroke-linecap="round"/>';
+      out += '<line x1="' + (cx + (r - 14) * (x[0] - cx) / r) + '" y1="' + (cy + (r - 14) * (x[1] - cy) / r) + '" x2="' + (cx + (r + 14) * (x[0] - cx) / r) + '" y2="' + (cy + (r + 14) * (x[1] - cy) / r) + '" stroke="var(--mc-amber)" stroke-width="3"/>';
+      out += '<text x="' + cx + '" y="' + (cy - 8) + '" text-anchor="middle" style="font-size:24px;font-weight:900;fill:var(--mc-text)">' + UI.fmtPct(pNet) + "</text>";
+      out += '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle">' + t("achieved") + " · " + t("expected") + " " + UI.fmtPct(pExp) + "</text>";
+      out += '<text x="' + cx + '" y="' + (cy + 30) + '" text-anchor="middle">' + M(T.net) + " / " + M(T.goal) + "</text>";
+      s.innerHTML = out; s.setAttribute("aria-label", t("cPath") + ": " + UI.fmtPct(pNet));
+    }
+    function drawWater(T) {
+      const { s, w, h } = svgEl("svgWater"); const pad = { l: 44, r: 10, t: 14, b: 26 };
+      const steps = [[t("invoiced"), T.inv, 0, "var(--mc-cyan)"], [t("returns"), -T.ret, T.inv, "var(--mc-bad)"], [t("discounts"), -T.disc, T.inv - T.ret, "var(--mc-bad)"], [t("net"), T.net, 0, "var(--mc-teal)"]];
+      const max = T.inv * 1.05 || 1, bw = (w - pad.l - pad.r) / steps.length;
+      const Y = v => pad.t + (h - pad.t - pad.b) * (1 - v / max);
+      let out = axes(w, h, pad, max);
+      steps.forEach((st, k) => {
+        const top = st[1] >= 0 ? st[2] + st[1] : st[2], bot = st[1] >= 0 ? st[2] : st[2] + st[1];
+        const x = pad.l + bw * k + bw * .18, wd = bw * .64;
+        out += '<rect x="' + x + '" y="' + Y(top) + '" width="' + wd + '" height="' + Math.max(1.5, Y(bot) - Y(top)) + '" rx="3" fill="' + st[3] + '" data-tip="' + st[0] + ": " + M(Math.abs(st[1])) + '"/>';
+        out += '<text x="' + (x + wd / 2) + '" y="' + (h - 8) + '" text-anchor="middle">' + st[0] + "</text>";
+      });
+      s.innerHTML = out; s.setAttribute("aria-label", t("cWater"));
+    }
+    function drawHeat(groups, A, cut) {
+      const max = Math.max(1, ...groups.flatMap(g => g.days));
+      const n = A.series.length;
+      const el = document.getElementById("heat");
+      el.style.gridTemplateColumns = "minmax(70px, 110px) repeat(" + n + ", minmax(6px, 1fr))";
+      el.innerHTML = groups.map(g => '<span class="lbl" title="' + g.name + '">' + g.name + "</span>" + g.days.map((v, k) => {
+        const work = A.series[k].work && k + 1 <= cut;
+        return '<span class="cell" style="background:' + (work ? "rgba(20,184,166," + (.12 + .88 * v / max).toFixed(2) + ")" : "rgba(148,163,184,.08)") + '" data-tip="' + g.name + " · " + (k + 1) + ": " + (work ? M(v) : "—") + '"></span>';
+      }).join("")).join("");
     }
 
     function render() {
-      const day = new Date(dayInput.value + "T00:00:00Z");
-      rows = dayData(day);
-      prevRows = dayData(shift(day, -7));
-      const gross = sum(rows, "gross"), ret = sum(rows, "returns"), net = gross - ret;
-      const pGross = sum(prevRows, "gross"), pNet = pGross - sum(prevRows, "returns");
-      const cash = sum(rows, "cash"), collected = sum(rows, "collected");
+      if (!state) return;
+      const { mo, cut } = state;
+      const selSups = ($g.val() || []).map(Number);
+      const supIdxs = selSups.length ? selSups : SUPS.map((_, i) => i);
+      let sellerIdxs = supIdxs.flatMap(i => SUPS[i].sellers);
+      if (level.sup != null) sellerIdxs = SUPS[level.sup].sellers;
+      if (level.seller != null) sellerIdxs = [level.seller];
+      const A = agg(mo, cut, sellerIdxs);
+      const T = A.res.reduce((a, x) => { ["inv", "ret", "disc", "net", "day", "goal", "exp", "goalDay"].forEach(k => a[k] += x[k]); return a; }, { inv: 0, ret: 0, disc: 0, net: 0, day: 0, goal: 0, exp: 0, goalDay: 0 });
+      const cutDay = dayUTC(mo.y, mo.m, cut);
+      const monthLbl = UI.monthName(mo.m) + " " + mo.y;
 
-      document.getElementById("kGross").textContent = UI.fmtMoney(gross);
-      document.getElementById("kGrossD").innerHTML = deltaHtml(gross, pGross);
-      document.getElementById("kRet").textContent = UI.fmtMoney(ret);
-      document.getElementById("kRetD").textContent = UI.fmtPct(ret / gross) + " of gross sales";
-      document.getElementById("kNet").textContent = UI.fmtMoney(net);
-      document.getElementById("kNetD").innerHTML = deltaHtml(net, pNet);
-      document.getElementById("kCash").textContent = UI.fmtMoney(cash + collected);
-      document.getElementById("kCashD").textContent = "Cash sales + credit collected";
+      // crumbs + title
+      let crumbs = '<button type="button" data-level="top">' + t("crumbAll") + "</button>";
+      if (level.sup != null) crumbs += " / " + (level.seller != null ? '<button type="button" data-level="sup">' + SUPS[level.sup].name + "</button>" : "<span>" + SUPS[level.sup].name + "</span>");
+      if (level.seller != null) crumbs += " / <span>" + D.sellers[level.seller] + "</span>";
+      document.getElementById("crumbs").innerHTML = crumbs;
+      document.getElementById("dTitle").textContent = level.seller != null ? t("titleSeller", { s: D.sellers[level.seller] }) : level.sup != null ? t("titleSup", { s: SUPS[level.sup].name }) : t("titleTop");
+      document.getElementById("dSub").textContent = t("sub", { m: monthLbl, e: A.we, w: A.wt });
+      document.getElementById("dOrigin").textContent = t("origin", { d: UI.fmtDayShort(cutDay) });
+      document.getElementById("back").hidden = level.sup == null;
 
-      const pay = [["Cash", sum(rows, "cash")], ["Card", sum(rows, "card")], ["Transfer", sum(rows, "transfer")], ["Credit", sum(rows, "credit")]];
-      document.getElementById("ladder").innerHTML =
-        '<div class="ladder-row total"><span>Gross sales</span><span class="num">' + UI.fmtMoney(gross) + "</span></div>" +
-        pay.map(p => '<div class="ladder-row indent"><span>' + p[0] + '</span><span class="num">' + UI.fmtMoney(p[1]) + "</span></div>").join("") +
-        '<div class="ladder-row"><span>− Returns</span><span class="num neg">' + UI.fmtMoney(-ret) + "</span></div>" +
-        '<div class="ladder-row result"><span>Net sales</span><span class="num">' + UI.fmtMoney(net) + "</span></div>";
+      // KPIs
+      const netG = A.res.filter(x => x.goal > 0).reduce((a, x) => a + x.net, 0);
+      const pct = T.exp ? netG / T.exp : 0, proj = A.we ? T.net / A.we * A.wt : 0;
+      const withGoal = A.res.filter(x => x.goal > 0), onPace = withGoal.filter(x => x.pct >= 1).length;
+      document.getElementById("kpis").innerHTML =
+        '<section class="dv-kpi"><h3>' + mi("payments") + t("kpiNet") + '</h3><strong class="num">' + M(T.net) + "</strong><p><span>" + t("kpiDay") + "</span><b>" + M(T.day) + "</b></p></section>" +
+        '<section class="dv-kpi"><h3>' + mi("flag") + t("kpiGoal") + '</h3><strong class="num">' + M(T.goal) + "</strong><p><span>" + t("kpiExpected") + "</span><b>" + M(T.exp) + "</b></p><p><span>" + t("kpiGoalDay") + "</span><b>" + M(T.goalDay) + "</b></p></section>" +
+        '<section class="dv-kpi"><h3>' + mi("speed") + t("kpiPct") + UI.helpBtn("aboutText") + '</h3><strong class="num">' + UI.fmtPct(pct) + '</strong><span class="dv-ritmo ' + (pct >= 1 ? "ok" : "bad") + '">' + mi(pct >= 1 ? "trending_up" : "trending_down") + t(pct >= 1 ? "ahead" : "behind") + "</span><p><span>" + t("kpiProj") + "</span><b>" + M(proj) + "</b></p></section>" +
+        '<section class="dv-kpi"><h3>' + mi("groups") + t("kpiCover") + '</h3><strong class="num">' + UI.fmtPct(A.res.length ? withGoal.length / A.res.length : 0) + "</strong><p><span>" + t("kpiNoGoal") + "</span><b>" + (A.res.length - withGoal.length) + "</b></p><p><span>" + t("kpiOk") + "</span><b>" + onPace + " / " + withGoal.length + "</b></p></section>";
 
-      renderTable();
-      renderChart(day);
-    }
-
-    function renderTable() {
-      const data = rows.map((x, i) => ({ ...x, card: x.card / x.gross, vs: (x.net - prevRows[i].net) / prevRows[i].net, prog: x.net / x.goal }));
-      data.sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : -1) * sortDir);
-      document.querySelector("#branches tbody").innerHTML = data.map(x => {
-        const pct = Math.min(x.prog, 1.25);
-        const color = x.prog >= 1 ? "var(--positive)" : x.prog >= 0.85 ? "var(--warning)" : "var(--negative)";
-        return "<tr><td>" + x.branch + "</td><td>" + x.region + '</td><td class="r num">' + UI.fmtInt(x.tickets) + '</td><td class="r num">' + UI.fmtMoney(x.net) +
-          '</td><td class="r num">' + UI.fmtPct(x.card) + '</td><td class="r num ' + (x.vs >= 0 ? "pos" : "neg") + '">' + (x.vs >= 0 ? "+" : "") + UI.fmtPct(x.vs) +
-          '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar-track" style="flex:1"><span style="width:' + (pct / 1.25 * 100) + "%;background:" + color + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(x.prog, 0) + "</span></div></td></tr>";
-      }).join("");
-      const net = sum(rows, "net"), pnet = sum(prevRows, "net");
-      document.querySelector("#branches tfoot").innerHTML = "<tr><td>Total</td><td></td><td class='r num'>" + UI.fmtInt(sum(rows, "tickets")) + "</td><td class='r num'>" + UI.fmtMoney(net) +
-        "</td><td class='r num'>" + UI.fmtPct(sum(rows, "card") / sum(rows, "gross")) + "</td><td class='r num " + (net >= pnet ? "pos" : "neg") + "'>" + UI.fmtPct((net - pnet) / pnet) + "</td><td class='num'>" + UI.fmtPct(net / sum(rows, "goal"), 0) + "</td></tr>";
-      document.querySelectorAll("#branches th.sortable").forEach(th => {
-        th.setAttribute("aria-sort", th.dataset.k === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none");
-        th.tabIndex = 0;
-      });
-    }
-
-    function renderChart(day) {
-      const labels = [], cur = [], prev = [];
-      for (let i = 29; i >= 0; i--) {
-        const d = shift(day, -i);
-        labels.push(UI.fmtDate(d).slice(5));
-        const r = dayData(d), p = dayData(shift(d, -7));
-        cur.push(sum(r, "net"));
-        prev.push(sum(p, "net"));
+      // Ranking cards
+      let groups;
+      if (level.seller != null) {
+        const r = UI.rng(level.seller * 31 + mo.m);
+        const share = D.customers.map(() => UI.between(r, .2, 1)); const tot = share.reduce((a, b) => a + b, 0);
+        groups = D.customers.map((c, k) => ({ key: null, name: c, net: T.net * share[k] / tot, exp: 0, goal: 0, sub: UI.L(D.categories[k % D.categories.length]), days: A.series.map(x => x.net * share[k] / tot) })).sort((a, b) => b.net - a.net).slice(0, 12);
+        document.getElementById("rankTitle").textContent = t("rankCust"); document.getElementById("rankHelp").textContent = t("rankHelpCust");
+      } else if (level.sup != null) {
+        groups = A.res.map(x => ({ key: "s" + x.s.i, name: x.s.name, net: x.net, exp: x.exp, goal: x.goal, pct: x.pct, sub: x.s.branch, days: x.s.daily.map((v, k) => v && k + 1 <= cut ? v.inv - v.ret - v.disc : 0) }));
+        document.getElementById("rankTitle").textContent = t("rankSel"); document.getElementById("rankHelp").textContent = t("rankHelpSel");
+      } else {
+        groups = supIdxs.map(si => { const rs = A.res.filter(x => x.s.sup === si); const net = rs.reduce((a, x) => a + x.net, 0), exp = rs.reduce((a, x) => a + x.exp, 0), goal = rs.reduce((a, x) => a + x.goal, 0), netG = rs.filter(x => x.goal > 0).reduce((a, x) => a + x.net, 0);
+          return { key: "g" + si, name: SUPS[si].name, net, exp, goal, pct: exp ? netG / exp : null, sub: rs.length + " " + t("colSeller").toLowerCase() + (UI.lang === "es" ? "es" : "s"), days: A.series.map((_, k) => rs.reduce((a, x) => { const v = x.s.daily[k]; return a + (v && k + 1 <= cut ? v.inv - v.ret - v.disc : 0); }, 0)) }; });
+        document.getElementById("rankTitle").textContent = t("rankSup"); document.getElementById("rankHelp").textContent = t("rankHelpSup");
       }
-      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
-      const cfg = {
-        type: "line",
-        data: { labels, datasets: [
-          { label: "Net sales", data: cur, borderColor: UI.cssVar("--chart-1"), backgroundColor: UI.cssVar("--chart-1"), tension: .3, pointRadius: 0, borderWidth: 2 },
-          { label: "Same weekday last week", data: prev, borderColor: text, borderDash: [5, 4], tension: .3, pointRadius: 0, borderWidth: 1.5 }
-        ] },
-        options: {
-          maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
-          plugins: { legend: { labels: { color: text, boxWidth: 14 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + UI.fmtMoney(c.parsed.y) } } },
-          scales: { x: { ticks: { color: text, maxTicksLimit: 8 }, grid: { display: false } }, y: { ticks: { color: text, callback: v => (v / 1000) + "k" }, grid: { color: grid } } }
-        }
-      };
-      if (chart) chart.destroy();
-      chart = new Chart(document.getElementById("trend"), cfg);
+      const sorters = { net: (a, b) => b.net - a.net, pct: (a, b) => (b.pct || 0) - (a.pct || 0), gap: (a, b) => (a.net - a.exp) - (b.net - b.exp) };
+      groups.sort(sorters[order]);
+      const scale = Math.max(1, ...groups.map(g => Math.max(g.net, g.exp)));
+      document.getElementById("order").innerHTML = [["net", "oNet"], ["pct", "oPct"], ["gap", "oGap"]].map(o => '<button type="button" data-order="' + o[0] + '" aria-pressed="' + (order === o[0]) + '">' + t(o[1]) + "</button>").join("");
+      document.getElementById("rankCount").textContent = t("count", { n: groups.length });
+      document.getElementById("ranking").innerHTML = groups.map(g =>
+        '<button type="button" class="dv-group" ' + (g.key ? 'data-key="' + g.key + '"' : "disabled") + ">" +
+          "<header><b>" + g.name + "</b><span>" + (g.sub || "") + "</span></header>" +
+          '<div class="dv-bullet"><span class="net' + (g.exp && g.net < g.exp * .95 ? " low" : "") + '" style="width:' + (g.net / scale * 100) + '%"></span>' + (g.exp ? '<span class="exp" style="left:' + (g.exp / scale * 100) + '%"></span>' : "") + "</div>" +
+          '<div class="nums"><span>' + t("net") + " <b>" + M(g.net) + "</b></span>" + (g.exp ? "<span>" + t("expected") + " <b>" + M(g.exp) + "</b></span><span><b class=\"" + (g.pct >= 1 ? "pos" : "neg") + '">' + UI.fmtPct(g.pct || 0) + "</b></span>" : (level.seller != null ? "" : "<span>" + t("noGoal") + "</span>")) + "</div>" +
+        "</button>").join("");
+
+      drawCum(A, cut); drawDaily(A, cut); drawPath(T); drawWater(T); drawHeat(groups, A, cut);
+
+      // Numeric table
+      document.querySelector("#tNum thead").innerHTML = "<tr><th>" + t("colGroup") + "</th><th>" + t("colSeller") + "</th><th>" + t("colBranch") + '</th><th class="r">' + t("colInv") + '</th><th class="r">' + t("colRet") + '</th><th class="r">' + t("colDisc") + '</th><th class="r">' + t("colNet") + '</th><th class="r">' + t("colGoal") + '</th><th class="r">' + t("colExp") + '</th><th class="r">' + t("colPct") + "</th></tr>";
+      document.querySelector("#tNum tbody").innerHTML = A.res.map(x => "<tr><td>" + SUPS[x.s.sup].name + "</td><td>" + x.s.name + "</td><td>" + x.s.branch + '</td><td class="r">' + M(x.inv) + '</td><td class="r">' + M(x.ret) + '</td><td class="r">' + M(x.disc) + '</td><td class="r">' + M(x.net) + '</td><td class="r">' + (x.goal ? M(x.goal) : t("noGoal")) + '</td><td class="r">' + M(x.exp) + '</td><td class="r ' + (x.pct == null ? "" : x.pct >= 1 ? "pos" : "neg") + '">' + (x.pct == null ? "—" : UI.fmtPct(x.pct)) + "</td></tr>").join("");
+      document.querySelector("#tNum tfoot").innerHTML = '<tr><td colspan="3">' + t("totals") + '</td><td class="r">' + M(T.inv) + '</td><td class="r">' + M(T.ret) + '</td><td class="r">' + M(T.disc) + '</td><td class="r">' + M(T.net) + '</td><td class="r">' + M(T.goal) + '</td><td class="r">' + M(T.exp) + '</td><td class="r">' + UI.fmtPct(pct) + "</td></tr>";
     }
 
-    document.querySelectorAll("#branches th.sortable").forEach(th => {
-      const go = () => { if (sortKey === th.dataset.k) sortDir *= -1; else { sortKey = th.dataset.k; sortDir = -1; } renderTable(); };
-      th.addEventListener("click", go);
-      th.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    function load() {
+      const d = new Date(dateIn.value + "T00:00:00Z");
+      state = { mo: month(d.getUTCFullYear(), d.getUTCMonth()), cut: d.getUTCDate() };
+      level = { sup: null, seller: null };
+      document.getElementById("dash").hidden = false;
+      document.getElementById("hint").textContent = t("loaded", { d: UI.fmtDay(d) }) + (isWork(d) ? "" : " " + t("sundayNote"));
+      render();
+    }
+
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); load(); });
+    document.getElementById("ranking").addEventListener("click", e => {
+      const b = e.target.closest("[data-key]"); if (!b) return;
+      const k = b.dataset.key;
+      if (k[0] === "g") level = { sup: Number(k.slice(1)), seller: null };
+      else level = { sup: level.sup, seller: Number(k.slice(1)) };
+      render();
+      document.getElementById("dTitle").scrollIntoView({ behavior: "smooth", block: "start" });
     });
-    dayInput.addEventListener("change", render);
-    document.addEventListener("themechange", () => renderChart(new Date(dayInput.value + "T00:00:00Z")));
-    render();
+    document.getElementById("crumbs").addEventListener("click", e => { const b = e.target.closest("[data-level]"); if (!b) return; level = b.dataset.level === "top" ? { sup: null, seller: null } : { sup: level.sup, seller: null }; render(); });
+    document.getElementById("back").addEventListener("click", () => { level = level.seller != null ? { sup: level.sup, seller: null } : { sup: null, seller: null }; render(); });
+    document.getElementById("order").addEventListener("click", e => { const b = e.target.closest("[data-order]"); if (b) { order = b.dataset.order; render(); } });
+    // Tooltip for chart marks
+    const tip = document.getElementById("tip");
+    document.addEventListener("mousemove", e => { const el = e.target.closest("[data-tip]"); if (!el) { tip.hidden = true; return; } tip.textContent = el.getAttribute("data-tip"); tip.hidden = false; tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = (e.clientY + 12) + "px"; });
+    let rT; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(render, 150); });
+    document.querySelector("details.dv-extras").addEventListener("toggle", render);
+    document.addEventListener("langchange", () => { fillGroups(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutDash"); if (state) { const d = new Date(dateIn.value + "T00:00:00Z"); document.getElementById("hint").textContent = t("loaded", { d: UI.fmtDay(d) }) + (isWork(d) ? "" : " " + t("sundayNote")); render(); } else document.getElementById("hint").textContent = t("hintStart"); });
+    document.addEventListener("themechange", render);
+    UI.strings({ en: { aboutDash: "About this dashboard" }, es: { aboutDash: "Acerca de este dashboard" } });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutDash");
+    document.getElementById("hint").textContent = t("hintStart");
+    load();
   });
   </script>
 </body>

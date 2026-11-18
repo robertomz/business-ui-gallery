@@ -3,361 +3,376 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Maintenance Planner · Business UI Gallery</title>
+  <title>Maintenance planner · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .plan-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--space-4); align-items: start; }
-    .cal-head { display: flex; align-items: center; gap: 8px; }
-    .cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
-    .cal .dow { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); padding: 6px 8px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface-2); }
-    .day { min-height: 104px; padding: 6px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-    .day.other { background: var(--surface-2); }
-    .day.other .dnum { color: var(--text-muted); opacity: .6; }
-    .day.today { box-shadow: inset 0 0 0 2px var(--primary); }
-    .dnum { font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); }
-    .job {
-      display: flex; align-items: center; gap: 4px; width: 100%; text-align: left;
-      font: inherit; font-size: .74rem; line-height: 1.25; padding: 3px 6px; border-radius: 5px; cursor: pointer;
-      border: 1px solid transparent; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-    }
-    .job svg { width: 12px; height: 12px; flex: none; }
-    .job span { overflow: hidden; text-overflow: ellipsis; }
-    .job.t-equipment { background: var(--info-bg); color: var(--info); }
-    .job.t-vehicle { background: var(--positive-bg); color: var(--positive); }
-    .job.t-ac { background: var(--warning-bg); color: var(--warning); }
-    .job.done { opacity: .6; text-decoration: line-through; }
-    .job.overdue { border-color: var(--negative); }
-    .more { font-size: .72rem; color: var(--text-muted); }
-    .side-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-    .item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); text-align: left; font: inherit; color: var(--text); cursor: pointer; width: 100%; }
-    .item:hover { background: var(--surface-2); }
-    .item .when { font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); white-space: nowrap; }
-    .alert { display: flex; gap: 8px; align-items: flex-start; color: var(--negative); font-size: .85rem; }
-    .alert svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
-    .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .8rem; }
-    .check-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-    .check-list label { display: flex; gap: 8px; align-items: center; font-size: .9rem; color: var(--text); }
-    .check-list input { width: 18px; height: 18px; }
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-    .modal.small { width: min(620px, 100%); }
-    textarea.input { min-height: 80px; resize: vertical; }
-    @media (max-width: 1100px) { .plan-layout { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) {
-      .day { min-height: 64px; padding: 3px; }
-      .job span { display: none; }
-      .job { justify-content: center; padding: 3px; }
-      .cal .dow { padding: 4px; font-size: .64rem; }
-      .form-grid { grid-template-columns: 1fr; }
-    }
+    .mt-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mt-cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .mt-cal-head h4 { font-size: 14px; font-weight: 800; }
+    .mt-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .mt-dow { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); text-align: center; padding: 4px 0; }
+    .mt-day { min-height: 86px; border: 1px solid var(--mc-line); border-radius: 6px; padding: 4px; background: var(--mc-panel-2); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .mt-day.out { opacity: .4; }
+    .mt-day.today { border-color: var(--mc-cyan); box-shadow: inset 0 0 0 1px var(--mc-cyan); }
+    .mt-day .n { font-size: 11px; font-weight: 800; color: var(--mc-muted); }
+    .mt-ev { display: block; width: 100%; text-align: left; font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 4px; border: 0; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+    .mt-ev.prev { background: #0f766e; } .mt-ev.corr { background: #b45309; } .mt-ev.done { background: #475569; text-decoration: line-through; } .mt-ev.late { background: #be123c; }
+    .mt-more { font-size: 10px; color: var(--mc-muted); }
+    .mt-alert { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 6px; border-left: 3px solid var(--mc-bad); background: rgba(251,113,133,.07); font-size: 12px; margin-bottom: 6px; }
+    .mt-alert .material-icons { color: var(--mc-bad); }
+    .mt-check { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--mc-line); font-size: 12px; }
+    .mt-check input { width: 18px; height: 18px; accent-color: var(--mc-teal); }
+    .mt-equipos { max-height: 170px; overflow: auto; border: 1px solid var(--mc-line); border-radius: 6px; padding: 6px 8px; background: var(--mc-panel-2); }
+    .mt-equipos label { display: flex; gap: 8px; align-items: center; font-size: 12px; padding: 3px 0; cursor: pointer; }
+    @media (max-width: 760px) { .mt-day { min-height: 54px; } .mt-ev { font-size: 0; padding: 0; height: 6px; } .mt-more { display: none; } }
   </style>
 </head>
 <body data-page="maintenance" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Maintenance planner</h1>
-        <p class="muted">Preventive maintenance for equipment, vehicles and air conditioning, so nothing waits until it breaks.</p>
+  <main id="content">
+    <div class="mc-head"><div><h2 data-i18n="title"></h2><p data-i18n="subtitle"></p></div><span class="mc-chip-time" data-i18n="year"></span></div>
+
+    <section class="mc-kpis" id="kpis"></section>
+
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">bolt</span><span data-i18n="quick"></span></h3></div>
+      <div class="mt-quick">
+        <button class="btn btn-teal" type="button" id="btnSched"><span class="material-icons" aria-hidden="true">event</span><span data-i18n="schedule"></span></button>
+        <button class="btn btn-violet" type="button" id="btnPlan"><span class="material-icons" aria-hidden="true">event_repeat</span><span data-i18n="annualPlan"></span></button>
+        <button class="btn btn-amber" type="button" id="btnLate"><span class="material-icons" aria-hidden="true">schedule</span><span data-i18n="showLate"></span></button>
       </div>
-      <button class="btn btn-primary" id="newJob" type="button">Schedule job</button>
+    </section>
+
+    <section class="mc-panel">
+      <div class="mc-filters">
+        <div class="mc-field"><label for="fCenter" data-i18n="center"></label><select id="fCenter"></select></div>
+        <div class="mc-field"><label for="fCat" data-i18n="category"></label><select id="fCat"></select></div>
+        <div class="mc-field"><label for="fType" data-i18n="type"></label><select id="fType"></select></div>
+        <div class="mc-field"><label for="fStatus" data-i18n="status"></label><select id="fStatus"></select></div>
+      </div>
+    </section>
+
+    <div class="split">
+      <section class="mc-panel">
+        <div class="mt-cal-head">
+          <button class="mc-icon-btn" type="button" id="calPrev" data-i18n-title="prevMonth"><span class="material-icons" aria-hidden="true">chevron_left</span></button>
+          <h4 id="calTitle" aria-live="polite"></h4>
+          <button class="mc-icon-btn" type="button" id="calNext" data-i18n-title="nextMonth"><span class="material-icons" aria-hidden="true">chevron_right</span></button>
+        </div>
+        <div class="mt-cal" id="cal"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" id="calLegend"></div>
+      </section>
+      <section class="mc-panel">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">notifications_active</span><span data-i18n="reminders"></span></h3></div>
+        <div id="alerts"></div>
+      </section>
     </div>
 
-    <section class="kpis" aria-label="Maintenance status">
-      <div class="card kpi"><div class="kpi-label">Assets under plan</div><div class="kpi-value" id="kAssets"></div><div class="kpi-delta muted">Equipment, vehicles, AC units</div></div>
-      <div class="card kpi"><div class="kpi-label">Due in 14 days</div><div class="kpi-value" id="kSoon"></div><div class="kpi-delta muted">Scheduled and not done</div></div>
-      <div class="card kpi"><div class="kpi-label">Overdue</div><div class="kpi-value neg" id="kOver"></div><div class="kpi-delta muted">Past their date</div></div>
-      <div class="card kpi"><div class="kpi-label">Done this month</div><div class="kpi-value pos" id="kDone"></div><div class="kpi-delta muted" id="kDoneD"></div></div>
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">upcoming</span><span data-i18n="upcoming"></span></h3><span class="mc-hint" id="upCount"></span></div>
+      <div class="table-wrap"><table class="grid" id="tUp"><thead></thead><tbody></tbody></table></div>
     </section>
 
-    <section class="plan-layout">
-      <div class="card">
-        <div class="card-head">
-          <div class="cal-head">
-            <button class="btn icon-btn" id="prev" type="button" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
-            <h2 id="monthTitle" aria-live="polite" style="min-width:150px;text-align:center"></h2>
-            <button class="btn icon-btn" id="next" type="button" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
-            <button class="btn" id="todayBtn" type="button">Today</button>
-          </div>
-          <div class="legend" id="legend"></div>
-        </div>
-        <div class="card-body"><div class="cal" id="cal"></div></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:var(--space-4)">
-        <section class="card card-body" aria-labelledby="overTitle">
-          <h2 id="overTitle">Overdue</h2>
-          <div class="side-list" id="overList"></div>
-        </section>
-        <section class="card card-body" aria-labelledby="soonTitle">
-          <h2 id="soonTitle">Next 14 days</h2>
-          <div class="side-list" id="soonList"></div>
-        </section>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-head"><h2>Assets and plans</h2><span class="muted" style="font-size:.82rem">Next date = last done + frequency</span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="assets">
-          <thead><tr><th>Asset</th><th>Type</th><th>Location</th><th class="r">Every</th><th>Last done</th><th>Next due</th><th>Status</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Each asset has a maintenance plan with a frequency. Completing a job schedules the next one automatically from the day it was really done, not from the planned day.</li>
-        <li>A job can only be closed when its checklist is complete, or with a note that explains what was left pending.</li>
-        <li>Overdue jobs stay visible on every screen until someone completes or reschedules them.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
-  <!-- Schedule job -->
-  <div class="modal-backdrop" id="mSchedule" role="dialog" aria-modal="true" aria-labelledby="mScheduleTitle">
-    <div class="modal small">
-      <div class="modal-head"><h2 id="mScheduleTitle">Schedule maintenance job</h2></div>
+  <!-- Schedule modal -->
+  <div class="modal-backdrop" id="mSched">
+    <div class="modal" style="width:min(820px,100%)" role="dialog" aria-modal="true" aria-labelledby="mSchedT">
+      <div class="modal-head"><h3 id="mSchedT"><span class="material-icons" aria-hidden="true">event</span><span data-i18n="schedule"></span></h3></div>
       <div class="modal-body">
-        <div class="form-grid">
-          <div class="field" style="grid-column:1/-1"><label for="sAsset">Asset</label><select class="input" id="sAsset"></select><span class="field-error" id="eAsset"></span></div>
-          <div class="field"><label for="sDate">Date</label><input class="input" type="date" id="sDate"><span class="field-error" id="eDate"></span></div>
-          <div class="field"><label for="sTech">Technician</label><select class="input" id="sTech"></select><span class="field-error" id="eTech"></span></div>
-          <div class="field" style="grid-column:1/-1"><label for="sChecklist">Checklist (one task per line)</label><textarea class="input" id="sChecklist"></textarea><span class="field-error" id="eChecklist"></span></div>
+        <div class="mc-filters">
+          <div class="mc-field"><label for="sCenter" data-i18n="centerReq"></label><select id="sCenter"></select></div>
+          <div class="mc-field"><label for="sArea" data-i18n="areaReq"></label><select id="sArea"></select></div>
+          <div class="mc-field"><label for="sCat" data-i18n="categoryReq"></label><select id="sCat"></select></div>
+          <div class="mc-field"><label for="sType" data-i18n="type"></label><select id="sType"></select></div>
+        </div>
+        <div class="mc-field" style="margin-top:10px">
+          <label data-i18n="equipment"></label>
+          <div style="display:flex;gap:6px;margin-bottom:4px"><button class="btn btn-sm" type="button" id="selAll" data-i18n="selAll"></button><button class="btn btn-sm" type="button" id="selNone" data-i18n="selNone"></button></div>
+          <div class="mt-equipos" id="sEquip"></div>
+          <span class="mc-field-error" id="sEquipErr"></span>
+        </div>
+        <div class="mc-filters" style="margin-top:10px">
+          <div class="mc-field"><label for="sDate" data-i18n="dateReq"></label><input type="date" id="sDate"><span class="mc-field-error" id="sDateErr"></span></div>
+          <div class="mc-field"><label for="sNotice" data-i18n="notice"></label><input type="date" id="sNotice"></div>
+          <div class="mc-field"><label for="sTech" data-i18n="techReq"></label><select id="sTech"></select></div>
+          <div class="mc-field"><label for="sCost" data-i18n="unitCost"></label><input id="sCost" class="num" inputmode="decimal"></div>
+          <div class="mc-field"><label data-i18n="totalCost"></label><div class="static num" id="sTotal">0.00</div></div>
         </div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="sSave" type="button">Schedule</button>
-        <button class="btn" id="sClose" type="button">Close</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="sSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button><button class="btn" type="button" data-close="mSched" data-i18n="close"></button></div>
     </div>
   </div>
 
-  <!-- Complete job -->
-  <div class="modal-backdrop" id="mJob" role="dialog" aria-modal="true" aria-labelledby="mJobTitle">
-    <div class="modal small">
-      <div class="modal-head"><h2 id="mJobTitle">Job</h2><span id="jStatus"></span></div>
+  <!-- Annual plan modal -->
+  <div class="modal-backdrop" id="mPlan">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mPlanT">
+      <div class="modal-head"><h3 id="mPlanT"><span class="material-icons" aria-hidden="true">event_repeat</span><span data-i18n="annualPlan"></span></h3></div>
       <div class="modal-body">
-        <p class="muted" id="jMeta" style="font-size:.88rem"></p>
-        <h3 style="margin:14px 0 8px">Checklist</h3>
-        <ul class="check-list" id="jChecks"></ul>
-        <div class="field" style="margin-top:14px"><label for="jNotes">Notes</label><textarea class="input" id="jNotes"></textarea><span class="field-error" id="eNotes"></span></div>
-        <p class="muted" id="jNext" style="font-size:.85rem;margin-top:8px"></p>
+        <div class="mc-filters" style="flex-direction:column;align-items:stretch">
+          <div class="mc-field"><label for="pCat" data-i18n="category"></label><select id="pCat"></select></div>
+          <div class="mc-field"><label for="pStart" data-i18n="planStart"></label><input type="date" id="pStart"></div>
+          <p class="mc-hint" id="pInfo"></p>
+        </div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="jComplete" type="button">Complete job</button>
-        <button class="btn" id="jClose" type="button">Close</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="pGo"><span class="material-icons" aria-hidden="true">play_arrow</span><span data-i18n="generate"></span></button><button class="btn" type="button" data-close="mPlan" data-i18n="close"></button></div>
     </div>
   </div>
 
+  <!-- Complete job modal -->
+  <div class="modal-backdrop" id="mDone">
+    <div class="modal" style="width:min(620px,100%)" role="dialog" aria-modal="true" aria-labelledby="mDoneT">
+      <div class="modal-head"><h3 id="mDoneT"><span class="material-icons" aria-hidden="true">task_alt</span><span id="dTitle"></span></h3></div>
+      <div class="modal-body">
+        <p class="mc-hint" id="dInfo" style="margin-bottom:8px"></p>
+        <div id="dChecks"></div>
+        <div class="mc-filters" style="margin-top:10px">
+          <div class="mc-field"><label for="dDate" data-i18n="attended"></label><input type="date" id="dDate"></div>
+          <div class="mc-field w-lg"><label for="dNote" data-i18n="notes"></label><textarea id="dNote" data-i18n-ph="notesPh"></textarea><span class="mc-field-error" id="dErr"></span></div>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="dSave"><span class="material-icons" aria-hidden="true">task_alt</span><span data-i18n="complete"></span></button><button class="btn" type="button" data-close="mDone" data-i18n="close"></button></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const DAY = 86400000;
+  UI.strings({
+    en: {
+      title: "Maintenance control panel", subtitle: "Preventive and corrective maintenance of equipment, vehicles and air conditioning by cost center.", year: "Current year",
+      kTotal: "Total equipment", kDone: "Completed", kPending: "Pending", kLate: "Late", kEff: "Efficiency", kEffSub: "Completed on time",
+      quick: "Quick actions", schedule: "Schedule maintenance", annualPlan: "Generate annual preventive plan", showLate: "Show late jobs",
+      center: "Cost center", category: "Category", type: "Type", prevMonth: "Previous month", nextMonth: "Next month",
+      reminders: "Reminders", upcoming: "Upcoming maintenance", upShown: "{n} jobs in the next 30 days",
+      colEquip: "Equipment", colArea: "Area", colType: "Type", colDate: "Date", colTech: "Responsible", colStatus: "Status", colAction: "Action",
+      preventive: "Preventive", corrective: "Corrective", pending: "Pending", completed: "Completed", late: "Late",
+      catPc: "Computers", catVeh: "Vehicles", catAc: "Air conditioning", catPrint: "Printers", catGen: "Power generators",
+      complete: "Complete", view: "View",
+      lateAlert: "{e} is {d} days late ({date}).", noticeAlert: "Pre-notice: {e} on {date} ({d} days).", noAlerts: "No reminders for the next days.",
+      centerReq: "Cost center *", areaReq: "Location (physical area) *", categoryReq: "Category *", equipment: "Equipment *", selAll: "Select all", selNone: "Deselect all",
+      dateReq: "Maintenance date *", notice: "Pre-notice date", techReq: "Responsible *", unitCost: "Individual cost", totalCost: "Total cost",
+      equipErr: "Select at least one piece of equipment.", dateErr: "Choose the date.", saved: "{n} maintenance jobs scheduled.",
+      planStart: "Plan start date", planInfo: "The annual preventive maintenance will be generated for {n} pieces of equipment of {c}, every {f} months, starting on the date above.",
+      generate: "Generate", planDone: "{n} preventive jobs generated for the year.",
+      attended: "Attention date", notes: "Notes", notesPh: "What was done, parts replaced…", checkErr: "Check every item or explain in the notes why one was not done.",
+      doneMsg: "Completed. Next preventive maintenance: {date}.", jobOf: "{e} · {t}",
+      chk_pc: ["Clean fans and filters", "Check disk health", "Install updates", "Test backup"], chk_veh: ["Change oil and filter", "Check brakes", "Check tires and pressure", "Check lights"],
+      chk_ac: ["Clean filters", "Check refrigerant", "Clean condenser", "Check drain"], chk_print: ["Clean rollers", "Check toner and drum", "Print test page"], chk_gen: ["Check oil and coolant", "Test start under load", "Check battery"],
+      aboutText: "The real screen is the maintenance control panel of the company: totals of equipment, jobs completed, pending and late, and the <b>efficiency</b> (completed on time over scheduled). <b>Schedule maintenance</b> goes in cascade: cost center → physical area → category → equipment, so only the equipment of that place can be chosen, and the total cost is the individual cost by the number of equipment. <b>Generate annual preventive plan</b> creates every job of the year from the frequency of each category. A job is completed by checking its list or explaining why an item was not done, and the next date is calculated from the day it was really done. All equipment and names are samples."
+    },
+    es: {
+      title: "Panel de control de mantenimiento", subtitle: "Mantenimiento preventivo y correctivo de equipos, vehículos y aires acondicionados por centro de costos.", year: "Año actual",
+      kTotal: "Total equipos", kDone: "Completados", kPending: "Pendientes", kLate: "Retrasados", kEff: "Eficiencia", kEffSub: "Completados a tiempo",
+      quick: "Acciones rápidas", schedule: "Programar mantenimiento", annualPlan: "Generar plan preventivo anual", showLate: "Ver retrasados",
+      center: "Centro de costos", category: "Categoría", type: "Tipo", prevMonth: "Mes anterior", nextMonth: "Mes siguiente",
+      reminders: "Recordatorios", upcoming: "Próximos mantenimientos", upShown: "{n} trabajos en los próximos 30 días",
+      colEquip: "Equipo", colArea: "Área", colType: "Tipo", colDate: "Fecha", colTech: "Responsable", colStatus: "Estado", colAction: "Acción",
+      preventive: "Preventivo", corrective: "Correctivo", pending: "Pendiente", completed: "Completado", late: "Retrasado",
+      catPc: "Computadoras", catVeh: "Vehículos", catAc: "Aires acondicionados", catPrint: "Impresoras", catGen: "Plantas eléctricas",
+      complete: "Completar", view: "Ver",
+      lateAlert: "{e} tiene {d} días de retraso ({date}).", noticeAlert: "Pre aviso: {e} el {date} ({d} días).", noAlerts: "No hay recordatorios para los próximos días.",
+      centerReq: "Centro de costos *", areaReq: "Ubicación (área física) *", categoryReq: "Categoría *", equipment: "Equipos *", selAll: "Seleccionar todas", selNone: "Deseleccionar todas",
+      dateReq: "Fecha de mantenimiento *", notice: "Fecha de pre aviso", techReq: "Responsable *", unitCost: "Costo individual", totalCost: "Costo total",
+      equipErr: "Seleccione al menos un equipo.", dateErr: "Elija la fecha.", saved: "Se programaron {n} mantenimientos.",
+      planStart: "Fecha de inicio del plan", planInfo: "Se generará el mantenimiento preventivo anual para {n} equipos de {c}, cada {f} meses, a partir de la fecha de arriba.",
+      generate: "Generar", planDone: "Se generaron {n} mantenimientos preventivos del año.",
+      attended: "Fecha de atención", notes: "Observaciones", notesPh: "Qué se hizo, repuestos cambiados…", checkErr: "Marque todos los puntos o explique en las observaciones por qué no se hizo alguno.",
+      doneMsg: "Completado. Próximo mantenimiento preventivo: {date}.", jobOf: "{e} · {t}",
+      chk_pc: ["Limpiar ventiladores y filtros", "Revisar salud del disco", "Instalar actualizaciones", "Probar respaldo"], chk_veh: ["Cambio de aceite y filtro", "Revisar frenos", "Revisar llantas y presión", "Revisar luces"],
+      chk_ac: ["Limpiar filtros", "Revisar refrigerante", "Limpiar condensador", "Revisar drenaje"], chk_print: ["Limpiar rodillos", "Revisar tóner y tambor", "Imprimir página de prueba"], chk_gen: ["Revisar aceite y refrigerante", "Probar arranque con carga", "Revisar batería"],
+      aboutText: "La pantalla real es el panel de control de mantenimiento de la empresa: total de equipos, trabajos completados, pendientes y retrasados, y la <b>eficiencia</b> (completados a tiempo sobre programados). <b>Programar mantenimiento</b> va en cascada: centro de costos → área física → categoría → equipos, para que solo se elijan los equipos de ese lugar, y el costo total es el costo individual por la cantidad de equipos. <b>Generar plan preventivo anual</b> crea todos los trabajos del año según la frecuencia de cada categoría. Un trabajo se completa marcando su lista o explicando por qué no se hizo algún punto, y la próxima fecha se calcula desde el día en que realmente se hizo. Todos los equipos y nombres son de ejemplo."
+    }
+  });
+
+  $(function () {
+    const t = UI.t, mi = UI.mi, D = UI.DATA;
     const TODAY = new Date(Date.UTC(2026, 10, 16));
+    const addDays = (d, n) => new Date(d.getTime() + n * 86400000);
+    const addMonths = (d, n) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, d.getUTCDate()));
     const iso = d => UI.fmtDate(d);
-    const parse = s => new Date(s + "T00:00:00Z");
-    const addDays = (d, n) => new Date(d.getTime() + n * DAY);
-    const diffDays = (a, b) => Math.round((a - b) / DAY);
-    const nice = d => d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-
-    const TYPES = {
-      equipment: { label: "Equipment", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
-        tasks: ["Check oil and fluid levels", "Inspect belts and hoses", "Clean filters", "Test safety stops", "Record hour meter"] },
-      vehicle: { label: "Vehicle", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 16V7h11v9M14 10h4l3 3v3h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>',
-        tasks: ["Change engine oil", "Rotate and check tires", "Check brakes", "Check lights", "Record mileage"] },
-      ac: { label: "AC unit", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2v20M4.9 6l14.2 12M19.1 6L4.9 18"/></svg>',
-        tasks: ["Clean condenser coils", "Replace air filter", "Check refrigerant pressure", "Clear drain line"] }
-    };
-    const STATE_ICON = {
-      overdue: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>',
-      done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>'
-    };
-
-    // ---------- Sample assets, technicians and jobs ----------
-    const r = UI.rng(7319);
-    const techs = ["M. Rivera", "J. Cruz", "L. Mendoza", "S. Herrera"];
-    const assetDefs = [
-      ["Forklift FL-01", "equipment", 30], ["Forklift FL-02", "equipment", 30], ["Pallet jack PJ-05", "equipment", 60],
-      ["Generator GEN-1", "equipment", 90], ["Walk-in cooler WC-1", "equipment", 60], ["Walk-in cooler WC-2", "equipment", 60], ["Compressor CP-3", "equipment", 90],
-      ["Truck TR-101", "vehicle", 45], ["Truck TR-102", "vehicle", 45], ["Truck TR-103", "vehicle", 45], ["Van VN-21", "vehicle", 60], ["Van VN-22", "vehicle", 60], ["Motorcycle MC-07", "vehicle", 30],
-      ["AC Office 1", "ac", 90], ["AC Office 2", "ac", 90], ["AC Server room", "ac", 30], ["AC Showroom", "ac", 120], ["AC Warehouse", "ac", 180]
-    ];
-    const assets = assetDefs.map((a, i) => {
-      const freq = a[2];
-      // Every third asset was serviced earlier this month; the rest at some point in their cycle (some overdue).
-      const last = i % 3 === 0 ? addDays(TODAY, -(2 + Math.floor(r() * 13))) : addDays(TODAY, -Math.floor(r() * (freq + 18)) - 2);
-      return { id: i + 1, name: a[0], type: a[1], freq, location: UI.pick(r, UI.DATA.branches), last };
-    });
+    const CATS = [{ id: "pc", k: "catPc", f: 4, chk: "chk_pc", icon: "computer" }, { id: "veh", k: "catVeh", f: 3, chk: "chk_veh", icon: "local_shipping" }, { id: "ac", k: "catAc", f: 6, chk: "chk_ac", icon: "ac_unit" },
+      { id: "print", k: "catPrint", f: 6, chk: "chk_print", icon: "print" }, { id: "gen", k: "catGen", f: 3, chk: "chk_gen", icon: "electrical_services" }];
+    const TECHS = ["R. Molina", "J. Cruz", "M. Herrera", "Outsourced: CoolAir", "Outsourced: FleetCare"];
+    const r = UI.rng(9090);
+    const centers = D.costCenters.slice(0, 6);
+    const equipment = [];
+    centers.forEach((c, ci) => CATS.forEach(cat => {
+      const n = cat.id === "gen" ? (ci < 2 ? 1 : 0) : cat.id === "veh" ? (ci < 3 ? 2 : 0) : 1 + Math.floor(r() * 2);
+      for (let i = 0; i < n; i++) equipment.push({ id: equipment.length + 1, code: cat.id.toUpperCase() + "-" + (ci + 1) + String(i + 1).padStart(2, "0"), cat: cat.id, center: ci, area: cat.id === "veh" || cat.id === "gen" ? 2 : cat.id === "ac" ? (r() < .5 ? 0 : 1) : 0 });
+    }));
     const jobs = [];
-    let jobSeq = 1;
-    function makeJob(asset, date, tech, tasks, status) {
-      const j = { id: jobSeq++, assetId: asset.id, date, tech, checklist: tasks.map(t => ({ text: t, done: status === "done" })), status, notes: "" };
-      jobs.push(j);
-      return j;
-    }
-    assets.forEach(a => {
-      // last completed job, then the next planned one
-      makeJob(a, a.last, UI.pick(r, techs), TYPES[a.type].tasks, "done");
-      makeJob(a, addDays(a.last, a.freq), UI.pick(r, techs), TYPES[a.type].tasks, "scheduled");
+    equipment.forEach(e => {
+      const cat = CATS.find(c => c.id === e.cat);
+      let d = addDays(new Date(Date.UTC(2026, 0, 5)), Math.floor(r() * 40));
+      while (d.getUTCFullYear() === 2026) {
+        const past = d < TODAY;
+        const roll = r();
+        const done = past && (TODAY - d > 40 * 86400000 || roll < .75);
+        jobs.push({ id: jobs.length + 1, eq: e.id, type: "prev", date: d, tech: UI.pick(r, TECHS.slice(0, e.cat === "veh" ? 5 : e.cat === "ac" ? 4 : 3)), done, doneDate: done ? addDays(d, r() < .8 ? 0 : Math.ceil(r() * 6)) : null, cost: Math.round(UI.between(r, 20, 220)) });
+        d = addMonths(d, cat.f);
+      }
+      if (r() < .25) { const cd = addDays(TODAY, Math.round(UI.between(r, -20, 25))); jobs.push({ id: jobs.length + 1, eq: e.id, type: "corr", date: cd, tech: TECHS[0], done: cd < addDays(TODAY, -5) && r() < .6, cost: Math.round(UI.between(r, 60, 400)) }); }
     });
+    const status = j => j.done ? "completed" : j.date < TODAY ? "late" : "pending";
+    const eqLabel = e => e.code + " · " + t(CATS.find(c => c.id === e.cat).k);
+    let month = new Date(Date.UTC(TODAY.getUTCFullYear(), TODAY.getUTCMonth(), 1));
+    let onlyLate = false;
 
-    const assetOf = j => assets.find(a => a.id === j.assetId);
-    const isOverdue = j => j.status === "scheduled" && j.date < TODAY;
-    function nextJob(a) { return jobs.filter(j => j.assetId === a.id && j.status === "scheduled").sort((x, y) => x.date - y.date)[0]; }
-
-    // ---------- Legend ----------
-    document.getElementById("legend").innerHTML = Object.keys(TYPES).map(t =>
-      '<span class="job t-' + t + '" style="width:auto">' + TYPES[t].icon + "<span>" + TYPES[t].label + "</span></span>").join("") +
-      '<span class="job t-equipment overdue" style="width:auto">' + STATE_ICON.overdue + "<span>Overdue</span></span>";
-
-    // ---------- Calendar ----------
-    let viewY = TODAY.getUTCFullYear(), viewM = TODAY.getUTCMonth();
-    function jobChip(j) {
-      const a = assetOf(j);
-      const over = isOverdue(j);
-      const ico = j.status === "done" ? STATE_ICON.done : over ? STATE_ICON.overdue : TYPES[a.type].icon;
-      const stateText = j.status === "done" ? "done" : over ? "overdue" : "scheduled";
-      return '<button type="button" class="job t-' + a.type + (j.status === "done" ? " done" : "") + (over ? " overdue" : "") + '" data-job="' + j.id + '" aria-label="' + a.name + ", " + stateText + ", " + nice(j.date) + '">' + ico + "<span>" + a.name + "</span></button>";
+    function fill(sel, opts, keepAll) {
+      const $s = $(sel), v = $s.val();
+      $s.empty(); if (keepAll) $s.append(new Option(t("all"), "all"));
+      opts.forEach(o => $s.append(new Option(o[1], o[0])));
+      if (v && $s.find('option[value="' + v + '"]').length) $s.val(v);
     }
-    function renderCalendar() {
-      const first = new Date(Date.UTC(viewY, viewM, 1));
-      document.getElementById("monthTitle").textContent = first.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
-      const start = addDays(first, -first.getUTCDay());
-      let html = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => '<div class="dow" aria-hidden="true">' + d + "</div>").join("");
+    function filters() {
+      fill("#fCenter", centers.map((c, i) => [String(i), UI.L(c)]), true);
+      fill("#fCat", CATS.map(c => [c.id, t(c.k)]), true);
+      fill("#fType", [["prev", t("preventive")], ["corr", t("corrective")]], true);
+      fill("#fStatus", [["pending", t("pending")], ["completed", t("completed")], ["late", t("late")]], true);
+    }
+    function pass(j) {
+      const e = equipment[j.eq - 1];
+      const c = $("#fCenter").val(), k = $("#fCat").val(), ty = $("#fType").val(), st = $("#fStatus").val();
+      return (c === "all" || String(e.center) === c) && (k === "all" || e.cat === k) && (ty === "all" || j.type === ty) && (st === "all" || status(j) === st) && (!onlyLate || status(j) === "late");
+    }
+    const stChip = s => '<span class="chip ' + { pending: "chip-info", completed: "chip-pos", late: "chip-neg" }[s] + '">' + mi({ pending: "schedule", completed: "check_circle", late: "error" }[s]) + t(s) + "</span>";
+    const tyChip = ty => '<span class="chip ' + (ty === "prev" ? "chip-pos" : "chip-warn") + '">' + mi(ty === "prev" ? "event_repeat" : "build") + t(ty === "prev" ? "preventive" : "corrective") + "</span>";
+
+    function kpis() {
+      const year = jobs.filter(j => j.date < TODAY);
+      const done = jobs.filter(j => j.done).length, late = jobs.filter(j => status(j) === "late").length, pend = jobs.filter(j => status(j) === "pending").length;
+      const onTime = jobs.filter(j => j.done && j.doneDate && (j.doneDate - j.date) <= 2 * 86400000).length;
+      const eff = year.length ? onTime / year.length : 0;
+      const k = (l, v, col, sub) => '<div class="mc-kpi is-accent" style="--k-color:' + col + '"><div class="k-label">' + t(l) + '</div><div class="k-value">' + v + "</div>" + (sub ? '<div class="k-sub">' + t(sub) + "</div>" : "") + "</div>";
+      document.getElementById("kpis").innerHTML = k("kTotal", equipment.length, "#06b6d4") + k("kDone", done, "#2dd4bf") + k("kPending", pend, "#38bdf8") + k("kLate", late, "#fb7185") + k("kEff", UI.fmtPct(eff, 0), "#a78bfa", "kEffSub");
+    }
+    function calendar() {
+      const y = month.getUTCFullYear(), m = month.getUTCMonth();
+      document.getElementById("calTitle").textContent = UI.monthName(m) + " " + y;
+      const first = new Date(Date.UTC(y, m, 1));
+      const start = addDays(first, -((first.getUTCDay() + 6) % 7));
+      const dows = [1, 2, 3, 4, 5, 6, 0].map(i => new Date(Date.UTC(2026, 10, 15 + i)).toLocaleString(UI.lang === "es" ? "es" : "en", { weekday: "short", timeZone: "UTC" }));
+      let html = dows.map(d => '<div class="mt-dow">' + d + "</div>").join("");
       for (let i = 0; i < 42; i++) {
         const d = addDays(start, i);
-        const dayJobs = jobs.filter(j => +j.date === +d).sort((a, b) => (a.status === "done") - (b.status === "done"));
-        const other = d.getUTCMonth() !== viewM;
-        const shown = dayJobs.slice(0, 3);
-        html += '<div class="day' + (other ? " other" : "") + (+d === +TODAY ? " today" : "") + '"><span class="dnum">' + d.getUTCDate() + (+d === +TODAY ? ' <span class="sr-only">today</span>' : "") + "</span>" +
-          shown.map(jobChip).join("") + (dayJobs.length > 3 ? '<span class="more">+' + (dayJobs.length - 3) + " more</span>" : "") + "</div>";
+        const evs = jobs.filter(j => iso(j.date) === iso(d) && pass(j));
+        html += '<div class="mt-day' + (d.getUTCMonth() !== m ? " out" : "") + (iso(d) === iso(TODAY) ? " today" : "") + '"><span class="n">' + d.getUTCDate() + "</span>" +
+          evs.slice(0, 3).map(j => { const e = equipment[j.eq - 1], s = status(j); return '<button type="button" class="mt-ev ' + (s === "completed" ? "done" : s === "late" ? "late" : j.type) + '" data-job="' + j.id + '" title="' + eqLabel(e) + " · " + t(s) + '">' + e.code + "</button>"; }).join("") +
+          (evs.length > 3 ? '<span class="mt-more">+' + (evs.length - 3) + "</span>" : "") + "</div>";
       }
       document.getElementById("cal").innerHTML = html;
+      document.getElementById("calLegend").innerHTML = tyChip("prev") + tyChip("corr") + stChip("completed") + stChip("late");
     }
-
-    // ---------- Side lists, KPIs and table ----------
-    function itemHtml(j, extra) {
-      const a = assetOf(j);
-      return '<button type="button" class="item" data-job="' + j.id + '"><span class="job t-' + a.type + '" style="width:auto;flex:none">' + TYPES[a.type].icon + '</span><span style="flex:1;min-width:0"><strong style="font-weight:500">' + a.name +
-        '</strong><br><span class="muted" style="font-size:.8rem">' + j.tech + " · " + a.location + "</span>" + (extra || "") + '</span><span class="when">' + nice(j.date) + "</span></button>";
+    function alerts() {
+      const late = jobs.filter(j => status(j) === "late" && pass(j)).sort((a, b) => a.date - b.date).slice(0, 5);
+      const soon = jobs.filter(j => status(j) === "pending" && j.date - TODAY <= 7 * 86400000 && pass(j)).sort((a, b) => a.date - b.date).slice(0, 5);
+      const html = late.map(j => '<div class="mt-alert">' + mi("error") + "<span>" + t("lateAlert", { e: eqLabel(equipment[j.eq - 1]), d: Math.round((TODAY - j.date) / 86400000), date: UI.fmtDay(j.date) }) + "</span></div>").join("") +
+        soon.map(j => '<div class="mt-alert" style="border-left-color:var(--mc-cyan);background:rgba(6,182,212,.07)"><span class="material-icons" style="color:var(--mc-cyan)" aria-hidden="true">notifications</span><span>' + t("noticeAlert", { e: eqLabel(equipment[j.eq - 1]), date: UI.fmtDay(j.date), d: Math.round((j.date - TODAY) / 86400000) }) + "</span></div>").join("");
+      document.getElementById("alerts").innerHTML = html || '<p class="mc-hint">' + t("noAlerts") + "</p>";
     }
-    function renderSide() {
-      const over = jobs.filter(isOverdue).sort((a, b) => a.date - b.date);
-      const soon = jobs.filter(j => j.status === "scheduled" && j.date >= TODAY && j.date <= addDays(TODAY, 14)).sort((a, b) => a.date - b.date);
-      document.getElementById("overList").innerHTML = over.length ? over.map(j =>
-        itemHtml(j, '<br><span class="alert">' + STATE_ICON.overdue + diffDays(TODAY, j.date) + " days late</span>")).join("") : '<p class="muted" style="font-size:.88rem">Nothing overdue.</p>';
-      document.getElementById("soonList").innerHTML = soon.length ? soon.map(j => itemHtml(j)).join("") : '<p class="muted" style="font-size:.88rem">No jobs in the next 14 days.</p>';
-      const monthDone = jobs.filter(j => j.status === "done" && j.doneOn && j.doneOn.getUTCMonth() === TODAY.getUTCMonth()).length +
-        jobs.filter(j => j.status === "done" && !j.doneOn && j.date.getUTCMonth() === TODAY.getUTCMonth() && j.date.getUTCFullYear() === TODAY.getUTCFullYear()).length;
-      document.getElementById("kAssets").textContent = assets.length;
-      document.getElementById("kSoon").textContent = soon.length;
-      document.getElementById("kOver").textContent = over.length;
-      document.getElementById("kDone").textContent = monthDone;
-      document.getElementById("kDoneD").textContent = "November " + TODAY.getUTCFullYear();
-
-      document.querySelector("#assets tbody").innerHTML = assets.slice().sort((a, b) => { const na = nextJob(a), nb = nextJob(b); return (na ? na.date : 0) - (nb ? nb.date : 0); }).map(a => {
-        const n = nextJob(a);
-        const st = !n ? '<span class="chip chip-info">No job</span>' : isOverdue(n) ? '<span class="chip chip-neg">' + STATE_ICON.overdue.replace('aria-hidden="true"', 'aria-hidden="true" width="12" height="12"') + " Overdue " + diffDays(TODAY, n.date) + " d</span>" :
-          n.date <= addDays(TODAY, 14) ? '<span class="chip chip-warn">Due in ' + diffDays(n.date, TODAY) + " d</span>" : '<span class="chip chip-pos">' + STATE_ICON.done.replace('aria-hidden="true"', 'aria-hidden="true" width="12" height="12"') + " On plan</span>";
-        return "<tr><td>" + a.name + "</td><td>" + TYPES[a.type].label + "</td><td>" + a.location + '</td><td class="r num">' + a.freq + ' d</td><td class="num">' + iso(a.last) + '</td><td class="num">' + (n ? iso(n.date) : "—") + "</td><td>" + st + "</td></tr>";
-      }).join("");
+    function upcoming() {
+      const list = jobs.filter(j => pass(j) && !j.done && (onlyLate ? true : j.date - TODAY <= 30 * 86400000)).sort((a, b) => a.date - b.date);
+      document.querySelector("#tUp thead").innerHTML = "<tr><th>" + t("colEquip") + "</th><th>" + t("center") + "</th><th>" + t("colType") + "</th><th>" + t("colDate") + "</th><th>" + t("colTech") + "</th><th>" + t("colStatus") + '</th><th class="r">' + t("colAction") + "</th></tr>";
+      document.querySelector("#tUp tbody").innerHTML = list.map(j => { const e = equipment[j.eq - 1]; return "<tr><td>" + mi(CATS.find(c => c.id === e.cat).icon) + " " + eqLabel(e) + "</td><td>" + UI.L(centers[e.center]) + "</td><td>" + tyChip(j.type) + '</td><td class="num">' + UI.fmtDay(j.date) + "</td><td>" + j.tech + "</td><td>" + stChip(status(j)) +
+        '</td><td class="r"><button type="button" class="btn btn-sm btn-outline-teal" data-job="' + j.id + '">' + mi("task_alt") + t("complete") + "</button></td></tr>"; }).join("") ||
+        '<tr><td colspan="7" class="muted">' + t("noData") + "</td></tr>";
+      document.getElementById("upCount").textContent = t("upShown", { n: list.length });
     }
-    function renderAll() { renderCalendar(); renderSide(); }
+    function all() { filters(); kpis(); calendar(); alerts(); upcoming(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutScreen"); }
 
-    // ---------- Schedule modal ----------
-    const sAsset = document.getElementById("sAsset"), sDate = document.getElementById("sDate"), sTech = document.getElementById("sTech"), sChecklist = document.getElementById("sChecklist");
-    sAsset.innerHTML = '<option value="">Choose an asset</option>' + assets.map(a => '<option value="' + a.id + '">' + a.name + " · " + TYPES[a.type].label + "</option>").join("");
-    sTech.innerHTML = '<option value="">Choose a technician</option>' + techs.map(t => "<option>" + t + "</option>").join("");
-    sAsset.addEventListener("change", () => {
-      const a = assets.find(x => x.id === +sAsset.value);
-      if (a && !sChecklist.value.trim()) sChecklist.value = TYPES[a.type].tasks.join("\n");
-    });
-    function clearErrors(ids) { ids.forEach(id => { document.getElementById(id).textContent = ""; }); [sAsset, sDate, sTech, sChecklist].forEach(el => el.removeAttribute("aria-invalid")); }
-    document.getElementById("newJob").addEventListener("click", () => {
-      sAsset.value = ""; sDate.value = ""; sTech.value = ""; sChecklist.value = "";
-      clearErrors(["eAsset", "eDate", "eTech", "eChecklist"]);
-      UI.openModal("mSchedule");
-    });
-    document.getElementById("sClose").addEventListener("click", () => UI.closeModal("mSchedule"));
-    document.getElementById("sSave").addEventListener("click", () => {
-      clearErrors(["eAsset", "eDate", "eTech", "eChecklist"]);
-      let ok = true;
-      const err = (el, id, text) => { ok = false; el.setAttribute("aria-invalid", "true"); document.getElementById(id).textContent = text; };
-      if (!sAsset.value) err(sAsset, "eAsset", "Choose the asset to maintain.");
-      if (!sDate.value) err(sDate, "eDate", "Choose a date.");
-      else if (parse(sDate.value) < TODAY) err(sDate, "eDate", "The date cannot be in the past.");
-      if (!sTech.value) err(sTech, "eTech", "Assign a technician.");
-      const tasks = sChecklist.value.split("\n").map(s => s.trim()).filter(Boolean);
-      if (!tasks.length) err(sChecklist, "eChecklist", "Add at least one task.");
-      if (!ok) { const f = document.querySelector('#mSchedule [aria-invalid="true"]'); if (f) f.focus(); return; }
-      const a = assets.find(x => x.id === +sAsset.value);
-      const j = makeJob(a, parse(sDate.value), sTech.value, tasks, "scheduled");
-      UI.closeModal("mSchedule");
-      viewY = j.date.getUTCFullYear(); viewM = j.date.getUTCMonth();
-      renderAll();
-      UI.toast("Job scheduled for " + a.name + " on " + nice(j.date) + ".");
-    });
-
-    // ---------- Job modal ----------
-    let openJob = null;
-    const jChecks = document.getElementById("jChecks"), jNotes = document.getElementById("jNotes"), jComplete = document.getElementById("jComplete");
-    function openJobModal(id) {
-      const j = jobs.find(x => x.id === id);
-      if (!j) return;
-      openJob = j;
-      const a = assetOf(j);
-      const over = isOverdue(j);
-      document.getElementById("mJobTitle").textContent = a.name;
-      document.getElementById("jStatus").innerHTML = j.status === "done" ? '<span class="chip chip-pos">Done</span>' : over ? '<span class="chip chip-neg">Overdue ' + diffDays(TODAY, j.date) + " days</span>" : '<span class="chip chip-info">Scheduled</span>';
-      document.getElementById("jMeta").textContent = TYPES[a.type].label + " · " + a.location + " · planned " + nice(j.date) + " · " + j.tech + " · every " + a.freq + " days";
-      const ro = j.status === "done";
-      jChecks.innerHTML = j.checklist.map((c, i) => '<li><label><input type="checkbox" data-i="' + i + '"' + (c.done ? " checked" : "") + (ro ? " disabled" : "") + ">" + c.text + "</label></li>").join("");
-      jNotes.value = j.notes || "";
-      jNotes.disabled = ro;
-      document.getElementById("eNotes").textContent = "";
-      jComplete.hidden = ro;
-      document.getElementById("jNext").textContent = ro ? (j.doneOn ? "Completed on " + nice(j.doneOn) + "." : "Completed.") : "When completed today, the next job is scheduled for " + nice(addDays(TODAY, a.freq)) + " (" + a.freq + " days).";
-      UI.openModal("mJob");
+    // Complete a job
+    let current = null;
+    function openJob(id) {
+      current = jobs.find(j => j.id === id);
+      const e = equipment[current.eq - 1], cat = CATS.find(c => c.id === e.cat);
+      document.getElementById("dTitle").textContent = t("jobOf", { e: eqLabel(e), t: t(current.type === "prev" ? "preventive" : "corrective") });
+      document.getElementById("dInfo").innerHTML = stChip(status(current)) + " " + UI.fmtDay(current.date) + " · " + current.tech;
+      const items = t(cat.chk);
+      document.getElementById("dChecks").innerHTML = (Array.isArray(items) ? items : []).map((x, i) => '<label class="mt-check"><input type="checkbox" ' + (current.done ? "checked disabled" : "") + ' data-i="' + i + '">' + x + "</label>").join("");
+      document.getElementById("dDate").value = iso(current.doneDate || TODAY);
+      document.getElementById("dNote").value = ""; document.getElementById("dErr").textContent = "";
+      document.getElementById("dSave").disabled = current.done;
+      UI.openModal("mDone");
     }
-    document.addEventListener("click", e => {
-      const b = e.target.closest("[data-job]");
-      if (b && !b.closest(".modal")) openJobModal(+b.dataset.job);
-    });
-    document.getElementById("jClose").addEventListener("click", () => UI.closeModal("mJob"));
-    jComplete.addEventListener("click", () => {
-      const j = openJob, a = assetOf(j);
-      jChecks.querySelectorAll("input").forEach(cb => { j.checklist[+cb.dataset.i].done = cb.checked; });
-      const pending = j.checklist.filter(c => !c.done).length;
-      if (pending && !jNotes.value.trim()) {
-        document.getElementById("eNotes").textContent = pending + " task" + (pending > 1 ? "s are" : " is") + " not ticked. Tick them or explain in the notes why they were left pending.";
-        jNotes.setAttribute("aria-invalid", "true");
-        jNotes.focus();
-        return;
+    document.getElementById("dSave").addEventListener("click", () => {
+      const boxes = [...document.querySelectorAll("#dChecks input")];
+      const allChecked = boxes.every(b => b.checked);
+      const note = document.getElementById("dNote").value.trim();
+      if (!allChecked && note.length < 5) { document.getElementById("dErr").textContent = t("checkErr"); document.getElementById("dNote").focus(); return; }
+      current.done = true; current.doneDate = new Date(document.getElementById("dDate").value + "T00:00:00Z");
+      const e = equipment[current.eq - 1], cat = CATS.find(c => c.id === e.cat);
+      let next = null;
+      if (current.type === "prev") {
+        next = addMonths(current.doneDate, cat.f);
+        jobs.filter(j => j.eq === e.id && j.type === "prev" && !j.done && j.date > current.date).sort((a, b) => a.date - b.date).slice(0, 1).forEach(j => { j.date = next; });
       }
-      jNotes.removeAttribute("aria-invalid");
-      j.notes = jNotes.value.trim();
-      j.status = "done";
-      j.doneOn = TODAY;
-      a.last = TODAY;
-      // The next job is planned from the day it was really done, not from the planned day.
-      const nextDate = addDays(TODAY, a.freq);
-      const n = makeJob(a, nextDate, j.tech, TYPES[a.type].tasks, "scheduled");
-      UI.closeModal("mJob");
-      renderAll();
-      UI.toast(a.name + " completed. Next job: " + nice(n.date) + ".");
+      UI.closeModal("mDone");
+      all();
+      UI.toast(next ? t("doneMsg", { date: UI.fmtDay(next) }) : t("saved", { n: 1 }));
     });
 
-    // ---------- Navigation ----------
-    document.getElementById("prev").addEventListener("click", () => { viewM--; if (viewM < 0) { viewM = 11; viewY--; } renderCalendar(); });
-    document.getElementById("next").addEventListener("click", () => { viewM++; if (viewM > 11) { viewM = 0; viewY++; } renderCalendar(); });
-    document.getElementById("todayBtn").addEventListener("click", () => { viewY = TODAY.getUTCFullYear(); viewM = TODAY.getUTCMonth(); renderCalendar(); });
+    // Schedule (cascade)
+    function sCascade(level) {
+      if (level <= 0) fill("#sCenter", centers.map((c, i) => [String(i), UI.L(c)]));
+      const c = Number($("#sCenter").val());
+      if (level <= 1) fill("#sArea", [["0", UI.lang === "es" ? "Oficina" : "Office"], ["1", UI.lang === "es" ? "Bodega" : "Warehouse"], ["2", UI.lang === "es" ? "Patio" : "Yard"]]);
+      const a = Number($("#sArea").val());
+      if (level <= 2) { const cats = CATS.filter(k => equipment.some(e => e.center === c && e.area === a && e.cat === k.id)); fill("#sCat", cats.length ? cats.map(k => [k.id, t(k.k)]) : [["", "—"]]); }
+      const k = $("#sCat").val();
+      const list = equipment.filter(e => e.center === c && e.area === a && e.cat === k);
+      document.getElementById("sEquip").innerHTML = list.length ? list.map(e => '<label><input type="checkbox" value="' + e.id + '" checked>' + eqLabel(e) + "</label>").join("") : '<span class="mc-hint">' + t("noData") + "</span>";
+      total();
+    }
+    function total() { const n = document.querySelectorAll("#sEquip input:checked").length; document.getElementById("sTotal").textContent = UI.fmtMoney(UI.parseMoney($("#sCost").val()) * n); }
+    UI.maskMoney(document.getElementById("sCost"));
+    $("#sCenter").on("change", () => sCascade(1)); $("#sArea").on("change", () => sCascade(2)); $("#sCat").on("change", () => sCascade(3));
+    $("#sEquip").on("change", total); $("#sCost").on("input blur", total);
+    $("#selAll").on("click", () => { $("#sEquip input").prop("checked", true); total(); }); $("#selNone").on("click", () => { $("#sEquip input").prop("checked", false); total(); });
+    document.getElementById("btnSched").addEventListener("click", () => {
+      fill("#sType", [["prev", t("preventive")], ["corr", t("corrective")]]); fill("#sTech", TECHS.map(x => [x, x]));
+      $("#sCenter").val(""); sCascade(0);
+      ["sDate", "sNotice", "sCost"].forEach(id => document.getElementById(id).value = ""); $("#sEquipErr, #sDateErr").text(""); total();
+      UI.openModal("mSched");
+    });
+    $("#sDate").on("change", () => { const v = $("#sDate").val(); if (v) $("#sNotice").val(iso(addDays(new Date(v + "T00:00:00Z"), -3))); });
+    document.getElementById("sSave").addEventListener("click", () => {
+      const ids = [...document.querySelectorAll("#sEquip input:checked")].map(i => Number(i.value));
+      const d = $("#sDate").val();
+      $("#sEquipErr, #sDateErr").text("");
+      if (!ids.length) { $("#sEquipErr").text(t("equipErr")); return; }
+      if (!d) { $("#sDateErr").text(t("dateErr")); $("#sDate").focus(); return; }
+      const cost = UI.parseMoney($("#sCost").val());
+      ids.forEach(id => jobs.push({ id: jobs.length + 1, eq: id, type: $("#sType").val(), date: new Date(d + "T00:00:00Z"), tech: $("#sTech").val(), done: false, cost }));
+      UI.closeModal("mSched"); month = new Date(Date.UTC(new Date(d).getUTCFullYear(), new Date(d).getUTCMonth(), 1)); all(); UI.toast(t("saved", { n: ids.length }));
+    });
 
-    renderAll();
+    // Annual plan
+    function planInfo() { const c = CATS.find(k => k.id === $("#pCat").val()); document.getElementById("pInfo").textContent = t("planInfo", { n: equipment.filter(e => e.cat === c.id).length, c: t(c.k), f: c.f }); }
+    document.getElementById("btnPlan").addEventListener("click", () => { fill("#pCat", CATS.map(c => [c.id, t(c.k)])); $("#pStart").val(iso(TODAY)); planInfo(); UI.openModal("mPlan"); });
+    $("#pCat").on("change", planInfo);
+    document.getElementById("pGo").addEventListener("click", () => {
+      const c = CATS.find(k => k.id === $("#pCat").val()), start = new Date($("#pStart").val() + "T00:00:00Z");
+      let n = 0;
+      equipment.filter(e => e.cat === c.id).forEach(e => {
+        jobs.splice(0, jobs.length, ...jobs.filter(j => !(j.eq === e.id && j.type === "prev" && !j.done && j.date >= start)));
+        for (let d = start; d < addMonths(start, 12); d = addMonths(d, c.f)) { jobs.push({ id: jobs.length + 1000 + n, eq: e.id, type: "prev", date: d, tech: TECHS[0], done: false, cost: 0 }); n++; }
+      });
+      UI.closeModal("mPlan"); all(); UI.toast(t("planDone", { n }));
+    });
+
+    document.getElementById("btnLate").addEventListener("click", e => { onlyLate = !onlyLate; e.currentTarget.classList.toggle("btn-amber", !onlyLate); e.currentTarget.classList.toggle("btn-danger", onlyLate); upcoming(); alerts(); calendar(); });
+    document.getElementById("calPrev").addEventListener("click", () => { month = new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth() - 1, 1)); calendar(); });
+    document.getElementById("calNext").addEventListener("click", () => { month = new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth() + 1, 1)); calendar(); });
+    $("#fCenter, #fCat, #fType, #fStatus").on("change", () => { calendar(); alerts(); upcoming(); });
+    document.addEventListener("click", e => { const b = e.target.closest("[data-job]"); if (b) openJob(Number(b.dataset.job)); });
+    document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => UI.closeModal(b.dataset.close)));
+    document.addEventListener("langchange", all);
+    all();
   });
   </script>
 </body>

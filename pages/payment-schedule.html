@@ -3,295 +3,274 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Payment Schedule · Business UI Gallery</title>
+  <title>Payment schedule · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: var(--space-4); align-items: start; }
-    .layout > * { min-width: 0; }
-    .panel { position: sticky; top: 76px; }
-    .scroll { max-height: 620px; overflow: auto; }
-    #payables { font-size: .85rem; }
-    #payables tr.group td { background: var(--surface-2); font-weight: 600; border-top: 1px solid var(--border); }
-    #payables tr.subtotal td { font-weight: 600; color: var(--text-muted); font-size: .8rem; }
-    #payables tr.picked td { background: var(--info-bg); }
-    #payables td, #payables th { white-space: nowrap; }
-    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; vertical-align: middle; }
-    .chip svg { width: 13px; height: 13px; }
-    .toggle { display: flex; align-items: center; gap: 8px; min-height: 38px; font-size: .9rem; }
-    .acct { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; display: grid; gap: 4px; }
-    .acct.over { border-color: var(--negative); background: var(--negative-bg); }
-    .acct-row { display: flex; justify-content: space-between; gap: 8px; font-size: .85rem; }
-    .pl-lines { max-height: 260px; overflow: auto; }
-    .pl-line { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: .84rem; }
-    .pl-line select { min-height: 32px; font-size: .8rem; padding: 2px 6px; }
-    .msg-block { font-size: .85rem; color: var(--negative); display: flex; gap: 6px; align-items: flex-start; }
+    tr.paid td { background: rgba(45, 212, 191, .08); }
+    tr.subtotal td { font-weight: 800; background: var(--mc-panel-2); }
+    tr.group td { cursor: default; }
+    .cols-menu { position: relative; }
+    .cols-pop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 220px; background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 8px; padding: 8px; box-shadow: var(--mc-shadow); }
+    .cols-pop label { display: flex; align-items: center; gap: 8px; padding: 5px 4px; font-size: 12px; cursor: pointer; }
+    .cols-pop input { accent-color: var(--mc-teal); width: 16px; height: 16px; }
+    .pl-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    @media (max-width: 900px) { .pl-grid { grid-template-columns: minmax(0, 1fr); } }
     #printArea { display: none; }
-    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field { margin-top: 8px; color: var(--text); font-family: inherit; }
-    .select2-container--default .select2-selection--multiple .select2-selection__rendered { padding: 0 8px; }
-    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .panel { position: static; } }
     @media print {
-      body * { visibility: hidden !important; }
-      #printArea, #printArea * { visibility: visible !important; }
-      #printArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; font-family: var(--font-sans); }
-      #printArea table { width: 100%; border-collapse: collapse; font-size: 11pt; }
-      #printArea th, #printArea td { border-bottom: 1px solid #999; padding: 4px 6px; text-align: left; }
-      #printArea .r { text-align: right; }
-      .sidebar, .topbar { display: none !important; }
+      body > *:not(#printArea) { display: none !important; }
+      #printArea { display: block; color: #000; font-family: Arial, sans-serif; font-size: 12px; }
+      #printArea table { width: 100%; border-collapse: collapse; }
+      #printArea th, #printArea td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
+      #printArea td.r { text-align: right; }
     }
   </style>
 </head>
 <body data-page="payment-schedule" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Payment schedule</h1>
-        <p class="muted">Open supplier invoices by due date. Pick what to pay, check the bank balances and approve the payment list.</p>
-      </div>
-      <span class="muted" style="font-size:.85rem">Today: <span class="num">2026-11-16</span> · Exchange rate <span class="num" id="fxLabel"></span> LCY per USD</span>
-    </div>
-
-    <section class="kpis" aria-label="Payables summary" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Open payables</div><div class="kpi-value" id="kOpen">–</div><div class="kpi-delta muted">in local currency (LCY)</div></div>
-      <div class="card kpi"><div class="kpi-label">Overdue</div><div class="kpi-value neg" id="kOverdue">–</div><div class="kpi-delta muted" id="kOverdueN"></div></div>
-      <div class="card kpi"><div class="kpi-label">Due in the next 7 days</div><div class="kpi-value" id="kWeek">–</div><div class="kpi-delta muted" id="kWeekN"></div></div>
-      <div class="card kpi"><div class="kpi-label">Selected to pay</div><div class="kpi-value" id="kSel">–</div><div class="kpi-delta muted" id="kSelN"></div></div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field w-lg"><label for="fReport" data-i18n="fReport"></label><select id="fReport"></select></div>
+        <div class="mc-field" style="max-width:160px"><label for="fFrom" data-i18n="fDueFrom"></label><input type="date" id="fFrom"></div>
+        <div class="mc-field" style="max-width:160px"><label for="fTo" data-i18n="fDueTo"></label><input type="date" id="fTo"></div>
+        <div class="mc-field"><label for="fSupplier" data-i18n="supplier"></label><select id="fSupplier" multiple></select></div>
+        <div class="mc-field" style="max-width:140px"><label for="fCur" data-i18n="fCur"></label><select id="fCur"></select></div>
+        <div class="mc-field" style="max-width:190px"><label for="fGroup" data-i18n="fGroup"></label><select id="fGroup"></select></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
     </section>
+    <p class="mc-hint" id="hint" role="status"></p>
 
-    <section class="card card-body" aria-label="Filters">
-      <div class="filters">
-        <div class="field"><label for="groupBy">Group by</label>
-          <select class="input" id="groupBy"><option value="week">Due week</option><option value="supplier">Supplier</option></select></div>
-        <div class="field"><label for="fSupplier">Supplier</label><select id="fSupplier" multiple></select></div>
-        <div class="field"><label for="fCurrency">Currency</label>
-          <select class="input" id="fCurrency"><option value="">All</option><option value="LCY">LCY</option><option value="USD">USD</option></select></div>
-        <div class="field"><label for="fUntil">Due until</label><input class="input" type="date" id="fUntil" value="2026-12-31"></div>
-        <div class="field"><span class="sr-only">Options</span><label class="toggle"><input type="checkbox" id="fOverdue"> Only overdue</label></div>
-      </div>
-    </section>
-
-    <div class="layout">
-      <section class="card">
-        <div class="card-head"><h2>Open invoices</h2><span class="muted" style="font-size:.82rem" id="countInfo"></span></div>
-        <div class="card-body scroll table-wrap">
-          <table class="grid" id="payables">
-            <thead><tr>
-              <th><span class="sr-only">Select</span></th><th>Supplier</th><th>Invoice</th><th>Issued</th><th>Due</th><th>Status</th>
-              <th class="r">Balance</th><th>Cur.</th><th class="r">Balance LCY</th>
-            </tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
+    <div id="result" hidden>
+      <div class="mc-kpis" id="kpis"></div>
+      <section class="mc-panel" style="margin-top:12px">
+        <div class="mc-panel-title">
+          <h3><span class="material-icons" aria-hidden="true">event_note</span><span data-i18n="tableTitle"></span></h3>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <label class="mc-check"><input type="checkbox" id="fHidePaid"><span data-i18n="hidePaid"></span></label>
+            <div class="cols-menu"><button type="button" class="btn btn-sm" id="colsBtn" aria-expanded="false" aria-controls="colsPop"><span class="material-icons" aria-hidden="true">view_column</span><span data-i18n="columns"></span></button>
+              <div class="cols-pop" id="colsPop" hidden></div></div>
+            <button type="button" class="btn btn-sm" id="btnCsv"><span class="material-icons" aria-hidden="true">download</span><span data-i18n="export"></span></button>
+          </div>
         </div>
+        <div class="table-wrap" style="max-height:560px"><table class="grid" id="tPay"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
       </section>
 
-      <aside class="card panel" aria-labelledby="plTitle">
-        <div class="card-head"><h2 id="plTitle">Payment list</h2><button class="btn" id="clearSel" type="button">Clear</button></div>
-        <div class="card-body" style="display:grid;gap:12px">
-          <div class="pl-lines" id="plLines"><p class="muted" style="font-size:.88rem">Select invoices in the list to build the payment list.</p></div>
-          <div style="display:grid;gap:8px" id="accts"></div>
-          <div class="msg-block" id="plMsg" role="alert"></div>
-          <button class="btn btn-primary" id="approveBtn" type="button" disabled>Approve payment list</button>
-        </div>
-      </aside>
-    </div>
-
-    <section class="card">
-      <div class="card-head"><h2>Generated lists</h2></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="history">
-          <thead><tr><th>List</th><th>Approved</th><th class="r">Invoices</th><th>Bank accounts</th><th class="r">Total LCY</th><th></th></tr></thead>
-          <tbody><tr><td colspan="6" class="muted">No lists approved in this visit yet.</td></tr></tbody>
-        </table>
+      <div class="pl-grid" style="margin-top:12px">
+        <section class="mc-panel">
+          <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">playlist_add_check</span><span data-i18n="plTitle"></span></h3><span class="chip chip-info" id="selChip"></span></div>
+          <div class="table-wrap"><table class="grid" id="tBanks"><thead></thead><tbody></tbody></table></div>
+          <p class="mc-field-error" id="plError" style="margin-top:6px"></p>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap">
+            <button type="button" class="btn btn-teal" id="btnGen"><span class="material-icons" aria-hidden="true">task_alt</span><span data-i18n="generate"></span></button>
+            <button type="button" class="btn" id="btnClearSel"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="clearSel"></span></button>
+          </div>
+        </section>
+        <section class="mc-panel">
+          <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">history</span><span data-i18n="histTitle"></span></h3></div>
+          <div class="table-wrap"><table class="grid" id="tHist"><thead></thead><tbody></tbody></table></div>
+        </section>
       </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Due date = issue date + the supplier's credit days. Overdue invoices show an icon and the days late, not only a color.</li>
-        <li>Each invoice is paid from an account in its own currency; USD amounts are shown in local currency with the day's exchange rate.</li>
-        <li>The list cannot be approved if any bank account would go below zero. Approving numbers the list, removes the invoices from the open list and keeps it in the history with a printable view.</li>
-      </ul>
-    </section>
-
-    <div id="printArea" aria-hidden="true"></div>
+    </div>
+    <div id="about"></div>
   </main>
+  <div id="printArea" aria-hidden="true"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const r = UI.rng(4411);
-    const FX = 24.85;
-    const TODAY = Date.UTC(2026, 10, 16);
-    const DAY = 86400000;
-    $("#fxLabel").text(FX.toFixed(2));
-    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
+  UI.strings({
+    en: {
+      fReport: "Report", rProjection: "Payment projection flow", rAging: "Payables aging", fDueFrom: "Due from", fDueTo: "Due to", fCur: "Currency", curAll: "All", fGroup: "Group by",
+      gNone: "No grouping", gSupplier: "Supplier", gWeek: "Due week", gType: "Payment type",
+      kInvoices: "Invoices", kTotal: "Balance to pay (local)", kOverdue: "Overdue", kWeek: "Due this week", kSelected: "Selected to pay",
+      tableTitle: "Payables to pay", hidePaid: "Hide invoices already in a list", columns: "Columns", plTitle: "Payment list", selected: "{n} selected", generate: "Generate payment list", clearSel: "Clear selection",
+      histTitle: "Generated lists", colList: "List", colDate: "Date", colItems: "Invoices", colTotal: "Total", colAction: "", reprint: "Reprint",
+      c_supplier: "Supplier", c_invoice: "Invoice", c_issue: "Issue date", c_days: "Credit days", c_due: "Due date", c_type: "Payment type", c_cur: "Currency", c_bal: "Balance", c_local: "Balance (local)", c_status: "Status",
+      w: "Week of {d}", stOverdue: "Overdue {n} d", stSoon: "Due in {n} d", stOk: "On time", stPaid: "In list {l}",
+      colBank: "Bank account", colAvail: "Available", colToPay: "To pay", colRemain: "Remaining",
+      errNone: "Select at least one invoice.", errFunds: "{b} does not have enough balance for this list.", genMsg: "Payment list {n} generated with {c} invoices.",
+      t_transfer: "Transfer", t_check: "Check", t_card: "Credit card", t_undef: "Undefined", loaded: "{n} open invoices loaded.", subtotal: "Subtotal",
+      printTitle: "Payment list {n}", printDate: "Generated on {d}",
+      aboutText: "The <b>payment projection flow</b> lists the open supplier invoices by due date (issue date + credit days), in local currency and USD converted with the rate of the day. It can be grouped by supplier, due week or the supplier's <b>expected payment type</b>, with a subtotal per group, and the visible columns can be chosen. Invoices are selected to build a <b>payment list</b>: each currency is paid from a bank account of the same currency and the list cannot be generated if any account would be left without balance. Generated lists keep a number, can be <b>reprinted</b> and their invoices are marked as already in a list (green) so they are not paid twice. All the data on this page is generated."
+    },
+    es: {
+      fReport: "Reporte", rProjection: "Flujo de proyección de pagos", rAging: "Antigüedad de cuentas por pagar", fDueFrom: "Vence desde", fDueTo: "Vence hasta", fCur: "Moneda", curAll: "Todas", fGroup: "Agrupar por",
+      gNone: "Sin agrupar", gSupplier: "Proveedor", gWeek: "Semana de vencimiento", gType: "Tipo de pago",
+      kInvoices: "Facturas", kTotal: "Saldo por pagar (local)", kOverdue: "Vencido", kWeek: "Vence esta semana", kSelected: "Seleccionado para pagar",
+      tableTitle: "Cuentas por pagar", hidePaid: "Ocultar facturas que ya están en una lista", columns: "Columnas", plTitle: "Lista de pago", selected: "{n} seleccionadas", generate: "Generar lista de pago", clearSel: "Limpiar selección",
+      histTitle: "Listas generadas", colList: "Lista", colDate: "Fecha", colItems: "Facturas", colTotal: "Total", colAction: "", reprint: "Reimprimir",
+      c_supplier: "Proveedor", c_invoice: "Factura", c_issue: "Fecha factura", c_days: "Días crédito", c_due: "Vence", c_type: "Tipo de pago", c_cur: "Moneda", c_bal: "Saldo", c_local: "Saldo (local)", c_status: "Estado",
+      w: "Semana del {d}", stOverdue: "Vencida {n} d", stSoon: "Vence en {n} d", stOk: "Al día", stPaid: "En lista {l}",
+      colBank: "Cuenta bancaria", colAvail: "Disponible", colToPay: "A pagar", colRemain: "Queda",
+      errNone: "Seleccione al menos una factura.", errFunds: "{b} no tiene saldo suficiente para esta lista.", genMsg: "Se generó la lista de pago {n} con {c} facturas.",
+      t_transfer: "Transferencia", t_check: "Cheque", t_card: "Tarjeta de crédito", t_undef: "Sin definir", loaded: "Se cargaron {n} facturas abiertas.", subtotal: "Subtotal",
+      printTitle: "Lista de pago {n}", printDate: "Generada el {d}",
+      aboutText: "El <b>flujo de proyección de pagos</b> lista las facturas de proveedor abiertas por fecha de vencimiento (fecha de factura + días de crédito), en moneda local y en USD convertido con la tasa del día. Se puede agrupar por proveedor, semana de vencimiento o el <b>tipo de pago esperado</b> del proveedor, con subtotal por grupo, y se eligen las columnas visibles. Las facturas se seleccionan para armar una <b>lista de pago</b>: cada moneda se paga desde una cuenta bancaria de la misma moneda y la lista no se genera si alguna cuenta quedaría sin saldo. Las listas generadas guardan un número, se pueden <b>reimprimir</b> y sus facturas quedan marcadas como ya incluidas (en verde) para no pagarlas dos veces. Todos los datos de esta página son generados."
+    }
+  });
 
-    const suppliers = [
-      ["Northwind Foods", 30, "LCY"], ["Contoso Beverages", 45, "LCY"], ["Fabrikam Home", 30, "USD"], ["Litware Dairy", 15, "LCY"],
-      ["Adventure Snacks", 60, "LCY"], ["Tailspin Grains", 30, "USD"], ["Proseware Packaging", 30, "LCY"], ["Wide World Freight", 15, "USD"],
-      ["Coho Cleaning Supply", 45, "LCY"], ["Alpine Ice Logistics", 30, "LCY"]
-    ];
-    const accounts = [
-      { id: "A1", name: "Operating account ···4821", cur: "LCY", available: 1650000 },
-      { id: "A2", name: "Payroll & suppliers ···0937", cur: "LCY", available: 520000 },
-      { id: "A3", name: "USD account ···7712", cur: "USD", available: 38000 }
-    ];
-
-    const invoices = [];
-    suppliers.forEach(([s, credit, cur]) => {
-      const n = 8 + Math.floor(r() * 9);
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi, D = UI.DATA;
+    function s2($el, opts) { if ($el.hasClass("select2-hidden-accessible")) $el.select2("destroy"); $el.select2(Object.assign({ width: "100%" }, opts)); }
+    const TODAY = new Date(Date.UTC(2026, 10, 16)), RATE = 24.7312;
+    const TYPES = ["transfer", "check", "card", "undef"];
+    const r = UI.rng(777);
+    const supType = {}; D.suppliers.concat(["Office Supplies Co.", "Fleet Services"]).forEach((s, i) => supType[s] = TYPES[i % 4]);
+    const SUPS = Object.keys(supType);
+    const INV = [];
+    SUPS.forEach((s, si) => {
+      const n = 8 + Math.floor(r() * 10);
       for (let k = 0; k < n; k++) {
-        const issue = TODAY - Math.floor(UI.between(r, 0, credit + 25)) * DAY;
-        const due = issue + credit * DAY;
-        const amount = cur === "USD" ? Math.round(UI.between(r, 400, 9000) * 100) / 100 : Math.round(UI.between(r, 6000, 180000) * 100) / 100;
-        const paidPart = r() < 0.2 ? UI.between(r, 0.1, 0.6) : 0;
-        invoices.push({ id: invoices.length, supplier: s, invoice: "F-" + (1000 + Math.floor(r() * 8999)) + "-" + String(k + 1).padStart(2, "0"), issue, due, cur,
-          balance: Math.round(amount * (1 - paidPart) * 100) / 100, paid: false });
+        const issue = new Date(TODAY.getTime() - Math.floor(UI.between(r, 0, 70)) * 86400000);
+        const days = UI.pick(r, [15, 30, 30, 45, 60]);
+        const cur = si === 2 && k % 2 ? "USD" : "LCY";
+        INV.push({ id: si + "-" + k, sup: s, inv: "FAC-" + (31000 + si * 211 + k * 7), issue, days, due: new Date(issue.getTime() + days * 86400000), cur, bal: Math.round(UI.between(r, 1800, cur === "USD" ? 9000 : 85000) * 100) / 100, list: null });
       }
     });
-    const lcy = x => x.cur === "USD" ? x.balance * FX : x.balance;
-    const iso = t => new Date(t).toISOString().slice(0, 10);
-    function weekStart(t) { const d = new Date(t); const wd = (d.getUTCDay() + 6) % 7; return t - wd * DAY; }
+    const BANKS = D.banks.map((b, i) => ({ name: b + " · **** " + (3010 + i * 1173), cur: i === 3 ? "USD" : "LCY", bal: [1854220.5, 962410.25, 418300, 86240.9][i] }));
+    const HIST = [{ n: "PL-000121", d: new Date(Date.UTC(2026, 10, 9)), ids: [] }, { n: "PL-000122", d: new Date(Date.UTC(2026, 10, 12)), ids: [] }];
+    // mark a few invoices as already in a list
+    INV.filter((x, i) => i % 11 === 0).forEach((x, i) => { const h = HIST[i % 2]; x.list = h.n; h.ids.push(x.id); });
+    let nextList = 123;
+    const COLS = ["supplier", "invoice", "issue", "days", "due", "type", "cur", "bal", "local", "status"];
+    const visibleCols = new Set(["supplier", "invoice", "due", "type", "cur", "bal", "local", "status"]);
+    const sel = new Set();
+    let state = null;
 
-    function statusOf(x) {
-      const days = Math.round((x.due - TODAY) / DAY);
-      if (days < 0) return '<span class="chip chip-neg">' + SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>') + "Overdue " + (-days) + " d</span>";
-      if (days <= 7) return '<span class="chip chip-warn">' + SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>') + "Due in " + days + " d</span>";
-      return '<span class="chip chip-info">' + SVG('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/>') + "Upcoming</span>";
+    function fillSelects() {
+      const rep = $("#fReport"), sup = $("#fSupplier"), cur = $("#fCur"), grp = $("#fGroup");
+      const vr = rep.val() || "proj", vs = sup.val() || [], vc = cur.val() || "all", vg = grp.val() || "week";
+      rep.empty().append(new Option(t("rProjection"), "proj"), new Option(t("rAging"), "aging"));
+      sup.empty(); SUPS.forEach(s => sup.append(new Option(s, s)));
+      cur.empty().append(new Option(t("curAll"), "all"), new Option("LCY", "LCY"), new Option("USD", "USD"));
+      grp.empty().append(new Option(t("gNone"), "none"), new Option(t("gSupplier"), "supplier"), new Option(t("gWeek"), "week"), new Option(t("gType"), "type"));
+      rep.val(vr); sup.val(vs); cur.val(vc); grp.val(vg);
+      s2(rep, { minimumResultsForSearch: Infinity }); s2(sup, { placeholder: t("all") }); s2(cur, { minimumResultsForSearch: Infinity }); s2(grp, { minimumResultsForSearch: Infinity });
+    }
+    fillSelects();
+    document.getElementById("fFrom").value = "2026-09-01"; document.getElementById("fTo").value = "2026-12-31";
+
+    const local = x => x.cur === "USD" ? x.bal * RATE : x.bal;
+    const daysTo = x => Math.round((x.due - TODAY) / 86400000);
+    function status(x) {
+      if (x.list) return '<span class="chip chip-pos">' + mi("task_alt") + t("stPaid", { l: x.list }) + "</span>";
+      const d = daysTo(x);
+      if (d < 0) return '<span class="chip chip-neg">' + mi("error_outline") + t("stOverdue", { n: -d }) + "</span>";
+      if (d <= 7) return '<span class="chip chip-warn">' + mi("schedule") + t("stSoon", { n: d }) + "</span>";
+      return '<span class="chip">' + mi("check") + t("stOk") + "</span>";
+    }
+    function weekStart(d) { const x = new Date(d.getTime()); const wd = (x.getUTCDay() + 6) % 7; return new Date(x.getTime() - wd * 86400000); }
+    const cell = (c, x) => ({ supplier: x.sup, invoice: x.inv, issue: UI.fmtDay(x.issue), days: x.days, due: UI.fmtDay(x.due), type: t("t_" + supType[x.sup]), cur: x.cur, bal: M(x.bal), local: M(local(x)), status: status(x) })[c];
+    const isNum = c => ["days", "bal", "local"].includes(c);
+
+    function rows() {
+      const from = new Date(document.getElementById("fFrom").value + "T00:00:00Z"), to = new Date(document.getElementById("fTo").value + "T00:00:00Z");
+      const sups = $("#fSupplier").val() || [], cur = $("#fCur").val(), hide = document.getElementById("fHidePaid").checked;
+      return INV.filter(x => x.bal > 0 && x.due >= from && x.due <= to && (!sups.length || sups.includes(x.sup)) && (cur === "all" || x.cur === cur) && (!hide || !x.list)).sort((a, b) => a.due - b.due);
     }
 
-    $("#fSupplier").html(suppliers.map(s => '<option value="' + s[0] + '">' + s[0] + "</option>").join(""))
-      .select2({ placeholder: "All", allowClear: true, width: "100%" });
-
-    const selected = new Map(); // invoice id -> account id
-    function defaultAccount(x) { return x.cur === "USD" ? "A3" : "A1"; }
-
-    function visible() {
-      const sup = $("#fSupplier").val() || [];
-      const cur = $("#fCurrency").val();
-      const until = $("#fUntil").val() ? Date.parse($("#fUntil").val() + "T00:00:00Z") : Infinity;
-      const onlyOver = $("#fOverdue").prop("checked");
-      return invoices.filter(x => !x.paid && (!sup.length || sup.includes(x.supplier)) && (!cur || x.cur === cur) && x.due <= until && (!onlyOver || x.due < TODAY));
+    function render() {
+      const list = rows();
+      const grp = $("#fGroup").val();
+      const cols = COLS.filter(c => visibleCols.has(c));
+      const sum = arr => arr.reduce((a, x) => a + local(x), 0);
+      const overdue = list.filter(x => daysTo(x) < 0), week = list.filter(x => daysTo(x) >= 0 && daysTo(x) <= 7);
+      const selRows = INV.filter(x => sel.has(x.id));
+      document.getElementById("kpis").innerHTML = [["kInvoices", UI.fmtInt(list.length)], ["kTotal", M(sum(list))], ["kOverdue", '<span class="neg">' + M(sum(overdue)) + "</span>"], ["kWeek", M(sum(week))], ["kSelected", M(sum(selRows))]]
+        .map(k => '<div class="mc-kpi"><div class="k-label">' + t(k[0]) + '</div><div class="k-value">' + k[1] + "</div></div>").join("");
+      document.querySelector("#tPay thead").innerHTML = '<tr><th style="width:34px"><input type="checkbox" id="allChk" aria-label="' + t("all") + '"></th>' + cols.map(c => "<th" + (isNum(c) ? ' class="r"' : "") + ">" + t("c_" + c) + "</th>").join("") + "</tr>";
+      const keyOf = x => grp === "supplier" ? x.sup : grp === "week" ? UI.fmtDate(weekStart(x.due)) : grp === "type" ? supType[x.sup] : "all";
+      const labelOf = k => grp === "supplier" ? k : grp === "week" ? t("w", { d: UI.fmtDay(new Date(k + "T00:00:00Z")) }) : grp === "type" ? t("t_" + k) : "";
+      const groups = [];
+      list.forEach(x => { const k = keyOf(x); let g = groups.find(y => y.k === k); if (!g) groups.push(g = { k, items: [] }); g.items.push(x); });
+      const line = x => '<tr class="' + (x.list ? "paid" : "") + '"><td><input type="checkbox" class="rowChk" data-id="' + x.id + '" aria-label="' + x.inv + '"' + (sel.has(x.id) ? " checked" : "") + (x.list ? " disabled" : "") + "></td>" + cols.map(c => "<td" + (isNum(c) ? ' class="r"' : "") + ">" + cell(c, x) + "</td>").join("") + "</tr>";
+      const span = cols.length + 1;
+      document.querySelector("#tPay tbody").innerHTML = groups.map(g => (grp === "none" ? "" : '<tr class="group"><td colspan="' + span + '">' + labelOf(g.k) + " · " + g.items.length + "</td></tr>") + g.items.map(line).join("") +
+        (grp === "none" ? "" : '<tr class="subtotal"><td></td><td colspan="' + (cols.length - (visibleCols.has("local") ? 1 : 0)) + '">' + t("subtotal") + "</td>" + (visibleCols.has("local") ? '<td class="r">' + M(sum(g.items)) + "</td>" : "") + "</tr>")).join("") || '<tr><td colspan="' + span + '" class="muted">' + t("noData") + "</td></tr>";
+      document.querySelector("#tPay tfoot").innerHTML = '<tr><td></td><td colspan="' + (cols.length - (visibleCols.has("local") ? 1 : 0)) + '">' + t("total") + "</td>" + (visibleCols.has("local") ? '<td class="r">' + M(sum(list)) + "</td>" : "") + "</tr>";
+      renderList();
     }
 
-    function renderTable() {
-      const list = visible();
-      const by = $("#groupBy").val();
-      const groups = new Map();
-      list.slice().sort((a, b) => by === "week" ? a.due - b.due : (a.supplier.localeCompare(b.supplier) || a.due - b.due)).forEach(x => {
-        const k = by === "week" ? weekStart(x.due) : x.supplier;
-        if (!groups.has(k)) groups.set(k, []);
-        groups.get(k).push(x);
-      });
-      let html = "", total = 0;
-      groups.forEach((items, k) => {
-        const label = by === "week" ? "Week of " + iso(k) + (k + 7 * DAY <= TODAY ? " (past)" : "") : k;
-        const sub = items.reduce((a, x) => a + lcy(x), 0);
-        total += sub;
-        const all = items.every(x => selected.has(x.id));
-        html += '<tr class="group"><td><input type="checkbox" class="pick-group" data-ids="' + items.map(x => x.id).join(",") + '"' + (all ? " checked" : "") + ' aria-label="Select all invoices in ' + label + '"></td><td colspan="7">' + label + ' <span class="muted" style="font-weight:400">· ' + items.length + " invoices</span></td><td class='r num'>" + UI.fmtMoney(sub) + "</td></tr>";
-        items.forEach(x => {
-          const on = selected.has(x.id);
-          html += "<tr" + (on ? ' class="picked"' : "") + '><td><input type="checkbox" class="pick" data-id="' + x.id + '"' + (on ? " checked" : "") + ' aria-label="Select invoice ' + x.invoice + '"></td><td>' + x.supplier + '</td><td class="num">' + x.invoice +
-            '</td><td class="num">' + iso(x.issue) + '</td><td class="num">' + iso(x.due) + "</td><td>" + statusOf(x) + '</td><td class="r num">' + UI.fmtMoney(x.balance) + "</td><td>" + x.cur + '</td><td class="r num">' + UI.fmtMoney(lcy(x)) + "</td></tr>";
-        });
-      });
-      $("#payables tbody").html(html || '<tr><td colspan="9" class="muted">No open invoices match the filters.</td></tr>');
-      $("#payables tfoot").html('<tr><td></td><td colspan="7">Total shown (' + list.length + ' invoices)</td><td class="r num">' + UI.fmtMoney(total) + "</td></tr>");
-      $("#countInfo").text(list.length + " open invoices shown");
+    function bankFor(cur) { return BANKS.find(b => b.cur === cur); }
+    function renderList() {
+      const selRows = INV.filter(x => sel.has(x.id));
+      document.getElementById("selChip").innerHTML = mi("check_box") + t("selected", { n: selRows.length });
+      document.querySelector("#tBanks thead").innerHTML = "<tr><th>" + t("colBank") + '</th><th class="r">' + t("colAvail") + '</th><th class="r">' + t("colToPay") + '</th><th class="r">' + t("colRemain") + "</th></tr>";
+      const by = {};
+      selRows.forEach(x => { const b = bankFor(x.cur); by[b.name] = (by[b.name] || 0) + x.bal; });
+      document.querySelector("#tBanks tbody").innerHTML = BANKS.filter(b => by[b.name] || b === bankFor("LCY") || b === bankFor("USD")).map(b => {
+        const pay = by[b.name] || 0, rem = b.bal - pay;
+        return "<tr><td>" + b.name + " · " + b.cur + '</td><td class="r">' + M(b.bal) + '</td><td class="r">' + M(pay) + '</td><td class="r ' + (rem < 0 ? "neg" : "") + '">' + M(rem) + (rem < 0 ? " " + mi("error_outline") : "") + "</td></tr>";
+      }).join("");
+      document.getElementById("plError").textContent = "";
     }
 
-    function renderKpis() {
-      const open = invoices.filter(x => !x.paid);
-      const over = open.filter(x => x.due < TODAY), week = open.filter(x => x.due >= TODAY && x.due <= TODAY + 7 * DAY);
-      const s = arr => arr.reduce((a, x) => a + lcy(x), 0);
-      $("#kOpen").text(UI.fmtMoney(s(open)));
-      $("#kOverdue").text(UI.fmtMoney(s(over))); $("#kOverdueN").text(over.length + " invoices");
-      $("#kWeek").text(UI.fmtMoney(s(week))); $("#kWeekN").text(week.length + " invoices");
-      const sel = [...selected.keys()].map(id => invoices[id]);
-      $("#kSel").text(UI.fmtMoney(s(sel))); $("#kSelN").text(sel.length + " invoices");
+    function renderHist() {
+      document.querySelector("#tHist thead").innerHTML = "<tr><th>" + t("colList") + "</th><th>" + t("colDate") + '</th><th class="r">' + t("colItems") + '</th><th class="r">' + t("colTotal") + "</th><th></th></tr>";
+      document.querySelector("#tHist tbody").innerHTML = HIST.slice().reverse().map(h => { const items = INV.filter(x => h.ids.includes(x.id)); return "<tr><td>" + h.n + "</td><td>" + UI.fmtDay(h.d) + '</td><td class="r">' + items.length + '</td><td class="r">' + M(items.reduce((a, x) => a + local(x), 0)) + '</td><td><button type="button" class="btn btn-sm" data-print="' + h.n + '">' + mi("print") + t("reprint") + "</button></td></tr>"; }).join("");
     }
 
-    function renderPanel() {
-      const sel = [...selected.entries()].map(([id, acct]) => ({ x: invoices[id], acct }));
-      if (!sel.length) {
-        $("#plLines").html('<p class="muted" style="font-size:.88rem">Select invoices in the list to build the payment list.</p>');
-      } else {
-        $("#plLines").html(sel.map(({ x, acct }) => {
-          const opts = accounts.filter(a => a.cur === x.cur).map(a => '<option value="' + a.id + '"' + (a.id === acct ? " selected" : "") + ">" + a.name + "</option>").join("");
-          return '<div class="pl-line"><div><div>' + x.supplier + ' <span class="muted num">' + x.invoice + '</span></div>' +
-            '<label class="sr-only" for="acct' + x.id + '">Pay ' + x.invoice + ' from</label><select class="input acct-pick" id="acct' + x.id + '" data-id="' + x.id + '">' + opts + "</select></div>" +
-            '<div class="num" style="text-align:right">' + UI.fmtMoney(x.balance) + " " + x.cur + "</div></div>";
-        }).join(""));
-      }
-      let blocked = [];
-      $("#accts").html(accounts.map(a => {
-        const toPay = sel.filter(s => s.acct === a.id).reduce((t, s) => t + s.x.balance, 0);
-        const left = a.available - toPay;
-        if (left < 0) blocked.push(a.name);
-        return '<div class="acct' + (left < 0 ? " over" : "") + '"><strong style="font-size:.88rem">' + a.name + ' <span class="muted" style="font-weight:400">' + a.cur + "</span></strong>" +
-          '<div class="acct-row"><span class="muted">Available</span><span class="num">' + UI.fmtMoney(a.available) + "</span></div>" +
-          '<div class="acct-row"><span class="muted">To pay</span><span class="num">' + UI.fmtMoney(toPay) + "</span></div>" +
-          '<div class="acct-row"><span>Remaining</span><span class="num ' + (left < 0 ? "neg" : "") + '">' + UI.fmtMoney(left) + "</span></div></div>";
-      }).join(""));
-      $("#plMsg").html(blocked.length ? SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>').replace("<svg", '<svg width="16" height="16" style="flex:none;margin-top:2px"') +
-        "<span>Not enough balance in " + blocked.join(", ") + ". Remove invoices or move them to another account.</span>" : "");
-      $("#approveBtn").prop("disabled", !sel.length || blocked.length > 0);
-    }
-
-    function renderAll() { renderTable(); renderKpis(); renderPanel(); }
-
-    $("#payables").on("change", ".pick", function () {
-      const id = +this.dataset.id, x = invoices[id];
-      if (this.checked) selected.set(id, defaultAccount(x)); else selected.delete(id);
-      renderAll();
-    });
-    $("#payables").on("change", ".pick-group", function () {
-      const on = this.checked;
-      this.dataset.ids.split(",").map(Number).forEach(id => { if (on) { if (!selected.has(id)) selected.set(id, defaultAccount(invoices[id])); } else selected.delete(id); });
-      renderAll();
-    });
-    $("#plLines").on("change", ".acct-pick", function () { selected.set(+this.dataset.id, this.value); renderPanel(); });
-    $("#clearSel").on("click", () => { selected.clear(); renderAll(); });
-    $("#groupBy, #fCurrency, #fUntil, #fOverdue").on("change", renderTable);
-    $("#fSupplier").on("change", renderTable);
-
-    // ---- Approve and history ----
-    let listNo = 122;
-    const history = [];
-    $("#approveBtn").on("click", () => {
-      const sel = [...selected.entries()].map(([id, acct]) => ({ x: invoices[id], acct }));
-      const no = "PL-" + String(++listNo).padStart(6, "0");
-      sel.forEach(s => { s.x.paid = true; accounts.find(a => a.id === s.acct).available -= s.x.balance; });
-      history.unshift({ no, date: "2026-11-16", lines: sel.map(s => ({ supplier: s.x.supplier, invoice: s.x.invoice, cur: s.x.cur, amount: s.x.balance, acct: accounts.find(a => a.id === s.acct).name })),
-        total: sel.reduce((t, s) => t + lcy(s.x), 0), accts: [...new Set(sel.map(s => accounts.find(a => a.id === s.acct).name))] });
-      selected.clear();
-      renderAll(); renderHistory();
-      UI.toast("Payment list " + no + " approved");
-    });
-    function renderHistory() {
-      $("#history tbody").html(history.map((h, i) =>
-        '<tr><td class="num">' + h.no + '</td><td class="num">' + h.date + '</td><td class="r num">' + h.lines.length + "</td><td>" + h.accts.join("<br>") +
-        '</td><td class="r num">' + UI.fmtMoney(h.total) + '</td><td class="r"><button class="btn print-btn" type="button" data-i="' + i + '">Print</button></td></tr>').join(""));
-    }
-    $("#history").on("click", ".print-btn", function () {
-      const h = history[+this.dataset.i];
-      $("#printArea").html("<h2>Payment list " + h.no + "</h2><p>Approved " + h.date + " · Exchange rate " + FX.toFixed(2) + " · Sample data</p>" +
-        '<table><thead><tr><th>Supplier</th><th>Invoice</th><th>Bank account</th><th>Cur.</th><th class="r">Amount</th></tr></thead><tbody>' +
-        h.lines.map(l => "<tr><td>" + l.supplier + "</td><td>" + l.invoice + "</td><td>" + l.acct + "</td><td>" + l.cur + '</td><td class="r">' + UI.fmtMoney(l.amount) + "</td></tr>").join("") +
-        '</tbody><tfoot><tr><td colspan="4"><strong>Total in local currency</strong></td><td class="r"><strong>' + UI.fmtMoney(h.total) + "</strong></td></tr></tfoot></table>" +
-        '<p style="margin-top:40px">Prepared by ____________________ &nbsp;&nbsp; Approved by ____________________</p>');
+    function printList(n) {
+      const h = HIST.find(x => x.n === n);
+      const items = INV.filter(x => h.ids.includes(x.id));
+      document.getElementById("printArea").innerHTML = "<h2>" + t("printTitle", { n }) + "</h2><p>" + t("printDate", { d: UI.fmtDay(h.d) }) + " · " + t("companyName") + "</p><table><thead><tr><th>" + t("c_supplier") + "</th><th>" + t("c_invoice") + "</th><th>" + t("c_due") + "</th><th>" + t("c_cur") + "</th><th>" + t("c_bal") + "</th></tr></thead><tbody>" +
+        items.map(x => "<tr><td>" + x.sup + "</td><td>" + x.inv + "</td><td>" + UI.fmtDay(x.due) + "</td><td>" + x.cur + '</td><td class="r">' + M(x.bal) + "</td></tr>").join("") + "</tbody></table>";
       window.print();
-    });
+    }
 
-    renderAll();
+    function renderCols() {
+      document.getElementById("colsPop").innerHTML = COLS.map(c => '<label><input type="checkbox" data-col="' + c + '"' + (visibleCols.has(c) ? " checked" : "") + ">" + t("c_" + c) + "</label>").join("");
+    }
+
+    function load() {
+      state = true;
+      document.getElementById("result").hidden = false;
+      document.getElementById("hint").textContent = t("loaded", { n: rows().length });
+      render(); renderHist(); renderCols();
+    }
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); load(); });
+    document.getElementById("fHidePaid").addEventListener("change", render);
+    $("#fGroup").on("change", () => state && render());
+    document.getElementById("tPay").addEventListener("change", e => {
+      if (e.target.id === "allChk") { rows().filter(x => !x.list).forEach(x => e.target.checked ? sel.add(x.id) : sel.delete(x.id)); render(); return; }
+      const c = e.target.closest(".rowChk"); if (!c) return;
+      c.checked ? sel.add(c.dataset.id) : sel.delete(c.dataset.id); render();
+    });
+    const colsBtn = document.getElementById("colsBtn"), colsPop = document.getElementById("colsPop");
+    colsBtn.addEventListener("click", () => { colsPop.hidden = !colsPop.hidden; colsBtn.setAttribute("aria-expanded", String(!colsPop.hidden)); });
+    colsPop.addEventListener("change", e => { const c = e.target.dataset.col; if (!c) return; if (e.target.checked) visibleCols.add(c); else if (visibleCols.size > 2) visibleCols.delete(c); else e.target.checked = true; render(); });
+    document.addEventListener("click", e => { if (!colsPop.hidden && !e.target.closest(".cols-menu")) { colsPop.hidden = true; colsBtn.setAttribute("aria-expanded", "false"); } });
+    document.getElementById("btnCsv").addEventListener("click", () => {
+      const cols = COLS.filter(c => visibleCols.has(c) && c !== "status");
+      UI.csvDownload("payment-projection.csv", [cols.map(c => t("c_" + c))].concat(rows().map(x => cols.map(c => ({ supplier: x.sup, invoice: x.inv, issue: UI.fmtDate(x.issue), days: x.days, due: UI.fmtDate(x.due), type: t("t_" + supType[x.sup]), cur: x.cur, bal: x.bal.toFixed(2), local: local(x).toFixed(2) })[c]))));
+    });
+    document.getElementById("btnClearSel").addEventListener("click", () => { sel.clear(); render(); });
+    document.getElementById("btnGen").addEventListener("click", () => {
+      const err = document.getElementById("plError");
+      const selRows = INV.filter(x => sel.has(x.id));
+      if (!selRows.length) { err.textContent = t("errNone"); return; }
+      const by = {};
+      selRows.forEach(x => { const b = bankFor(x.cur); by[b.name] = (by[b.name] || 0) + x.bal; });
+      const short = BANKS.find(b => (by[b.name] || 0) > b.bal);
+      if (short) { err.textContent = t("errFunds", { b: short.name }); return; }
+      const n = "PL-" + String(nextList++).padStart(6, "0");
+      BANKS.forEach(b => b.bal -= by[b.name] || 0);
+      selRows.forEach(x => x.list = n);
+      HIST.push({ n, d: TODAY, ids: selRows.map(x => x.id) });
+      sel.clear();
+      render(); renderHist();
+      UI.toast(t("genMsg", { n, c: selRows.length }));
+    });
+    document.getElementById("tHist").addEventListener("click", e => { const b = e.target.closest("[data-print]"); if (b) printList(b.dataset.print); });
+    document.addEventListener("langchange", () => { fillSelects(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); if (state) { render(); renderHist(); renderCols(); document.getElementById("hint").textContent = t("loaded", { n: rows().length }); } });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    load();
   });
   </script>
 </body>

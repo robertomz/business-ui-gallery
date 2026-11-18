@@ -1,12 +1,12 @@
 # Business UI Gallery
 
-Business software screens rebuilt with sample data: accounting, treasury, budgets, payroll, sales and purchasing.
+Business software screens rebuilt with sample data: sales, inventory, accounting, treasury, budgets, payroll and IT. **Spanish and English** (switch in the top bar).
 
 **Live demo:** https://robertomz.github.io/business-ui-gallery/
 
-![Sales dashboard in dark mode](assets/img/og-image.png)
+![Operations dashboard in dark mode](assets/img/og-image.png)
 
-I build and maintain an internal ERP for a distribution company: a Django platform with 20+ modules that replaced a legacy Visual FoxPro system. That code is private, so this gallery rebuilds the kinds of screens I work on every day, with generated data and no company information, so anyone can open and try them.
+I build and maintain an internal ERP for a distribution company: a Django platform with 20+ modules that replaced a legacy Visual FoxPro system. That code is private, so this gallery rebuilds the screens I work on every day, keeping their layout, look and business rules, with generated data and no company information, so anyone can open and try them.
 
 ## Screens
 
@@ -56,6 +56,8 @@ I build and maintain an internal ERP for a distribution company: a Django platfo
 - **Big tables are never paginated.** Virtual scrolling keeps 10,000 rows fast.
 - **Forms validate next to the field** and money fields accept only valid amounts (1,000.00).
 - **Color is never the only signal.** Status uses an icon and text too, in light and dark themes.
+- **Every figure explains itself.** The **?** buttons say how a number is calculated, and each report ends with an "About this report" box.
+- **Two languages.** Every text exists in Spanish and English; the choice is remembered and the first visit follows the browser language.
 
 ## Tech
 

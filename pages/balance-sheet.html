@@ -3,235 +3,238 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Balance Sheet · Business UI Gallery</title>
+  <title>Balance sheet · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .two { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-4); align-items: start; }
-    .two > * { min-width: 0; }
-    .switch { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; cursor: pointer; min-height: 38px; }
-    .switch input { width: 18px; height: 18px; accent-color: var(--primary); }
-    .check { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius); border: 1px solid var(--border); }
-    .check svg { width: 22px; height: 22px; flex: none; }
-    .check.ok { background: var(--positive-bg); color: var(--positive); }
-    .check.bad { background: var(--negative-bg); color: var(--negative); }
-    .check .muted { color: inherit; opacity: .85; }
-    #tree td.name { white-space: nowrap; }
-    #tree .tog { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-right: 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); cursor: pointer; font: inherit; line-height: 1; vertical-align: middle; }
-    #tree .tog svg { width: 14px; height: 14px; transition: transform .15s var(--ease); }
-    #tree .tog[aria-expanded="true"] svg { transform: rotate(90deg); }
-    #tree .spacer { display: inline-block; width: 26px; flex: none; }
-    #tree .nm { display: flex; align-items: center; gap: 4px; }
-    #tree .tog { flex: none; }
-    #tree tr.l1 td { font-weight: 700; background: var(--surface-2); }
-    #tree tr.l2 td { font-weight: 600; }
-    #tree tr.l5 td { color: var(--text-muted); }
-    #tree tr.result td { font-style: italic; }
-    .chart-box { position: relative; height: 260px; }
-    @media (max-width: 600px) {
-      #tree td.name { white-space: normal; }
-      #tree th:nth-child(3), #tree td:nth-child(3) { display: none; }
-      #tree td, #tree th { padding-left: 6px; padding-right: 6px; }
-    }
-    @media (max-width: 1240px) { .two { grid-template-columns: minmax(0, 1fr); } .chart-box { height: 220px; } }
+    .tree-btn { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: var(--mc-muted); cursor: pointer; padding: 0; vertical-align: middle; }
+    .tree-btn:hover { background: rgba(148, 163, 184, .14); color: var(--mc-text); }
+    .tree-btn[aria-expanded="true"] .material-icons { transform: rotate(90deg); }
+    .tree-btn .material-icons { transition: transform .15s; font-size: 18px; }
+    .tree-pad { display: inline-block; width: 24px; }
+    tr.lvl-1 td { font-weight: 800; background: rgba(20, 184, 166, .06); }
+    tr.lvl-2 td { font-weight: 700; }
+    .manual-in { width: 120px; min-height: 28px; padding: 3px 7px; border: 1px solid var(--mc-line); border-radius: 5px; background: var(--mc-panel-2); color: var(--mc-text); text-align: right; font-size: 11.5px; }
+    .check-banner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+    .check-banner.ok { background: rgba(45, 212, 191, .1); color: var(--mc-good); border: 1px solid rgba(45, 212, 191, .35); }
+    .check-banner.bad { background: rgba(251, 113, 133, .1); color: var(--mc-bad); border: 1px solid rgba(251, 113, 133, .35); }
+    .check-banner span.muted { font-weight: 500; }
   </style>
 </head>
 <body data-page="balance-sheet" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Balance sheet</h1>
-        <p class="muted">What the company owns and owes at the end of a month, from the account classes down to each subaccount.</p>
-      </div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field w-sm"><label data-i18n="company"></label><div class="static">DEMO</div></div>
+        <div class="mc-field" style="max-width:170px"><label for="fMonth" data-i18n="fMonth"></label><select id="fMonth"></select></div>
+        <div class="mc-field" style="max-width:120px"><label for="fYear" data-i18n="fYear"></label><select id="fYear"><option>2026</option><option>2025</option></select></div>
+        <div class="mc-field" style="max-width:220px"><label for="fNic" data-i18n="fNic"></label><select id="fNic"></select></div>
+        <label class="mc-check"><input type="checkbox" id="fResult" checked><span data-i18n="fResult"></span></label>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
+    </section>
+    <p class="mc-hint" id="hint" role="status"></p>
+
+    <div id="result" hidden>
+      <section class="mc-panel">
+        <div class="mc-panel-title">
+          <h3><span class="material-icons" aria-hidden="true">fact_check</span><span data-i18n="checkTitle"></span></h3>
+          <div class="mc-field" style="max-width:170px;flex:0 1 170px"><label for="fGrade" data-i18n="fGrade"></label><select id="fGrade"></select></div>
+        </div>
+        <div id="banner"></div>
+        <div class="table-wrap"><table class="grid" id="tCheck"><thead></thead><tbody></tbody></table></div>
+      </section>
+
+      <section class="mc-panel" style="margin-top:12px">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">account_tree</span><span data-i18n="treeTitle"></span></h3>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn btn-sm" id="expandAll"><span class="material-icons" aria-hidden="true">unfold_more</span><span data-i18n="expandAll"></span></button><button type="button" class="btn btn-sm" id="collapseAll"><span class="material-icons" aria-hidden="true">unfold_less</span><span data-i18n="collapseAll"></span></button></div></div>
+        <div class="mc-filters" style="margin-bottom:10px">
+          <div class="mc-field w-lg"><label for="fSearch" data-i18n="fSearch"></label><input id="fSearch" type="search" data-i18n-ph="searchPh"></div>
+          <div class="mc-field" style="max-width:200px"><label for="fRubro" data-i18n="fRubro"></label><select id="fRubro"></select></div>
+          <div class="mc-field" style="max-width:150px"><label for="fDepth" data-i18n="fDepth"></label><select id="fDepth"></select></div>
+          <label class="mc-check"><input type="checkbox" id="fOnly" checked><span data-i18n="fOnly"></span></label>
+        </div>
+        <div class="table-wrap" style="max-height:620px"><table class="grid" id="tTree"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </section>
     </div>
-
-    <section class="card card-body">
-      <div class="filters">
-        <div class="field"><label for="month">Month</label><select class="input" id="month"></select></div>
-        <div class="field"><label for="level">Detail level</label>
-          <select class="input" id="level"><option value="1">1 · Class</option><option value="2">2 · Group</option><option value="3" selected>3 · Subgroup</option><option value="4">4 · Account</option><option value="5">5 · Subaccount</option></select></div>
-        <label class="switch"><input type="checkbox" id="onlyBal" checked> Only accounts with balance</label>
-        <label class="switch"><input type="checkbox" id="withResult" checked> Include period result</label>
-      </div>
-    </section>
-
-    <div class="check" id="check" role="status" aria-live="polite"></div>
-
-    <section class="two">
-      <div class="card">
-        <div class="card-head"><h2>Accounts</h2>
-          <div style="display:flex;gap:8px"><button class="btn" type="button" id="expandAll">Expand all</button><button class="btn" type="button" id="collapseAll">Collapse all</button></div>
-        </div>
-        <div class="card-body table-wrap">
-          <table class="grid" id="tree"><thead><tr><th>Account</th><th class="r">Balance</th><th class="r">Share</th></tr></thead><tbody></tbody></table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Composition</h2></div>
-        <div class="card-body">
-          <div class="chart-box"><canvas id="comp" role="img" aria-label="Assets compared with liabilities plus equity"></canvas></div>
-          <div class="ladder" id="mini" style="margin-top:var(--space-3)"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>The tree goes from level 1 (class) to level 5 (subaccount), and every parent adds up its children, so any number can be traced down.</li>
-        <li>The banner checks the accounting equation: assets must equal liabilities plus equity.</li>
-        <li>Until the month is closed, the period result (revenue minus costs and expenses) still lives in the income accounts. Turn off "Include period result" and the banner shows that exact difference.</li>
-        <li>Rows expand with a mouse or the keyboard; the toggle buttons announce whether they are open.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const r2 = n => Math.round(n * 100) / 100;
-    // Sample chart of accounts: [code, name, sign, base amount]. Parents are derived from the code.
-    const LEAVES = [
-      ["1-01-01-01-001", "Main cash register", 1, 85000], ["1-01-01-01-002", "Branch petty cash", 1, 12000],
-      ["1-01-02-01-001", "Checking account", 1, 640000], ["1-01-02-01-002", "Savings account", 1, 310000], ["1-01-02-02-001", "US dollar account", 1, 145000],
-      ["1-01-03-01-001", "Trade customers", 1, 920000], ["1-01-03-01-002", "Card payments receivable", 1, 180000], ["1-01-03-02-001", "Allowance for doubtful accounts", -1, 46000],
-      ["1-01-04-01-001", "Main warehouse", 1, 1650000], ["1-01-04-01-002", "Branch stock", 1, 540000],
-      ["1-02-01-01-001", "Delivery trucks", 1, 1200000], ["1-02-01-02-001", "Accumulated depreciation, trucks", -1, 380000], ["1-02-01-03-001", "Office furniture", 1, 95000],
-      ["2-01-01-01-001", "Local suppliers", 1, 1180000], ["2-01-01-01-002", "Foreign suppliers", 1, 0],
-      ["2-01-02-01-001", "Salaries payable", 1, 96000], ["2-01-02-01-002", "Social security payable", 1, 41000],
-      ["2-01-03-01-001", "Sales tax payable", 1, 138000], ["2-01-03-01-002", "Income tax payable", 1, 0],
-      ["2-02-01-01-001", "Long-term bank loan", 1, 900000],
-      ["3-01-01-01-001", "Share capital", 1, 1500000],
-      ["3-02-01-01-001", "Prior years earnings", 1, 0]
+  UI.strings({
+    en: {
+      fMonth: "Month", fYear: "Year", fNic: "IFRS types", nicAll: "All", nicCur: "Current", nicNon: "Non-current", fResult: "Include period result",
+      checkTitle: "Balance check", fGrade: "Detail grade", grade: "Grade {n}", treeTitle: "Hierarchical detail by account", fSearch: "Search account", searchPh: "Code or name",
+      fRubro: "Group", fDepth: "Break down to", fOnly: "Only with balance", expandAll: "Expand all", collapseAll: "Collapse all",
+      colConcept: "Concept", colAuto: "Auto", colManual: "Manual", colDiff: "Difference", colAccount: "Account", colName: "Name", colGrade: "Grade", colNature: "Nature", colClass: "Classification", colDif: "Diff.",
+      assets: "Assets", liabilities: "Liabilities", equity: "Equity", periodResult: "Period result", liabEq: "Liabilities + equity", difference: "Difference",
+      debit: "Debit", credit: "Credit", current: "Current", noncurrent: "Non-current",
+      okBanner: "Balanced: assets {a} = liabilities + equity {b}.", badBanner: "Difference of {d}: assets {a} vs liabilities + equity {b}.", badWhy: "It is the period result, which is not included right now.",
+      loaded: "Balance of {m} {y} loaded.", manualHint: "Manual value",
+      aboutText: "The balance sheet is calculated from the <b>account balances</b> of the chosen month and year. The <b>balance check</b> compares assets with liabilities plus equity; the period result (revenue − costs − expenses) closes the gap until the year-end entry moves it to equity, so the check only balances with <b>Include period result</b> on. Accountants can type a <b>manual value</b> next to the automatic one to reconcile with an external report; the difference column shows where they disagree. The tree opens from level 1 (group) to level 5 (posting account), can be searched by code or name and shows only accounts with balance by default. All the data on this page is generated."
+    },
+    es: {
+      fMonth: "Mes", fYear: "Año", fNic: "Tipos NIC", nicAll: "Todos", nicCur: "Corriente", nicNon: "No corriente", fResult: "Incluir resultado del período",
+      checkTitle: "Comprobación del balance", fGrade: "Grado del detalle", grade: "Grado {n}", treeTitle: "Detalle jerárquico por cuenta", fSearch: "Buscar cuenta", searchPh: "Código o nombre",
+      fRubro: "Rubro", fDepth: "Desglosar hasta", fOnly: "Solo con saldo", expandAll: "Desplegar todo", collapseAll: "Contraer todo",
+      colConcept: "Concepto", colAuto: "Auto", colManual: "Manual", colDiff: "Diferencia", colAccount: "Cuenta", colName: "Nombre", colGrade: "Grado", colNature: "Naturaleza", colClass: "Clasificación", colDif: "Dif.",
+      assets: "Activo", liabilities: "Pasivo", equity: "Capital", periodResult: "Resultado del período", liabEq: "Pasivo + capital", difference: "Diferencia",
+      debit: "Deudora", credit: "Acreedora", current: "Corriente", noncurrent: "No corriente",
+      okBanner: "Cuadrado: activo {a} = pasivo + capital {b}.", badBanner: "Diferencia de {d}: activo {a} contra pasivo + capital {b}.", badWhy: "Es el resultado del período, que ahora no está incluido.",
+      loaded: "Se cargó el balance de {m} {y}.", manualHint: "Valor manual",
+      aboutText: "El balance general se calcula con los <b>saldos de las cuentas</b> del mes y año elegidos. La <b>comprobación del balance</b> compara el activo con el pasivo más el capital; el resultado del período (ingresos − costos − gastos) cierra la diferencia hasta que la partida de cierre del año lo pasa a capital, por eso la comprobación solo cuadra con <b>Incluir resultado del período</b> marcado. Contabilidad puede escribir un <b>valor manual</b> junto al automático para conciliar con un reporte externo; la columna de diferencia muestra dónde no coinciden. El árbol abre del grado 1 (rubro) al grado 5 (cuenta de movimiento), se busca por código o nombre y por defecto muestra solo cuentas con saldo. Todos los datos de esta página son generados."
+    }
+  });
+
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    function s2($el, opts) { if ($el.hasClass("select2-hidden-accessible")) $el.select2("destroy"); $el.select2(Object.assign({ width: "100%" }, opts)); }
+    // Chart of accounts (5 levels): 1 group, 2 class, 3 sub, 4 account, 5 posting account.
+    const N = (code, en, es, nic) => ({ code, en, es, nic });
+    const TREE = [
+      N("1", "Assets", "Activo"), N("1-01", "Current assets", "Activo corriente", "cur"), N("1-01-01", "Cash and banks", "Efectivo y bancos", "cur"),
+      N("1-01-01-01", "Cash", "Caja", "cur"), N("1-01-01-01-001", "General cash", "Caja general", "cur"), N("1-01-01-01-002", "Petty cash", "Caja chica", "cur"),
+      N("1-01-01-02", "Banks", "Bancos", "cur"), N("1-01-01-02-001", "Bank account 1", "Cuenta bancaria 1", "cur"), N("1-01-01-02-002", "Bank account 2", "Cuenta bancaria 2", "cur"), N("1-01-01-02-003", "Deposits in transit", "Depósitos en tránsito", "cur"),
+      N("1-01-02", "Receivables", "Cuentas por cobrar", "cur"), N("1-01-02-01", "Customers", "Clientes", "cur"), N("1-01-02-01-001", "Customers on credit", "Clientes crédito", "cur"), N("1-01-02-01-002", "Cards receivable", "Tarjetas por cobrar", "cur"),
+      N("1-01-03", "Inventory", "Inventario", "cur"), N("1-01-03-01", "Merchandise", "Mercadería", "cur"), N("1-01-03-01-001", "Warehouse inventory", "Inventario en bodega", "cur"), N("1-01-03-01-002", "Goods in transit", "Mercadería en tránsito", "cur"),
+      N("1-02", "Non-current assets", "Activo no corriente", "non"), N("1-02-01", "Property and equipment", "Propiedad y equipo", "non"), N("1-02-01-01", "Equipment", "Equipo", "non"),
+      N("1-02-01-01-001", "Vehicles", "Vehículos", "non"), N("1-02-01-01-002", "Computer equipment", "Equipo de cómputo", "non"), N("1-02-01-01-003", "Accumulated depreciation", "Depreciación acumulada", "non"),
+      N("2", "Liabilities", "Pasivo"), N("2-01", "Current liabilities", "Pasivo corriente", "cur"), N("2-01-01", "Payables", "Cuentas por pagar", "cur"), N("2-01-01-01", "Suppliers", "Proveedores", "cur"),
+      N("2-01-01-01-001", "Local suppliers", "Proveedores locales", "cur"), N("2-01-01-01-002", "Foreign suppliers", "Proveedores del exterior", "cur"),
+      N("2-01-02", "Withholdings and taxes", "Retenciones e impuestos", "cur"), N("2-01-02-01", "Taxes payable", "Impuestos por pagar", "cur"), N("2-01-02-01-001", "Sales tax payable", "Impuesto sobre ventas", "cur"), N("2-01-02-01-002", "Payroll withholdings", "Retenciones de planilla", "cur"),
+      N("2-01-03", "Credit cards", "Tarjetas de crédito", "cur"), N("2-01-03-01", "Company cards", "Tarjetas corporativas", "cur"), N("2-01-03-01-001", "Card balances", "Saldos de tarjetas", "cur"),
+      N("2-02", "Non-current liabilities", "Pasivo no corriente", "non"), N("2-02-01", "Long-term loans", "Préstamos a largo plazo", "non"), N("2-02-01-01", "Bank loans", "Préstamos bancarios", "non"), N("2-02-01-01-001", "Loan 1", "Préstamo 1", "non"),
+      N("3", "Equity", "Capital"), N("3-01", "Paid-in capital", "Capital social"), N("3-01-01", "Shares", "Acciones"), N("3-01-01-01", "Common shares", "Acciones comunes"), N("3-01-01-01-001", "Subscribed capital", "Capital suscrito"),
+      N("3-02", "Retained earnings", "Utilidades retenidas"), N("3-02-01", "Prior years", "Años anteriores"), N("3-02-01-01", "Accumulated results", "Resultados acumulados"), N("3-02-01-01-001", "Prior years results", "Resultados de años anteriores")
     ];
-    const NAMES = {
-      "1": "Assets", "1-01": "Current assets", "1-01-01": "Cash", "1-01-01-01": "Cash on hand", "1-01-02": "Banks", "1-01-02-01": "Local currency banks", "1-01-02-02": "Foreign currency banks",
-      "1-01-03": "Receivables", "1-01-03-01": "Customers", "1-01-03-02": "Allowances", "1-01-04": "Inventory", "1-01-04-01": "Merchandise",
-      "1-02": "Non-current assets", "1-02-01": "Property and equipment", "1-02-01-01": "Vehicles", "1-02-01-02": "Accumulated depreciation", "1-02-01-03": "Furniture",
-      "2": "Liabilities", "2-01": "Current liabilities", "2-01-01": "Suppliers", "2-01-01-01": "Trade payables", "2-01-02": "Payroll liabilities", "2-01-02-01": "Payroll payables",
-      "2-01-03": "Taxes", "2-01-03-01": "Taxes payable", "2-02": "Long-term liabilities", "2-02-01": "Bank loans", "2-02-01-01": "Loans payable",
-      "3": "Equity", "3-01": "Capital", "3-01-01": "Paid-in capital", "3-01-01-01": "Common shares", "3-02": "Retained earnings", "3-02-01": "Accumulated results", "3-02-01-01": "Prior years",
-      "3-03": "Period result", "3-03-01": "Current year", "3-03-01-01": "Result to date", "3-03-01-01-001": "Revenue minus costs and expenses"
-    };
+    const lvl = c => c.split("-").length;
+    const parent = c => c.split("-").slice(0, -1).join("-");
+    const kids = c => TREE.filter(n => parent(n.code) === c);
+    const fMonth = $("#fMonth"), fNic = $("#fNic"), fGrade = $("#fGrade"), fRubro = $("#fRubro"), fDepth = $("#fDepth");
+    function fillSelects() {
+      const m = fMonth.val() || "10", n = fNic.val() || "all", g = fGrade.val() || "3", r = fRubro.val() || "all", dp = fDepth.val() || "5";
+      fMonth.empty(); for (let i = 0; i < 12; i++) fMonth.append(new Option(UI.monthName(i), String(i)));
+      fNic.empty().append(new Option(t("nicAll"), "all"), new Option(t("nicCur"), "cur"), new Option(t("nicNon"), "non"));
+      fGrade.empty(); fDepth.empty(); for (let i = 1; i <= 5; i++) { fGrade.append(new Option(t("grade", { n: i }), String(i))); fDepth.append(new Option(t("grade", { n: i }), String(i))); }
+      fRubro.empty().append(new Option(t("nicAll"), "all"), new Option(t("assets"), "1"), new Option(t("liabilities"), "2"), new Option(t("equity"), "3"));
+      fMonth.val(m); fNic.val(n); fGrade.val(g); fRubro.val(r); fDepth.val(dp);
+      [fMonth, fNic, fGrade, fRubro, fDepth, $("#fYear")].forEach(x => s2(x, { minimumResultsForSearch: Infinity }));
+    }
+    fillSelects();
 
-    const months = [];
-    for (let m = 5; m <= 10; m++) months.push({ v: "2026-" + String(m + 1).padStart(2, "0"), t: new Date(Date.UTC(2026, m, 1)).toLocaleString("en-US", { month: "long", timeZone: "UTC" }) + " 2026", i: m - 5 });
-    const monthSel = document.getElementById("month");
-    monthSel.innerHTML = months.slice().reverse().map(m => '<option value="' + m.v + '">' + m.t + "</option>").join("");
+    let state = null, open = new Set(["1", "2", "3", "1-01", "2-01"]), manual = {};
 
-    // Balances for one month; prior years earnings plugs the equation and the period result is computed apart.
-    function balances(mi) {
-      const r = UI.rng(500 + mi);
+    function compute() {
+      const seed = state.y * 13 + state.m * 7;
       const bal = {};
-      LEAVES.forEach(l => { bal[l[0]] = l[3] ? r2(l[2] * l[3] * (1 + mi * 0.025) * UI.between(r, 0.9, 1.1)) : 0; });
-      if (mi % 2) bal["2-01-01-01-002"] = r2(UI.between(r, 20000, 60000));
-      const result = r2(UI.between(r, 180000, 260000) * (mi + 1) / 2);
-      const sum = p => Object.keys(bal).filter(k => k.startsWith(p)).reduce((a, k) => a + bal[k], 0);
-      bal["3-02-01-01-001"] = r2(sum("1") - sum("2") - sum("3") - result);
-      bal["3-03-01-01-001"] = result;
-      return bal;
-    }
-
-    function buildTree(bal, withResult) {
-      const nodes = {};
-      const ensure = code => {
-        if (nodes[code]) return nodes[code];
-        const parts = code.split("-");
-        const n = { code, name: NAMES[code] || (LEAVES.find(l => l[0] === code) || [])[1], level: parts.length, children: [], bal: 0 };
-        nodes[code] = n;
-        if (parts.length > 1) ensure(parts.slice(0, -1).join("-")).children.push(n);
-        return n;
-      };
-      Object.keys(bal).sort().forEach(code => {
-        if (!withResult && code.startsWith("3-03")) return;
-        const leaf = ensure(code);
-        leaf.bal = bal[code];
-        let p = code.split("-");
-        while (p.length > 1) { p = p.slice(0, -1); nodes[p.join("-")].bal = r2(nodes[p.join("-")].bal + bal[code]); }
+      TREE.filter(n => lvl(n.code) === 5).forEach((n, i) => {
+        const r = UI.rng(seed * 101 + i);
+        let v = 0;
+        if (n.code.startsWith("1-02-01-01-003")) v = -UI.between(r, 180000, 260000);
+        else if (n.code.startsWith("1")) v = UI.between(r, 40000, 2400000) * (r() < .12 ? 0 : 1);
+        else if (n.code.startsWith("2")) v = UI.between(r, 60000, 1800000) * (r() < .1 ? 0 : 1);
+        else v = n.code.startsWith("3-01") ? 2500000 : UI.between(r, 300000, 900000);
+        bal[n.code] = Math.round(v * 100) / 100;
       });
-      return ["1", "2", "3"].map(c => nodes[c]);
+      const leafSum = p => Object.keys(bal).filter(c => c === p || c.startsWith(p + "-")).reduce((a, c) => a + bal[c], 0);
+      TREE.forEach(n => { if (lvl(n.code) < 5) bal[n.code] = leafSum(n.code); });
+      const A = bal["1"], L = bal["2"], E = bal["3"];
+      const result = Math.round((A - L - E) * 100) / 100;   // the gap is the period result
+      return { bal, A, L, E, result };
     }
-
-    const expanded = new Set(["1", "2", "3", "1-01", "2-01"]);
-    let roots = [], chart;
-    const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
 
     function render() {
-      const mi = months.find(m => m.v === monthSel.value).i;
-      const withResult = document.getElementById("withResult").checked;
-      const only = document.getElementById("onlyBal").checked;
-      const maxLevel = +document.getElementById("level").value;
-      roots = buildTree(balances(mi), withResult);
-      const [A, L, E] = roots.map(n => n.bal);
-      const rows = [];
-      const walk = (n, rootBal) => {
-        if (only && Math.abs(n.bal) < 0.005) return;
-        const kids = n.level < maxLevel ? n.children.filter(c => !only || Math.abs(c.bal) >= 0.005) : [];
-        const open = expanded.has(n.code);
-        const tog = kids.length ? '<button class="tog" type="button" data-code="' + n.code + '" aria-expanded="' + open + '" aria-label="' + (open ? "Collapse " : "Expand ") + n.name + '">' + CHEV + "</button>" : '<span class="spacer"></span>';
-        rows.push('<tr class="l' + n.level + (n.code.startsWith("3-03") ? " result" : "") + '"><td class="name" style="padding-left:' + (10 + (n.level - 1) * 18) + 'px"><div class="nm">' + tog +
-          '<span><span class="num" style="font-size:.8rem;margin-right:6px">' + n.code + "</span>" + n.name + "</span></div>" + '</td><td class="r num ' + (n.bal < 0 ? "neg" : "") + '">' + UI.fmtMoney(n.bal) +
-          '</td><td class="r num muted">' + UI.fmtPct(rootBal ? n.bal / rootBal : 0) + "</td></tr>");
-        if (open) kids.forEach(c => walk(c, rootBal));
-      };
-      walk(roots[0], A); walk(roots[1], L + E); walk(roots[2], L + E);
-      document.querySelector("#tree tbody").innerHTML = rows.join("");
-
-      const diff = r2(A - (L + E));
-      const check = document.getElementById("check");
-      const ok = Math.abs(diff) < 0.005;
-      check.className = "check " + (ok ? "ok" : "bad");
-      check.innerHTML = (ok
-        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div><strong>Balanced.</strong> <span class="muted">Assets ' + UI.fmtMoney(A) + " = Liabilities " + UI.fmtMoney(L) + " + Equity " + UI.fmtMoney(E) + "</span></div>"
-        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg><div><strong>Difference of ' + UI.fmtMoney(diff) + ".</strong> <span class=\"muted\">Assets " + UI.fmtMoney(A) + " vs liabilities plus equity " + UI.fmtMoney(L + E) + (withResult ? "" : ". This is the period result, which is not included right now.") + "</span></div>");
-
-      const node = c => (roots.find(x => x.code === c[0]).children.find(x => x.code === c) || { bal: 0 }).bal;
-      document.getElementById("mini").innerHTML =
-        '<div class="ladder-row total"><span>Assets</span><span class="num">' + UI.fmtMoney(A) + "</span></div>" +
-        '<div class="ladder-row"><span>− Liabilities</span><span class="num">' + UI.fmtMoney(-L) + "</span></div>" +
-        '<div class="ladder-row"><span>− Equity</span><span class="num">' + UI.fmtMoney(-E) + "</span></div>" +
-        '<div class="ladder-row result"><span>Difference</span><span class="num ' + (ok ? "pos" : "neg") + '">' + UI.fmtMoney(diff) + "</span></div>";
-
-      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
-      const ds = [
-        { label: "Current assets", data: [node("1-01"), 0], backgroundColor: UI.cssVar("--chart-1") },
-        { label: "Non-current assets", data: [node("1-02"), 0], backgroundColor: UI.cssVar("--chart-4") },
-        { label: "Current liabilities", data: [0, node("2-01")], backgroundColor: UI.cssVar("--chart-5") },
-        { label: "Long-term liabilities", data: [0, node("2-02")], backgroundColor: UI.cssVar("--chart-3") },
-        { label: "Equity", data: [0, E], backgroundColor: UI.cssVar("--chart-2") }
-      ];
-      if (chart) chart.destroy();
-      chart = new Chart(document.getElementById("comp"), {
-        type: "bar",
-        data: { labels: ["Assets", "Liabilities + equity"], datasets: ds },
-        options: {
-          indexAxis: "y", maintainAspectRatio: false,
-          plugins: { legend: { position: "bottom", labels: { color: text, boxWidth: 12, font: { size: 11 } } }, tooltip: { filter: i => i.parsed.x !== 0, callbacks: { label: c => c.dataset.label + ": " + UI.fmtMoney(c.parsed.x) } } },
-          scales: { x: { stacked: true, ticks: { color: text, callback: v => (v / 1e6).toFixed(1) + "M" }, grid: { color: grid } }, y: { stacked: true, ticks: { color: text }, grid: { display: false } } }
-        }
-      });
+      if (!state) return;
+      const c = compute(); state.c = c;
+      const inc = document.getElementById("fResult").checked;
+      const LE = c.L + c.E + (inc ? c.result : 0), diff = c.A - LE;
+      const man = k => manual[k] != null ? manual[k] : null;
+      document.getElementById("banner").innerHTML = Math.abs(diff) < .005
+        ? '<div class="check-banner ok">' + mi("check_circle") + "<div>" + t("okBanner", { a: M(c.A), b: M(LE) }) + "</div></div>"
+        : '<div class="check-banner bad">' + mi("error_outline") + "<div>" + t("badBanner", { d: M(diff), a: M(c.A), b: M(LE) }) + ' <span class="muted">' + (inc ? "" : t("badWhy")) + "</span></div></div>";
+      const rowsC = [["assets", c.A], ["liabilities", c.L], ["equity", c.E]].concat(inc ? [["periodResult", c.result]] : []).concat([["liabEq", LE], ["difference", diff]]);
+      document.querySelector("#tCheck thead").innerHTML = "<tr><th>" + t("colConcept") + '</th><th class="r">' + t("colAuto") + '</th><th class="r">' + t("colManual") + '</th><th class="r">' + t("colDiff") + "</th></tr>";
+      document.querySelector("#tCheck tbody").innerHTML = rowsC.map(x => { const mv = man("chk-" + x[0]); return '<tr class="' + (x[0] === "liabEq" || x[0] === "difference" ? "lvl-2" : "") + '"><td>' + t(x[0]) + '</td><td class="r">' + M(x[1]) + '</td><td class="r">' + (x[0] === "difference" || x[0] === "liabEq" ? "—" : '<input class="manual-in" data-k="chk-' + x[0] + '" aria-label="' + t("manualHint") + " " + t(x[0]) + '" value="' + (mv != null ? M(mv) : "") + '">') +
+        '</td><td class="r ' + (mv != null && Math.abs(mv - x[1]) >= .005 ? "neg" : "") + '">' + (mv != null ? M(mv - x[1]) : (x[0] === "difference" && Math.abs(diff) >= .005 ? '<span class="neg">' + M(diff) + "</span>" : "—")) + "</td></tr>"; }).join("");
+      document.querySelectorAll("#tCheck .manual-in").forEach(inp => { UI.maskMoney(inp); inp.addEventListener("change", () => { manual[inp.dataset.k] = inp.value === "" ? null : UI.parseMoney(inp.value); render(); }); });
+      renderTree();
     }
 
-    document.querySelector("#tree tbody").addEventListener("click", e => {
-      const b = e.target.closest(".tog");
-      if (!b) return;
-      const c = b.dataset.code;
-      if (expanded.has(c)) expanded.delete(c); else expanded.add(c);
+    function renderTree() {
+      const c = state.c;
+      const q = document.getElementById("fSearch").value.trim().toLowerCase();
+      const only = document.getElementById("fOnly").checked;
+      const depth = Number(fDepth.val()), rubro = fRubro.val(), nic = fNic.val(), grade = Number(fGrade.val());
+      const name = n => UI.lang === "es" ? n.es : n.en;
+      const visible = [];
+      const match = n => (n.code.toLowerCase().includes(q) || name(n).toLowerCase().includes(q));
+      const subtreeMatches = n => match(n) || TREE.some(x => x.code.startsWith(n.code + "-") && match(x));
+      function walk(code) {
+        kids(code).forEach(n => {
+          if (lvl(n.code) > depth) return;
+          if (rubro !== "all" && !n.code.startsWith(rubro)) return;
+          if (nic !== "all" && n.nic && n.nic !== nic) return;
+          if (only && Math.abs(c.bal[n.code]) < .005) return;
+          if (q && !subtreeMatches(n)) return;
+          visible.push(n);
+          if (q || open.has(n.code)) walk(n.code);
+        });
+      }
+      TREE.filter(n => lvl(n.code) === 1).forEach(n => {
+        if (rubro !== "all" && n.code !== rubro) return;
+        if (only && Math.abs(c.bal[n.code]) < .005) return;
+        if (q && !subtreeMatches(n)) return;
+        visible.push(n);
+        if (q || open.has(n.code)) walk(n.code);
+      });
+      document.querySelector("#tTree thead").innerHTML = "<tr><th>" + t("colAccount") + "</th><th>" + t("colName") + '</th><th class="r">' + t("colGrade") + "</th><th>" + t("colNature") + "</th><th>" + t("colClass") + '</th><th class="r">' + t("colAuto") + '</th><th class="r">' + t("colManual") + '</th><th class="r">' + t("colDif") + "</th></tr>";
+      document.querySelector("#tTree tbody").innerHTML = visible.map(n => {
+        const l = lvl(n.code), hasKids = kids(n.code).length && l < depth, isOpen = q || open.has(n.code);
+        const mv = manual["acc-" + n.code];
+        const nat = n.code.startsWith("1") ? t("debit") : t("credit");
+        const cls = n.nic ? t(n.nic === "cur" ? "current" : "noncurrent") : "—";
+        return '<tr class="lvl-' + l + (l <= grade ? "" : " muted") + '"><td style="padding-left:' + (8 + (l - 1) * 16) + 'px;white-space:nowrap">' +
+          (hasKids ? '<button type="button" class="tree-btn" data-code="' + n.code + '" aria-expanded="' + !!isOpen + '" aria-label="' + n.code + '">' + mi("chevron_right") + "</button>" : '<span class="tree-pad"></span>') + " " + n.code +
+          "</td><td>" + name(n) + '</td><td class="r">' + l + "</td><td>" + nat + "</td><td>" + cls + '</td><td class="r' + (c.bal[n.code] < 0 ? " neg" : "") + '">' + M(c.bal[n.code]) +
+          '</td><td class="r">' + (l === 5 ? '<input class="manual-in" data-k="acc-' + n.code + '" aria-label="' + t("manualHint") + " " + n.code + '" value="' + (mv != null ? M(mv) : "") + '">' : "—") +
+          '</td><td class="r ' + (mv != null && Math.abs(mv - c.bal[n.code]) >= .005 ? "neg" : "") + '">' + (mv != null ? M(mv - c.bal[n.code]) : "—") + "</td></tr>";
+      }).join("") || '<tr><td colspan="8" class="muted">' + t("noData") + "</td></tr>";
+      document.querySelectorAll("#tTree .manual-in").forEach(inp => { UI.maskMoney(inp); inp.addEventListener("change", () => { manual[inp.dataset.k] = inp.value === "" ? null : UI.parseMoney(inp.value); renderTree(); }); });
+      document.querySelector("#tTree tfoot").innerHTML = '<tr><td colspan="5">' + t("assets") + " − " + t("liabEq") + '</td><td class="r">' + M(c.A - c.L - c.E - (document.getElementById("fResult").checked ? c.result : 0)) + '</td><td></td><td></td></tr>';
+    }
+
+    document.getElementById("tTree").addEventListener("click", e => {
+      const b = e.target.closest(".tree-btn"); if (!b) return;
+      const code = b.dataset.code;
+      if (open.has(code)) open.delete(code); else open.add(code);
+      renderTree();
+      const again = document.querySelector('#tTree .tree-btn[data-code="' + code + '"]'); if (again) again.focus();
+    });
+    document.getElementById("expandAll").addEventListener("click", () => { TREE.forEach(n => open.add(n.code)); renderTree(); });
+    document.getElementById("collapseAll").addEventListener("click", () => { open = new Set(); renderTree(); });
+    document.getElementById("fSearch").addEventListener("input", () => state && renderTree());
+    document.getElementById("fOnly").addEventListener("change", () => state && renderTree());
+    [fRubro, fDepth, fGrade].forEach(s => s.on("change", () => state && renderTree()));
+    document.getElementById("fResult").addEventListener("change", () => state && render());
+
+    function load() {
+      state = { m: Number(fMonth.val()), y: Number($("#fYear").val()) };
+      manual = {};
+      document.getElementById("result").hidden = false;
+      document.getElementById("hint").textContent = t("loaded", { m: UI.monthName(state.m), y: state.y });
       render();
-      const again = document.querySelector('#tree .tog[data-code="' + c + '"]');
-      if (again) again.focus();
-    });
-    document.getElementById("expandAll").addEventListener("click", () => {
-      const all = n => { expanded.add(n.code); n.children.forEach(all); };
-      roots.forEach(all); render();
-    });
-    document.getElementById("collapseAll").addEventListener("click", () => { expanded.clear(); render(); });
-    ["month", "level", "onlyBal", "withResult"].forEach(id => document.getElementById(id).addEventListener("change", render));
-    document.addEventListener("themechange", render);
-    render();
+    }
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); load(); });
+    document.addEventListener("langchange", () => { fillSelects(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); if (state) { document.getElementById("hint").textContent = t("loaded", { m: UI.monthName(state.m), y: state.y }); render(); } });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    load();
   });
   </script>
 </body>

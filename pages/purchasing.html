@@ -3,125 +3,89 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Automatic Purchasing · Business UI Gallery</title>
+  <title>Automatic purchasing · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .status-legend { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip svg { width: 13px; height: 13px; }
-    .chip-over { background: rgba(139, 92, 246, .14); color: #7c3aed; }
-    :root[data-theme="dark"] .chip-over { color: #c4b5fd; }
-    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip-over { color: #c4b5fd; } }
-    .chip-idle { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
-    #items { font-size: .84rem; }
-    #items td, #items th { white-space: nowrap; padding: 6px 10px; }
-    #items tbody tr { height: 36px; }
-    #items tbody td { border-bottom: 1px solid var(--border); }
-    #items tbody tr:hover { background: var(--surface-2); }
-    .dataTables_scrollHead thead th { font-family: var(--font-sans) !important; padding: 8px 10px !important; white-space: nowrap; background: var(--surface-2); color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
-    #items thead th { font-family: var(--font-sans); }
-    #items tbody tr, #items tbody td { background: var(--surface) !important; box-shadow: none !important; color: var(--text); }
-    #items tbody tr:hover td { background: var(--surface-2) !important; }
-    #items tbody tr.picked td { background: var(--info-bg) !important; }
-    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field { margin-top: 8px; color: var(--text); font-family: inherit; }
-    .select2-container--default .select2-selection--multiple .select2-selection__rendered { padding: 0 8px; }
-    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
-    .action-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
-    .po-group { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--space-4); overflow: hidden; }
-    .po-group-head { display: flex; justify-content: space-between; gap: var(--space-3); padding: 10px 12px; background: var(--surface-2); flex-wrap: wrap; }
-    .po-group table.grid th { position: static; }
-    .qty-input { width: 96px; min-height: 34px; }
+    .ca-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px 10px; align-items: end; }
+    .ca-grid .mc-field { min-width: 0; }
+    .ca-grid .span2 { grid-column: span 2; }
+    .ca-params { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--mc-line); }
+    .ca-params .mc-field { flex: 0 0 auto; width: 76px; min-width: 0; }
+    .ca-params .mc-field.days { width: 92px; }
+    @media (max-width: 1200px) { .ca-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (max-width: 700px) { .ca-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ca-grid .span2 { grid-column: span 2; } }
+    .mc-kpis.ca { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    @media (max-width: 1200px) { .mc-kpis.ca { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .mc-kpis.ca { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .sem { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+    .sem .material-icons { font-size: 14px; }
+    .sem-short { color: #fecaca; background: rgba(239,68,68,.22); }
+    .sem-buy { color: #fde68a; background: rgba(245,158,11,.2); }
+    .sem-ok { color: #99f6e4; background: rgba(20,184,166,.2); }
+    .sem-over { color: #c4b5fd; background: rgba(139,92,246,.22); }
+    .sem-none { color: var(--mc-muted); background: rgba(148,163,184,.14); }
+    :root[data-theme="light"] .sem-short { color: #991b1b; } :root[data-theme="light"] .sem-buy { color: #8a5a00; }
+    :root[data-theme="light"] .sem-ok { color: #0f766e; } :root[data-theme="light"] .sem-over { color: #6d28d9; }
+    td.sug { font-weight: 800; color: var(--mc-good); }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 11px; color: var(--mc-muted); }
+    .tbl-tools { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
   </style>
 </head>
 <body data-page="purchasing" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Automatic purchasing</h1>
-        <p class="muted">What each branch should order today, based on how fast it sells and how long the supplier takes to deliver.</p>
-      </div>
-    </div>
-
-    <section class="card card-body" aria-label="Filters">
-      <div class="filters">
-        <div class="field"><label for="fSupplier">Supplier</label><select id="fSupplier" multiple></select></div>
-        <div class="field"><label for="fCategory">Category</label><select id="fCategory" multiple></select></div>
-        <div class="field"><label for="fBranch">Branch</label><select id="fBranch" multiple></select></div>
-        <div class="field"><label for="fStatus">Status</label><select id="fStatus" multiple></select></div>
-        <div class="field"><label for="fOver">Overstock above (days)</label><input class="input num" type="number" id="fOver" value="40" min="10" max="120" step="5"></div>
-      </div>
-    </section>
-
-    <section class="kpis" aria-label="Status counts" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Shortage</div><div class="kpi-value neg" id="kShort">–</div><div class="kpi-delta muted">Runs out before the next delivery</div></div>
-      <div class="card kpi"><div class="kpi-label">Reorder</div><div class="kpi-value" id="kReorder" style="color:var(--warning)">–</div><div class="kpi-delta muted">Below lead time + safety stock</div></div>
-      <div class="card kpi"><div class="kpi-label">Overstock</div><div class="kpi-value" id="kOver">–</div><div class="kpi-delta muted" id="kOverD">More than 40 days of inventory</div></div>
-      <div class="card kpi"><div class="kpi-label">Suggested purchase</div><div class="kpi-value" id="kCost">–</div><div class="kpi-delta muted" id="kCostD"></div></div>
-    </section>
-
-    <section class="card">
-      <div class="card-head action-bar">
-        <h2>Products by branch</h2>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span class="muted" style="font-size:.85rem" id="selInfo" aria-live="polite">0 selected</span>
-          <button class="btn" id="pickSuggested" type="button">Select all with a suggestion</button>
-          <button class="btn btn-primary" id="createBtn" type="button" disabled>Create purchase orders</button>
+  <main id="content">
+    <section class="mc-panel">
+      <form id="filters">
+        <div class="ca-grid">
+          <div class="mc-field span2"><label for="fDesc" data-i18n="desc"></label><input id="fDesc" data-i18n-ph="allF"></div>
+          <div class="mc-field"><label for="fFrom" data-i18n="dateFrom"></label><input type="date" id="fFrom"></div>
+          <div class="mc-field"><label for="fTo" data-i18n="dateTo"></label><input type="date" id="fTo"></div>
+          <div class="mc-field"><label for="fSup" data-i18n="supplier"></label><select id="fSup"></select></div>
+          <div class="mc-field"><label for="fBranch" data-i18n="branch"></label><select id="fBranch"></select></div>
+          <div class="mc-field"><label for="fBuyer" data-i18n="buyer"></label><select id="fBuyer"></select></div>
+          <div class="mc-field"><label for="fDiv" data-i18n="division"></label><select id="fDiv"></select></div>
+          <div class="mc-field"><label for="fDept" data-i18n="dept"></label><select id="fDept"></select></div>
+          <div class="mc-field"><label for="fCat" data-i18n="category"></label><select id="fCat"></select></div>
+          <div class="mc-field"><label for="fSub" data-i18n="subcat"></label><select id="fSub"></select></div>
+          <div class="mc-field"><label for="fWh" data-i18n="warehouse"></label><select id="fWh"></select></div>
+          <div class="mc-field span2"><label for="fSeg" data-i18n="segment"></label><select id="fSeg"></select></div>
+          <div class="mc-field" style="justify-content:flex-end"><label class="mc-check"><input type="checkbox" id="fNoBand" checked><span data-i18n="noBand"></span></label></div>
         </div>
-      </div>
-      <div class="card-body">
-        <div class="status-legend" id="legend" style="margin-bottom:10px"></div>
-        <table id="items" style="width:100%">
-          <thead><tr>
-            <th><input type="checkbox" id="checkAll" aria-label="Select all visible rows"></th>
-            <th>Product</th><th>Branch</th><th>Supplier</th>
-            <th class="r" title="Average daily sales, last 30 days">Avg/day</th>
-            <th class="r">Stock</th><th class="r">In transit</th>
-            <th class="r" title="Supplier lead time in days">Lead (d)</th>
-            <th class="r">Safety</th>
-            <th class="r" title="Stock divided by average daily sales">Days of inv.</th>
-            <th>Status</th>
-            <th class="r">Suggested</th><th class="r">Est. cost</th>
-          </tr></thead>
-        </table>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-head"><h2>By supplier</h2><span class="muted" style="font-size:.82rem">Follows the filters above</span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="bySupplier">
-          <thead><tr><th>Supplier</th><th class="r">Lead (d)</th><th class="r">Items to order</th><th class="r">Units</th><th class="r">Est. cost</th></tr></thead>
-          <tbody></tbody><tfoot></tfoot>
-        </table>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Days of inventory = stock ÷ average daily sales of the last 30 days.</li>
-        <li>Suggested quantity = average daily sales × (lead time + safety days) − stock − units in transit, rounded up to full cases. Safety days = lead time × safety %.</li>
-        <li>Status uses icon and text as well as color: Shortage (stock lasts less than the lead time), Reorder (below lead time + safety), OK, Overstock (above the day limit) and No movement.</li>
-        <li>Selected lines become one purchase order per supplier; quantities can still be adjusted before confirming.</li>
-      </ul>
-    </section>
-
-    <div class="modal-backdrop" id="poModal" role="dialog" aria-modal="true" aria-labelledby="poTitle">
-      <div class="modal">
-        <div class="modal-head"><h2 id="poTitle">Create purchase orders</h2><span class="muted" id="poSub"></span></div>
-        <div class="modal-body" id="poBody"></div>
-        <div class="modal-foot">
-          <span class="num" style="margin-right:auto;font-weight:600" id="poTotal"></span>
-          <button class="btn btn-primary" id="poConfirm" type="button">Create orders</button>
-          <button class="btn" id="poCancel" type="button">Cancel</button>
+        <div class="ca-params">
+          <div class="mc-field days"><label for="pRev" data-i18n="revDays"></label><input id="pRev" class="num" type="number" min="1" value="30"></div>
+          <div class="mc-field days"><label for="pUmb"><span data-i18n="threshold"></span></label><input id="pUmb" class="num" type="number" min="1" value="40"></div>
+          <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+          <button class="btn" type="button" id="btnClear"><span class="material-icons" aria-hidden="true">filter_alt_off</span><span data-i18n="clear"></span></button>
+          <span style="flex:1"></span>
+          <div class="mc-field"><label for="pDA">DA</label><input id="pDA" class="num" type="number" min="0" data-i18n-ph="opc"></div>
+          <div class="mc-field"><label for="pDI">DI</label><input id="pDI" class="num" type="number" min="0" data-i18n-ph="opc"></div>
+          <div class="mc-field"><label for="pSeg" data-i18n="pctSeg"></label><input id="pSeg" class="num" type="number" min="0" data-i18n-ph="opc"></div>
+          <button class="btn btn-outline-teal" type="button" id="btnApply"><span class="material-icons" aria-hidden="true">done_all</span><span data-i18n="applyVisible"></span></button>
         </div>
+      </form>
+    </section>
+
+    <section class="mc-kpis ca" id="kpis" aria-label="Summary"></section>
+
+    <section class="mc-panel">
+      <div class="col-filters" id="colFilters">
+        <input data-col="code" data-i18n-ph="cf_code"><input data-col="desc" data-i18n-ph="cf_desc">
+        <select data-col="status" id="cfStatus"></select>
+        <input data-col="barcode" data-i18n-ph="cf_bar"><input data-col="sup" data-i18n-ph="cf_sup"><input data-col="cat" data-i18n-ph="cf_cat"><input data-col="buyer" data-i18n-ph="cf_buyer"><input data-col="branch" data-i18n-ph="cf_branch">
       </div>
-    </div>
+      <div class="tbl-tools">
+        <div class="legend" id="legend"></div>
+        <button class="btn btn-sm" type="button" id="btnCsv"><span class="material-icons" aria-hidden="true">download</span><span data-i18n="export"></span></button>
+      </div>
+      <table id="tItems" class="display nowrap" style="width:100%"><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table>
+    </section>
+    <div id="about"></div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -130,227 +94,183 @@
   <script src="https://cdn.datatables.net/scroller/2.3.0/js/dataTables.scroller.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const r = UI.rng(777);
-    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
-    const STATUS = {
-      "Shortage":    { cls: "chip-neg",  icon: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>') },
-      "Reorder":     { cls: "chip-warn", icon: SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/>') },
-      "OK":          { cls: "chip-pos",  icon: SVG('<path d="M5 12l4 4 10-10"/>') },
-      "Overstock":   { cls: "chip-over", icon: SVG('<path d="M12 19V5M5 12l7-7 7 7"/>') },
-      "No movement": { cls: "chip-idle", icon: SVG('<path d="M6 12h12"/>') }
-    };
-    const chip = s => '<span class="chip ' + STATUS[s].cls + '">' + STATUS[s].icon + s + "</span>";
-
-    // Supplier per category, lead time per supplier.
-    const supplierOf = { "Beverages": "Contoso Beverages", "Dairy": "Litware Dairy", "Snacks": "Adventure Snacks", "Cleaning": "Fabrikam Home", "Personal care": "Fabrikam Home", "Canned goods": "Northwind Foods", "Grains": "Tailspin Grains" };
-    const lead = { "Contoso Beverages": 4, "Litware Dairy": 2, "Adventure Snacks": 6, "Fabrikam Home": 10, "Northwind Foods": 8, "Tailspin Grains": 12 };
-    const safety = { "Contoso Beverages": .5, "Litware Dairy": .5, "Adventure Snacks": .3, "Fabrikam Home": .25, "Northwind Foods": .3, "Tailspin Grains": .25 };
-
-    // Base data (independent of the overstock limit).
-    const base = [];
-    D.products.forEach(([name, cat]) => {
-      const sup = supplierOf[cat];
-      const caseSize = UI.pick(r, [6, 12, 12, 24, 24, 48]);
-      const cost = Math.round(UI.between(r, 12, 180) * 100) / 100;
-      D.branches.forEach(br => {
-        const idle = r() < 0.05;
-        const avg = idle ? 0 : Math.round(UI.between(r, 0.6, 26) * 10) / 10;
-        const lt = lead[sup];
-        const doiTarget = UI.between(r, 0.2, 2.2) * (lt + Math.ceil(lt * safety[sup])) + (r() < 0.15 ? UI.between(r, 25, 60) : 0);
-        const stock = idle ? Math.round(UI.between(r, 4, 60)) : Math.max(0, Math.round(avg * doiTarget));
-        const transit = r() < 0.2 ? caseSize * (1 + Math.floor(r() * 3)) : 0;
-        base.push({ name, cat, sup, br, caseSize, cost, avg, stock, transit, lt, safetyPct: safety[sup] });
-      });
-    });
-
-    let overLimit = 40;
-    let rows = [];
-    function compute() {
-      rows = base.map(x => {
-        const safetyDays = Math.ceil(x.lt * x.safetyPct);
-        const doi = x.avg > 0 ? x.stock / x.avg : null;
-        const need = x.avg * (x.lt + safetyDays) - x.stock - x.transit;
-        const suggested = need > 0 ? Math.ceil(need / x.caseSize) * x.caseSize : 0;
-        let status;
-        if (x.avg === 0) status = "No movement";
-        else if (doi < x.lt) status = "Shortage";
-        else if (doi < x.lt + safetyDays) status = "Reorder";
-        else if (doi > overLimit) status = "Overstock";
-        else status = "OK";
-        return Object.assign({}, x, { safetyDays, doi, suggested, status, estCost: suggested * x.cost });
-      });
+  UI.strings({
+    en: {
+      desc: "Description", allF: "All", dateFrom: "Start date", dateTo: "End date", buyer: "Buyer", division: "Division", dept: "Department", subcat: "Subcategory", warehouse: "Warehouse",
+      segment: "Segment (analysis type)", noBand: "No promo bundles", revDays: "Review days", threshold: "Threshold", pctSeg: "% Safety", opc: "Opt.", applyVisible: "Apply to visible",
+      k_units: "Quantities in", k_unitsV: "Major unit", k_prod: "Products", k_inv: "Inventory value", k_sug: "Suggested purchase", k_buy: "To buy", k_over: "Products in excess", k_overV: "Excess value", k_days: "Selected days",
+      cf_code: "Item code…", cf_desc: "Description…", cf_bar: "Barcode…", cf_sup: "Supplier…", cf_cat: "Category…", cf_buyer: "Buyer…", cf_branch: "Branch…", stAll: "Status (all)",
+      c_code: "Item code", c_bar: "Barcode", c_desc: "Description", c_branch: "Branch", c_sup: "Supplier", c_sold: "Period sales (major)", c_daily: "Avg. daily sales (major)", c_month: "Avg. monthly sales (major)",
+      c_inv: "Available stock (major)", c_transit: "Orders in transit (major)", c_safe: "Safety days", c_stockDi: "DI stock (major)", c_rop: "Reorder point", c_cover: "Days of coverage", c_sug: "Suggested order", c_cost: "Unit cost", c_status: "Status", c_overV: "Excess value",
+      s_short: "Shortage", s_buy: "Buy", s_ok: "OK", s_over: "Excess", s_none: "No movement", applied: "DA/DI/% safety applied to {n} visible items.",
+      h_da: "DA = days until the supplier delivers (lead time). DI = days of inventory to keep after it arrives.",
+      aboutText: "For every item and branch the screen takes the sales of the review period and calculates the <b>average daily sale</b> in the major unit (case, box). <b>DA</b> is the supplier's lead time and <b>DI</b> the days of inventory to keep after it arrives; <b>safety days</b> = DA × % safety. <b>Reorder point</b> = daily sale × (DA + safety days). <b>Suggested order</b> = daily sale × (DA + DI + safety days) − available stock − orders in transit, rounded up to full cases. The <b>4-color status</b>: <b>Shortage</b> when the coverage does not reach the lead time, <b>Buy</b> when it is under the reorder point, <b>OK</b>, and <b>Excess</b> when the coverage passes the threshold (40 days by default); items without sales show <b>No movement</b>. DA, DI and % safety can be applied in bulk to the visible rows. Totals follow the filters and the column filters. All data is generated."
+    },
+    es: {
+      desc: "Descripción", allF: "Todas", dateFrom: "Fecha inicio", dateTo: "Fecha fin", buyer: "Comprador", division: "División", dept: "Depto", subcat: "Subcategoría", warehouse: "Bodega",
+      segment: "Segmento (tipo de análisis)", noBand: "Sin bandeos", revDays: "Días rev.", threshold: "Umbral", pctSeg: "% Seg.", opc: "Opc.", applyVisible: "Aplicar visibles",
+      k_units: "Cantidades en", k_unitsV: "Unidad mayor", k_prod: "Productos", k_inv: "Valor inv.", k_sug: "Compra sug.", k_buy: "Comprar", k_over: "Prod. exceso", k_overV: "Valor exceso", k_days: "Días selec.",
+      cf_code: "Cód. artículo…", cf_desc: "Descripción…", cf_bar: "Cód. barra…", cf_sup: "Proveedor…", cf_cat: "Categoría…", cf_buyer: "Comprador…", cf_branch: "Sucursal…", stAll: "Estado (todos)",
+      c_code: "Cód. artículo", c_bar: "Cód. barra", c_desc: "Descripción", c_branch: "Sucursal", c_sup: "Proveedor", c_sold: "Venta periodo (mayor)", c_daily: "Venta diaria prom. (mayor)", c_month: "Venta prom. mensual (mayor)",
+      c_inv: "Inventario disp. (mayor)", c_transit: "Pedidos en tránsito (mayor)", c_safe: "Días seg.", c_stockDi: "Stock DI (mayor)", c_rop: "Punto reorden", c_cover: "Días cobertura", c_sug: "Pedido sugerido", c_cost: "Costo unit.", c_status: "Estado", c_overV: "Valor exceso",
+      s_short: "Faltante", s_buy: "Comprar", s_ok: "OK", s_over: "Exceso", s_none: "Sin movimiento", applied: "DA/DI/% seg. aplicado a {n} artículos visibles.",
+      h_da: "DA = días que tarda el proveedor en entregar. DI = días de inventario que se quieren tener después de que llega.",
+      aboutText: "Para cada artículo y sucursal la pantalla toma la venta del periodo de revisión y calcula la <b>venta diaria promedio</b> en la unidad mayor (caja, fardo). <b>DA</b> son los días de abastecimiento del proveedor y <b>DI</b> los días de inventario que se quieren tener cuando llega; los <b>días de seguridad</b> = DA × % seg. <b>Punto de reorden</b> = venta diaria × (DA + días seg.). <b>Pedido sugerido</b> = venta diaria × (DA + DI + días seg.) − inventario disponible − pedidos en tránsito, redondeado a cajas completas. El <b>semáforo de 4 colores</b>: <b>Faltante</b> cuando la cobertura no alcanza para el abastecimiento, <b>Comprar</b> cuando está bajo el punto de reorden, <b>OK</b>, y <b>Exceso</b> cuando la cobertura pasa el umbral (40 días por defecto); los artículos sin venta salen como <b>Sin movimiento</b>. DA, DI y % seg. se pueden aplicar en bloque a las filas visibles. Los totales siguen los filtros y los filtros por columna. Todos los datos son generados."
     }
-    compute();
+  });
 
-    // Filters
-    function fill(id, values) {
-      $("#" + id).html(values.map(v => '<option value="' + v + '">' + v + "</option>").join(""))
-        .select2({ placeholder: "All", allowClear: true, width: "100%" });
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const TODAY = new Date(Date.UTC(2026, 10, 16));
+    const BUYERS = ["N. Cruz", "P. Aguilar", "S. Herrera"];
+    const DIVS = [{ en: "Grocery", es: "Abarrotes" }, { en: "Home", es: "Hogar" }];
+    const DEPTS = [{ en: "Food", es: "Alimentos" }, { en: "Drinks", es: "Bebidas" }, { en: "Household", es: "Limpieza y hogar" }, { en: "Personal", es: "Cuidado personal" }];
+    const SEGS = [{ en: "No promo bundles", es: "Sin bandeos" }, { en: "Top sellers (A)", es: "Más vendidos (A)" }, { en: "Seasonal", es: "Temporada" }];
+    const SUBS = [{ en: "Regular", es: "Regular" }, { en: "Premium", es: "Premium" }, { en: "Value pack", es: "Paquete económico" }];
+    const catDept = [1, 0, 0, 2, 3, 0, 0];
+    const supOf = cat => D.suppliers[[1, 3, 4, 2, 2, 0, 5][cat]];
+    const STATUS = { short: ["s_short", "sem-short", "error"], buy: ["s_buy", "sem-buy", "shopping_cart"], ok: ["s_ok", "sem-ok", "check_circle"], over: ["s_over", "sem-over", "inventory"], none: ["s_none", "sem-none", "remove_circle_outline"] };
+
+    // Items × branches
+    const r = UI.rng(9091);
+    const ITEMS = [];
+    D.products.forEach((p, pi) => D.branches.forEach((b, bi) => {
+      const noMove = r() < .05;
+      const daily = noMove ? 0 : UI.between(r, .3, 9) * (bi === 2 ? 1.5 : 1);
+      const coverTarget = r() < .15 ? UI.between(r, 45, 80) : UI.between(r, 2, 30);
+      ITEMS.push({
+        code: "A-" + String(10000 + pi * 37), barcode: "750" + String(1000000 + pi * 7919).slice(0, 7), desc: p[0], cat: p[1], branch: b, bi,
+        sup: supOf(p[1]), buyer: BUYERS[p[1] % 3], div: p[1] >= 3 ? 1 : 0, dept: catDept[p[1]], sub: pi % 3, segIdx: pi % 3,
+        daily, inv: Math.round(daily * coverTarget), transit: r() < .25 ? Math.round(UI.between(r, 2, 20)) : 0,
+        da: [3, 5, 7, 10][Math.floor(r() * 4)], di: [7, 10, 15][Math.floor(r() * 3)], seg: [.2, .3, .5][Math.floor(r() * 3)], caseQty: [6, 12, 24][pi % 3], cost: UI.between(r, 80, 900)
+      });
+    }));
+
+    let params = { rev: 30, umb: 40, from: null, to: null };
+    function calc(x) {
+      const safe = Math.round(x.da * x.seg);
+      const avail = x.inv + x.transit;
+      const cover = x.daily ? avail / x.daily : Infinity;
+      const rop = x.daily * (x.da + safe);
+      const need = x.daily * (x.da + x.di + safe) - avail;
+      const sug = need > 0 ? Math.ceil(need / 1) : 0;
+      let st = "ok";
+      if (!x.daily) st = "none"; else if (cover < x.da) st = "short"; else if (avail < rop) st = "buy"; else if (cover > params.umb) st = "over";
+      const overUnits = st === "over" ? avail - x.daily * params.umb : 0;
+      return { safe, cover, rop, sug, st, stockDi: x.daily * x.di, sold: x.daily * params.rev, month: x.daily * 30, overV: overUnits * x.cost };
     }
-    fill("fSupplier", Object.keys(lead));
-    fill("fCategory", D.categories);
-    fill("fBranch", D.branches);
-    fill("fStatus", Object.keys(STATUS));
-    $("#legend").html(Object.keys(STATUS).map(chip).join(""));
 
-    let F = {};
+    // ---------- Filters ----------
+    const selects = { fSup: () => D.suppliers, fBranch: () => D.branches, fBuyer: () => BUYERS, fDiv: () => DIVS, fDept: () => DEPTS, fCat: () => D.categories, fSub: () => SUBS, fWh: () => D.branches.map(b => b + " · " + (UI.lang === "es" ? "Bodega" : "Warehouse")), fSeg: () => SEGS };
+    function fillSelects() {
+      Object.keys(selects).forEach(id => {
+        const $s = $("#" + id), v = $s.val() || "all";
+        $s.empty().append(new Option(t("allF"), "all"));
+        selects[id]().forEach((x, i) => $s.append(new Option(UI.L(x), String(i))));
+        $s.val(v).select2({ width: "100%" });
+      });
+      const sv = $("#cfStatus").val() || "";
+      $("#cfStatus").empty().append(new Option(t("stAll"), ""));
+      Object.keys(STATUS).forEach(k => $("#cfStatus").append(new Option(t(STATUS[k][0]), k)));
+      $("#cfStatus").val(sv);
+      document.getElementById("legend").innerHTML = Object.keys(STATUS).map(k => '<span class="sem ' + STATUS[k][1] + '">' + mi(STATUS[k][2]) + t(STATUS[k][0]) + "</span>").join("");
+    }
+    fillSelects();
+    document.getElementById("fFrom").value = UI.fmtDate(new Date(TODAY.getTime() - 29 * 86400000));
+    document.getElementById("fTo").value = UI.fmtDate(TODAY);
+
+    let applied = null;
     function readFilters() {
-      const set = id => { const v = $("#" + id).val() || []; return v.length ? new Set(v) : null; };
-      F = { sup: set("fSupplier"), cat: set("fCategory"), br: set("fBranch"), st: set("fStatus") };
+      const v = id => $("#" + id).val();
+      return { desc: document.getElementById("fDesc").value.trim().toLowerCase(), sup: v("fSup"), branch: v("fBranch"), buyer: v("fBuyer"), div: v("fDiv"), dept: v("fDept"), cat: v("fCat"), sub: v("fSub"), wh: v("fWh"), seg: v("fSeg"), noBand: document.getElementById("fNoBand").checked };
     }
-    readFilters();
-    $.fn.dataTable.ext.search.push(function (settings, data, idx) {
-      if (settings.nTable.id !== "items") return true;
-      const x = rows[idx];
-      if (F.sup && !F.sup.has(x.sup)) return false;
-      if (F.cat && !F.cat.has(x.cat)) return false;
-      if (F.br && !F.br.has(x.br)) return false;
-      if (F.st && !F.st.has(x.status)) return false;
-      return true;
-    });
-
-    const selected = new Set();
-    const statusOrder = { "Shortage": 0, "Reorder": 1, "OK": 2, "Overstock": 3, "No movement": 4 };
-    const table = $("#items").DataTable({
-      data: rows.map((x, i) => [i]),
-      columnDefs: [{ targets: "_all", data: 0 }],
-      deferRender: true,
-      scrollY: 440, scrollX: true,
-      scroller: { rowHeight: 36, displayBuffer: 4 },
-      dom: "rti",
-      order: [[10, "asc"], [9, "asc"]],
-      columns: [
-        { orderable: false, render: i => '<input type="checkbox" class="pick" data-i="' + i + '" aria-label="Select ' + rows[i].name + " at " + rows[i].br + '"' + (selected.has(i) ? " checked" : "") + ">" },
-        { render: i => rows[i].name },
-        { render: i => rows[i].br },
-        { render: i => rows[i].sup },
-        { className: "dt-right num", render: (i, t) => t === "display" ? rows[i].avg.toFixed(1) : rows[i].avg },
-        { className: "dt-right num", render: (i, t) => t === "display" ? UI.fmtInt(rows[i].stock) : rows[i].stock },
-        { className: "dt-right num", render: (i, t) => t === "display" ? (rows[i].transit ? UI.fmtInt(rows[i].transit) : "–") : rows[i].transit },
-        { className: "dt-right num", render: i => rows[i].lt },
-        { className: "dt-right num", render: (i, t) => t === "display" ? UI.fmtPct(rows[i].safetyPct, 0) + " (" + rows[i].safetyDays + "d)" : rows[i].safetyPct },
-        { className: "dt-right num", render: (i, t) => { const d = rows[i].doi; if (t !== "display") return d == null ? 9999 : d; return d == null ? "–" : d.toFixed(1); } },
-        { render: (i, t) => t === "display" ? chip(rows[i].status) : statusOrder[rows[i].status] },
-        { className: "dt-right num", render: (i, t) => t === "display" ? (rows[i].suggested ? UI.fmtInt(rows[i].suggested) : "–") : rows[i].suggested },
-        { className: "dt-right num", render: (i, t) => t === "display" ? (rows[i].estCost ? UI.fmtMoney(rows[i].estCost) : "–") : rows[i].estCost }
-      ],
-      createdRow: (tr, d) => { if (selected.has(d[0])) tr.classList.add("picked"); },
-      language: { info: "_TOTAL_ product × branch lines", infoFiltered: "(filtered from _MAX_)", infoEmpty: "No lines match the filters", zeroRecords: "No lines match the filters" }
-    });
-
-    function visibleIdx() { return table.rows({ search: "applied" }).data().toArray().map(d => d[0]); }
-
-    function summarize() {
-      const idx = visibleIdx();
-      const c = { "Shortage": 0, "Reorder": 0, "Overstock": 0 };
-      let cost = 0, items = 0;
-      const bySup = new Map();
-      idx.forEach(i => {
-        const x = rows[i];
-        if (c[x.status] != null) c[x.status]++;
-        if (x.suggested > 0) {
-          cost += x.estCost; items++;
-          const g = bySup.get(x.sup) || { items: 0, units: 0, cost: 0 };
-          g.items++; g.units += x.suggested; g.cost += x.estCost;
-          bySup.set(x.sup, g);
-        }
-      });
-      $("#kShort").text(UI.fmtInt(c.Shortage));
-      $("#kReorder").text(UI.fmtInt(c.Reorder));
-      $("#kOver").text(UI.fmtInt(c.Overstock));
-      $("#kOverD").text("More than " + overLimit + " days of inventory");
-      $("#kCost").text(UI.fmtMoney(cost));
-      $("#kCostD").text(UI.fmtInt(items) + " lines with a suggestion");
-      const list = [...bySup.entries()].sort((a, b) => b[1].cost - a[1].cost);
-      let tu = 0, ti = 0;
-      $("#bySupplier tbody").html(list.map(([s, g]) => { tu += g.units; ti += g.items;
-        return "<tr><td>" + s + '</td><td class="r num">' + lead[s] + '</td><td class="r num">' + g.items + '</td><td class="r num">' + UI.fmtInt(g.units) + '</td><td class="r num">' + UI.fmtMoney(g.cost) + "</td></tr>"; }).join("") ||
-        '<tr><td colspan="5" class="muted">Nothing to order with the current filters</td></tr>');
-      $("#bySupplier tfoot").html('<tr><td>Total</td><td></td><td class="r num">' + ti + '</td><td class="r num">' + UI.fmtInt(tu) + '</td><td class="r num">' + UI.fmtMoney(cost) + "</td></tr>");
-      const allChecked = idx.length > 0 && idx.every(i => selected.has(i));
-      $("#checkAll").prop("checked", allChecked);
+    function baseRows() {
+      const f = applied;
+      return ITEMS.filter(x => (!f.desc || x.desc.toLowerCase().includes(f.desc) || x.code.toLowerCase().includes(f.desc)) &&
+        (f.sup === "all" || x.sup === D.suppliers[+f.sup]) && (f.branch === "all" || x.bi === +f.branch) && (f.wh === "all" || x.bi === +f.wh) &&
+        (f.buyer === "all" || x.buyer === BUYERS[+f.buyer]) && (f.div === "all" || x.div === +f.div) && (f.dept === "all" || x.dept === +f.dept) &&
+        (f.cat === "all" || x.cat === +f.cat) && (f.sub === "all" || x.sub === +f.sub) && (f.seg === "all" || x.segIdx === +f.seg));
     }
-    table.on("draw", summarize);
-    summarize();
 
-    function updateSel() {
-      $("#selInfo").text(selected.size + " selected");
-      $("#createBtn").prop("disabled", selected.size === 0);
+    // ---------- Table ----------
+    const COLS = [
+      ["c_code", x => x.code, 0], ["c_bar", x => x.barcode, 0], ["c_desc", x => x.desc, 0], ["c_branch", x => x.branch, 0], ["c_sup", x => x.sup, 0],
+      ["c_sold", (x, c) => c.sold.toFixed(1), 1, (x, c) => c.sold], ["c_daily", (x, c) => x.daily.toFixed(2), 1], ["c_month", (x, c) => c.month.toFixed(1), 1],
+      ["c_inv", x => UI.fmtInt(x.inv), 1, x => x.inv], ["c_transit", x => UI.fmtInt(x.transit), 1, x => x.transit], ["DA", x => x.da, 1], ["DI", x => x.di, 1], ["pctSeg", x => UI.fmtPct(x.seg, 0), 1], ["c_safe", (x, c) => c.safe, 1],
+      ["c_stockDi", (x, c) => c.stockDi.toFixed(1), 1], ["c_rop", (x, c) => c.rop.toFixed(1), 1], ["c_cover", (x, c) => isFinite(c.cover) ? c.cover.toFixed(1) : "—", 1],
+      ["c_sug", (x, c) => c.sug ? UI.fmtInt(c.sug) : "0", 2, (x, c) => c.sug], ["c_cost", x => M(x.cost), 1], ["c_status", (x, c) => '<span class="sem ' + STATUS[c.st][1] + '">' + mi(STATUS[c.st][2]) + t(STATUS[c.st][0]) + "</span>", 0],
+      ["c_overV", (x, c) => c.overV ? M(c.overV) : "", 1, (x, c) => c.overV]
+    ];
+    const head = () => COLS.map(c => (c[0] === "DA" || c[0] === "DI") ? c[0] : t(c[0]));
+    let dt = null;
+    function rowsData() {
+      const cf = {};
+      document.querySelectorAll("#colFilters [data-col]").forEach(el => cf[el.dataset.col] = el.value.trim().toLowerCase());
+      return baseRows().map(x => ({ x, c: calc(x) })).filter(({ x, c }) =>
+        (!cf.code || x.code.toLowerCase().includes(cf.code)) && (!cf.desc || x.desc.toLowerCase().includes(cf.desc)) && (!cf.status || c.st === cf.status) &&
+        (!cf.barcode || x.barcode.includes(cf.barcode)) && (!cf.sup || x.sup.toLowerCase().includes(cf.sup)) && (!cf.cat || UI.L(D.categories[x.cat]).toLowerCase().includes(cf.cat)) &&
+        (!cf.buyer || x.buyer.toLowerCase().includes(cf.buyer)) && (!cf.branch || x.branch.toLowerCase().includes(cf.branch)));
     }
-    function setPick(i, on) {
-      if (on) selected.add(i); else selected.delete(i);
-      const node = table.row((idx, data) => data[0] === i).node();
-      if (node) { node.classList.toggle("picked", on); $(node).find(".pick").prop("checked", on); }
-    }
-    $("#items").on("change", ".pick", function () { setPick(+this.dataset.i, this.checked); updateSel(); summarize(); });
-    $("#checkAll").on("change", function () { const on = this.checked; visibleIdx().forEach(i => setPick(i, on)); updateSel(); });
-    $("#pickSuggested").on("click", () => { visibleIdx().forEach(i => { if (rows[i].suggested > 0) setPick(i, true); }); updateSel(); summarize(); });
-
-    function redraw() { readFilters(); table.draw(false); }
-    $("#fSupplier, #fCategory, #fBranch, #fStatus").on("change", redraw);
-    $("#fOver").on("change", function () {
-      const v = Math.max(10, Math.min(120, parseInt(this.value, 10) || 40));
-      this.value = v; overLimit = v; compute();
-      table.rows().invalidate("data").draw(false);
-    });
-
-    // ---- Purchase order modal ----
-    let draft = [];
-    function openPO() {
-      draft = [...selected].map(i => ({ i, qty: rows[i].suggested || rows[i].caseSize }));
-      const groups = new Map();
-      draft.forEach(d => { const s = rows[d.i].sup; if (!groups.has(s)) groups.set(s, []); groups.get(s).push(d); });
-      $("#poSub").text(groups.size + " supplier" + (groups.size === 1 ? "" : "s") + " · " + draft.length + " lines");
-      let html = "";
-      groups.forEach((list, sup) => {
-        html += '<div class="po-group" data-sup="' + sup + '"><div class="po-group-head"><strong>' + sup + '</strong><span class="muted">Lead time ' + lead[sup] + ' days · subtotal <span class="num sup-total"></span></span></div>' +
-          '<div class="table-wrap"><table class="grid"><thead><tr><th>Product</th><th>Branch</th><th class="r">Case</th><th class="r">Unit cost</th><th class="r">Qty</th><th class="r">Total</th></tr></thead><tbody>' +
-          list.map(d => { const x = rows[d.i]; const k = draft.indexOf(d);
-            return "<tr><td>" + x.name + "</td><td>" + x.br + '</td><td class="r num">' + x.caseSize + '</td><td class="r num">' + UI.fmtMoney(x.cost) +
-              '</td><td class="r"><label class="sr-only" for="q' + k + '">Quantity for ' + x.name + " at " + x.br + '</label><input class="input num qty-input" id="q' + k + '" data-k="' + k + '" inputmode="numeric" value="' + d.qty + '"></td><td class="r num line-total"></td></tr>'; }).join("") +
-          "</tbody></table></div></div>";
-      });
-      $("#poBody").html(html);
-      recalcPO();
-      UI.openModal("poModal");
-    }
-    function recalcPO() {
-      let grand = 0;
-      $("#poBody .po-group").each(function () {
-        let sub = 0;
-        $(this).find(".qty-input").each(function () {
-          const d = draft[+this.dataset.k];
-          const t = d.qty * rows[d.i].cost;
-          sub += t;
-          $(this).closest("tr").find(".line-total").text(UI.fmtMoney(t));
+    let current = [];
+    function draw() {
+      current = rowsData();
+      const data = current.map(({ x, c }) => COLS.map(col => col[1](x, c)));
+      if (dt) { dt.clear(); dt.rows.add(data); dt.draw(false); }
+      else {
+        $("#tItems thead tr").html(head().map((h, i) => "<th" + (COLS[i][2] ? ' class="dt-right"' : "") + ">" + h + "</th>").join(""));
+        $("#tItems tfoot tr").html(COLS.map(() => "<th></th>").join(""));
+        dt = $("#tItems").DataTable({
+          data, deferRender: true, scrollY: 460, scrollX: true, scroller: { rowHeight: 34, displayBuffer: 4 }, searching: false, ordering: true, info: true, order: [[17, "desc"]],
+          columnDefs: [{ targets: COLS.map((c, i) => c[2] ? i : -1).filter(i => i >= 0), className: "dt-right num" }, { targets: [17], className: "dt-right num sug" }],
+          language: dtLang()
         });
-        $(this).find(".sup-total").text(UI.fmtMoney(sub));
-        grand += sub;
-      });
-      $("#poTotal").text("Total " + UI.fmtMoney(grand));
-      $("#poConfirm").prop("disabled", !draft.some(d => d.qty > 0));
+      }
+      renderTotals();
     }
-    $("#poBody").on("input", ".qty-input", function () {
-      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
-      draft[+this.dataset.k].qty = parseInt(this.value || "0", 10);
-      recalcPO();
-    });
-    $("#createBtn").on("click", openPO);
-    $("#poCancel").on("click", () => UI.closeModal("poModal"));
-    $("#poConfirm").on("click", () => {
-      const sups = new Set(draft.filter(d => d.qty > 0).map(d => rows[d.i].sup));
-      let n = 5120;
-      const nums = [...sups].map(() => "PO-" + String(++n).padStart(6, "0"));
-      UI.closeModal("poModal");
-      [...selected].forEach(i => setPick(i, false));
-      updateSel(); summarize();
-      UI.toast(nums.length + " purchase order" + (nums.length === 1 ? "" : "s") + " created: " + nums.join(", "));
-    });
+    function dtLang() { return UI.lang === "es" ? { info: "_TOTAL_ artículos", infoEmpty: "Sin artículos", emptyTable: "Sin datos", zeroRecords: "No hay artículos con estos filtros" } : { info: "_TOTAL_ items", infoEmpty: "No items", emptyTable: "No data", zeroRecords: "No items match these filters" }; }
+    function renderTotals() {
+      const sum = f => current.reduce((a, r) => a + f(r.x, r.c), 0);
+      const inv = sum(x => x.inv * x.cost), sug = sum((x, c) => c.sug * x.cost), buy = current.filter(r => r.c.sug > 0).length;
+      const over = current.filter(r => r.c.st === "over").length, overV = sum((x, c) => c.overV);
+      const days = Math.round((new Date(document.getElementById("fTo").value) - new Date(document.getElementById("fFrom").value)) / 86400000) + 1;
+      const k = (l, v, color) => '<div class="mc-kpi is-accent" style="--k-color:' + color + '"><div class="k-label">' + t(l) + '</div><div class="k-value num">' + v + "</div></div>";
+      document.getElementById("kpis").innerHTML = k("k_units", t("k_unitsV"), "#38bdf8") + k("k_prod", UI.fmtInt(current.length), "#14b8a6") + k("k_inv", M(inv), "#14b8a6") + k("k_sug", M(sug), "#f59e0b") +
+        k("k_buy", UI.fmtInt(buy), "#f59e0b") + k("k_over", UI.fmtInt(over), "#8b5cf6") + k("k_overV", M(overV), "#8b5cf6") + k("k_days", isNaN(days) ? "—" : days, "#64748b");
+      const foot = dt.table().footer().querySelectorAll("th");
+      const tot = (i, v) => { if (foot[i]) foot[i].innerHTML = v; };
+      foot.forEach(th => th.innerHTML = "");
+      tot(0, t("total")); tot(5, sum((x, c) => c.sold).toFixed(1)); tot(8, UI.fmtInt(sum(x => x.inv))); tot(9, UI.fmtInt(sum(x => x.transit))); tot(17, UI.fmtInt(sum((x, c) => c.sug))); tot(20, M(overV));
+      [5, 8, 9, 17, 20].forEach(i => foot[i] && (foot[i].className = "dt-right num"));
+    }
 
-    window.addEventListener("resize", () => table.columns.adjust());
-    if (document.fonts) document.fonts.ready.then(() => table.columns.adjust());
+    // ---------- Events ----------
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); applied = readFilters(); params.umb = Number(document.getElementById("pUmb").value) || 40; params.rev = Number(document.getElementById("pRev").value) || 30; draw(); });
+    document.getElementById("btnClear").addEventListener("click", () => {
+      document.getElementById("fDesc").value = ""; Object.keys(selects).forEach(id => $("#" + id).val("all").trigger("change.select2"));
+      document.querySelectorAll("#colFilters input").forEach(i => i.value = ""); $("#cfStatus").val("");
+      applied = readFilters(); draw();
+    });
+    let tmr;
+    document.getElementById("colFilters").addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(draw, 200); });
+    document.getElementById("colFilters").addEventListener("change", draw);
+    document.getElementById("btnApply").addEventListener("click", () => {
+      const da = document.getElementById("pDA").value, di = document.getElementById("pDI").value, sg = document.getElementById("pSeg").value;
+      current.forEach(({ x }) => { if (da !== "") x.da = Number(da); if (di !== "") x.di = Number(di); if (sg !== "") x.seg = Number(sg) / 100; });
+      UI.toast(t("applied", { n: current.length })); draw();
+    });
+    document.getElementById("btnCsv").addEventListener("click", () => {
+      UI.csvDownload("automatic-purchasing.csv", [head()].concat(current.map(({ x, c }) => COLS.map(col => String(col[1](x, c)).replace(/<[^>]+>/g, "").replace(/^(error|shopping_cart|check_circle|inventory|remove_circle_outline)/, "")))));
+    });
+    document.addEventListener("langchange", () => {
+      fillSelects();
+      if (dt) { dt.destroy(); dt = null; $("#tItems").empty().html("<thead><tr></tr></thead><tfoot><tr></tr></tfoot>"); }
+      draw();
+      document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    applied = readFilters();
+    draw();
+    document.fonts && document.fonts.ready.then(() => dt && dt.columns.adjust());
   });
   </script>
 </body>

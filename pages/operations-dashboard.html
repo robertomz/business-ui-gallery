@@ -3,279 +3,387 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Operations Dashboard · Business UI Gallery</title>
+  <title>Operations dashboard · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .kpis-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .kpi-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-2); }
-    .spark { width: 110px; height: 36px; flex: none; }
-    .spark path.line { fill: none; stroke-width: 1.8; }
-    .spark path.area { opacity: .12; }
-    .deltas { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; font-size: .8rem; }
-    .delta { display: inline-flex; align-items: center; gap: 4px; }
-    .delta.good { color: var(--positive); }
-    .delta.bad { color: var(--negative); }
-    .delta.flat { color: var(--text-muted); }
-    .sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
-    .stat-list { display: flex; flex-direction: column; gap: 10px; }
-    .stat-row { display: grid; grid-template-columns: 120px 1fr 90px; gap: 10px; align-items: center; font-size: .86rem; }
-    .stat-row .bar-track { min-width: 0; }
-    th.sortable { cursor: pointer; user-select: none; }
-    tr.branch-row { cursor: pointer; }
-    tr.branch-row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
-    tr.drill td { background: var(--surface-2); }
-    .drill-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); padding: 6px 0; }
-    .drill-grid div { font-size: .82rem; }
-    .drill-grid strong { display: block; font-family: var(--font-mono); font-weight: 600; font-size: .92rem; }
-    .note { font-size: .8rem; }
-    @media (max-width: 1100px) { .kpis-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 900px) { .sections { grid-template-columns: 1fr; } }
-    @media (max-width: 560px) {
-      .kpis-3 { grid-template-columns: 1fr; }
-      .stat-row { grid-template-columns: 90px 1fr 70px; }
-      .drill-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
+    .ig-card[data-area="caja"] { --ig-color: #38bdf8; }
+    .ig-card[data-area="ventas"] { --ig-color: #14b8a6; }
+    .ig-card[data-area="cxc"] { --ig-color: #f59e0b; }
+    .ig-card[data-area="especial"] { --ig-color: #fb923c; }
+    .ig-card[data-area="cxp"] { --ig-color: #a78bfa; }
+    .ig-card[data-area="tarjetas"] { --ig-color: #38bdf8; }
+    .ig-card[data-area="cxp_tipos"] { --ig-color: #a78bfa; }
+    .ig-card[data-area="inventario"] { --ig-color: #f87171; }
+    .ig-card[data-area="resultado"] { --ig-color: #34d399; }
+    .tipo-bar header { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin: 10px 0 5px; }
+    .tipo-bar header span { font-weight: 750; }
+    .tipo-bar .ig-barra { height: 10px; }
+    .tipo-bar .ig-barra span { background: #a78bfa; }
+    .tipo-bar.is-sin .ig-barra span { background: repeating-linear-gradient(45deg, #94a3b8 0 6px, #64748b 6px 12px); }
+    .tipo-bar p { font-size: 10px; color: var(--mc-muted); margin-top: 4px; }
+    .card-list li b small { text-align: right; }
+    tr.drill { cursor: pointer; }
+    tr.drill:focus-visible { outline: 2px solid var(--mc-cyan); outline-offset: -2px; }
+    tr.detail td { background: var(--mc-panel-2); }
+    .pct-bad { color: var(--mc-bad); font-weight: 800; }
   </style>
 </head>
 <body data-page="operations-dashboard" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Operations dashboard</h1>
-        <p class="muted">The daily close in one screen: cash, sales, receivables, payables and stock, compared with the previous close.</p>
+  <main id="content">
+    <section class="mc-panel no-print">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field w-sm"><label data-i18n="fCompany"></label><div class="static">DEMO</div></div>
+        <div class="mc-field" style="max-width:170px"><label for="fDate" data-i18n="fDate"></label><input type="date" id="fDate"></div>
+        <div class="mc-field" style="max-width:240px"><label for="fBranch" data-i18n="branch"></label><select id="fBranch"></select></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
+    </section>
+    <p class="mc-hint" id="hint" role="status"></p>
+
+    <div id="dash" hidden>
+      <div class="mc-head">
+        <div><h2 id="dTitle"></h2><p id="dSub"></p></div>
+        <span class="mc-chip-time" id="dTime"></span>
       </div>
-      <div class="field" style="width:200px">
-        <label for="day">Close of</label>
-        <select class="input" id="day"></select>
-      </div>
+      <div class="ig-areas" id="areas" style="margin-top:12px"></div>
+
+      <section class="mc-panel" style="margin-top:12px">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">store</span><span data-i18n="byBranch"></span></h3><span class="mc-hint" data-i18n="byBranchHint"></span></div>
+        <div class="table-wrap"><table class="grid" id="tBranches"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </section>
+
+      <section class="mc-panel" style="margin-top:12px">
+        <div class="mc-panel-title">
+          <h3><span class="material-icons" aria-hidden="true">groups</span><span data-i18n="customers"></span></h3>
+          <div class="mc-tabs" role="tablist" id="custTabs"></div>
+        </div>
+        <div class="table-wrap"><table class="grid" id="tCust"><thead></thead><tbody></tbody></table></div>
+      </section>
     </div>
-
-    <section class="kpis kpis-3" id="kpis" aria-label="Key figures of the close"></section>
-    <p class="muted note" style="margin-top:-12px">Arrows show the direction of the change. Green means the change is good for the business and red means it is bad: more payables due is red even when the arrow goes up. Sundays and holidays are skipped, so "previous close" is the previous working day.</p>
-
-    <section class="sections">
-      <div class="card">
-        <div class="card-head"><h2>Cash settled vs sold</h2><span class="muted" style="font-size:.82rem">Cash and card sales already deposited</span></div>
-        <div class="card-body"><div class="stat-list" id="settled"></div></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Receivables and payables</h2></div>
-        <div class="card-body">
-          <div class="ladder" id="arap"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Inventory</h2><span class="muted" style="font-size:.82rem">Days of inventory above 40 count as overstock</span></div>
-        <div class="card-body"><div class="stat-list" id="inventory"></div></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Payables due this week</h2></div>
-        <div class="card-body table-wrap">
-          <table class="grid" id="dueTable"><thead><tr><th>Supplier</th><th>Due</th><th class="r">Amount</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-head"><h2>By branch</h2><span class="muted" style="font-size:.82rem">Select a branch to see its detail</span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="branches">
-          <thead><tr>
-            <th>Branch</th><th class="r">Sales</th><th class="r">vs previous close</th><th class="r">Settled</th><th class="r">Overdue AR</th><th class="r">Shortages</th><th>Status</th>
-          </tr></thead>
-          <tbody></tbody>
-          <tfoot></tfoot>
-        </table>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>A scheduled job closes each day at night and stores a snapshot, so any past close opens instantly and is never recalculated.</li>
-        <li>Every card compares against the previous working day and the same day last month. Non-working days are skipped so a Monday is not compared with a Sunday.</li>
-        <li>Direction and meaning are separate: the arrow shows whether the number went up or down, the color shows whether that is good or bad for that metric.</li>
-        <li>Branch rows open a detail with the same figures, so the totals at the top can be traced down to each branch.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const HOLIDAYS = ["2026-09-15", "2026-10-03", "2026-10-12", "2026-10-21"];
-    const DAY = 86400000;
-
-    function isWorking(d) { return d.getUTCDay() !== 0 && !HOLIDAYS.includes(UI.fmtDate(d)); }
-
-    // The last 60 working-day closes up to Nov 16, 2026.
-    const closes = [];
-    for (let d = new Date(Date.UTC(2026, 10, 16)); closes.length < 60; d = new Date(d.getTime() - DAY)) {
-      if (isWorking(d)) closes.unshift(new Date(d));
+  UI.strings({
+    en: {
+      fCompany: "Company", fDate: "Close date", byBranch: "Comparison by branch", byBranchHint: "Select a branch to see its detail",
+      customers: "Customers that owe the most", tabBalance: "Most balance", tabOverdue: "Most overdue", tabSpecial: "Special overdue",
+      title: "Operations dashboard at the close of {d}",
+      sub: "Each figure is compared with the close of {p} (previous working day) and {m} (same day last month). If a day has no close, it shows «No data».",
+      consulted: "Consulted {d}", loaded: "Loaded the close of {d}.",
+      caja: "Cash", ventas: "Sales", cxc: "Accounts receivable", especial: "Special overdue (41+ days)", cxp: "Accounts payable", tarjetas: "Credit card balances",
+      cxp_tipos: "Payables by payment type", inventario: "Inventory", resultado: "Result of the day",
+      cajaMain: "Cash received at the registers", cajaPct: "Settled to the bank", ventasMain: "Net sales of the day", ventasPct: "Daily goal achievement",
+      cxcMain: "Normal overdue (1 to 40 days)", cxcPct: "% of the balance overdue", espMain: "Balance in special overdue", espPct: "% of the balance in special overdue",
+      cxpMain: "Payables balance", cxpPct: "% of the balance overdue", tarMain: "Pending balance of all cards", tarPct: "% of cards used that day",
+      invMain: "Value in overstock", invPct: "% of inventory in overstock", resMain: "Working capital (current assets − current liabilities)", resPct: "Current ratio",
+      sCash: "Cash", sPos: "Card terminals", sBank: "Bank", sDay: "Day", sMonth: "Month", sChannel: "Contado / credit / cash on delivery",
+      cashReceived: "Cash received", cashSales: "Cash sales", creditPayments: "Payments on credit", codPayments: "Cash on delivery", topups: "Top-ups", cashReturns: "Returns paid in cash",
+      posTotal: "Card sales", posRefund: "Tax refund on card sales", bankCredits: "Credits to the bank (bank book)", bankSettled: "Settled in the bank",
+      goalDay: "Goal of the day", billedDay: "Invoiced in the day", diffGoal: "Difference against the goal", soldCash: "Cash", soldCredit: "Credit", soldCod: "Cash on delivery",
+      monthSold: "Sold in the month", monthGoal: "Goal of the month", monthPct: "Month achievement",
+      portfolio: "Total balance (portfolio)", current: "Current", d1_30: "Overdue 1 to 30 days", d31_40: "Overdue 31 to 40 days", custOverdue: "Customers in overdue", invOverdue: "Invoices in overdue",
+      e41_60: "Special 41 to 60 days", e61_90: "Special 61 to 90 days", e90: "Special over 90 days", eNew: "Of which became special today",
+      overdue: "Overdue", dueWeek: "Due in the next 7 days", onTime: "On time", over90: "Overdue more than 90 days", suppliersOverdue: "Suppliers with overdue", suppliersBalance: "Suppliers with balance",
+      payByCard: "Can be paid with card", activeCards: "Active cards", noBalanceToday: "{n} cards have no balance on {d}: their last balance is used.",
+      invValue: "Inventory value", overstockItems: "Items in overstock", overstockSub: "More than 40 days of sales", shortItems: "Items in shortage", shortSub: "Not enough to cover lead time",
+      suggested: "Suggested purchase of shortages", outOfStock: "Out of stock", noSale30: "No sales in 30 days",
+      assets: "Current assets", liabilities: "Current liabilities", totAssets: "Total current assets", totLiab: "Total current liabilities", cashBank: "Cash and bank", receivable: "Accounts receivable",
+      inventory: "Inventory", payable: "Accounts payable", cardsDebt: "Credit cards", undefined: "Undefined", suppliersN: "{n} suppliers", dueIn7: "due in 7 days {v}",
+      perDayOf: "{x}, per day",
+      colBranch: "Branch", colSales: "Net sales", colGoal: "Goal %", colCash: "Cash received", colSettled: "% settled", colCxc: "Receivable", colOver: "% overdue", colStock: "Inventory", colOverstock: "% overstock",
+      colCustomer: "Customer", colSeller: "Seller", colBal: "Balance", colOverdue: "Overdue", colDays: "Days", colLimit: "Credit limit",
+      h_caja: "Cash the cashiers delivered to deposit plus card terminals of the day, minus the tax refund on card sales. <b>% settled</b> = what the bank already confirmed over what was delivered.",
+      h_ventas: "Invoiced minus returns. The goal of the day comes from the month goal split by working days.",
+      h_cxc: "Overdue starts the day after the due date (date + credit days). <b>Normal</b> = 1 to 40 days; 41 or more is <b>special</b> and has its own card.",
+      h_esp: "Invoices with 41 or more days past due, in their own bucket so collections can act on them.",
+      h_cxp: "Open supplier invoices. Due date = invoice date + credit days.",
+      h_tar: "Last balance of each company card up to the close date. If a card has no balance that day, its last one is used.",
+      h_inv: "Overstock and shortages use the automatic purchasing rule: overstock = more than 40 days of coverage; shortage = below what is needed until the next delivery.",
+      h_res: "Working capital = current assets − current liabilities. Current ratio = current assets ÷ current liabilities.",
+      aboutText: "The real version saves a <b>daily close</b> every night at 11:50 pm, so past days open instantly and only today is calculated live. Each figure is compared with the <b>previous working day</b> (non-working days are skipped) and with the <b>same day of the previous month</b>. The arrow shows the direction of the change and the color shows whether it is good or bad: payables going up is red even though the arrow points up. Every <b>?</b> explains how a figure is calculated, and each card ends with its trend <b>per day</b>. The comparison table can be sorted and each branch opens its detail. All the data on this page is generated."
+    },
+    es: {
+      fCompany: "Empresa", fDate: "Fecha de cierre", byBranch: "Comparativo por sucursal", byBranchHint: "Elija una sucursal para ver su detalle",
+      customers: "Clientes que más deben", tabBalance: "Más saldo", tabOverdue: "Más mora", tabSpecial: "Mora especial",
+      title: "Dashboard operativo al cierre del {d}",
+      sub: "Cada indicador se compara con el cierre del {p} (día hábil anterior) y con el del {m} (mismo día del mes anterior). Si no hay cierre de ese día, sale «Sin dato».",
+      consulted: "Consultado {d}", loaded: "Se cargó el cierre del {d}.",
+      caja: "Caja", ventas: "Ventas", cxc: "Cuentas por cobrar", especial: "Mora especial (41 días o más)", cxp: "Cuentas por pagar", tarjetas: "Saldo de tarjetas de crédito",
+      cxp_tipos: "CxP por tipo de pago", inventario: "Inventario", resultado: "Resultado del día",
+      cajaMain: "Entró por caja", cajaPct: "Liquidado en banco", ventasMain: "Venta neta del día", ventasPct: "Cumplimiento de la meta del día",
+      cxcMain: "Mora normal (1 a 40 días)", cxcPct: "% del saldo en mora normal", espMain: "Saldo en mora especial", espPct: "% del saldo en mora especial",
+      cxpMain: "Saldo por pagar", cxpPct: "% del saldo vencido", tarMain: "Saldo pendiente de todas las tarjetas", tarPct: "% de tarjetas con saldo de ese día",
+      invMain: "Valor en sobreexistencia", invPct: "% del inventario en sobreexistencia", resMain: "Capital de trabajo (activo − pasivo circulante)", resPct: "Razón corriente",
+      sCash: "Efectivo", sPos: "POS", sBank: "Banco", sDay: "Día", sMonth: "Mes", sChannel: "Contado / crédito / pago contra entrega",
+      cashReceived: "Efectivo recibido", cashSales: "Ventas de contado", creditPayments: "Abonos a crédito", codPayments: "Pagos contra entrega", topups: "Recargas", cashReturns: "Devoluciones en efectivo",
+      posTotal: "Ventas con tarjeta", posRefund: "Devolución de ISV de tarjeta", bankCredits: "Créditos al banco (libro del banco)", bankSettled: "Liquidado en banco",
+      goalDay: "Meta del día", billedDay: "Facturado del día", diffGoal: "Diferencia con la meta", soldCash: "Contado", soldCredit: "Crédito", soldCod: "Pago contra entrega",
+      monthSold: "Vendido en el mes", monthGoal: "Meta del mes", monthPct: "Cumplimiento del mes",
+      portfolio: "Saldo total (cartera)", current: "Al día", d1_30: "Mora 1 a 30 días", d31_40: "Mora 31 a 40 días", custOverdue: "Clientes en mora", invOverdue: "Facturas en mora",
+      e41_60: "Especial 41 a 60 días", e61_90: "Especial 61 a 90 días", e90: "Especial más de 90 días", eNew: "De esas, pasaron hoy a especial",
+      overdue: "Vencido", dueWeek: "Vence en los próximos 7 días", onTime: "Al día", over90: "Vencido más de 90 días", suppliersOverdue: "Proveedores con vencido", suppliersBalance: "Proveedores con saldo",
+      payByCard: "Se puede pagar con tarjeta", activeCards: "Tarjetas activas", noBalanceToday: "{n} tarjetas no tienen saldo del {d}: se toma su último saldo.",
+      invValue: "Valor del inventario", overstockItems: "Artículos en sobreexistencia", overstockSub: "Más de 40 días de venta", shortItems: "Artículos faltantes", shortSub: "No alcanzan para el abastecimiento",
+      suggested: "Compra sugerida de los faltantes", outOfStock: "Agotados", noSale30: "Sin venta en 30 días",
+      assets: "Activo circulante", liabilities: "Pasivo circulante", totAssets: "Total activo circulante", totLiab: "Total pasivo circulante", cashBank: "Caja y banco", receivable: "Cuentas por cobrar",
+      inventory: "Inventario", payable: "Cuentas por pagar", cardsDebt: "Tarjetas de crédito", undefined: "Sin definir", suppliersN: "{n} proveedores", dueIn7: "vence en 7 días {v}",
+      perDayOf: "{x}, por día",
+      colBranch: "Sucursal", colSales: "Venta neta", colGoal: "% meta", colCash: "Entró por caja", colSettled: "% liquidado", colCxc: "Por cobrar", colOver: "% en mora", colStock: "Inventario", colOverstock: "% sobreexistencia",
+      colCustomer: "Cliente", colSeller: "Vendedor", colBal: "Saldo", colOverdue: "En mora", colDays: "Días", colLimit: "Límite de crédito",
+      h_caja: "Efectivo que los cajeros entregaron para depositar más los POS de los turnos del día, menos la devolución de ISV de tarjeta. <b>% liquidado</b> = lo que el banco ya confirmó sobre lo entregado.",
+      h_ventas: "Facturado menos devoluciones. La meta del día sale de la meta del mes repartida en los días hábiles.",
+      h_cxc: "La mora empieza el día después del vencimiento (fecha + plazo). <b>Normal</b> = 1 a 40 días; 41 o más es <b>especial</b> y tiene su propia tarjeta.",
+      h_esp: "Facturas con 41 días o más de atraso, separadas para que Créditos actúe sobre ellas.",
+      h_cxp: "Facturas de proveedor abiertas. Vencimiento = fecha de la factura + días de crédito.",
+      h_tar: "Último saldo de cada tarjeta de la empresa hasta la fecha del cierre. Si una tarjeta no tiene saldo ese día, se toma el último.",
+      h_inv: "Sobreexistencia y faltantes usan la regla de Compras Automáticas: sobreexistencia = más de 40 días de cobertura; faltante = cubre menos de lo necesario hasta el próximo abastecimiento.",
+      h_res: "Capital de trabajo = activo circulante − pasivo circulante. Razón corriente = activo circulante ÷ pasivo circulante.",
+      aboutText: "La versión real guarda un <b>cierre diario</b> cada noche a las 11:50 p. m., así los días pasados abren al instante y solo el día de hoy se calcula en vivo. Cada indicador se compara con el <b>día hábil anterior</b> (se saltan los días no hábiles) y con el <b>mismo día del mes anterior</b>. La flecha indica hacia dónde va el cambio y el color si es bueno o malo: si las cuentas por pagar suben sale en rojo aunque la flecha apunte arriba. Cada <b>?</b> explica cómo se calcula la cifra, y cada tarjeta termina con su tendencia <b>por día</b>. El comparativo se puede ordenar y cada sucursal abre su detalle. Todos los datos de esta página son generados."
     }
+  });
 
-    // A deterministic close snapshot per branch; values drift slowly over time.
-    function snapshot(d) {
-      const n = Math.floor(d.getTime() / DAY);
-      return D.branches.map((b, i) => {
-        const r = UI.rng(n * 131 + i * 17);
-        const trend = 1 + (n % 90) / 900;
-        const sales = [52000, 38000, 61000, 29000, 33000, 24000][i] * trend * UI.between(r, 0.82, 1.18) * (d.getUTCDay() === 6 ? 1.25 : 1);
-        const cashCard = sales * UI.between(r, 0.6, 0.75);
-        const settled = cashCard * UI.between(r, 0.86, 1);
-        const ar = [410000, 300000, 520000, 210000, 260000, 180000][i] * UI.between(r, 0.96, 1.04) * trend;
-        const overdue = ar * UI.between(r, 0.08, 0.26);
-        const ap = [380000, 240000, 450000, 200000, 220000, 160000][i] * UI.between(r, 0.95, 1.06);
-        const apWeek = ap * UI.between(r, 0.12, 0.28);
-        const stock = [900000, 620000, 1100000, 480000, 530000, 400000][i] * UI.between(r, 0.97, 1.03);
-        const overstock = stock * UI.between(r, 0.05, 0.16);
-        const shortages = Math.round(UI.between(r, 2, 26));
-        return { branch: b, sales, cashCard, settled, ar, overdue, ap, apWeek, stock, overstock, shortages };
+  $(function () {
+    const D = UI.DATA, t = UI.t, mi = UI.mi, M = UI.fmtMoney;
+    const TODAY = new Date(Date.UTC(2026, 10, 16));
+    const day = ms => new Date(ms);
+    const isWorking = d => d.getUTCDay() !== 0;   // Sundays have no close in the sample
+    function prevWorking(d) { let x = new Date(d.getTime() - 86400000); while (!isWorking(x)) x = new Date(x.getTime() - 86400000); return x; }
+    function sameDayLastMonth(d) { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, d.getUTCDate())); return isWorking(x) ? x : prevWorking(x); }
+
+    // One deterministic close per day and branch.
+    function close(d, branchIdx) {
+      const seed = Math.floor(d.getTime() / 86400000);
+      const idxs = branchIdx == null ? D.branches.map((_, i) => i) : [branchIdx];
+      const z = {};
+      const add = (k, v) => { z[k] = (z[k] || 0) + v; };
+      idxs.forEach(i => {
+        const r = UI.rng(seed * 131 + i * 7 + 3);
+        const scale = [1.35, 0.95, 1.6, 0.75, 0.85, 0.6][i];
+        const wd = [0.7, 1, 1, 1.05, 1.1, 1.3, 1.2][d.getUTCDay()];
+        const goalDay = 82000 * scale * wd;
+        const billed = goalDay * UI.between(r, 0.82, 1.08);
+        const cash = billed * UI.between(r, .1, .14), credit = billed * UI.between(r, .42, .5), cod = billed - cash - credit;
+        add("goalDay", goalDay); add("billed", billed); add("cash", cash); add("credit", credit); add("cod", cod);
+        add("monthSold", billed * (d.getUTCDate() - 1) * UI.between(r, .9, 1.02) + billed); add("monthGoal", goalDay * 26);
+        const creditPay = billed * UI.between(r, .55, .7), codPay = cod * UI.between(r, .85, 1), topups = UI.between(r, 0, 900), cashRet = UI.between(r, 0, 1500);
+        const cashRecv = cash + creditPay + codPay + topups - cashRet;
+        add("cashSales", cash); add("creditPay", creditPay); add("codPay", codPay); add("topups", topups); add("cashRet", cashRet); add("cashRecv", cashRecv);
+        const pos = billed * UI.between(r, .14, .22), refund = pos * .15 / 1.15 * .08;
+        add("pos", pos); add("posRefund", refund);
+        add("entered", cashRecv + pos - refund);
+        add("settled", (cashRecv + pos - refund) * UI.between(r, .74, .95));
+        add("bankCredits", UI.between(r, 0, 1200));
+        const portfolio = 2600000 * scale * UI.between(r, .97, 1.03);
+        const d1 = portfolio * UI.between(r, .1, .14), d2 = portfolio * UI.between(r, .07, .1), e = portfolio * UI.between(r, .015, .03);
+        add("portfolio", portfolio); add("d1_30", d1); add("d31_40", d2); add("current", portfolio - d1 - d2 - e); add("especial", e);
+        add("e41_60", e * .55); add("e61_90", e * .3); add("e90", e * .15); add("eNew", e * UI.between(r, 0, .06));
+        add("custOverdue", Math.round(UI.between(r, 25, 60) * scale)); add("invOverdue", Math.round(UI.between(r, 60, 140) * scale)); add("custTotal", Math.round(130 * scale));
+        const pay = 3300000 * scale * UI.between(r, .97, 1.04), ov = pay * UI.between(r, .08, .13), wk = pay * UI.between(r, .12, .17);
+        add("payable", pay); add("pOverdue", ov); add("pWeek", wk); add("pOnTime", pay - ov); add("p90", ov * .04);
+        add("supOver", Math.round(UI.between(r, 4, 9))); add("supBal", Math.round(UI.between(r, 12, 18)));
+        const inv = 2400000 * scale * UI.between(r, .98, 1.02), over = inv * UI.between(r, .17, .23);
+        add("inv", inv); add("overstock", over); add("overItems", Math.round(UI.between(r, 90, 140))); add("shortItems", Math.round(UI.between(r, 10, 20)));
+        add("suggested", UI.between(r, 90000, 160000) * scale); add("outStock", Math.round(UI.between(r, 8, 18))); add("noSale", UI.between(r, 20000, 40000) * scale);
       });
-    }
-    function total(rows, k) { return rows.reduce((a, x) => a + x[k], 0); }
-    function totals(d) {
-      const s = snapshot(d);
-      return {
-        sales: total(s, "sales"), settledPct: total(s, "settled") / total(s, "cashCard"),
-        ar: total(s, "ar"), overduePct: total(s, "overdue") / total(s, "ar"),
-        apWeek: total(s, "apWeek"), overstock: total(s, "overstock"), shortages: total(s, "shortages"), rows: s
-      };
-    }
-
-    // Metric definitions: good = which direction is good for the business.
-    const METRICS = [
-      { k: "sales", label: "Net sales", fmt: v => UI.fmtMoney(v), good: "up" },
-      { k: "settledPct", label: "Cash settled", fmt: v => UI.fmtPct(v), good: "up", pct: true },
-      { k: "ar", label: "Receivables", fmt: v => UI.fmtMoney(v), good: "down" },
-      { k: "overduePct", label: "Overdue receivables", fmt: v => UI.fmtPct(v), good: "down", pct: true },
-      { k: "apWeek", label: "Payables due this week", fmt: v => UI.fmtMoney(v), good: "down" },
-      { k: "overstock", label: "Overstock value", fmt: v => UI.fmtMoney(v), good: "down" }
-    ];
-
-    const sel = document.getElementById("day");
-    sel.innerHTML = closes.slice(30).reverse().map(d => '<option value="' + UI.fmtDate(d) + '">' + UI.fmtDate(d) + (d.getUTCDay() === 6 ? " (Sat)" : "") + "</option>").join("");
-
-    function sameDayLastMonth(d) {
-      let m = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, d.getUTCDate()));
-      while (!isWorking(m)) m = new Date(m.getTime() - DAY);
-      return m;
+      const rc = UI.rng(seed * 17 + 99);
+      z.cards = [["4417", D.banks[0], "VISA"], ["2111", D.banks[1], "MASTERCARD"], ["7036", D.banks[0], "MASTERCARD"], ["0172", D.banks[2], "VISA"], ["9253", D.banks[3], "VISA"], ["4048", D.banks[1], "VISA"]]
+        .map((c, i) => ({ last4: c[0], bank: c[1], brand: c[2], bal: i < 4 ? UI.between(rc, 300000, 2400000) : 0, today: rc() > .45 }));
+      z.cardsBal = z.cards.reduce((a, c) => a + c.bal, 0);
+      z.cardsUsed = z.cards.filter(c => c.today).length / z.cards.length;
+      z.types = [
+        { en: "Transfer", es: "Transferencia", v: z.payable * .52, n: 11 }, { en: "Check", es: "Cheque", v: z.payable * .27, n: 6 },
+        { en: "Credit card", es: "Tarjeta de crédito", v: z.payable * .13, n: 4 }, { en: "Undefined", es: "Sin definir", v: z.payable * .08, n: 3, sin: true }
+      ];
+      z.cashBank = z.entered * 1.6;
+      z.assets = z.cashBank + z.portfolio + z.inv;
+      z.liab = z.payable + z.cardsBal;
+      return z;
     }
 
-    function arrow(up) {
-      return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">' + (up ? '<path d="M12 19V5M5 12l7-7 7 7"/>' : '<path d="M12 5v14M5 12l7 7 7-7"/>') + "</svg>";
+    // Filters
+    const $branch = $("#fBranch");
+    function fillBranches() {
+      const v = $branch.val();
+      $branch.empty().append(new Option(t("wholeCompany"), "all"));
+      D.branches.forEach((b, i) => $branch.append(new Option(b, String(i))));
+      $branch.val(v || "all").select2({ width: "100%", minimumResultsForSearch: 0 });
     }
-    function deltaHtml(m, cur, prev, label) {
-      const diff = m.pct ? cur - prev : (cur - prev) / prev;
-      if (Math.abs(diff) < 0.0005) return '<span class="delta flat">— no change <span class="muted">' + label + "</span></span>";
-      const up = diff > 0;
-      const good = (m.good === "up") === up;
-      const txt = m.pct ? (Math.abs(diff) * 100).toFixed(1) + " pts" : UI.fmtPct(Math.abs(diff));
-      return '<span class="delta ' + (good ? "good" : "bad") + '">' + arrow(up) + txt + ' <span class="muted">' + label + '</span><span class="sr-only">, ' + (good ? "favorable" : "unfavorable") + "</span></span>";
-    }
+    fillBranches();
+    const dateIn = document.getElementById("fDate");
+    dateIn.value = UI.fmtDate(TODAY); dateIn.max = UI.fmtDate(TODAY);
 
-    function spark(values, color) {
-      const w = 110, h = 36, min = Math.min(...values), max = Math.max(...values), span = max - min || 1;
-      const pts = values.map((v, i) => [i / (values.length - 1) * w, h - 3 - (v - min) / span * (h - 6)]);
-      const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
-      const area = line + " L" + w + " " + h + " L0 " + h + " Z";
-      const last = pts[pts.length - 1];
-      return '<svg class="spark" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true"><path class="area" d="' + area + '" fill="' + color + '"/><path class="line" d="' + line + '" stroke="' + color + '"/><circle cx="' + last[0] + '" cy="' + last[1] + '" r="2.5" fill="' + color + '"/></svg>';
-    }
+    let state = null, custTab = "balance", sort = { k: "sales", dir: -1 }, openBranch = null;
 
-    let openBranch = null;
+    function trend(d, b, f) {
+      const vals = [], labels = [];
+      let x = d;
+      for (let i = 0; i < 12; i++) { vals.unshift(f(close(x, b))); labels.unshift(UI.fmtDayShort(x)); x = prevWorking(x); }
+      return [vals, labels];
+    }
+    const row = (label, value, opt) => '<li class="' + ((opt && opt.cls) || "") + '"><span>' + label + (opt && opt.help ? UI.helpBtn(opt.help) : "") + (opt && opt.sub ? "<small>" + opt.sub + "</small>" : "") + "</span><b>" + value + (opt && opt.bsub ? "<small>" + opt.bsub + "</small>" : "") + "</b></li>";
+    const sec = label => '<li class="ig-seccion">' + label + "</li>";
+
+    function card(area, icon, dateTxt, main, pct, rows, spark, extra) {
+      return '<article class="ig-card" data-area="' + area + '">' +
+        '<div class="ig-card-head"><h3>' + mi(icon) + t(area) + '</h3><span class="ig-card-fecha">' + dateTxt + "</span></div>" + (extra || "") +
+        '<div class="ig-principal-label">' + main.label + UI.helpBtn(main.help) + "</div>" +
+        '<div class="ig-principal num' + (main.value < 0 ? " is-negativo" : "") + '">' + (main.fmt || M)(main.value) + "</div>" +
+        '<div class="ig-deltas">' + main.deltas + "</div>" +
+        (pct ? '<div class="ig-medidor"><div class="ig-medidor-texto"><span>' + pct.label + "</span><b>" + (pct.fmt || UI.fmtPct)(pct.value) + '</b></div><div class="ig-barra"><span style="width:' + Math.max(0, Math.min(100, pct.value * 100)) + '%"></span></div>' +
+          '<div class="ig-deltas">' + pct.deltas + "</div></div>" : "") +
+        '<ul class="ig-filas card-list">' + rows + "</ul>" + spark + "</article>";
+    }
 
     function render() {
-      const day = new Date(sel.value + "T00:00:00Z");
-      const idx = closes.findIndex(d => UI.fmtDate(d) === sel.value);
-      const cur = totals(day), prev = totals(closes[idx - 1]), lm = totals(sameDayLastMonth(day));
-      const history = closes.slice(idx - 29, idx + 1).map(totals);
+      if (!state) return;
+      const { d, b } = state;
+      const p = prevWorking(d), m = sameDayLastMonth(d);
+      const z = close(d, b), zp = close(p, b), zm = close(m, b);
+      const dt = UI.fmtDay(d), dp = UI.fmtDayShort(p), dm = UI.fmtDayShort(m);
+      const vp = t("vsPrev") + " " + dp, vm = t("vsPrev") + " " + dm;
+      const both = (k, opts) => UI.delta(z[k], zp[k], Object.assign({ label: vp }, opts)) + UI.delta(z[k], zm[k], Object.assign({ label: vm }, opts));
+      const bothF = (f, opts) => UI.delta(f(z), f(zp), Object.assign({ label: vp }, opts)) + UI.delta(f(z), f(zm), Object.assign({ label: vm }, opts));
+      const pctD = (f, goodUp) => UI.delta(f(z), f(zp), { label: vp, points: true, goodWhenUp: goodUp }) + UI.delta(f(z), f(zm), { label: vm, points: true, goodWhenUp: goodUp });
+      const spark = (titleKey, f) => { const tr = trend(d, b, f); return UI.sparkline(tr[0], tr[1], t("perDayOf", { x: t(titleKey) })); };
 
-      document.getElementById("kpis").innerHTML = METRICS.map(m => {
-        const color = UI.cssVar("--chart-1");
-        return '<div class="card kpi"><div class="kpi-top"><div><div class="kpi-label">' + m.label + '</div><div class="kpi-value">' + m.fmt(cur[m.k]) + "</div></div>" +
-          spark(history.map(h => h[m.k]), color) + '</div><div class="deltas">' +
-          deltaHtml(m, cur[m.k], prev[m.k], "vs previous close") + deltaHtml(m, cur[m.k], lm[m.k], "vs same day last month") + "</div></div>";
-      }).join("");
+      document.getElementById("dTitle").textContent = t("title", { d: dt });
+      document.getElementById("dSub").textContent = t("sub", { p: UI.fmtDay(p), m: UI.fmtDay(m) });
+      document.getElementById("dTime").textContent = t("consulted", { d: UI.fmtDay(TODAY) + " 16:34" });
 
-      // Cash settled per branch
-      document.getElementById("settled").innerHTML = cur.rows.map(r => {
-        const p = r.settled / r.cashCard;
-        const color = p >= 0.97 ? "var(--positive)" : p >= 0.9 ? "var(--warning)" : "var(--negative)";
-        return '<div class="stat-row"><span>' + r.branch + '</span><div class="bar-track"><span style="width:' + (p * 100) + "%;background:" + color + '"></span></div><span class="num r" style="text-align:right">' + UI.fmtPct(p) + "</span></div>";
-      }).join("") + '<p class="muted note">Total: ' + UI.fmtMoney(total(cur.rows, "settled")) + " settled of " + UI.fmtMoney(total(cur.rows, "cashCard")) + " sold in cash and card.</p>";
+      const settled = x => x.settled / x.entered, goalPct = x => x.billed / x.goalDay, cxcPct = x => (x.d1_30 + x.d31_40) / x.portfolio,
+        espPct = x => x.especial / x.portfolio, cxpPct = x => x.pOverdue / x.payable, invPct = x => x.overstock / x.inv, ratio = x => x.assets / x.liab;
 
-      // Receivables / payables ladder
-      const ar = cur.ar, od = total(cur.rows, "overdue");
-      const ap = total(cur.rows, "ap"), apw = cur.apWeek;
-      document.getElementById("arap").innerHTML =
-        '<div class="ladder-row total"><span>Receivables</span><span class="num">' + UI.fmtMoney(ar) + "</span></div>" +
-        '<div class="ladder-row indent"><span>Current</span><span class="num">' + UI.fmtMoney(ar - od) + "</span></div>" +
-        '<div class="ladder-row indent"><span>Overdue (' + UI.fmtPct(od / ar) + ')</span><span class="num neg">' + UI.fmtMoney(od) + "</span></div>" +
-        '<div class="ladder-row total" style="margin-top:8px"><span>Payables</span><span class="num">' + UI.fmtMoney(ap) + "</span></div>" +
-        '<div class="ladder-row indent"><span>Due this week</span><span class="num">' + UI.fmtMoney(apw) + "</span></div>" +
-        '<div class="ladder-row indent"><span>Due later</span><span class="num">' + UI.fmtMoney(ap - apw) + "</span></div>" +
-        '<div class="ladder-row result"><span>Receivables − payables</span><span class="num ' + (ar - ap >= 0 ? "pos" : "neg") + '">' + UI.fmtMoney(ar - ap) + "</span></div>";
-
-      // Inventory
-      const stock = total(cur.rows, "stock"), over = cur.overstock;
-      document.getElementById("inventory").innerHTML = cur.rows.map(r => {
-        const p = r.overstock / r.stock;
-        return '<div class="stat-row"><span>' + r.branch + '</span><div class="bar-track"><span style="width:' + Math.min(p / 0.2, 1) * 100 + '%;background:var(--warning)"></span></div><span class="num" style="text-align:right">' + r.shortages + " short</span></div>";
-      }).join("") + '<p class="muted note">Stock value ' + UI.fmtMoney(stock) + ", of which " + UI.fmtMoney(over) + " (" + UI.fmtPct(over / stock) + ") is overstock. " + cur.shortages + " items are below their reorder point. Bars show the overstock share of each branch.</p>";
-
-      // Payables due this week
-      const r = UI.rng(Math.floor(day.getTime() / DAY) * 7);
-      const due = D.suppliers.map((s, i) => ({ s, d: new Date(day.getTime() + Math.floor(UI.between(r, 0, 6)) * DAY), a: apw * [0.24, 0.2, 0.18, 0.15, 0.13, 0.1][i] }))
-        .sort((a, b) => a.d - b.d);
-      document.querySelector("#dueTable tbody").innerHTML = due.map(x => "<tr><td>" + x.s + '</td><td class="num">' + UI.fmtDate(x.d) + '</td><td class="r num">' + UI.fmtMoney(x.a) + "</td></tr>").join("");
-      document.querySelector("#dueTable tfoot").innerHTML = '<tr><td>Total</td><td></td><td class="r num">' + UI.fmtMoney(due.reduce((a, x) => a + x.a, 0)) + "</td></tr>";
-
-      // Branch comparison
-      const tb = document.querySelector("#branches tbody");
-      tb.innerHTML = cur.rows.map((x, i) => {
-        const p = prev.rows[i];
-        const vs = (x.sales - p.sales) / p.sales;
-        const st = x.settled / x.cashCard, odp = x.overdue / x.ar;
-        const issues = (st < 0.9 ? 1 : 0) + (odp > 0.2 ? 1 : 0) + (x.shortages > 18 ? 1 : 0);
-        const status = issues === 0 ? '<span class="chip chip-pos">✓ On track</span>' : issues === 1 ? '<span class="chip chip-warn">! 1 alert</span>' : '<span class="chip chip-neg">!! ' + issues + " alerts</span>";
-        let html = '<tr class="branch-row" tabindex="0" data-i="' + i + '" aria-expanded="' + (openBranch === i) + '"><td>' + x.branch + '</td><td class="r num">' + UI.fmtMoney(x.sales) +
-          '</td><td class="r num ' + (vs >= 0 ? "pos" : "neg") + '">' + (vs >= 0 ? "▲ +" : "▼ ") + UI.fmtPct(vs) + '</td><td class="r num">' + UI.fmtPct(st) + '</td><td class="r num">' + UI.fmtPct(odp) +
-          '</td><td class="r num">' + x.shortages + "</td><td>" + status + "</td></tr>";
-        if (openBranch === i) {
-          html += '<tr class="drill"><td colspan="7"><div class="drill-grid">' +
-            "<div>Cash and card sold<strong>" + UI.fmtMoney(x.cashCard) + "</strong></div>" +
-            "<div>Settled<strong>" + UI.fmtMoney(x.settled) + "</strong></div>" +
-            "<div>Pending deposit<strong>" + UI.fmtMoney(x.cashCard - x.settled) + "</strong></div>" +
-            "<div>Receivables<strong>" + UI.fmtMoney(x.ar) + "</strong></div>" +
-            "<div>Overdue<strong>" + UI.fmtMoney(x.overdue) + "</strong></div>" +
-            "<div>Payables due this week<strong>" + UI.fmtMoney(x.apWeek) + "</strong></div>" +
-            "<div>Stock<strong>" + UI.fmtMoney(x.stock) + "</strong></div>" +
-            "<div>Overstock<strong>" + UI.fmtMoney(x.overstock) + "</strong></div>" +
-            "</div></td></tr>";
-        }
-        return html;
-      }).join("");
-      const ps = total(prev.rows, "sales"), cs = cur.sales;
-      document.querySelector("#branches tfoot").innerHTML = '<tr><td>Total</td><td class="r num">' + UI.fmtMoney(cs) + '</td><td class="r num ' + (cs >= ps ? "pos" : "neg") + '">' + (cs >= ps ? "▲ +" : "▼ ") + UI.fmtPct((cs - ps) / ps) +
-        '</td><td class="r num">' + UI.fmtPct(cur.settledPct) + '</td><td class="r num">' + UI.fmtPct(cur.overduePct) + '</td><td class="r num">' + cur.shortages + "</td><td></td></tr>";
+      const cards = [];
+      cards.push(card("caja", "point_of_sale", UI.fmtDayShort(d),
+        { label: t("cajaMain"), help: "h_caja", value: z.entered, deltas: both("entered") },
+        { label: t("cajaPct"), value: settled(z), deltas: pctD(settled, true) },
+        sec(t("sCash")) + row(t("cashReceived"), M(z.cashRecv), { cls: "is-total" }) + row(t("cashSales"), M(z.cashSales), { cls: "is-sub" }) + row(t("creditPayments"), M(z.creditPay), { cls: "is-sub" }) +
+        row(t("codPayments"), M(z.codPay), { cls: "is-sub" }) + row(t("topups"), M(z.topups), { cls: "is-sub" }) + row("− " + t("cashReturns"), M(z.cashRet), { cls: "is-sub" }) +
+        sec(t("sPos")) + row(t("posTotal"), M(z.pos)) + row("− " + t("posRefund"), M(z.posRefund), { cls: "is-sub" }) +
+        sec(t("sBank")) + row(t("bankCredits"), M(z.bankCredits)) + row(t("bankSettled"), M(z.settled)),
+        spark("cajaPct", settled)));
+      cards.push(card("ventas", "trending_up", UI.fmtDayShort(d),
+        { label: t("ventasMain"), help: "h_ventas", value: z.billed, deltas: both("billed") },
+        { label: t("ventasPct"), value: goalPct(z), deltas: pctD(goalPct, true) },
+        sec(t("sDay")) + row(t("goalDay"), M(z.goalDay)) + row(t("billedDay"), M(z.billed), { cls: "is-total" }) +
+        row(t("diffGoal"), '<span class="' + (z.billed - z.goalDay < 0 ? "neg" : "pos") + '">' + M(z.billed - z.goalDay) + "</span>", { bsub: UI.fmtPct(goalPct(z)) }) +
+        row(t("soldCash"), M(z.cash), { cls: "is-sub", bsub: UI.fmtPct(z.cash / z.billed) }) + row(t("soldCredit"), M(z.credit), { cls: "is-sub", bsub: UI.fmtPct(z.credit / z.billed) }) +
+        row(t("soldCod"), M(z.cod), { cls: "is-sub", bsub: UI.fmtPct(z.cod / z.billed) }) +
+        sec(t("sMonth")) + row(t("monthGoal"), M(z.monthGoal)) + row(t("monthSold"), M(z.monthSold)) + row(t("monthPct"), UI.fmtPct(z.monthSold / z.monthGoal)),
+        spark("ventasPct", goalPct)));
+      cards.push(card("cxc", "request_page", UI.fmtDayShort(d),
+        { label: t("cxcMain"), help: "h_cxc", value: z.d1_30 + z.d31_40, deltas: bothF(x => x.d1_30 + x.d31_40, { goodWhenUp: false }) },
+        { label: t("cxcPct"), value: cxcPct(z), deltas: pctD(cxcPct, false) },
+        row(t("portfolio"), M(z.portfolio), { bsub: UI.fmtInt(z.custTotal) + " " + t("customer").toLowerCase() + "s" }) + row(t("current"), M(z.current)) +
+        row(t("d1_30"), M(z.d1_30)) + row(t("d31_40"), M(z.d31_40)) + row(t("custOverdue"), UI.fmtInt(z.custOverdue)) + row(t("invOverdue"), UI.fmtInt(z.invOverdue)),
+        spark("cxcPct", cxcPct)));
+      cards.push(card("especial", "warning", UI.fmtDayShort(d),
+        { label: t("espMain"), help: "h_esp", value: z.especial, deltas: both("especial", { goodWhenUp: false }) },
+        { label: t("espPct"), value: espPct(z), deltas: pctD(espPct, false) },
+        row(t("e41_60"), M(z.e41_60), { sub: t("eNew") + ": " + M(z.eNew) }) + row(t("e61_90"), M(z.e61_90)) + row(t("e90"), M(z.e90)),
+        spark("espPct", espPct)));
+      cards.push(card("cxp", "receipt_long", UI.fmtDayShort(d),
+        { label: t("cxpMain"), help: "h_cxp", value: z.payable, deltas: both("payable", { goodWhenUp: false }) },
+        { label: t("cxpPct"), value: cxpPct(z), deltas: pctD(cxpPct, false) },
+        row(t("overdue"), M(z.pOverdue)) + row(t("suppliersOverdue"), UI.fmtInt(z.supOver)) + row(t("dueWeek"), M(z.pWeek)) + row(t("onTime"), M(z.pOnTime)) +
+        row(t("over90"), M(z.p90)) + row(t("suppliersBalance"), UI.fmtInt(z.supBal)) + sec(t("payByCard")) + row(t("cardsDebt"), M(z.types[2].v)),
+        spark("cxpPct", cxpPct)));
+      const noToday = z.cards.filter(c => !c.today).length;
+      cards.push(card("tarjetas", "credit_card", UI.fmtDayShort(d),
+        { label: t("tarMain"), help: "h_tar", value: z.cardsBal, deltas: both("cardsBal", { goodWhenUp: false }) },
+        { label: t("tarPct"), value: z.cardsUsed, deltas: pctD(x => x.cardsUsed, true) },
+        row(t("activeCards"), z.cards.length) + z.cards.map(c => row("**** " + c.last4 + " · " + c.bank, c.bal ? M(c.bal) : "—", { sub: c.brand, bsub: c.today ? UI.fmtDayShort(d) : "—" })).join(""),
+        spark("tarMain", x => x.cardsBal),
+        noToday ? '<p class="ig-nota">' + t("noBalanceToday", { n: noToday, d: UI.fmtDayShort(d) }) + "</p>" : ""));
+      cards.push('<article class="ig-card" data-area="cxp_tipos"><div class="ig-card-head"><h3>' + mi("payments") + t("cxp_tipos") + '</h3><span class="ig-card-fecha">' + UI.fmtDayShort(d) + "</span></div>" +
+        '<div class="ig-principal-label">' + t("cxpMain") + '</div><div class="ig-principal num">' + M(z.payable) + "</div>" +
+        z.types.map(ty => '<div class="tipo-bar' + (ty.sin ? " is-sin" : "") + '"><header><span>' + UI.L(ty) + "</span><b class=\"num\">" + M(ty.v) + " · " + UI.fmtPct(ty.v / z.payable) + '</b></header><div class="ig-barra"><span style="width:' + (ty.v / z.payable * 100) + '%"></span></div><p>' + t("suppliersN", { n: ty.n }) + "</p></div>").join("") +
+        "</article>");
+      cards.push(card("inventario", "inventory_2", UI.fmtDayShort(d),
+        { label: t("invMain"), help: "h_inv", value: z.overstock, deltas: both("overstock", { goodWhenUp: false }) },
+        { label: t("invPct"), value: invPct(z), deltas: pctD(invPct, false) },
+        row(t("invValue"), M(z.inv)) + row(t("overstockItems"), UI.fmtInt(z.overItems), { sub: t("overstockSub") }) + row(t("shortItems"), UI.fmtInt(z.shortItems), { sub: t("shortSub") }) +
+        row(t("suggested"), M(z.suggested)) + row(t("outOfStock"), UI.fmtInt(z.outStock)) + row(t("noSale30"), M(z.noSale)),
+        spark("invPct", invPct)));
+      cards.push(card("resultado", "functions", UI.fmtDayShort(d),
+        { label: t("resMain"), help: "h_res", value: z.assets - z.liab, deltas: bothF(x => x.assets - x.liab) },
+        { label: t("resPct"), value: ratio(z) / 2, fmt: () => ratio(z).toFixed(2), deltas: UI.delta(ratio(z), ratio(zp), { label: vp, points: true }) + UI.delta(ratio(z), ratio(zm), { label: vm, points: true }) },
+        sec(t("assets")) + row(t("totAssets"), M(z.assets), { cls: "is-total" }) + row(t("cashBank"), M(z.cashBank), { cls: "is-sub" }) + row(t("receivable"), M(z.portfolio), { cls: "is-sub" }) + row(t("inventory"), M(z.inv), { cls: "is-sub" }) +
+        sec(t("liabilities")) + row(t("totLiab"), M(z.liab), { cls: "is-total" }) + row(t("payable"), M(z.payable), { cls: "is-sub" }) + row(t("cardsDebt"), M(z.cardsBal), { cls: "is-sub" }),
+        spark("resMain", x => x.assets - x.liab)));
+      document.getElementById("areas").innerHTML = cards.join("");
+      renderBranches();
+      renderCustomers();
     }
 
-    document.querySelector("#branches tbody").addEventListener("click", e => {
-      const tr = e.target.closest("tr.branch-row"); if (!tr) return;
-      const i = +tr.dataset.i; openBranch = openBranch === i ? null : i; render();
-      const again = document.querySelector('#branches tr.branch-row[data-i="' + i + '"]'); if (again) again.focus();
+    function renderBranches() {
+      const { d } = state;
+      const cols = [["branch", "colBranch", 0], ["sales", "colSales", 1], ["goal", "colGoal", 2], ["cash", "colCash", 1], ["settled", "colSettled", 2], ["cxc", "colCxc", 1], ["over", "colOver", 2], ["stock", "colStock", 1], ["overstock", "colOverstock", 2]];
+      const rows = D.branches.map((name, i) => { const z = close(d, i), zp = close(prevWorking(d), i); return { i, name, z, zp, branch: name, sales: z.billed, goal: z.billed / z.goalDay, cash: z.entered, settled: z.settled / z.entered, cxc: z.portfolio, over: (z.d1_30 + z.d31_40) / z.portfolio, stock: z.inv, overstock: z.overstock / z.inv }; });
+      rows.sort((a, b) => (a[sort.k] > b[sort.k] ? 1 : -1) * sort.dir);
+      const th = document.querySelector("#tBranches thead");
+      th.innerHTML = "<tr>" + cols.map(c => '<th class="sortable' + (c[2] ? " r" : "") + '" data-k="' + c[0] + '" tabindex="0" aria-sort="' + (sort.k === c[0] ? (sort.dir > 0 ? "ascending" : "descending") : "none") + '">' + t(c[1]) + "</th>").join("") + "</tr>";
+      const fmt = (c, r) => c[2] === 1 ? M(r[c[0]]) : c[2] === 2 ? '<span class="' + ((c[0] === "goal" && r[c[0]] < .85) || (c[0] === "settled" && r[c[0]] < .8) || (c[0] === "over" && r[c[0]] > .22) || (c[0] === "overstock" && r[c[0]] > .22) ? "pct-bad" : "") + '">' + UI.fmtPct(r[c[0]]) + "</span>" : r[c[0]];
+      document.querySelector("#tBranches tbody").innerHTML = rows.map(r =>
+        '<tr class="drill" tabindex="0" data-i="' + r.i + '">' + cols.map(c => "<td" + (c[2] ? ' class="r"' : "") + ">" + (c[0] === "branch" ? mi(openBranch === r.i ? "expand_less" : "expand_more") + " " : "") + fmt(c, r) + "</td>").join("") + "</tr>" +
+        (openBranch === r.i ? '<tr class="detail"><td colspan="' + cols.length + '"><div class="ig-deltas">' +
+          UI.delta(r.z.billed, r.zp.billed, { label: t("colSales") + " " + t("vsPrev") + " " + UI.fmtDayShort(prevWorking(d)) }) +
+          UI.delta(r.z.entered, r.zp.entered, { label: t("colCash") }) +
+          UI.delta(r.z.d1_30 + r.z.d31_40, r.zp.d1_30 + r.zp.d31_40, { label: t("cxcMain"), goodWhenUp: false }) +
+          UI.delta(r.z.overstock, r.zp.overstock, { label: t("invMain"), goodWhenUp: false }) + "</div></td></tr>" : "")).join("");
+      const tot = k => rows.reduce((a, r) => a + r.z[k], 0);
+      document.querySelector("#tBranches tfoot").innerHTML = "<tr><td>" + t("total") + '</td><td class="r">' + M(tot("billed")) + '</td><td class="r">' + UI.fmtPct(tot("billed") / tot("goalDay")) + '</td><td class="r">' + M(tot("entered")) +
+        '</td><td class="r">' + UI.fmtPct(tot("settled") / tot("entered")) + '</td><td class="r">' + M(tot("portfolio")) + '</td><td class="r">' + UI.fmtPct((tot("d1_30") + tot("d31_40")) / tot("portfolio")) +
+        '</td><td class="r">' + M(tot("inv")) + '</td><td class="r">' + UI.fmtPct(tot("overstock") / tot("inv")) + "</td></tr>";
+    }
+
+    function renderCustomers() {
+      const tabs = [["balance", "tabBalance"], ["overdue", "tabOverdue"], ["special", "tabSpecial"]];
+      document.getElementById("custTabs").innerHTML = tabs.map(x => '<button type="button" class="mc-tab" role="tab" aria-selected="' + (custTab === x[0]) + '" data-tab="' + x[0] + '">' + t(x[1]) + "</button>").join("");
+      const r = UI.rng(Math.floor(state.d.getTime() / 86400000) + 5);
+      const list = D.customers.map((c, i) => { const bal = UI.between(r, 40000, 420000); const ov = bal * UI.between(r, 0, .5); return { c, seller: D.sellers[i % D.sellers.length], bal, ov, sp: ov * UI.between(r, 0, .6), days: Math.round(UI.between(r, 3, 120)), lim: bal * UI.between(r, .9, 1.6) }; });
+      const key = custTab === "balance" ? "bal" : custTab === "overdue" ? "ov" : "sp";
+      const top = list.filter(x => x[key] > 0).sort((a, b) => b[key] - a[key]).slice(0, 15);
+      document.querySelector("#tCust thead").innerHTML = '<tr><th style="width:36px">#</th><th>' + t("colCustomer") + "</th><th>" + t("colSeller") + '</th><th class="r">' + t("colBal") + '</th><th class="r">' + t("colOverdue") + '</th><th class="r">' + t("colDays") + '</th><th class="r">' + t("colLimit") + "</th></tr>";
+      document.querySelector("#tCust tbody").innerHTML = top.map((x, i) => "<tr><td>" + (i + 1) + "</td><td>" + x.c + "</td><td>" + x.seller + '</td><td class="r">' + M(x.bal) + '</td><td class="r">' + M(custTab === "special" ? x.sp : x.ov) + '</td><td class="r' + (x.days > 40 ? " pct-bad" : "") + '">' + x.days + '</td><td class="r">' + M(x.lim) + "</td></tr>").join("");
+    }
+
+    function load() {
+      const d = new Date(dateIn.value + "T00:00:00Z");
+      const bv = $branch.val();
+      state = { d: isWorking(d) ? d : prevWorking(d), b: bv === "all" ? null : Number(bv) };
+      openBranch = null;
+      document.getElementById("dash").hidden = false;
+      document.getElementById("hint").textContent = t("loaded", { d: UI.fmtDay(state.d) });
+      render();
+    }
+
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); load(); });
+    document.getElementById("tBranches").addEventListener("click", e => {
+      const th = e.target.closest("th.sortable");
+      if (th) { if (sort.k === th.dataset.k) sort.dir *= -1; else { sort.k = th.dataset.k; sort.dir = -1; } renderBranches(); return; }
+      const tr = e.target.closest("tr.drill");
+      if (tr) { const i = Number(tr.dataset.i); openBranch = openBranch === i ? null : i; renderBranches(); }
     });
-    document.querySelector("#branches tbody").addEventListener("keydown", e => {
-      if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr.branch-row")) { e.preventDefault(); e.target.click(); }
+    document.getElementById("tBranches").addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const el = e.target.closest("th.sortable, tr.drill");
+      if (el) { e.preventDefault(); el.click(); }
     });
-    sel.addEventListener("change", () => { openBranch = null; render(); });
-    document.addEventListener("themechange", render);
-    render();
+    document.getElementById("custTabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { custTab = b.dataset.tab; renderCustomers(); } });
+    document.addEventListener("langchange", () => { fillBranches(); if (state) render(); else document.getElementById("hint").textContent = t("loadHint"); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    document.getElementById("hint").textContent = t("loadHint");
+    load(); // the gallery opens with the latest close already loaded
   });
   </script>
 </body>

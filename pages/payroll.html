@@ -3,443 +3,328 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Payroll Run · Business UI Gallery</title>
+  <title>Payroll · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .kpis.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    .steps { display: flex; gap: var(--space-2); list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
-    .steps li { display: flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--text-muted); }
-    .steps .dot { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border); font-family: var(--font-mono); font-size: .8rem; }
-    .steps li[aria-current="step"] { color: var(--text); font-weight: 500; }
-    .steps li[aria-current="step"] .dot { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
-    .steps li.done .dot { background: var(--positive-bg); color: var(--positive); border-color: transparent; }
-    .steps li + li::before { content: ""; width: 20px; height: 1px; background: var(--border); }
-    .toolbar { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-3); flex-wrap: wrap; }
-    #emp { font-size: .84rem; }
-    #emp td, #emp th { white-space: nowrap; padding: 6px 10px; }
-    #emp tbody td { height: 38px; }
-    #emp td.dt-right, #emp th.dt-right { text-align: right; }
-    .dataTables_scrollHead th:first-child, .dataTables_scrollBody td:first-child, .dataTables_scrollFoot td:first-child, .dataTables_scrollFoot th:first-child {
-      position: sticky; left: 0; z-index: 1; background: var(--surface); border-right: 1px solid var(--border);
-    }
-    .dataTables_scrollHead th { background: var(--surface-2) !important; color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; }
-    .dataTables_scrollHead th:first-child, .dataTables_scrollFoot td:first-child, .dataTables_scrollFoot th:first-child { background: var(--surface-2) !important; }
-    .dataTables_scrollFoot td, .dataTables_scrollFoot th { background: var(--surface-2); font-weight: 600; text-align: right; }
-    table.dataTable tbody tr { background: transparent; }
-    table.dataTable.display tbody tr:hover > * { box-shadow: inset 0 0 0 9999px var(--surface-2) !important; }
-    table.dataTable tbody td { border-top: 1px solid var(--border) !important; }
-    .adj-btn { min-height: 30px; padding: 0 10px; font-size: .8rem; }
-    .pill { display: inline-block; margin-left: 4px; font-size: .7rem; padding: 0 6px; border-radius: 999px; background: var(--info-bg); color: var(--info); }
-    .phase { display: flex; gap: 8px; align-items: center; font-size: .88rem; padding: 4px 0; }
-    .phase .mark { width: 18px; text-align: center; }
-    pre.csv { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: var(--font-mono); font-size: .78rem; overflow-x: auto; margin: 0; }
-    .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); align-items: start; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-4); }
-    .form-grid .span-2 { grid-column: 1 / -1; }
-    textarea.input { min-height: 72px; resize: vertical; }
-    .rules { font-size: .82rem; }
-    .rules td { padding: 4px 8px; }
-    @media (max-width: 1200px) { .kpis.five { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-    @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) { .kpis.five { grid-template-columns: 1fr 1fr; } .form-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 520px) { .kpis.five { grid-template-columns: 1fr; } }
-    .two > * { min-width: 0; }
-    .card { min-width: 0; }
+    .info-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .info-card { background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+    .info-card .mc-label { display: flex; align-items: center; gap: 5px; }
+    .info-card .mc-label .material-icons { font-size: 15px; color: var(--mc-cyan); }
+    .info-card b { display: block; margin-top: 6px; font-size: 14px; font-weight: 800; }
+    .pay-tools { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin: 10px 0 8px; }
+    .pay-tools h3 { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; }
+    .wide { max-height: 520px; }
+    .wide td, .wide th { white-space: nowrap; }
+    .wide th:nth-child(4), .wide td:nth-child(4) { position: sticky; left: 0; z-index: 2; }
+    .wide td:nth-child(4) { background: var(--mc-panel); }
+    .wide th:nth-child(4) { z-index: 3; }
+    .wide tr.tot td { font-weight: 800; background: var(--mc-panel-2); position: sticky; top: 33px; z-index: 1; }
+    .wide tr.tot td:nth-child(4) { z-index: 2; }
+    .wide tr.adj td { color: var(--mc-amber); }
+    tr.grp td { background: var(--mc-panel-2); font-weight: 800; }
+    .bankfile { font-family: ui-monospace, Consolas, monospace; font-size: 11px; background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-radius: 6px; padding: 10px; max-height: 260px; overflow: auto; white-space: pre; }
+    @media (max-width: 900px) { .info-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   </style>
 </head>
 <body data-page="payroll" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Payroll run</h1>
-        <p class="muted">Bi-weekly payroll: review every employee, adjust, then apply to create the bank file and the accounting entry.</p>
-      </div>
-      <div class="field" style="width:260px">
-        <label for="period">Period</label>
-        <select class="input" id="period"></select>
-      </div>
-    </div>
-
-    <section class="card card-body toolbar">
-      <ol class="steps" id="steps" aria-label="Payroll progress">
-        <li data-s="1"><span class="dot">1</span>Attendance</li>
-        <li data-s="2"><span class="dot">2</span>Earnings</li>
-        <li data-s="3"><span class="dot">3</span>Deductions</li>
-        <li data-s="4"><span class="dot">4</span>Review</li>
-        <li data-s="5"><span class="dot">5</span>Apply</li>
-      </ol>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span id="status"></span>
-        <button class="btn btn-primary" id="applyBtn" type="button">Apply payroll</button>
-      </div>
-    </section>
-
-    <section class="kpis five" aria-label="Payroll totals">
-      <div class="card kpi"><div class="kpi-label">Employees</div><div class="kpi-value" id="kEmp"></div><div class="kpi-delta muted" id="kEmpD"></div></div>
-      <div class="card kpi"><div class="kpi-label">Gross pay</div><div class="kpi-value" id="kGross"></div></div>
-      <div class="card kpi"><div class="kpi-label">Employee deductions</div><div class="kpi-value" id="kDed"></div></div>
-      <div class="card kpi"><div class="kpi-label">Employer contributions</div><div class="kpi-value" id="kEmpr"></div></div>
-      <div class="card kpi"><div class="kpi-label">Net pay</div><div class="kpi-value" id="kNet"></div></div>
-    </section>
-
-    <section class="card" id="processCard" hidden>
-      <div class="card-head"><h2>Applying payroll</h2><span class="num muted" id="pct">0%</span></div>
-      <div class="card-body">
-        <div class="progress" role="progressbar" aria-labelledby="pct" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pbar"><span></span></div>
-        <div id="phases" style="margin-top:10px" aria-live="polite"></div>
-      </div>
-    </section>
-
-    <section class="two" id="results" hidden>
-      <div class="card">
-        <div class="card-head"><h2>Bank transfer file</h2><button class="btn" id="csvBtn" type="button">Download CSV</button></div>
-        <div class="card-body"><pre class="csv" id="csv"></pre><p class="muted" style="font-size:.8rem;margin-top:6px" id="csvInfo"></p></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Accounting entry</h2><span id="entryChip"></span></div>
-        <div class="card-body table-wrap"><table class="grid" id="entry"><thead><tr><th>Account</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-head"><h2>Employees in this run</h2><span class="muted" style="font-size:.82rem">Totals follow the search</span></div>
-      <div class="card-body">
-        <table id="emp" class="display" style="width:100%">
-          <thead><tr>
-            <th>Employee</th><th>Cost center</th><th class="dt-right">Base salary</th><th class="dt-right">Days</th><th class="dt-right">Overtime</th><th class="dt-right">Commissions</th><th class="dt-right">Bonuses</th>
-            <th class="dt-right">Gross</th><th class="dt-right">Social security</th><th class="dt-right">Pension fund</th><th class="dt-right">Income tax</th><th class="dt-right">Loans</th><th class="dt-right">Other</th><th class="dt-right">Net pay</th><th></th>
-          </tr></thead>
-          <tfoot><tr><th>Total</th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th></tr></tfoot>
-        </table>
-      </div>
-    </section>
-
-    <section class="two">
-      <div class="card">
-        <div class="card-head"><h2>Not in this run</h2></div>
-        <div class="card-body table-wrap"><table class="grid" id="missing"><thead><tr><th>Employee</th><th>Cost center</th><th>Reason</th></tr></thead><tbody></tbody></table></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Rules used (sample rates)</h2></div>
-        <div class="card-body">
-          <table class="grid rules">
-            <tbody>
-              <tr><td>Social security</td><td>Employee 3.5%, employer 7%, on gross up to a ceiling of 11,000.00 per period</td></tr>
-              <tr><td>Pension fund</td><td>Employee 4%, employer 4%, only on the part of gross above a floor of 6,850.00</td></tr>
-              <tr><td>Housing fund</td><td>Employer 1.5% of gross</td></tr>
-              <tr><td>Income tax</td><td>Gross × 24 minus 40,000.00 exempt; 0% to 200k, 15% to 500k, 20% to 1M, 25% above; divided by 24</td></tr>
-              <tr><td>Overtime</td><td>Hourly rate (monthly salary ÷ 240) × 1.5</td></tr>
-            </tbody>
-          </table>
-          <p class="muted" style="font-size:.78rem;margin-top:8px">These rates are invented for the demo. Real payroll rules depend on each country.</p>
+  <main id="content">
+    <section class="mc-panel">
+      <div class="mc-filters">
+        <div class="mc-field w-lg"><label for="fRun" data-i18n="fRun"></label><select id="fRun"></select></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto">
+          <button class="btn btn-cyan" type="button" id="btnUpload"><span class="material-icons" aria-hidden="true">cloud_upload</span><span data-i18n="upload"></span></button>
+          <button class="btn btn-amber" type="button" id="btnAcc"><span class="material-icons" aria-hidden="true">receipt_long</span><span data-i18n="accDetail"></span></button>
+          <button class="btn btn-violet" type="button" id="btnContrib"><span class="material-icons" aria-hidden="true">account_balance</span><span data-i18n="contribDetail"></span></button>
+          <button class="btn btn-teal" type="button" id="btnApply"><span class="material-icons" aria-hidden="true">task_alt</span><span data-i18n="applyBtn"></span></button>
         </div>
       </div>
     </section>
 
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Payroll is built in steps: attendance sets the days worked, then earnings, then deductions, and nothing is posted until it is reviewed and applied.</li>
-        <li>Contributions with a ceiling or a floor are calculated per employee, which is where most payroll mistakes happen.</li>
-        <li>Manual bonuses and deductions need a reason and are kept per employee.</li>
-        <li>Applying creates the bank transfer file and one accounting entry: salaries by cost center, withholdings payable and net pay payable, one line per account.</li>
-        <li>People who are active but not in the run are listed with the reason, so nobody is left out by accident.</li>
-      </ul>
+    <div class="info-cards" id="info"></div>
+
+    <section class="mc-panel">
+      <div class="mc-tabs" role="tablist" id="tabs"></div>
+      <div id="tabMain">
+        <div class="pay-tools">
+          <h3><span class="material-icons" aria-hidden="true">list</span><span data-i18n="detailTitle"></span></h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div class="mc-field" style="min-width:200px"><label for="fGroup" data-i18n="groupBy"></label><select id="fGroup"></select></div>
+            <div class="mc-field" style="min-width:180px"><label for="fSearch" data-i18n="search"></label><input id="fSearch" data-i18n-ph="searchPh"></div>
+            <button class="btn btn-teal" type="button" id="btnNew"><span class="material-icons" aria-hidden="true">add_circle</span><span data-i18n="newRecord"></span></button>
+          </div>
+        </div>
+        <div class="table-wrap wide"><table class="grid" id="tPay"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div id="tabMissing" hidden style="margin-top:10px">
+        <div class="table-wrap"><table class="grid" id="tMissing"><thead></thead><tbody></tbody></table></div>
+      </div>
     </section>
+
+    <div id="about"></div>
   </main>
 
-  <div class="modal-backdrop" id="adjModal" role="dialog" aria-modal="true" aria-labelledby="adjTitle">
-    <div class="modal" style="width:min(560px,100%)">
-      <div class="modal-head"><div><h2 id="adjTitle">Manual adjustment</h2><p class="muted" id="adjWho" style="font-size:.85rem"></p></div></div>
+  <!-- New record: manual deduction / bonus -->
+  <div class="modal-backdrop" id="mNew">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mNewT">
+      <div class="modal-head"><h3 id="mNewT"><span class="material-icons" aria-hidden="true">add_circle</span><span data-i18n="newRecord"></span></h3></div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+        <div class="mc-field"><label for="nEmp" data-i18n="colName"></label><select id="nEmp"></select></div>
+        <div class="mc-field"><label for="nType" data-i18n="adjType"></label><select id="nType"></select></div>
+        <div class="mc-field"><label for="nAmt" data-i18n="amount"></label><input class="num" id="nAmt" inputmode="decimal"><span class="mc-field-error" id="nAmtErr"></span></div>
+        <div class="mc-field"><label for="nDet" data-i18n="adjDetail"></label><input id="nDet"><span class="mc-field-error" id="nDetErr"></span></div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="nSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button><button class="btn" type="button" data-close="mNew" data-i18n="close"></button></div>
+    </div>
+  </div>
+
+  <!-- Apply payroll -->
+  <div class="modal-backdrop" id="mApply">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mApplyT">
+      <div class="modal-head"><h3 id="mApplyT"><span class="material-icons" aria-hidden="true">task_alt</span><span data-i18n="applyTitle"></span></h3></div>
       <div class="modal-body">
-        <div class="form-grid">
-          <div class="field"><label for="aType">Type</label><select class="input" id="aType"><option value="">Choose</option><option value="bonus">Bonus (adds to gross)</option><option value="deduction">Deduction (subtracts from net)</option></select><div class="field-error" id="aTypeErr"></div></div>
-          <div class="field"><label for="aAmt">Amount</label><input class="input num" id="aAmt" inputmode="decimal" aria-describedby="aAmtErr"><div class="field-error" id="aAmtErr"></div></div>
-          <div class="field span-2"><label for="aReason">Reason</label><textarea class="input" id="aReason" aria-describedby="aReasonErr"></textarea><div class="field-error" id="aReasonErr"></div></div>
-        </div>
-        <div id="adjList" style="margin-top:var(--space-3)"></div>
+        <div class="mc-kpis" id="aKpis"></div>
+        <p class="mc-hint" style="margin:10px 0" id="aNote"></p>
+        <div id="aRun" hidden><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="aBar"><span></span></div><ul class="ig-filas" id="aSteps" style="border:0"></ul></div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="adjSave" type="button">Add adjustment</button>
-        <button class="btn" id="adjClose" type="button">Close</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="aGo"><span class="material-icons" aria-hidden="true">play_arrow</span><span data-i18n="applyNow"></span></button><button class="btn" type="button" data-close="mApply" id="aClose" data-i18n="close"></button></div>
+    </div>
+  </div>
+
+  <!-- Accounting detail -->
+  <div class="modal-backdrop" id="mAcc">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mAccT">
+      <div class="modal-head"><h3 id="mAccT"><span class="material-icons" aria-hidden="true">receipt_long</span><span data-i18n="accDetail"></span></h3><span id="accChip"></span></div>
+      <div class="modal-body"><div class="table-wrap"><table class="grid" id="tAcc"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+      <div class="modal-foot"><button class="btn" type="button" data-close="mAcc" data-i18n="close"></button></div>
+    </div>
+  </div>
+
+  <!-- Contributions detail -->
+  <div class="modal-backdrop" id="mCon">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mConT">
+      <div class="modal-head"><h3 id="mConT"><span class="material-icons" aria-hidden="true">account_balance</span><span data-i18n="contribDetail"></span></h3></div>
+      <div class="modal-body"><p class="mc-hint" style="margin-bottom:8px" data-i18n="contribHint"></p><div class="table-wrap" style="max-height:420px"><table class="grid" id="tCon"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+      <div class="modal-foot"><button class="btn" type="button" data-close="mCon" data-i18n="close"></button></div>
+    </div>
+  </div>
+
+  <!-- Bank voucher (upload) -->
+  <div class="modal-backdrop" id="mBank">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mBankT">
+      <div class="modal-head"><h3 id="mBankT"><span class="material-icons" aria-hidden="true">cloud_upload</span><span data-i18n="bankTitle"></span></h3></div>
+      <div class="modal-body"><p class="mc-hint" style="margin-bottom:8px" id="bankNote"></p><div class="bankfile" id="bankFile"></div></div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="bankCsv"><span class="material-icons" aria-hidden="true">download</span><span data-i18n="download"></span></button><button class="btn" type="button" data-close="mBank" data-i18n="close"></button></div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/scroller/2.3.0/js/dataTables.scroller.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const R2 = n => Math.round(n * 100) / 100;
-    const RULES = { ssEmp: 0.035, ssEr: 0.07, ssCeil: 11000, penEmp: 0.04, penEr: 0.04, penFloor: 6850, housing: 0.015, exempt: 40000 };
-    const BRACKETS = [[200000, 0], [500000, 0.15], [1000000, 0.2], [Infinity, 0.25]];
+  UI.strings({
+    en: {
+      fRun: "Payroll", upload: "Upload to bank", accDetail: "Accounting detail", contribDetail: "Contributions detail", applyBtn: "Apply payroll",
+      iCode: "Code", iPeriod: "Payroll period", iApply: "Apply date", iType: "Payroll type", typeBi: "Bi-weekly", stApplied: "Applied", stDraft: "In process",
+      tabAssoc: "Associated payroll details", tabMissing: "Employees not associated", detailTitle: "Payroll detail", groupBy: "View", gNone: "One line per record", gEmp: "Group by employee", gCenter: "Group by center",
+      searchPh: "Name, ID or center…", newRecord: "New record",
+      colPlan: "Payroll", colDni: "ID", colName: "Full name", colCenter: "Center", colBase: "Base salary", colCompl: "Complementary salary", colDays: "Days worked", colSalary: "Salary",
+      colDed: "Deductions", colNeg: "Previous negative balance", colGross: "Gross salary", colBonus: "Bonuses", colComm: "Commissions", colNet: "Net salary", colDaily: "Salary per day", colBank: "Bank", colAccount: "Bank account", colStatus: "Status",
+      totals: "Totals:", adjType: "Adjustment type", tDed: "Manual deduction", tBonus: "Bonus", amount: "Amount", adjDetail: "Adjustment detail",
+      errAmt: "Enter an amount greater than zero.", errDet: "The detail is required.", savedAdj: "Adjustment saved for {n}.",
+      reasonMissing: "Reason", mVac: "On unpaid leave", mNew: "Hired after the cut-off", mTerm: "Contract ended", colHire: "Hire date",
+      applyTitle: "Apply payroll", kEmp: "Employees", kGross: "Gross", kDed: "Deductions", kNet: "Net to pay", kSS: "Social security (employer)", kPen: "Pension fund (employer)",
+      applyNote: "Applying locks the payroll, generates the bank file and the accounting entry. It cannot be edited afterwards.", applyNow: "Apply", alreadyApplied: "This payroll is already applied.",
+      st1: "Calculating {n} employees", st2: "Generating the bank file", st3: "Generating the accounting entry", appliedMsg: "Payroll {c} applied.",
+      accAccount: "Account", accCenter: "Center", debit: "Debit", credit: "Credit", balanced: "Balanced", contribHint: "Sample rates: social security 3.5% employee / 7% employer up to a ceiling of 11,000.00; pension fund 1.5% employee / 1.5% employer over a floor of 10,000.00.",
+      cEmpSS: "Social security (employee)", cErSS: "Social security (employer)", cEmpPen: "Pension fund (employee)", cErPen: "Pension fund (employer)", cTax: "Income tax",
+      bankTitle: "Bank transfer voucher", bankNote: "{n} transfers, total {v}.", download: "Download CSV",
+      aSalaries: "6-01-01-001 Salaries", aBonus: "6-01-01-006 Bonuses and commissions", aErSS: "6-01-02-001 Employer social security", aErPen: "6-01-02-002 Employer pension fund",
+      lSS: "2-01-05-001 Social security payable", lPen: "2-01-05-002 Pension fund payable", lTax: "2-01-05-003 Income tax withheld", lLoan: "2-01-05-004 Loans and other deductions", lNet: "2-01-06-001 Net payroll payable",
+      aboutText: "Mirrors the payroll management screen: the header shows the <b>code, period, apply date and type</b> of the payroll; the detail lists every employee with base salary, days worked, salary, <b>deductions</b>, previous negative balance, gross, <b>bonuses</b>, commissions and net, with totals on top. <b>New record</b> adds a manual deduction or bonus with a mandatory detail. <b>Apply payroll</b> locks it and generates the bank voucher and the <b>accounting detail</b> (salaries and employer contributions by cost center, withholdings and net payable, one line per account and side). Contribution rates here are generic samples. All data is generated."
+    },
+    es: {
+      fRun: "Planilla", upload: "Subir", accDetail: "Detalle contable", contribDetail: "Detalle de aportes", applyBtn: "Aplicar planilla",
+      iCode: "Código", iPeriod: "Período de la planilla", iApply: "Fecha aplicar planilla", iType: "Tipo de planilla", typeBi: "Quincenal", stApplied: "Aplicada", stDraft: "En proceso",
+      tabAssoc: "Detalles de planillas asociados", tabMissing: "Empleados no asociados", detailTitle: "Detalle de planillas", groupBy: "Vista", gNone: "Una línea por registro", gEmp: "Agrupar por empleado", gCenter: "Agrupar por centro",
+      searchPh: "Nombre, DNI o centro…", newRecord: "Nuevo registro",
+      colPlan: "Planilla", colDni: "DNI", colName: "Nombre completo", colCenter: "Centro", colBase: "Salario base", colCompl: "Aplica salario compl.", colDays: "Días trabaj.", colSalary: "Salario",
+      colDed: "Deducciones", colNeg: "Saldo neg. ant.", colGross: "Salario bruto", colBonus: "Bonificaciones", colComm: "Comisiones", colNet: "Salario neto", colDaily: "Salario por día", colBank: "Banco", colAccount: "Cuenta bancaria", colStatus: "Estado",
+      totals: "Totales:", adjType: "Tipo de ajuste", tDed: "Deducción manual", tBonus: "Bonificación", amount: "Monto", adjDetail: "Detalle del ajuste",
+      errAmt: "Escriba un monto mayor que cero.", errDet: "El detalle es obligatorio.", savedAdj: "Ajuste guardado para {n}.",
+      reasonMissing: "Motivo", mVac: "Permiso sin goce", mNew: "Ingresó después del corte", mTerm: "Contrato terminado", colHire: "Fecha de ingreso",
+      applyTitle: "Aplicar planilla", kEmp: "Empleados", kGross: "Bruto", kDed: "Deducciones", kNet: "Neto a pagar", kSS: "Seguro social (patronal)", kPen: "Fondo de pensiones (patronal)",
+      applyNote: "Al aplicar se bloquea la planilla y se generan el comprobante del banco y la partida contable. Después no se puede editar.", applyNow: "Aplicar", alreadyApplied: "Esta planilla ya está aplicada.",
+      st1: "Calculando {n} empleados", st2: "Generando el comprobante del banco", st3: "Generando la partida contable", appliedMsg: "Planilla {c} aplicada.",
+      accAccount: "Cuenta", accCenter: "Centro", debit: "Debe", credit: "Haber", balanced: "Cuadrada", contribHint: "Tasas de ejemplo: seguro social 3.5% empleado / 7% patronal hasta un techo de 11,000.00; fondo de pensiones 1.5% empleado / 1.5% patronal sobre un piso de 10,000.00.",
+      cEmpSS: "Seguro social (empleado)", cErSS: "Seguro social (patronal)", cEmpPen: "Fondo de pensiones (empleado)", cErPen: "Fondo de pensiones (patronal)", cTax: "Impuesto sobre la renta",
+      bankTitle: "Comprobante de transferencia al banco", bankNote: "{n} transferencias, total {v}.", download: "Descargar CSV",
+      aSalaries: "6-01-01-001 Sueldos y salarios", aBonus: "6-01-01-006 Bonificaciones y comisiones", aErSS: "6-01-02-001 Seguro social patronal", aErPen: "6-01-02-002 Fondo de pensiones patronal",
+      lSS: "2-01-05-001 Seguro social por pagar", lPen: "2-01-05-002 Fondo de pensiones por pagar", lTax: "2-01-05-003 Impuesto sobre la renta retenido", lLoan: "2-01-05-004 Préstamos y otras deducciones", lNet: "2-01-06-001 Planilla neta por pagar",
+      aboutText: "Replica la gestión de planilla: el encabezado muestra <b>código, período, fecha de aplicación y tipo</b>; el detalle lista a cada empleado con salario base, días trabajados, salario, <b>deducciones</b>, saldo negativo anterior, bruto, <b>bonificaciones</b>, comisiones y neto, con los totales arriba. <b>Nuevo registro</b> agrega una deducción manual o una bonificación con detalle obligatorio. <b>Aplicar planilla</b> la bloquea y genera el comprobante del banco y el <b>detalle contable</b> (salarios y aportes patronales por centro de costo, retenciones y neto por pagar, una línea por cuenta y lado). Las tasas de aportes son ejemplos genéricos. Todos los datos son generados."
+    }
+  });
 
-    const PERIODS = [
-      { id: "2026-11-B", label: "Nov 16 – Nov 30, 2026", status: "Draft" },
-      { id: "2026-11-A", label: "Nov 1 – Nov 15, 2026", status: "Applied" },
-      { id: "2026-10-B", label: "Oct 16 – Oct 31, 2026", status: "Applied" },
-      { id: "2026-10-A", label: "Oct 1 – Oct 15, 2026", status: "Applied" }
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const SS_CEIL = 11000, PEN_FLOOR = 10000;
+    const RUNS = [
+      { code: "PL-2026-22", from: "2026-11-01", to: "2026-11-15", apply: "2026-11-15", applied: true, seed: 22 },
+      { code: "PL-2026-23", from: "2026-11-16", to: "2026-11-30", apply: "2026-11-30", applied: false, seed: 23 },
+      { code: "PL-2026-21", from: "2026-10-16", to: "2026-10-31", apply: "2026-10-31", applied: true, seed: 21 }
     ];
-    const pSel = document.getElementById("period");
-    pSel.innerHTML = PERIODS.map(p => '<option value="' + p.id + '">' + p.label + " · " + p.status + "</option>").join("");
+    const r0 = UI.rng(777);
+    const EMP = Array.from({ length: 124 }, (_, i) => ({
+      id: "0801-19" + String(80 + (i % 20)).padStart(2, "0") + "-" + String(10000 + i * 37).slice(0, 5),
+      name: D.firstNames[i % D.firstNames.length] + " " + D.lastNames[(i * 7) % D.lastNames.length] + " " + D.lastNames[(i * 3 + 5) % D.lastNames.length],
+      center: i % D.costCenters.length, base: Math.round(UI.between(r0, 9800, 32000) / 50) * 50, compl: r0() < .2,
+      bank: UI.pick(r0, D.banks), acc: String(Math.floor(UI.between(r0, 1e9, 9.9e9))), hire: new Date(Date.UTC(2019 + Math.floor(r0() * 7), Math.floor(r0() * 12), 1 + Math.floor(r0() * 27)))
+    }));
+    const MISSING = [[EMP.length, "mVac"], [EMP.length + 1, "mNew"], [EMP.length + 2, "mTerm"], [EMP.length + 3, "mVac"]];
+    let runIdx = 1, group = "none", adj = {}, tab = "assoc";
+    const tax = g => { const ann = g * 24; const t1 = Math.max(0, Math.min(ann, 500000) - 200000) * .15, t2 = Math.max(0, Math.min(ann, 750000) - 500000) * .2, t3 = Math.max(0, ann - 750000) * .25; return (t1 + t2 + t3) / 24; };
+    function calc(run) {
+      const r = UI.rng(run.seed * 1000);
+      return EMP.map((e, i) => {
+        const days = r() < .9 ? 15 : 15 - Math.ceil(r() * 4);
+        const salary = e.base / 30 * days * 2 / 2, sal = salary;
+        const bonus = (r() < .25 ? Math.round(UI.between(r, 300, 1500)) : 0) + ((adj[run.code] || []).filter(a => a.i === i && a.type === "tBonus").reduce((a, x) => a + x.v, 0));
+        const comm = e.center < 3 && r() < .6 ? Math.round(UI.between(r, 500, 4500)) : 0;
+        const gross = sal + bonus + comm;
+        const monthly = gross * 2;
+        const ss = Math.min(monthly, SS_CEIL) * .035 / 2, pen = Math.max(0, monthly - PEN_FLOOR) * .015 / 2, it = tax(gross);
+        const loan = (r() < .15 ? Math.round(UI.between(r, 400, 2500)) : 0) + ((adj[run.code] || []).filter(a => a.i === i && a.type === "tDed").reduce((a, x) => a + x.v, 0));
+        const neg = r() < .03 ? Math.round(UI.between(r, 100, 800)) : 0;
+        const ded = ss + pen + it + loan;
+        const erSS = Math.min(monthly, SS_CEIL) * .07 / 2, erPen = Math.max(0, monthly - PEN_FLOOR) * .015 / 2;
+        return { i, e, days, sal, bonus, comm, gross, ss, pen, it, loan, neg, ded, net: gross - ded - neg, erSS, erPen, adj: (adj[run.code] || []).some(a => a.i === i) };
+      });
+    }
+    const run = () => RUNS[runIdx];
 
-    // Staff list (stable across periods).
-    const rs = UI.rng(2026);
-    const POSITIONS = { "Sales North": "Sales rep", "Sales Center": "Sales rep", "Sales Coast": "Sales rep", "Warehouse": "Warehouse clerk", "Logistics": "Driver", "Administration": "Accountant", "IT": "Developer" };
-    const staff = Array.from({ length: 124 }, (_, i) => {
-      const center = D.costCenters[Math.floor(rs() * D.costCenters.length)];
-      const name = UI.pick(rs, D.firstNames) + " " + UI.pick(rs, D.lastNames) + " " + UI.pick(rs, D.lastNames).charAt(0) + ".";
-      const salary = Math.round(UI.between(rs, 11000, center === "IT" || center === "Administration" ? 52000 : 26000) / 50) * 50;
-      return { id: "E" + String(1001 + i), name, center, position: POSITIONS[center], salary, sales: center.startsWith("Sales"), account: "****" + String(1000 + Math.floor(rs() * 8999)) };
-    });
-    const MISSING_REASONS = ["Hired after the attendance cut-off (Nov 25)", "Unpaid leave for the whole period", "No bank account on file", "Contract ended Nov 15"];
-
-    let rows = [], missing = [], applied = false;
-    const adjustments = {}; // period|empId -> [{type, amount, reason}]
-
-    function tax(gross) {
-      let base = Math.max(0, gross * 24 - RULES.exempt), prev = 0, t = 0;
-      for (const [top, rate] of BRACKETS) {
-        if (base <= prev) break;
-        t += (Math.min(base, top) - prev) * rate;
-        prev = top;
+    function fillTop() {
+      const $r = $("#fRun"); $r.empty(); RUNS.forEach((x, i) => $r.append(new Option(x.code + " · " + UI.fmtDay(new Date(x.from + "T00:00:00Z")) + " – " + UI.fmtDay(new Date(x.to + "T00:00:00Z")) + " · " + t(x.applied ? "stApplied" : "stDraft"), String(i)))); $r.val(String(runIdx)).select2({ width: "100%", minimumResultsForSearch: Infinity });
+      const $g = $("#fGroup"); $g.empty(); [["none", "gNone"], ["emp", "gEmp"], ["center", "gCenter"]].forEach(x => $g.append(new Option(t(x[1]), x[0]))); $g.val(group).select2({ width: "100%", minimumResultsForSearch: Infinity });
+    }
+    function render() {
+      const R = run(), rows = calc(R);
+      document.getElementById("info").innerHTML = [["tag", "iCode", R.code], ["date_range", "iPeriod", UI.fmtDay(new Date(R.from + "T00:00:00Z")) + " – " + UI.fmtDay(new Date(R.to + "T00:00:00Z"))], ["event_available", "iApply", UI.fmtDay(new Date(R.apply + "T00:00:00Z"))], ["category", "iType", t("typeBi") + " · " + (R.applied ? '<span class="chip chip-pos">' + mi("lock") + t("stApplied") + "</span>" : '<span class="chip chip-warn">' + mi("pending") + t("stDraft") + "</span>")]]
+        .map(x => '<div class="info-card"><span class="mc-label">' + mi(x[0]) + t(x[1]) + "</span><b>" + x[2] + "</b></div>").join("");
+      document.getElementById("tabs").innerHTML = '<button type="button" role="tab" class="mc-tab" aria-selected="' + (tab === "assoc") + '" data-tab="assoc">' + mi("folder_shared") + " " + t("tabAssoc") + ' <span class="chip chip-info">' + rows.length + '</span></button><button type="button" role="tab" class="mc-tab" aria-selected="' + (tab === "missing") + '" data-tab="missing">' + mi("person_off") + " " + t("tabMissing") + ' <span class="chip chip-neg">' + MISSING.length + "</span></button>";
+      document.getElementById("tabMain").hidden = tab !== "assoc";
+      document.getElementById("tabMissing").hidden = tab !== "missing";
+      document.getElementById("btnNew").disabled = R.applied;
+      const q = document.getElementById("fSearch").value.trim().toLowerCase();
+      const list = rows.filter(x => !q || (x.e.name + " " + x.e.id + " " + UI.L(D.costCenters[x.e.center])).toLowerCase().includes(q));
+      const cols = ["#", "colPlan", "colDni", "colName", "colCenter", "colBase", "colCompl", "colDays", "colSalary", "colDed", "colNeg", "colGross", "colBonus", "colComm", "colNet", "colDaily", "colBank", "colAccount", "colStatus"];
+      const num = new Set(["colBase", "colDays", "colSalary", "colDed", "colNeg", "colGross", "colBonus", "colComm", "colNet", "colDaily"]);
+      document.querySelector("#tPay thead").innerHTML = "<tr>" + cols.map(c => "<th" + (num.has(c) ? ' class="r"' : "") + ">" + (c === "#" ? "#" : t(c)) + "</th>").join("") + "</tr>";
+      const S = k => list.reduce((a, x) => a + x[k], 0);
+      const totRow = '<tr class="tot"><td></td><td colspan="2">' + t("totals") + "</td><td>" + list.length + " " + t("kEmp").toLowerCase() + '</td><td></td><td class="r">' + M(list.reduce((a, x) => a + x.e.base, 0)) + '</td><td></td><td></td><td class="r">' + M(S("sal")) + '</td><td class="r">' + M(S("ded")) + '</td><td class="r">' + M(S("neg")) + '</td><td class="r">' + M(S("gross")) + '</td><td class="r">' + M(S("bonus")) + '</td><td class="r">' + M(S("comm")) + '</td><td class="r">' + M(S("net")) + '</td><td colspan="4"></td></tr>';
+      const line = (x, n) => '<tr class="' + (x.adj ? "adj" : "") + '"><td>' + n + "</td><td>" + R.code + "</td><td>" + x.e.id + "</td><td>" + x.e.name + "</td><td>" + UI.L(D.costCenters[x.e.center]) + '</td><td class="r">' + M(x.e.base) + "</td><td>" + (x.e.compl ? t("yes") : t("no")) + '</td><td class="r">' + x.days + '</td><td class="r">' + M(x.sal) + '</td><td class="r">' + M(x.ded) + '</td><td class="r">' + M(x.neg) + '</td><td class="r">' + M(x.gross) + '</td><td class="r">' + M(x.bonus) + '</td><td class="r">' + M(x.comm) + '</td><td class="r"><b>' + M(x.net) + '</b></td><td class="r">' + M(x.e.base / 30) + "</td><td>" + x.e.bank + "</td><td>****" + x.e.acc.slice(-4) + "</td><td>" + (R.applied ? '<span class="chip chip-pos">' + mi("lock") + t("stApplied") + "</span>" : '<span class="chip chip-warn">' + mi("pending") + t("stDraft") + "</span>") + "</td></tr>";
+      let body = "";
+      if (group === "none" || group === "emp") body = list.map((x, k) => line(x, k + 1)).join("");
+      else {
+        D.costCenters.forEach((c, ci) => { const g = list.filter(x => x.e.center === ci); if (!g.length) return; const s = k => g.reduce((a, x) => a + x[k], 0);
+          body += '<tr class="grp"><td></td><td colspan="4">' + UI.L(c) + " · " + g.length + '</td><td colspan="3"></td><td class="r">' + M(s("sal")) + '</td><td class="r">' + M(s("ded")) + '</td><td class="r">' + M(s("neg")) + '</td><td class="r">' + M(s("gross")) + '</td><td class="r">' + M(s("bonus")) + '</td><td class="r">' + M(s("comm")) + '</td><td class="r">' + M(s("net")) + '</td><td colspan="4"></td></tr>' + g.map((x, k) => line(x, k + 1)).join(""); });
       }
-      return R2(t / 24);
+      document.querySelector("#tPay tbody").innerHTML = totRow + body;
+      document.querySelector("#tMissing thead").innerHTML = "<tr><th>" + t("colDni") + "</th><th>" + t("colName") + "</th><th>" + t("colCenter") + "</th><th>" + t("colHire") + "</th><th>" + t("reasonMissing") + "</th></tr>";
+      document.querySelector("#tMissing tbody").innerHTML = MISSING.map((m, k) => "<tr><td>0801-1999-" + (20000 + k) + "</td><td>" + D.firstNames[(k * 5 + 3) % 20] + " " + D.lastNames[(k * 4 + 1) % 15] + "</td><td>" + UI.L(D.costCenters[k % 7]) + "</td><td>" + UI.fmtDay(new Date(Date.UTC(2026, 10, 18 + k))) + '</td><td><span class="chip chip-warn">' + mi("info") + t(m[1]) + "</span></td></tr>").join("");
+      return rows;
     }
-    function calc(e) {
-      const adj = adjustments[pSel.value + "|" + e.id] || [];
-      const manualBonus = adj.filter(a => a.type === "bonus").reduce((s, a) => s + a.amount, 0);
-      const manualDed = adj.filter(a => a.type === "deduction").reduce((s, a) => s + a.amount, 0);
-      const base = R2(e.salary / 2 * e.days / 15);
-      const overtime = R2(e.otHours * e.salary / 240 * 1.5);
-      const bonuses = R2(e.bonus + manualBonus);
-      const gross = R2(base + overtime + e.commission + bonuses);
-      const ss = R2(Math.min(gross, RULES.ssCeil) * RULES.ssEmp);
-      const pen = R2(Math.max(0, gross - RULES.penFloor) * RULES.penEmp);
-      const it = tax(gross);
-      const other = R2(e.otherBase + manualDed);
-      const net = R2(gross - ss - pen - it - e.loan - other);
-      const ssEr = R2(Math.min(gross, RULES.ssCeil) * RULES.ssEr);
-      const penEr = R2(Math.max(0, gross - RULES.penFloor) * RULES.penEr);
-      const housing = R2(gross * RULES.housing);
-      return Object.assign(e, { base, overtime, bonuses, gross, ss, pen, it, other, net, ssEr, penEr, housing, nAdj: adj.length });
-    }
-
-    function load() {
-      const pid = pSel.value, pidx = PERIODS.findIndex(p => p.id === pid);
-      const r = UI.rng(500 + pidx * 77);
-      const miss = new Set([7, 33, 58, 91].map(i => (i + pidx * 5) % staff.length));
-      missing = []; rows = [];
-      staff.forEach((s, i) => {
-        if (miss.has(i)) { missing.push({ s, reason: MISSING_REASONS[missing.length % MISSING_REASONS.length] }); return; }
-        const days = r() < 0.12 ? 15 - (1 + Math.floor(r() * 4)) : 15;
-        rows.push(calc({ ...s, days, otHours: r() < 0.35 ? Math.floor(UI.between(r, 2, 16)) : 0, commission: s.sales ? R2(UI.between(r, 1500, 9000)) : 0,
-          bonus: r() < 0.08 ? 1000 : 0, loan: r() < 0.2 ? R2(UI.between(r, 400, 2500)) : 0, otherBase: r() < 0.1 ? R2(UI.between(r, 150, 600)) : 0 }));
+    // Accounting entry: one line per account and side (salaries and employer contributions by center)
+    function entry(rows) {
+      const lines = [];
+      D.costCenters.forEach((c, ci) => {
+        const g = rows.filter(x => x.e.center === ci); if (!g.length) return; const s = k => g.reduce((a, x) => a + x[k], 0);
+        lines.push([t("aSalaries"), UI.L(c), s("sal"), 0], [t("aBonus"), UI.L(c), s("bonus") + s("comm"), 0], [t("aErSS"), UI.L(c), s("erSS"), 0], [t("aErPen"), UI.L(c), s("erPen"), 0]);
       });
-      applied = PERIODS[pidx].status === "Applied";
-      document.getElementById("results").hidden = !applied;
-      document.getElementById("processCard").hidden = true;
-      table.clear().rows.add(rows).draw();
-      renderMissing();
-      renderState();
-      if (applied) showResults();
+      const S = k => rows.reduce((a, x) => a + x[k], 0);
+      lines.push([t("lSS"), "—", 0, S("ss") + S("erSS")], [t("lPen"), "—", 0, S("pen") + S("erPen")], [t("lTax"), "—", 0, S("it")], [t("lLoan"), "—", 0, S("loan") + S("neg")], [t("lNet"), "—", 0, S("net")]);
+      return lines.filter(l => l[2] > 0.004 || l[3] > 0.004);
     }
-
-    const money = d => UI.fmtMoney(d);
-    const table = $("#emp").DataTable({
-      data: [],
-      columns: [
-        { data: "name", render: (d, t, r) => t === "display" ? "<strong>" + d + "</strong> <span class='muted' style='font-size:.75rem'>" + r.id + "</span>" + (r.nAdj ? "<span class='pill' title='Manual adjustments'>" + r.nAdj + " adj.</span>" : "") : d },
-        { data: "center" },
-        { data: "base", className: "dt-right num", render: money },
-        { data: "days", className: "dt-right num", render: (d, t) => t === "display" && d < 15 ? "<span class='neg'>" + d + "</span>" : d },
-        { data: "overtime", className: "dt-right num", render: money },
-        { data: "commission", className: "dt-right num", render: money },
-        { data: "bonuses", className: "dt-right num", render: money },
-        { data: "gross", className: "dt-right num", render: (d, t) => t === "display" ? "<strong>" + money(d) + "</strong>" : d },
-        { data: "ss", className: "dt-right num", render: money },
-        { data: "pen", className: "dt-right num", render: money },
-        { data: "it", className: "dt-right num", render: money },
-        { data: "loan", className: "dt-right num", render: money },
-        { data: "other", className: "dt-right num", render: money },
-        { data: "net", className: "dt-right num", render: (d, t) => t === "display" ? "<strong>" + money(d) + "</strong>" : d },
-        { data: null, orderable: false, searchable: false, render: (d, t, r) => "<button class='btn adj-btn' type='button' data-id='" + r.id + "' aria-label='Adjust " + r.name + "'>Adjust</button>" }
-      ],
-      order: [[0, "asc"]],
-      deferRender: true,
-      scrollX: true,
-      scrollY: "420px",
-      scrollCollapse: true,
-      scroller: { rowHeight: 39, displayBuffer: 4 },
-      dom: "frti",
-      language: { search: "Search", info: "_TOTAL_ employees", infoFiltered: "(of _MAX_)", emptyTable: "No employees in this run" },
-      footerCallback: function () {
-        const api = this.api();
-        const sums = [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-        sums.forEach(c => {
-          const v = api.column(c, { search: "applied" }).data().reduce((a, b) => a + b, 0);
-          $(api.column(c).footer()).html("<span class='num'>" + UI.fmtMoney(v) + "</span>");
-        });
-        $(api.column(3).footer()).html("");
-        $(api.column(0).footer()).html("Total (" + api.rows({ search: "applied" }).count() + ")");
-        renderKpis(api.rows({ search: "applied" }).data().toArray());
-      }
-    });
-
-    function renderKpis(list) {
-      const s = k => list.reduce((a, r) => a + r[k], 0);
-      document.getElementById("kEmp").textContent = list.length;
-      document.getElementById("kEmpD").textContent = missing.length + " active not in this run";
-      document.getElementById("kGross").textContent = UI.fmtMoney(s("gross"));
-      document.getElementById("kDed").textContent = UI.fmtMoney(s("ss") + s("pen") + s("it") + s("loan") + s("other"));
-      document.getElementById("kEmpr").textContent = UI.fmtMoney(s("ssEr") + s("penEr") + s("housing"));
-      document.getElementById("kNet").textContent = UI.fmtMoney(s("net"));
+    function showEntry() {
+      const rows = calc(run()), L = entry(rows), d = L.reduce((a, l) => a + l[2], 0), c = L.reduce((a, l) => a + l[3], 0);
+      document.querySelector("#tAcc thead").innerHTML = "<tr><th>" + t("accAccount") + "</th><th>" + t("accCenter") + '</th><th class="r">' + t("debit") + '</th><th class="r">' + t("credit") + "</th></tr>";
+      document.querySelector("#tAcc tbody").innerHTML = L.map(l => "<tr><td>" + l[0] + "</td><td>" + l[1] + '</td><td class="r">' + (l[2] ? M(l[2]) : "") + '</td><td class="r">' + (l[3] ? M(l[3]) : "") + "</td></tr>").join("");
+      document.querySelector("#tAcc tfoot").innerHTML = '<tr><td colspan="2">' + t("total") + '</td><td class="r">' + M(d) + '</td><td class="r">' + M(c) + "</td></tr>";
+      document.getElementById("accChip").innerHTML = Math.abs(d - c) < .01 ? '<span class="chip chip-pos">' + mi("check_circle") + t("balanced") + "</span>" : '<span class="chip chip-neg">' + mi("error") + M(d - c) + "</span>";
+      UI.openModal("mAcc");
     }
-
-    function renderMissing() {
-      document.querySelector("#missing tbody").innerHTML = missing.map(m => "<tr><td>" + m.s.name + ' <span class="muted" style="font-size:.75rem">' + m.s.id + "</span></td><td>" + m.s.center + '</td><td><span class="chip chip-warn">' + m.reason + "</span></td></tr>").join("");
+    function showContrib() {
+      const rows = calc(run());
+      document.querySelector("#tCon thead").innerHTML = "<tr><th>" + t("colName") + '</th><th class="r">' + t("colGross") + '</th><th class="r">' + t("cEmpSS") + '</th><th class="r">' + t("cErSS") + '</th><th class="r">' + t("cEmpPen") + '</th><th class="r">' + t("cErPen") + '</th><th class="r">' + t("cTax") + "</th></tr>";
+      document.querySelector("#tCon tbody").innerHTML = rows.map(x => "<tr><td>" + x.e.name + '</td><td class="r">' + M(x.gross) + '</td><td class="r">' + M(x.ss) + '</td><td class="r">' + M(x.erSS) + '</td><td class="r">' + M(x.pen) + '</td><td class="r">' + M(x.erPen) + '</td><td class="r">' + M(x.it) + "</td></tr>").join("");
+      const S = k => rows.reduce((a, x) => a + x[k], 0);
+      document.querySelector("#tCon tfoot").innerHTML = "<tr><td>" + t("total") + '</td><td class="r">' + M(S("gross")) + '</td><td class="r">' + M(S("ss")) + '</td><td class="r">' + M(S("erSS")) + '</td><td class="r">' + M(S("pen")) + '</td><td class="r">' + M(S("erPen")) + '</td><td class="r">' + M(S("it")) + "</td></tr>";
+      UI.openModal("mCon");
     }
-
-    function renderState(stepNow) {
-      const step = stepNow || (applied ? 6 : 4);
-      document.querySelectorAll("#steps li").forEach(li => {
-        const s = +li.dataset.s;
-        li.classList.toggle("done", s < step);
-        if (s === step) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
-        li.querySelector(".dot").textContent = s < step ? "✓" : s;
-      });
-      document.getElementById("status").innerHTML = applied ? '<span class="chip chip-pos">✓ Applied</span>' : '<span class="chip chip-warn">Draft</span>';
-      const btn = document.getElementById("applyBtn");
-      btn.disabled = applied;
-      btn.textContent = applied ? "Applied" : "Apply payroll";
-      document.querySelectorAll(".adj-btn").forEach(b => b.disabled = applied);
+    let bankRows = [];
+    function showBank() {
+      const rows = calc(run());
+      bankRows = [["account", "name", "id", "amount", "reference"]].concat(rows.map(x => [x.e.acc, x.e.name, x.e.id, x.net.toFixed(2), run().code]));
+      document.getElementById("bankNote").textContent = t("bankNote", { n: rows.length, v: M(rows.reduce((a, x) => a + x.net, 0)) });
+      document.getElementById("bankFile").textContent = bankRows.slice(0, 40).map(r => r.join(",")).join("\n") + (rows.length > 39 ? "\n…" : "");
+      UI.openModal("mBank");
     }
-    table.on("draw", () => document.querySelectorAll(".adj-btn").forEach(b => b.disabled = applied));
-
-    // ---------- Adjustments ----------
-    let current = null;
-    const aType = document.getElementById("aType"), aAmt = document.getElementById("aAmt"), aReason = document.getElementById("aReason");
-    UI.maskMoney(aAmt);
-    function listAdj() {
-      const adj = adjustments[pSel.value + "|" + current.id] || [];
-      document.getElementById("adjList").innerHTML = adj.length ? '<table class="grid"><thead><tr><th>Type</th><th>Reason</th><th class="r">Amount</th></tr></thead><tbody>' +
-        adj.map(a => "<tr><td>" + (a.type === "bonus" ? '<span class="chip chip-pos">Bonus</span>' : '<span class="chip chip-neg">Deduction</span>') + "</td><td>" + a.reason + '</td><td class="r num">' + UI.fmtMoney(a.amount) + "</td></tr>").join("") + "</tbody></table>" : '<p class="muted" style="font-size:.85rem">No manual adjustments for this period.</p>';
+    document.getElementById("bankCsv").addEventListener("click", () => UI.csvDownload(run().code + "-bank.csv", bankRows));
+    function openApply() {
+      const R = run(), rows = calc(R), S = k => rows.reduce((a, x) => a + x[k], 0);
+      document.getElementById("aKpis").innerHTML = [["kEmp", UI.fmtInt(rows.length)], ["kGross", M(S("gross"))], ["kDed", M(S("ded"))], ["kNet", M(S("net"))], ["kSS", M(S("erSS"))], ["kPen", M(S("erPen"))]]
+        .map(k => '<div class="mc-kpi"><div class="k-label">' + t(k[0]) + '</div><div class="k-value">' + k[1] + "</div></div>").join("");
+      document.getElementById("aNote").textContent = R.applied ? t("alreadyApplied") : t("applyNote");
+      document.getElementById("aGo").disabled = R.applied;
+      document.getElementById("aRun").hidden = true;
+      UI.openModal("mApply");
     }
-    $("#emp").on("click", ".adj-btn", function () {
-      current = rows.find(r => r.id === this.dataset.id);
-      document.getElementById("adjWho").textContent = current.name + " · " + current.id + " · Net pay " + UI.fmtMoney(current.net);
-      aType.value = ""; aAmt.value = ""; aReason.value = "";
-      ["aTypeErr", "aAmtErr", "aReasonErr"].forEach(id => document.getElementById(id).textContent = "");
-      listAdj();
-      UI.openModal("adjModal");
-    });
-    document.getElementById("adjSave").addEventListener("click", () => {
-      let ok = true;
-      const amt = UI.parseMoney(aAmt.value);
-      ["aTypeErr", "aAmtErr", "aReasonErr"].forEach(id => document.getElementById(id).textContent = "");
-      if (!aType.value) { document.getElementById("aTypeErr").textContent = "Choose bonus or deduction."; ok = false; }
-      if (!(amt > 0)) { document.getElementById("aAmtErr").textContent = "Enter an amount greater than zero."; ok = false; }
-      else if (aType.value === "deduction" && amt > current.net) { document.getElementById("aAmtErr").textContent = "A deduction cannot leave net pay below zero."; ok = false; }
-      if (aReason.value.trim().length < 5) { document.getElementById("aReasonErr").textContent = "Write the reason (at least 5 characters)."; ok = false; }
-      if (!ok) return;
-      const key = pSel.value + "|" + current.id;
-      (adjustments[key] = adjustments[key] || []).push({ type: aType.value, amount: amt, reason: aReason.value.trim() });
-      calc(current);
-      table.rows().every(function () { if (this.data().id === current.id) this.data(current); });
-      table.draw(false);
-      document.getElementById("adjWho").textContent = current.name + " · " + current.id + " · Net pay " + UI.fmtMoney(current.net);
-      aType.value = ""; aAmt.value = ""; aReason.value = "";
-      listAdj();
-      UI.toast("Adjustment added. Net pay is now " + UI.fmtMoney(current.net) + ".");
-    });
-    document.getElementById("adjClose").addEventListener("click", () => UI.closeModal("adjModal"));
-
-    // ---------- Apply ----------
-    function buildCsv() {
-      const lines = ["employee_id,name,bank_account,amount,reference"];
-      rows.forEach(r => lines.push([r.id, '"' + r.name + '"', r.account, r.net.toFixed(2), "PAYROLL " + pSel.value].join(",")));
-      return lines;
-    }
-    function buildEntry() {
-      const map = new Map();
-      const add = (acct, side, amt) => { if (!amt) return; const k = acct + "|" + side; const c = map.get(k) || { acct, debit: 0, credit: 0 }; c[side] = R2(c[side] + amt); map.set(k, c); };
-      rows.forEach(r => {
-        add("6-01-01 Salaries and wages · " + r.center, "debit", r.gross);
-        add("6-01-02 Employer contributions · " + r.center, "debit", R2(r.ssEr + r.penEr + r.housing));
-        add("2-1-04-01 Social security payable", "credit", R2(r.ss + r.ssEr));
-        add("2-1-04-02 Pension fund payable", "credit", R2(r.pen + r.penEr));
-        add("2-1-04-03 Housing fund payable", "credit", r.housing);
-        add("2-1-04-04 Income tax withheld", "credit", r.it);
-        add("1-1-04-03 Employee loans receivable", "credit", r.loan);
-        add("2-1-04-09 Other deductions payable", "credit", r.other);
-        add("2-1-04-10 Net pay payable", "credit", r.net);
-      });
-      return Array.from(map.values()).sort((a, b) => (b.debit ? 1 : 0) - (a.debit ? 1 : 0) || a.acct.localeCompare(b.acct));
-    }
-    function showResults() {
-      const lines = buildCsv();
-      document.getElementById("csv").textContent = lines.slice(0, 8).join("\n") + "\n…";
-      document.getElementById("csvInfo").textContent = (lines.length - 1) + " transfers · total " + UI.fmtMoney(rows.reduce((a, r) => a + r.net, 0));
-      const e = buildEntry();
-      const td = R2(e.reduce((a, l) => a + l.debit, 0)), tc = R2(e.reduce((a, l) => a + l.credit, 0));
-      document.querySelector("#entry tbody").innerHTML = e.map(l => '<tr><td style="' + (l.credit ? "padding-left:24px" : "") + '">' + l.acct + '</td><td class="r num">' + (l.debit ? UI.fmtMoney(l.debit) : "") + '</td><td class="r num">' + (l.credit ? UI.fmtMoney(l.credit) : "") + "</td></tr>").join("");
-      document.querySelector("#entry tfoot").innerHTML = '<tr><td>Total</td><td class="r num">' + UI.fmtMoney(td) + '</td><td class="r num">' + UI.fmtMoney(tc) + "</td></tr>";
-      document.getElementById("entryChip").innerHTML = Math.abs(td - tc) < 0.005 ? '<span class="chip chip-pos">✓ Balanced</span>' : '<span class="chip chip-neg">✕ Off by ' + UI.fmtMoney(td - tc) + "</span>";
-      document.getElementById("results").hidden = false;
-    }
-    document.getElementById("csvBtn").addEventListener("click", () => {
-      const blob = new Blob([buildCsv().join("\n")], { type: "text/csv" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "payroll-" + pSel.value + ".csv";
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    });
-
-    document.getElementById("applyBtn").addEventListener("click", () => {
-      if (applied) return;
-      const btn = document.getElementById("applyBtn");
-      btn.disabled = true; pSel.disabled = true;
-      document.querySelectorAll(".adj-btn").forEach(b => b.disabled = true);
-      const card = document.getElementById("processCard"), bar = document.getElementById("pbar"), pct = document.getElementById("pct"), ph = document.getElementById("phases");
-      card.hidden = false;
-      const PH = ["Calculating " + rows.length + " employees", "Building the bank transfer file", "Generating the accounting entry"];
-      renderState(5);
-      let p = 0;
-      const paint = () => {
-        const cur = Math.min(2, Math.floor(p / 34));
-        ph.innerHTML = PH.map((t, i) => '<div class="phase"><span class="mark ' + (i < cur || p >= 100 ? "pos" : "") + '">' + (i < cur || p >= 100 ? "✓" : i === cur ? "…" : "○") + "</span>" + t + "</div>").join("");
-        bar.firstElementChild.style.width = p + "%";
-        bar.setAttribute("aria-valuenow", p);
-        pct.textContent = p + "%";
+    document.getElementById("aGo").addEventListener("click", () => {
+      const R = run(), steps = [t("st1", { n: EMP.length }), t("st2"), t("st3")];
+      const bar = document.querySelector("#aBar span"), list = document.getElementById("aSteps");
+      document.getElementById("aRun").hidden = false; document.getElementById("aGo").disabled = true; document.getElementById("aClose").disabled = true;
+      let i = 0;
+      const tick = () => {
+        list.innerHTML = steps.map((s, k) => "<li><span>" + (k < i ? mi("check_circle", "pos") : k === i ? mi("autorenew") : mi("radio_button_unchecked")) + " " + s + "</span></li>").join("");
+        bar.style.width = (i / steps.length * 100) + "%"; document.getElementById("aBar").setAttribute("aria-valuenow", String(Math.round(i / steps.length * 100)));
+        if (i < steps.length) { i++; setTimeout(tick, 650); return; }
+        R.applied = true; document.getElementById("aClose").disabled = false; UI.closeModal("mApply"); fillTop(); render(); UI.toast(t("appliedMsg", { c: R.code })); showEntry();
       };
-      paint();
-      const timer = setInterval(() => {
-        p = Math.min(100, p + 4);
-        paint();
-        if (p >= 100) {
-          clearInterval(timer);
-          applied = true;
-          PERIODS.find(x => x.id === pSel.value).status = "Applied";
-          pSel.querySelector('option[value="' + pSel.value + '"]').textContent = PERIODS.find(x => x.id === pSel.value).label + " · Applied";
-          pSel.disabled = false;
-          renderState();
-          showResults();
-          UI.toast("Payroll applied: bank file and accounting entry are ready.");
-        }
-      }, 70);
+      tick();
     });
-
-    pSel.addEventListener("change", load);
-    load();
+    // New record
+    UI.maskMoney(document.getElementById("nAmt"));
+    document.getElementById("btnNew").addEventListener("click", () => {
+      const $e = $("#nEmp"); $e.empty(); EMP.forEach((e, i) => $e.append(new Option(e.name + " · " + e.id, String(i)))); $e.select2({ width: "100%", dropdownParent: $("#mNew") });
+      const $t = $("#nType"); $t.empty(); [["tDed", "tDed"], ["tBonus", "tBonus"]].forEach(x => $t.append(new Option(t(x[1]), x[0]))); $t.select2({ width: "100%", minimumResultsForSearch: Infinity, dropdownParent: $("#mNew") });
+      ["nAmt", "nDet"].forEach(id => { document.getElementById(id).value = ""; document.getElementById(id).removeAttribute("aria-invalid"); });
+      ["nAmtErr", "nDetErr"].forEach(id => document.getElementById(id).textContent = "");
+      UI.openModal("mNew");
+    });
+    document.getElementById("nSave").addEventListener("click", () => {
+      const v = UI.parseMoney(document.getElementById("nAmt").value), d = document.getElementById("nDet").value.trim(); let ok = true;
+      const set = (id, eid, msg) => { document.getElementById(eid).textContent = msg; document.getElementById(id).setAttribute("aria-invalid", msg ? "true" : "false"); if (msg) ok = false; };
+      set("nAmt", "nAmtErr", v > 0 ? "" : t("errAmt")); set("nDet", "nDetErr", d ? "" : t("errDet"));
+      if (!ok) return;
+      const i = Number($("#nEmp").val()), code = run().code;
+      (adj[code] = adj[code] || []).push({ i, type: $("#nType").val(), v, d });
+      UI.closeModal("mNew"); render(); UI.toast(t("savedAdj", { n: EMP[i].name }));
+    });
+    document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => UI.closeModal(b.dataset.close)));
+    document.getElementById("btnApply").addEventListener("click", openApply);
+    document.getElementById("btnAcc").addEventListener("click", showEntry);
+    document.getElementById("btnContrib").addEventListener("click", showContrib);
+    document.getElementById("btnUpload").addEventListener("click", showBank);
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; render(); } });
+    $("#fRun").on("change", () => { runIdx = Number($("#fRun").val()); render(); });
+    $("#fGroup").on("change", () => { group = $("#fGroup").val(); render(); });
+    document.getElementById("fSearch").addEventListener("input", render);
+    const about = () => document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    document.addEventListener("langchange", () => { fillTop(); render(); about(); });
+    fillTop(); render(); about();
   });
   </script>
 </body>

@@ -3,351 +3,319 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Accounts Receivable · Business UI Gallery</title>
+  <title>Accounts receivable · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .kpis-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-    .kpi .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
-    .chart-box { position: relative; height: 230px; }
-    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); overflow-x: auto; }
-    .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font: inherit; font-size: .9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; min-height: 44px; }
-    .tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
-    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-    .seg button { border: 0; background: var(--surface); color: var(--text); padding: 0 12px; min-height: 36px; font: inherit; font-size: .86rem; cursor: pointer; }
-    .seg button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
-    .toolbar { display: flex; gap: var(--space-3); align-items: end; flex-wrap: wrap; justify-content: space-between; margin-bottom: var(--space-3); }
-    #aging td, #aging th, #eff td, #eff th, #stmt td, #stmt th { white-space: nowrap; }
-    .usage { display: flex; align-items: center; gap: 8px; min-width: 150px; }
-    .usage .bar-track { flex: 1; }
-    .link-btn { background: none; border: 0; padding: 0; color: var(--primary); font: inherit; cursor: pointer; text-align: left; text-decoration: underline; text-underline-offset: 2px; min-height: 28px; }
-    .stmt-head { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
-    .stmt-head div { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; }
-    .chip svg { width: 13px; height: 13px; }
-    @media (max-width: 1200px) { .kpis-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-    .kpis-6 .kpi { min-width: 0; }
-    @media (max-width: 640px) { .kpis-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpis-6 .kpi-value { font-size: 1.1rem; } .stmt-head { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .kpi-groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .kpi-groups .mc-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 1100px) { .kpi-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .kpi-groups { grid-template-columns: minmax(0, 1fr); } }
+    tr.cust { cursor: pointer; }
+    tr.cust:focus-visible { outline: 2px solid var(--mc-cyan); outline-offset: -2px; }
+    tr.inv td { background: var(--mc-panel-2); font-size: 11px; }
+    tr.inv td:first-child { padding-left: 28px; }
+    .limit { display: flex; align-items: center; gap: 6px; min-width: 120px; }
+    .limit .bar-track { flex: 1; height: 6px; }
+    .eff { display: flex; align-items: center; gap: 6px; min-width: 130px; }
+    .eff .bar-track { flex: 1; height: 6px; }
+    .bucket-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: rgba(148,163,184,.16); }
+    .bucket-bar span { display: block; height: 100%; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--mc-muted); margin-top: 6px; }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
   </style>
 </head>
 <body data-page="receivables" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Accounts receivable</h1>
-        <p class="muted">What customers owe as of November 16, 2026, how old it is and how well each seller collects.</p>
-      </div>
-      <div class="field" style="width:240px">
-        <label for="fSeller">Seller</label>
-        <select id="fSeller" multiple></select>
-      </div>
-    </div>
-
-    <section class="kpis kpis-6" aria-label="Aging totals" aria-live="polite" id="kpis"></section>
-
-    <section class="card">
-      <div class="card-head"><h2>Aging by bucket</h2><span class="muted" style="font-size:.82rem">Top 10 by balance; follows the seller filter</span></div>
-      <div class="card-body"><div class="chart-box"><canvas id="agingChart" role="img" aria-label="Stacked bar of balance by age bucket for the top customers"></canvas></div></div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field"><label for="fChannel" data-i18n="channel"></label><select id="fChannel"></select></div>
+        <div class="mc-field"><label for="fSup" data-i18n="supervisor"></label><select id="fSup"></select></div>
+        <div class="mc-field"><label for="fRoute" data-i18n="route"></label><select id="fRoute"></select></div>
+        <div class="mc-field"><label for="fSeller" data-i18n="seller"></label><select id="fSeller"></select></div>
+        <div class="mc-field"><label for="fType" data-i18n="custType"></label><select id="fType"></select></div>
+        <div class="mc-field w-sm"><label for="fBefore" data-i18n="daysBefore"></label><input id="fBefore" type="number" min="0" value="0" class="num"></div>
+        <div class="mc-field w-sm"><label for="fOver" data-i18n="daysOver"></label><input id="fOver" type="number" min="0" value="0" class="num"></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+        <button class="btn" type="button" id="btnClear"><span class="material-icons" aria-hidden="true">filter_alt_off</span><span data-i18n="clear"></span></button>
+      </form>
     </section>
 
-    <section class="card">
-      <div class="tabs" role="tablist" aria-label="Receivables views">
-        <button class="tab" role="tab" id="tab-aging" aria-controls="panel-aging" aria-selected="true">Aging</button>
-        <button class="tab" role="tab" id="tab-eff" aria-controls="panel-eff" aria-selected="false" tabindex="-1">Collection effectiveness</button>
-      </div>
-      <div class="card-body" role="tabpanel" id="panel-aging" aria-labelledby="tab-aging">
-        <div class="toolbar">
-          <div class="seg" role="group" aria-label="Group rows by">
-            <button type="button" data-g="customer" aria-pressed="true">By customer</button>
-            <button type="button" data-g="seller" aria-pressed="false">By seller</button>
-          </div>
-          <div class="field" style="width:240px"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Customer or seller…"></div>
-        </div>
-        <div class="table-wrap">
-          <table class="grid" id="aging">
-            <thead><tr><th id="gHead">Customer</th><th class="r">Current</th><th class="r">1–30</th><th class="r">31–60</th><th class="r">61–90</th><th class="r">&gt; 90</th><th class="r">Balance</th><th>Credit limit use</th></tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
-        </div>
-      </div>
-      <div class="card-body" role="tabpanel" id="panel-eff" aria-labelledby="tab-eff" hidden>
-        <p class="muted" style="font-size:.85rem;margin-bottom:10px">Share of the invoices issued in the last 90 days that were paid within 20 and within 40 days of their date.</p>
-        <div class="table-wrap">
-          <table class="grid" id="eff">
-            <thead><tr><th>Seller</th><th class="r">Invoices</th><th>Collected ≤ 20 days</th><th>Collected ≤ 40 days</th><th class="r">Avg days to collect</th><th>Status</th></tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
-        </div>
-      </div>
-    </section>
+    <section class="kpi-groups" id="kpis" aria-label="Summary"></section>
 
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Each invoice falls in one bucket by its days past due, so the five buckets always add up to the balance shown.</li>
-        <li>The account statement lists invoices and payments in date order with a running balance that ends at the same number as the aging table.</li>
-        <li>Collection effectiveness counts how many invoices were paid within 20 and 40 days, which shows collection habits better than the balance alone.</li>
-      </ul>
+    <section class="mc-panel">
+      <div class="mc-panel-title">
+        <div class="mc-tabs" role="tablist" id="tabs"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="mc-tabs" role="group" aria-label="Group" id="groupBy"></div>
+          <input class="mc-input" id="q" style="width:220px;max-width:100%" data-i18n-ph="searchPh">
+        </div>
+      </div>
+      <div id="agingBox" style="margin-bottom:10px"></div>
+      <div class="table-wrap" style="max-height:560px"><table class="grid" id="tMain"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
     </section>
+    <div id="about"></div>
   </main>
 
-  <div class="modal-backdrop" id="stmtModal" role="dialog" aria-modal="true" aria-labelledby="stmtTitle">
-    <div class="modal">
-      <div class="modal-head"><h2 id="stmtTitle">Account statement</h2><span class="muted" id="stmtSub" style="font-size:.85rem"></span></div>
+  <div class="modal-backdrop" id="mState">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mStateT">
+      <div class="modal-head"><h3 id="mStateT"><span class="material-icons" aria-hidden="true">receipt_long</span><span id="stTitle"></span></h3></div>
       <div class="modal-body">
-        <div class="stmt-head" id="stmtHead"></div>
-        <div class="table-wrap">
-          <table class="grid" id="stmt">
-            <thead><tr><th>Date</th><th>Document</th><th>Type</th><th class="r">Days past due</th><th class="r">Charge</th><th class="r">Payment</th><th class="r">Balance</th></tr></thead>
-            <tbody></tbody>
-          </table>
+        <div class="mc-filters" style="margin-bottom:10px">
+          <div class="mc-field" style="max-width:170px"><label for="sFrom" data-i18n="from"></label><input type="date" id="sFrom"></div>
+          <div class="mc-field" style="max-width:170px"><label for="sTo" data-i18n="to"></label><input type="date" id="sTo"></div>
+          <div class="mc-field" style="max-width:220px"><label for="sMov" data-i18n="movType"></label><select id="sMov"></select></div>
         </div>
+        <div class="mc-kpis" id="stKpis" style="margin-bottom:10px"></div>
+        <div class="table-wrap" style="max-height:420px"><table class="grid" id="tState"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="printStmt" type="button">Print</button>
-        <button class="btn" id="closeStmt" type="button">Close</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="stPrint"><span class="material-icons" aria-hidden="true">print</span><span data-i18n="print"></span></button><button class="btn" type="button" id="stClose" data-i18n="close"></button></div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const r = UI.rng(9031);
-    const today = Date.UTC(2026, 10, 16);
-    const DAY = 86400000;
-    const BUCKETS = ["Current", "1–30", "31–60", "61–90", "> 90"];
-    const BUCKET_VARS = ["--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5"];
-    const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>';
-    const ICON_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>';
-    const ICON_BAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  UI.strings({
+    en: {
+      channel: "Channel", supervisor: "Supervisor", route: "Route", custType: "Customer type", daysBefore: "Days before overdue", daysOver: "Days overdue",
+      g_inv: "Invoices", g_amt: "Amounts", g_over: "Overdue", g_cred: "Credit", k_invCount: "Open invoices", k_custs: "Customers", k_billed: "Invoice amount", k_bal: "Balance",
+      k_over: "Overdue balance", k_overPct: "% overdue", k_limit: "Credit limit", k_avail: "Credit available",
+      tabCust: "Customer / invoice", tabSpecial: "Special (over 40 days)", tabEff: "Collection effectiveness", byCust: "By customer", bySeller: "By seller", searchPh: "Search customer or invoice…",
+      code: "Code", custName: "Customer", invoices: "Invoices", invAmount: "Invoice amount", pctTotal: "% of total", overdue: "Overdue", daysOv: "Days overdue",
+      limit: "Credit limit", avail: "Available", usage: "Limit usage", invoice: "Invoice", invDate: "Invoice date", due: "Due date", daysBef: "Days to due", paid: "% paid",
+      over: "Over limit", near: "Near limit", ok: "Within limit", b0: "Current", b1: "1–30", b2: "31–60", b3: "61–90", b4: "Over 90", aging: "Aging of the balance",
+      statement: "Account statement", movType: "Movement type", movAll: "All movements", movInv: "Invoices", movPay: "Payments", movNc: "Credit notes", print: "Print",
+      date: "Date", document: "Document", movement: "Movement", debit: "Debit", credit: "Credit", runBal: "Balance", openBal: "Opening balance", payment: "Payment", cnote: "Credit note", invMov: "Invoice",
+      e_coll: "Collected in the period", e_valid: "Valid collection", e_validPct: "% valid of collected", e_canceled: "Invoices paid", e_overdue: "Invoices overdue", e_pending: "Pending (dispatched)",
+      in20: "Paid within 20 days", in40: "Paid within 40 days", avgDays: "Avg. days to pay", effective: "Effective", regular: "Regular", low: "Low",
+      aboutText: "The balance of each invoice is the invoice amount minus payments and credit notes. <b>Overdue</b> starts the day after the due date (invoice date + the customer's credit days): <b>1 to 40 days</b> is normal overdue and <b>41 or more</b> goes to the <b>Special</b> tab. The credit bar compares the balance with the customer's credit limit and warns when it is near or over it, with an icon and text. The <b>account statement</b> lists invoices, payments and credit notes with a running balance that ends in the same balance as the aging table. <b>Collection effectiveness</b> measures, per seller, how many invoices were paid within 20 and 40 days. Every total follows the filters and the search. All data is generated."
+    },
+    es: {
+      channel: "Canal", supervisor: "Supervisor", route: "Ruta", custType: "Tipo de cliente", daysBefore: "Días antes de mora", daysOver: "Días en mora",
+      g_inv: "Facturas", g_amt: "Montos", g_over: "Mora", g_cred: "Crédito", k_invCount: "Facturas abiertas", k_custs: "Clientes", k_billed: "Monto facturas", k_bal: "Saldo",
+      k_over: "Saldo en mora", k_overPct: "% en mora", k_limit: "Máx. crédito", k_avail: "Crédito disponible",
+      tabCust: "Cliente / Factura", tabSpecial: "Especiales (más de 40 días)", tabEff: "Recaudación efectiva", byCust: "Por cliente", bySeller: "Por vendedor", searchPh: "Buscar cliente o factura…",
+      code: "Código", custName: "Cliente", invoices: "Facturas", invAmount: "Monto facturas", pctTotal: "% del total", overdue: "Mora", daysOv: "Días en mora",
+      limit: "Máx. crédito", avail: "Disponible", usage: "Uso del límite", invoice: "# Factura", invDate: "Fecha factura", due: "Fecha vence", daysBef: "Días antes mora", paid: "% pagado",
+      over: "Fuera de límite", near: "Cerca del límite", ok: "Dentro del límite", b0: "Al día", b1: "1–30", b2: "31–60", b3: "61–90", b4: "Más de 90", aging: "Antigüedad del saldo",
+      statement: "Estado de cuenta del cliente", movType: "Tipo de movimiento", movAll: "Todos los movimientos", movInv: "Facturas", movPay: "Abonos", movNc: "Notas de crédito", print: "Imprimir",
+      date: "Fecha", document: "Documento", movement: "Movimiento", debit: "Debe", credit: "Haber", runBal: "Saldo", openBal: "Saldo inicial", payment: "Abono", cnote: "Nota de crédito", invMov: "Factura",
+      e_coll: "Recaudado en el periodo", e_valid: "Recaudación válida", e_validPct: "% válida del recaudado", e_canceled: "Facturas canceladas", e_overdue: "Facturas en mora", e_pending: "Pendientes (despachadas)",
+      in20: "Canceladas en 20 días", in40: "Canceladas en 40 días", avgDays: "Prom. días cancelación", effective: "Efectiva", regular: "Regular", low: "Baja",
+      aboutText: "El saldo de cada factura es su monto menos los abonos y las notas de crédito. La <b>mora</b> empieza el día después del vencimiento (fecha de la factura + días de crédito del cliente): de <b>1 a 40 días</b> es mora normal y desde <b>41 días</b> pasa a la pestaña de <b>Especiales</b>. La barra de crédito compara el saldo con el máximo de crédito del cliente y avisa con ícono y texto cuando está cerca o fuera del límite. El <b>estado de cuenta</b> muestra facturas, abonos y notas de crédito con saldo corrido, y termina en el mismo saldo que la tabla de antigüedad. La <b>recaudación efectiva</b> mide por vendedor cuántas facturas se cancelaron dentro de 20 y de 40 días. Todos los totales siguen los filtros y la búsqueda. Todos los datos son generados."
+    }
+  });
 
-    // ---- Customers, invoices and payments ----
-    const customers = D.customers.map((name, i) => ({
-      name, seller: D.sellers[i % D.sellers.length], limit: Math.round(UI.between(r, 40, 160)) * 1000, terms: UI.pick(r, [15, 30, 30, 45])
-    }));
-    const docs = []; // every charge and payment, used by statements and effectiveness
-    customers.forEach((c, ci) => {
-      const n = 10 + Math.floor(r() * 18);
-      const habit = UI.between(r, 0.55, 1); // how reliably the customer pays
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const TODAY = new Date(Date.UTC(2026, 10, 16));
+    const CHANNELS = [{ en: "Retail", es: "Detalle" }, { en: "Wholesale", es: "Mayoreo" }, { en: "Supermarkets", es: "Supermercados" }];
+    const SUPS = ["R. Paredes", "M. Solis", "L. Banegas"];
+    const ROUTES = ["R-01", "R-02", "R-03", "R-04", "R-05", "R-06"];
+    const TYPES = [{ en: "Cash on delivery", es: "Contra entrega" }, { en: "Credit", es: "Crédito" }, { en: "Key account", es: "Cuenta clave" }];
+    const COLORS = ["#14b8a6", "#38bdf8", "#f59e0b", "#fb923c", "#fb7185"];
+
+    // Customers and invoices (deterministic)
+    const r = UI.rng(4242);
+    const CUST = [];
+    for (let i = 0; i < 48; i++) {
+      const name = D.customers[i % D.customers.length] + (i >= D.customers.length ? " " + (Math.floor(i / D.customers.length) + 1) : "");
+      const seller = D.sellers[i % D.sellers.length];
+      const days = [15, 21, 30, 30, 45][Math.floor(r() * 5)];
+      const c = { code: "C-" + String(1040 + i * 7), name, seller, channel: Math.floor(r() * 3), sup: Math.floor(r() * 3), route: Math.floor(r() * 6), type: Math.floor(r() * 3), days, limit: Math.round(UI.between(r, 40, 260)) * 1000, inv: [] };
+      const n = 1 + Math.floor(r() * 6);
       for (let k = 0; k < n; k++) {
-        const date = today - Math.floor(UI.between(r, 1, 150)) * DAY;
-        const amount = Math.round(UI.between(r, 900, 14000) * 100) / 100;
-        const inv = { type: "Invoice", doc: "INV-" + (52000 + ci * 40 + k), cust: c.name, date, due: date + c.terms * DAY, amount, paid: 0, paidDate: null };
-        if (r() < habit) {
-          const lag = Math.floor(UI.between(r, 5, 70));
-          const pd = date + lag * DAY;
-          if (pd <= today) {
-            const full = r() < 0.85;
-            inv.paid = full ? amount : Math.round(amount * UI.between(r, 0.3, 0.8) * 100) / 100;
-            inv.paidDate = pd;
-            docs.push({ type: "Payment", doc: "RC-" + (8100 + docs.length), cust: c.name, date: pd, amount: inv.paid, ref: inv.doc });
-          }
-        }
-        docs.push(inv);
+        const age = 1 + Math.floor(Math.pow(r(), 3.2) * 110); // most invoices are recent, a few are old
+        const date = new Date(TODAY.getTime() - age * 86400000);
+        const due = new Date(date.getTime() + days * 86400000);
+        const amount = UI.between(r, 4000, 52000);
+        const paid = r() < .45 ? amount * UI.between(r, .1, .8) : 0;
+        c.inv.push({ no: "F-" + (200300 + i * 31 + k * 7), date, due, amount, bal: amount - paid, over: Math.floor((TODAY - due) / 86400000) });
       }
-    });
-    const invoices = docs.filter(d => d.type === "Invoice");
-
-    function bucketOf(inv) {
-      const past = Math.floor((today - inv.due) / DAY);
-      if (past <= 0) return 0;
-      if (past <= 30) return 1;
-      if (past <= 60) return 2;
-      if (past <= 90) return 3;
-      return 4;
+      CUST.push(c);
     }
 
-    // ---- Filters ----
-    $("#fSeller").html(D.sellers.map(s => '<option value="' + s + '">' + s + "</option>").join(""))
-      .select2({ placeholder: "All sellers", allowClear: true, width: "100%" });
-    let group = "customer";
+    let tab = "cust", group = "cust", open = null, applied = null;
 
-    function filteredCustomers() {
-      const sel = $("#fSeller").val() || [];
-      const q = $("#fSearch").val().trim().toLowerCase();
-      return customers.filter(c => (!sel.length || sel.includes(c.seller)) && (!q || c.name.toLowerCase().includes(q) || c.seller.toLowerCase().includes(q)));
+    function fillSelects() {
+      const keep = {};
+      ["#fChannel", "#fSup", "#fRoute", "#fSeller", "#fType"].forEach(s => keep[s] = $(s).val() || "all");
+      const fill = (sel, items) => { $(sel).empty().append(new Option(t("all"), "all")); items.forEach((x, i) => $(sel).append(new Option(UI.L(x), String(i)))); $(sel).val(keep[sel]).select2({ width: "100%" }); };
+      fill("#fChannel", CHANNELS); fill("#fSup", SUPS); fill("#fRoute", ROUTES); fill("#fSeller", D.sellers); fill("#fType", TYPES);
+    }
+    fillSelects();
+
+    function readFilters() {
+      return { ch: $("#fChannel").val(), sup: $("#fSup").val(), route: $("#fRoute").val(), seller: $("#fSeller").val(), type: $("#fType").val(), before: Number(document.getElementById("fBefore").value) || 0, over: Number(document.getElementById("fOver").value) || 0 };
     }
 
-    function agingFor(custList) {
-      const names = new Set(custList.map(c => c.name));
-      const byCust = new Map(custList.map(c => [c.name, { key: c.name, c, b: [0, 0, 0, 0, 0] }]));
-      invoices.forEach(inv => {
-        if (!names.has(inv.cust)) return;
-        const open = inv.amount - inv.paid;
-        if (open <= 0.005) return;
-        byCust.get(inv.cust).b[bucketOf(inv)] += open;
-      });
-      return [...byCust.values()];
+    function rows() {
+      const f = applied || readFilters();
+      const q = document.getElementById("q").value.trim().toLowerCase();
+      return CUST.filter(c =>
+        (f.ch === "all" || c.channel === +f.ch) && (f.sup === "all" || c.sup === +f.sup) && (f.route === "all" || c.route === +f.route) &&
+        (f.seller === "all" || D.sellers[+f.seller] === c.seller) && (f.type === "all" || c.type === +f.type))
+        .map(c => {
+          let inv = c.inv.filter(x => x.bal > 0.5);
+          if (f.over > 0) inv = inv.filter(x => x.over >= f.over);
+          if (f.before > 0) inv = inv.filter(x => x.over < 0 && -x.over <= f.before);
+          if (tab === "special") inv = inv.filter(x => x.over > 40);
+          if (q && !c.name.toLowerCase().includes(q) && !c.code.toLowerCase().includes(q)) inv = inv.filter(x => x.no.toLowerCase().includes(q));
+          const bal = inv.reduce((a, x) => a + x.bal, 0), amount = inv.reduce((a, x) => a + x.amount, 0), over = inv.filter(x => x.over > 0).reduce((a, x) => a + x.bal, 0);
+          return Object.assign({}, c, { inv, bal, amount, over, maxOver: inv.reduce((a, x) => Math.max(a, x.over), 0), totalBal: c.inv.reduce((a, x) => a + x.bal, 0) });
+        }).filter(c => c.inv.length);
+    }
+    function bucket(o) { return o <= 0 ? 0 : o <= 30 ? 1 : o <= 60 ? 2 : o <= 90 ? 3 : 4; }
+
+    function usageCell(bal, limit) {
+      const u = bal / limit;
+      const st = u > 1 ? ["over", "neg", "error"] : u > .85 ? ["near", "", "warning"] : ["ok", "pos", "check_circle"];
+      return '<div class="limit"><div class="bar-track"><span style="width:' + Math.min(100, u * 100) + "%;background:" + (u > 1 ? "var(--mc-bad)" : u > .85 ? "var(--mc-amber)" : "var(--mc-teal)") + '"></span></div><span class="chip ' + (u > 1 ? "chip-neg" : u > .85 ? "chip-warn" : "chip-pos") + '">' + mi(st[2]) + t(st[0]) + "</span></div>";
     }
 
-    let chart;
-    function render() {
-      const custs = filteredCustomers();
-      const rowsC = agingFor(custs);
-      let rows;
+    function renderKpis(list) {
+      const inv = list.reduce((a, c) => a.concat(c.inv), []);
+      const bal = list.reduce((a, c) => a + c.bal, 0), amount = list.reduce((a, c) => a + c.amount, 0), over = list.reduce((a, c) => a + c.over, 0);
+      const limit = list.reduce((a, c) => a + c.limit, 0), used = list.reduce((a, c) => a + c.totalBal, 0);
+      const k = (l, v, sub) => '<div class="mc-kpi"><div class="k-label">' + t(l) + '</div><div class="k-value num">' + v + "</div>" + (sub ? '<div class="k-sub">' + sub + "</div>" : "") + "</div>";
+      const g = (l, html) => '<div class="mc-kpi-group"><span class="mc-label">' + t(l) + '</span><div class="mc-kpis">' + html + "</div></div>";
+      document.getElementById("kpis").innerHTML =
+        g("g_inv", k("k_invCount", UI.fmtInt(inv.length)) + k("k_custs", UI.fmtInt(list.length))) +
+        g("g_amt", k("k_billed", M(amount)) + k("k_bal", M(bal))) +
+        g("g_over", k("k_over", '<span class="neg">' + M(over) + "</span>") + k("k_overPct", UI.fmtPct(bal ? over / bal : 0))) +
+        g("g_cred", k("k_limit", M(limit)) + k("k_avail", M(Math.max(0, limit - used))));
+      // Aging bar
+      const b = [0, 0, 0, 0, 0];
+      inv.forEach(x => b[bucket(x.over)] += x.bal);
+      const tot = b.reduce((a, x) => a + x, 0) || 1;
+      document.getElementById("agingBox").innerHTML = tab === "eff" ? "" : '<div class="mc-label" style="margin-bottom:6px">' + t("aging") + '</div><div class="bucket-bar" role="img" aria-label="' + t("aging") + '">' +
+        b.map((v, i) => '<span style="width:' + (v / tot * 100) + "%;background:" + COLORS[i] + '" title="' + t("b" + i) + ": " + M(v) + '"></span>').join("") + '</div><div class="legend">' +
+        b.map((v, i) => '<span><i style="background:' + COLORS[i] + '"></i>' + t("b" + i) + " · <b class=\"num\">" + M(v) + "</b> (" + UI.fmtPct(v / tot, 0) + ")</span>").join("") + "</div>";
+    }
+
+    function renderMain() {
+      const list = rows();
+      renderKpis(list);
+      document.getElementById("tabs").innerHTML = [["cust", "tabCust"], ["special", "tabSpecial"], ["eff", "tabEff"]].map(x => '<button type="button" class="mc-tab" role="tab" aria-selected="' + (tab === x[0]) + '" data-tab="' + x[0] + '">' + t(x[1]) + "</button>").join("");
+      document.getElementById("groupBy").innerHTML = tab === "eff" ? "" : [["cust", "byCust"], ["seller", "bySeller"]].map(x => '<button type="button" class="mc-tab' + (group === x[0] ? " is-active" : "") + '" aria-pressed="' + (group === x[0]) + '" data-g="' + x[0] + '">' + t(x[1]) + "</button>").join("");
+      document.getElementById("groupBy").hidden = tab === "eff";
+      const thead = document.querySelector("#tMain thead"), tbody = document.querySelector("#tMain tbody"), tfoot = document.querySelector("#tMain tfoot");
+      const grand = list.reduce((a, c) => a + c.bal, 0) || 1;
+      if (tab === "eff") return renderEff(list);
       if (group === "seller") {
-        const m = new Map();
-        rowsC.forEach(x => {
-          const g = m.get(x.c.seller) || { key: x.c.seller, limit: 0, b: [0, 0, 0, 0, 0], n: 0 };
-          x.b.forEach((v, i) => g.b[i] += v);
-          g.limit += x.c.limit; g.n++;
-          m.set(x.c.seller, g);
-        });
-        rows = [...m.values()];
-      } else {
-        rows = rowsC.map(x => ({ key: x.key, limit: x.c.limit, b: x.b, cust: true }));
+        const by = {};
+        list.forEach(c => { const s = by[c.seller] || (by[c.seller] = { s: c.seller, n: 0, inv: 0, amount: 0, bal: 0, over: 0, limit: 0, used: 0 }); s.n++; s.inv += c.inv.length; s.amount += c.amount; s.bal += c.bal; s.over += c.over; s.limit += c.limit; s.used += c.totalBal; });
+        const arr = Object.values(by).sort((a, b) => b.bal - a.bal);
+        thead.innerHTML = "<tr><th>" + t("seller") + '</th><th class="r">' + t("k_custs") + '</th><th class="r">' + t("invoices") + '</th><th class="r">' + t("invAmount") + '</th><th class="r">' + t("balance") + '</th><th class="r">' + t("pctTotal") + '</th><th class="r">' + t("overdue") + '</th><th class="r">' + t("k_overPct") + "</th><th>" + t("usage") + "</th></tr>";
+        tbody.innerHTML = arr.map(s => "<tr><td>" + s.s + '</td><td class="r">' + s.n + '</td><td class="r">' + s.inv + '</td><td class="r">' + M(s.amount) + '</td><td class="r">' + M(s.bal) + '</td><td class="r">' + UI.fmtPct(s.bal / grand) + '</td><td class="r neg">' + M(s.over) + '</td><td class="r">' + UI.fmtPct(s.bal ? s.over / s.bal : 0) + "</td><td>" + usageCell(s.used, s.limit) + "</td></tr>").join("");
+        tfoot.innerHTML = "<tr><td>" + t("total") + '</td><td class="r">' + list.length + '</td><td class="r">' + list.reduce((a, c) => a + c.inv.length, 0) + '</td><td class="r">' + M(list.reduce((a, c) => a + c.amount, 0)) + '</td><td class="r">' + M(grand) + '</td><td class="r">100.0%</td><td class="r">' + M(list.reduce((a, c) => a + c.over, 0)) + "</td><td></td><td></td></tr>";
+        return;
       }
-      rows.forEach(x => x.bal = x.b.reduce((a, v) => a + v, 0));
-      rows.sort((a, b) => b.bal - a.bal);
-      document.getElementById("gHead").textContent = group === "seller" ? "Seller" : "Customer";
-
-      document.querySelector("#aging tbody").innerHTML = rows.map(x => {
-        const use = x.bal / x.limit;
-        const color = use > 1 ? "var(--negative)" : use > 0.8 ? "var(--warning)" : "var(--positive)";
-        const label = use > 1 ? ICON_BAD + "Over limit" : use > 0.8 ? ICON_WARN + "Near limit" : "";
-        const name = x.cust ? '<button type="button" class="link-btn" data-cust="' + x.key + '">' + x.key + "</button>" : x.key + ' <span class="muted" style="font-size:.8rem">(' + x.n + " customers)</span>";
-        return "<tr><td>" + name + "</td>" + x.b.map((v, i) => '<td class="r num' + (i >= 3 && v > 0 ? " neg" : "") + '">' + (v ? UI.fmtMoney(v) : '<span class="muted">–</span>') + "</td>").join("") +
-          '<td class="r num"><strong>' + UI.fmtMoney(x.bal) + "</strong></td>" +
-          '<td><div class="usage"><div class="bar-track"><span style="width:' + Math.min(use, 1) * 100 + "%;background:" + color + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(use, 0) + "</span>" +
-          (label ? '<span class="chip ' + (use > 1 ? "chip-neg" : "chip-warn") + '">' + label + "</span>" : "") + "</div></td></tr>";
-      }).join("") || '<tr><td colspan="8" class="muted">No customers match the filters</td></tr>';
-
-      const tot = [0, 0, 0, 0, 0];
-      rows.forEach(x => x.b.forEach((v, i) => tot[i] += v));
-      const totBal = tot.reduce((a, v) => a + v, 0);
-      const totLimit = rows.reduce((a, x) => a + x.limit, 0);
-      document.querySelector("#aging tfoot").innerHTML = "<tr><td>Total</td>" + tot.map(v => '<td class="r num">' + UI.fmtMoney(v) + "</td>").join("") +
-        '<td class="r num">' + UI.fmtMoney(totBal) + '</td><td class="num">' + (totLimit ? UI.fmtPct(totBal / totLimit, 0) + " of limits" : "") + "</td></tr>";
-
-      document.getElementById("kpis").innerHTML = BUCKETS.map((b, i) =>
-        '<div class="card kpi"><div class="kpi-label"><span class="swatch" style="background:var(' + BUCKET_VARS[i] + ')"></span>' + (i ? b + " days" : b) + '</div><div class="kpi-value">' + UI.fmtMoney(tot[i]) +
-        '</div><div class="kpi-delta muted">' + (totBal ? UI.fmtPct(tot[i] / totBal) : "0.0%") + " of balance</div></div>").join("") +
-        '<div class="card kpi"><div class="kpi-label">Total balance</div><div class="kpi-value">' + UI.fmtMoney(totBal) + '</div><div class="kpi-delta ' + ((tot[3] + tot[4]) / (totBal || 1) > 0.15 ? "neg" : "muted") + '">' +
-        UI.fmtPct((tot[3] + tot[4]) / (totBal || 1)) + " over 60 days</div></div>";
-
-      renderChart(rowsC);
-      renderEff(custs);
+      list.sort((a, b) => b.bal - a.bal);
+      thead.innerHTML = "<tr><th>" + t("code") + "</th><th>" + t("custName") + "</th><th>" + t("channel") + "</th><th>" + t("seller") + '</th><th class="r">' + t("invoices") + '</th><th class="r">' + t("invAmount") + '</th><th class="r">' + t("balance") + '</th><th class="r">' + t("pctTotal") + '</th><th class="r">' + t("overdue") + '</th><th class="r">' + t("daysOv") + "</th><th>" + t("usage") + '</th><th style="width:44px"></th></tr>';
+      tbody.innerHTML = list.map(c => '<tr class="cust" tabindex="0" data-code="' + c.code + '"><td>' + mi(open === c.code ? "expand_less" : "expand_more") + " " + c.code + "</td><td>" + c.name + "</td><td>" + UI.L(CHANNELS[c.channel]) + "</td><td>" + c.seller + '</td><td class="r">' + c.inv.length + '</td><td class="r">' + M(c.amount) + '</td><td class="r">' + M(c.bal) + '</td><td class="r">' + UI.fmtPct(c.bal / grand) +
+        '</td><td class="r' + (c.over > 0 ? " neg" : "") + '">' + M(c.over) + '</td><td class="r' + (c.maxOver > 40 ? " neg" : "") + '">' + Math.max(0, c.maxOver) + "</td><td>" + usageCell(c.totalBal, c.limit) + '</td><td><button type="button" class="btn btn-sm icon-btn" data-st="' + c.code + '" aria-label="' + t("statement") + '" title="' + t("statement") + '">' + mi("receipt_long") + "</button></td></tr>" +
+        (open === c.code ? c.inv.map(x => '<tr class="inv"><td>' + x.no + "</td><td>" + t("invDate") + " " + UI.fmtDay(x.date) + "</td><td>" + t("due") + " " + UI.fmtDay(x.due) + '</td><td></td><td></td><td class="r">' + M(x.amount) + '</td><td class="r">' + M(x.bal) + '</td><td class="r">' + UI.fmtPct(1 - x.bal / x.amount) + " " + t("paid") + '</td><td class="r' + (x.over > 0 ? " neg" : "") + '">' + (x.over > 0 ? M(x.bal) : "—") + '</td><td class="r">' + (x.over > 0 ? x.over : "—") + "</td><td>" + (x.over <= 0 ? '<span class="muted">' + t("daysBef") + ": " + (-x.over) + "</span>" : "") + "</td><td></td></tr>").join("") : "")).join("");
+      tfoot.innerHTML = '<tr><td colspan="4">' + t("total") + '</td><td class="r">' + list.reduce((a, c) => a + c.inv.length, 0) + '</td><td class="r">' + M(list.reduce((a, c) => a + c.amount, 0)) + '</td><td class="r">' + M(list.reduce((a, c) => a + c.bal, 0)) + '</td><td class="r">100.0%</td><td class="r">' + M(list.reduce((a, c) => a + c.over, 0)) + '</td><td colspan="3"></td></tr>';
     }
 
-    function renderChart(rowsC) {
-      const top = rowsC.map(x => ({ k: x.key, b: x.b, s: x.b.reduce((a, v) => a + v, 0) })).sort((a, b) => b.s - a.s).slice(0, 10);
-      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
-      const cfg = {
-        type: "bar",
-        data: { labels: top.map(x => x.k), datasets: BUCKETS.map((b, i) => ({ label: b, data: top.map(x => x.b[i]), backgroundColor: UI.cssVar(BUCKET_VARS[i]), borderRadius: 2 })) },
-        options: {
-          indexAxis: "y", maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: text, boxWidth: 12 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + UI.fmtMoney(c.parsed.x) } } },
-          scales: { x: { stacked: true, ticks: { color: text, callback: v => (v / 1000) + "k" }, grid: { color: grid } }, y: { stacked: true, ticks: { color: text, font: { size: 11 } }, grid: { display: false } } }
+    function renderEff(list) {
+      const by = {};
+      const re = UI.rng(77);
+      D.sellers.forEach(s => { by[s] = { s, coll: 0, valid: 0, canceled: 0, overdue: 0, pending: 0, in20: 0, in40: 0, days: 0 }; });
+      list.forEach(c => {
+        const s = by[c.seller];
+        const n = c.inv.length + 3;
+        for (let k = 0; k < n; k++) {
+          const d = Math.round(UI.between(re, 5, 70)), amt = UI.between(re, 3000, 30000);
+          s.coll += amt; s.valid += d <= c.days + 5 ? amt : amt * .4; s.canceled++; s.days += d;
+          if (d <= 20) s.in20++; if (d <= 40) s.in40++;
         }
-      };
-      if (chart) chart.destroy();
-      chart = new Chart(document.getElementById("agingChart"), cfg);
-    }
-
-    function renderEff(custs) {
-      const names = new Set(custs.map(c => c.name));
-      const from = today - 90 * DAY;
-      const bySeller = new Map();
-      invoices.forEach(inv => {
-        if (!names.has(inv.cust) || inv.date < from) return;
-        const seller = customers.find(c => c.name === inv.cust).seller;
-        const g = bySeller.get(seller) || { seller, n: 0, d20: 0, d40: 0, days: 0, paidN: 0 };
-        g.n++;
-        if (inv.paidDate && inv.paid >= inv.amount - 0.005) {
-          const d = (inv.paidDate - inv.date) / DAY;
-          if (d <= 20) g.d20++;
-          if (d <= 40) g.d40++;
-          g.days += d; g.paidN++;
-        }
-        bySeller.set(seller, g);
+        s.overdue += c.inv.filter(x => x.over > 0).length; s.pending += c.inv.filter(x => x.over <= 0).length;
       });
-      const rows = [...bySeller.values()].sort((a, b) => b.d40 / b.n - a.d40 / a.n);
-      const bar = (p, good) => '<div class="usage"><div class="bar-track"><span style="width:' + p * 100 + "%;background:" + (p >= good ? "var(--positive)" : p >= good - 0.2 ? "var(--warning)" : "var(--negative)") + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(p, 0) + "</span></div>";
-      document.querySelector("#eff tbody").innerHTML = rows.map(g => {
-        const p40 = g.d40 / g.n;
-        const st = p40 >= 0.7 ? '<span class="chip chip-pos">' + ICON_OK + "On track</span>" : p40 >= 0.5 ? '<span class="chip chip-warn">' + ICON_WARN + "Watch</span>" : '<span class="chip chip-neg">' + ICON_BAD + "Low</span>";
-        return "<tr><td>" + g.seller + '</td><td class="r num">' + g.n + "</td><td>" + bar(g.d20 / g.n, 0.5) + "</td><td>" + bar(p40, 0.7) +
-          '</td><td class="r num">' + (g.paidN ? (g.days / g.paidN).toFixed(1) : "–") + "</td><td>" + st + "</td></tr>";
-      }).join("") || '<tr><td colspan="6" class="muted">No invoices match the filters</td></tr>';
-      const t = rows.reduce((a, g) => ({ n: a.n + g.n, d20: a.d20 + g.d20, d40: a.d40 + g.d40, days: a.days + g.days, paidN: a.paidN + g.paidN }), { n: 0, d20: 0, d40: 0, days: 0, paidN: 0 });
-      document.querySelector("#eff tfoot").innerHTML = t.n ? '<tr><td>Total</td><td class="r num">' + t.n + '</td><td class="num">' + UI.fmtPct(t.d20 / t.n, 0) + '</td><td class="num">' + UI.fmtPct(t.d40 / t.n, 0) +
-        '</td><td class="r num">' + (t.paidN ? (t.days / t.paidN).toFixed(1) : "–") + "</td><td></td></tr>" : "";
+      const arr = Object.values(by).filter(s => s.canceled);
+      const sum = k => arr.reduce((a, s) => a + s[k], 0);
+      const k = (l, v) => '<div class="mc-kpi"><div class="k-label">' + t(l) + '</div><div class="k-value num">' + v + "</div></div>";
+      document.getElementById("kpis").innerHTML = '<div class="mc-kpi-group" style="grid-column:1/-1"><span class="mc-label">' + t("tabEff") + '</span><div class="mc-kpis">' +
+        k("e_coll", M(sum("coll"))) + k("e_valid", M(sum("valid"))) + k("e_validPct", UI.fmtPct(sum("valid") / (sum("coll") || 1))) + k("e_canceled", UI.fmtInt(sum("canceled"))) + k("e_overdue", UI.fmtInt(sum("overdue"))) + k("e_pending", UI.fmtInt(sum("pending"))) + "</div></div>";
+      const effCell = p => { const st = p >= .7 ? ["effective", "chip-pos", "check_circle"] : p >= .45 ? ["regular", "chip-warn", "warning"] : ["low", "chip-neg", "error"]; return '<div class="eff"><div class="bar-track"><span style="width:' + p * 100 + "%;background:" + (p >= .7 ? "var(--mc-teal)" : p >= .45 ? "var(--mc-amber)" : "var(--mc-bad)") + '"></span></div><span class="num">' + UI.fmtPct(p, 0) + '</span><span class="chip ' + st[1] + '">' + mi(st[2]) + t(st[0]) + "</span></div>"; };
+      document.querySelector("#tMain thead").innerHTML = "<tr><th>" + t("seller") + '</th><th class="r">' + t("e_coll") + '</th><th class="r">' + t("e_valid") + '</th><th class="r">' + t("e_canceled") + "</th><th>" + t("in20") + "</th><th>" + t("in40") + '</th><th class="r">' + t("avgDays") + '</th><th class="r">' + t("e_overdue") + "</th></tr>";
+      document.querySelector("#tMain tbody").innerHTML = arr.sort((a, b) => b.in20 / b.canceled - a.in20 / a.canceled).map(s => "<tr><td>" + s.s + '</td><td class="r">' + M(s.coll) + '</td><td class="r">' + M(s.valid) + '</td><td class="r">' + s.canceled + "</td><td>" + effCell(s.in20 / s.canceled) + "</td><td>" + effCell(s.in40 / s.canceled) + '</td><td class="r">' + (s.days / s.canceled).toFixed(1) + '</td><td class="r">' + s.overdue + "</td></tr>").join("");
+      document.querySelector("#tMain tfoot").innerHTML = "<tr><td>" + t("total") + '</td><td class="r">' + M(sum("coll")) + '</td><td class="r">' + M(sum("valid")) + '</td><td class="r">' + sum("canceled") + "</td><td>" + UI.fmtPct(sum("in20") / (sum("canceled") || 1), 0) + "</td><td>" + UI.fmtPct(sum("in40") / (sum("canceled") || 1), 0) + '</td><td class="r">' + (sum("days") / (sum("canceled") || 1)).toFixed(1) + '</td><td class="r">' + sum("overdue") + "</td></tr>";
     }
 
-    // ---- Account statement ----
-    function openStatement(name) {
-      const c = customers.find(x => x.name === name);
-      const items = docs.filter(d => d.cust === name).sort((a, b) => a.date - b.date || (a.type === "Invoice" ? -1 : 1));
-      let bal = 0;
-      const rows = items.map(d => {
-        const charge = d.type === "Invoice" ? d.amount : 0;
-        const pay = d.type === "Payment" ? d.amount : 0;
-        bal += charge - pay;
-        let past = "";
-        if (d.type === "Invoice" && d.amount - d.paid > 0.005) {
-          const p = Math.floor((today - d.due) / DAY);
-          past = p > 0 ? '<span class="' + (p > 60 ? "neg" : "") + '">' + p + "</span>" : '<span class="muted">0</span>';
+    // ----- Account statement -----
+    let stCust = null;
+    function statementRows(c) {
+      const movs = [];
+      c.inv.forEach((x, k) => {
+        movs.push({ d: x.date, doc: x.no, kind: "inv", debit: x.amount, credit: 0 });
+        const paid = x.amount - x.bal;
+        if (paid > 0) {
+          const nc = k % 3 === 0 ? paid * .2 : 0;
+          if (nc) movs.push({ d: new Date(x.date.getTime() + 4 * 86400000), doc: "NC-" + x.no.slice(2), kind: "nc", debit: 0, credit: nc });
+          movs.push({ d: new Date(Math.min(TODAY.getTime(), x.date.getTime() + 12 * 86400000)), doc: "R-" + x.no.slice(2), kind: "pay", debit: 0, credit: paid - nc });
         }
-        return '<tr><td class="num">' + UI.fmtDate(new Date(d.date)) + '</td><td class="num">' + d.doc + "</td><td>" + (d.type === "Payment" ? "Payment of " + d.ref : "Invoice") +
-          '</td><td class="r num">' + past + '</td><td class="r num">' + (charge ? UI.fmtMoney(charge) : "") + '</td><td class="r num pos">' + (pay ? UI.fmtMoney(pay) : "") +
-          '</td><td class="r num">' + UI.fmtMoney(bal) + "</td></tr>";
       });
-      const open = invoices.filter(i => i.cust === name).reduce((a, i) => a + i.amount - i.paid, 0);
-      document.getElementById("stmtSub").textContent = name + " · seller " + c.seller;
-      document.getElementById("stmtHead").innerHTML =
-        '<div><div class="kpi-label">Balance</div><div class="num"><strong>' + UI.fmtMoney(open) + "</strong></div></div>" +
-        '<div><div class="kpi-label">Credit limit</div><div class="num">' + UI.fmtMoney(c.limit) + "</div></div>" +
-        '<div><div class="kpi-label">Available</div><div class="num ' + (c.limit - open < 0 ? "neg" : "") + '">' + UI.fmtMoney(c.limit - open) + "</div></div>" +
-        '<div><div class="kpi-label">Terms</div><div class="num">' + c.terms + " days</div></div>";
-      document.querySelector("#stmt tbody").innerHTML = rows.join("");
-      UI.openModal("stmtModal");
+      return movs.sort((a, b) => a.d - b.d);
     }
-    document.getElementById("aging").addEventListener("click", e => {
-      const b = e.target.closest("[data-cust]");
-      if (b) openStatement(b.dataset.cust);
+    function renderStatement() {
+      const c = stCust;
+      document.getElementById("stTitle").textContent = t("statement") + ": " + c.code + " · " + c.name;
+      const from = new Date(document.getElementById("sFrom").value + "T00:00:00Z"), to = new Date(document.getElementById("sTo").value + "T00:00:00Z");
+      const kind = $("#sMov").val();
+      const all = statementRows(c);
+      const before = all.filter(m => m.d < from).reduce((a, m) => a + m.debit - m.credit, 0);
+      let run = before;
+      const list = all.filter(m => m.d >= from && m.d <= to);
+      const shown = [];
+      list.forEach(m => { run += m.debit - m.credit; if (kind === "all" || kind === m.kind) shown.push(Object.assign({ run }, m)); });
+      const name = { inv: t("invMov"), pay: t("payment"), nc: t("cnote") };
+      document.querySelector("#tState thead").innerHTML = "<tr><th>" + t("date") + "</th><th>" + t("document") + "</th><th>" + t("movement") + '</th><th class="r">' + t("debit") + '</th><th class="r">' + t("credit") + '</th><th class="r">' + t("runBal") + "</th></tr>";
+      document.querySelector("#tState tbody").innerHTML = '<tr><td colspan="5" class="muted">' + t("openBal") + '</td><td class="r">' + M(before) + "</td></tr>" + shown.map(m => "<tr><td>" + UI.fmtDay(m.d) + "</td><td>" + m.doc + "</td><td>" + name[m.kind] + '</td><td class="r">' + (m.debit ? M(m.debit) : "") + '</td><td class="r">' + (m.credit ? M(m.credit) : "") + '</td><td class="r">' + M(m.run) + "</td></tr>").join("");
+      const deb = shown.reduce((a, m) => a + m.debit, 0), cre = shown.reduce((a, m) => a + m.credit, 0);
+      document.querySelector("#tState tfoot").innerHTML = '<tr><td colspan="3">' + t("total") + '</td><td class="r">' + M(deb) + '</td><td class="r">' + M(cre) + '</td><td class="r">' + M(run) + "</td></tr>";
+      const k = (l, v) => '<div class="mc-kpi"><div class="k-label">' + t(l) + '</div><div class="k-value num">' + v + "</div></div>";
+      document.getElementById("stKpis").innerHTML = k("openBal", M(before)) + k("debit", M(deb)) + k("credit", M(cre)) + k("runBal", M(run)) + k("limit", M(c.limit));
+    }
+    function openStatement(code) {
+      stCust = CUST.find(c => c.code === code);
+      const first = stCust.inv.reduce((a, x) => x.date < a ? x.date : a, TODAY);
+      document.getElementById("sFrom").value = UI.fmtDate(new Date(first.getTime() - 86400000));
+      document.getElementById("sTo").value = UI.fmtDate(TODAY);
+      fillMov();
+      renderStatement();
+      UI.openModal("mState");
+    }
+    function fillMov() { const v = $("#sMov").val() || "all"; $("#sMov").empty(); [["all", "movAll"], ["inv", "movInv"], ["pay", "movPay"], ["nc", "movNc"]].forEach(x => $("#sMov").append(new Option(t(x[1]), x[0]))); $("#sMov").val(v).select2({ width: "100%", dropdownParent: $("#mState"), minimumResultsForSearch: Infinity }); }
+    $("#sMov").on("change", () => stCust && renderStatement());
+    ["sFrom", "sTo"].forEach(id => document.getElementById(id).addEventListener("change", renderStatement));
+    document.getElementById("stClose").addEventListener("click", () => UI.closeModal("mState"));
+    document.getElementById("stPrint").addEventListener("click", () => window.print());
+
+    // ----- Events -----
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); applied = readFilters(); open = null; renderMain(); });
+    document.getElementById("btnClear").addEventListener("click", () => { ["#fChannel", "#fSup", "#fRoute", "#fSeller", "#fType"].forEach(s => $(s).val("all").trigger("change.select2")); document.getElementById("fBefore").value = 0; document.getElementById("fOver").value = 0; document.getElementById("q").value = ""; applied = readFilters(); renderMain(); });
+    document.getElementById("q").addEventListener("input", renderMain);
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; open = null; renderMain(); } });
+    document.getElementById("groupBy").addEventListener("click", e => { const b = e.target.closest("[data-g]"); if (b) { group = b.dataset.g; renderMain(); } });
+    document.getElementById("tMain").addEventListener("click", e => {
+      const st = e.target.closest("[data-st]");
+      if (st) { e.stopPropagation(); openStatement(st.dataset.st); return; }
+      const tr = e.target.closest("tr.cust");
+      if (tr) { open = open === tr.dataset.code ? null : tr.dataset.code; renderMain(); }
     });
-    document.getElementById("closeStmt").addEventListener("click", () => UI.closeModal("stmtModal"));
-    document.getElementById("printStmt").addEventListener("click", () => window.print());
-
-    // ---- Tabs (arrow keys move between them) ----
-    const tabs = [...document.querySelectorAll('[role="tab"]')];
-    function selectTab(t) {
-      tabs.forEach(x => {
-        const on = x === t;
-        x.setAttribute("aria-selected", String(on));
-        x.tabIndex = on ? 0 : -1;
-        document.getElementById(x.getAttribute("aria-controls")).hidden = !on;
-      });
-      t.focus();
-    }
-    tabs.forEach((t, i) => {
-      t.addEventListener("click", () => selectTab(t));
-      t.addEventListener("keydown", e => {
-        if (e.key === "ArrowRight") selectTab(tabs[(i + 1) % tabs.length]);
-        if (e.key === "ArrowLeft") selectTab(tabs[(i - 1 + tabs.length) % tabs.length]);
-      });
-    });
-
-    document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
-      group = b.dataset.g;
-      document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-      render();
-    }));
-    $("#fSeller").on("change", render);
-    let t;
-    $("#fSearch").on("input", () => { clearTimeout(t); t = setTimeout(render, 180); });
-    document.addEventListener("themechange", render);
-    render();
+    document.getElementById("tMain").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr.cust")) { e.preventDefault(); e.target.click(); } });
+    document.addEventListener("langchange", () => { fillSelects(); renderMain(); if (stCust && document.getElementById("mState").classList.contains("open")) { fillMov(); renderStatement(); } document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    applied = readFilters();
+    renderMain();
   });
   </script>
 </body>

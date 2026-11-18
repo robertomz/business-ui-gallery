@@ -3,134 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Credit Cards · Business UI Gallery</title>
+  <title>Credit cards · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-4); }
-    .ccard { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); cursor: pointer; text-align: left; font: inherit; color: var(--text); transition: border-color .15s var(--ease); }
-    .ccard:hover { border-color: var(--primary); }
-    .ccard[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary) inset; }
-    .ccard .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-    .ccard .bank { font-weight: 600; }
-    .ccard .digits { font-family: var(--font-mono); letter-spacing: .08em; font-size: .95rem; }
-    .ccard .row { display: flex; justify-content: space-between; font-size: .84rem; }
-    .util { display: flex; align-items: center; gap: 8px; }
-    .util .bar-track { flex: 1; }
-    .warnline { font-size: .78rem; display: inline-flex; gap: 4px; align-items: center; }
-    .warnline svg { width: 14px; height: 14px; }
-    /* Keeps select2's hidden <select> inside the scrolling wrapper on narrow screens. */
-    .table-wrap { position: relative; }
-    #charges td { white-space: nowrap; }
-    #charges td.cc { min-width: 190px; }
-    .modal.sm { width: min(560px, 100%); }
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-    .form-grid .span2 { grid-column: span 2; }
-    .opt { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
-    .opt + .opt { margin-top: 8px; }
-    .opt .amt { margin-left: auto; font-family: var(--font-mono); }
-    @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } .form-grid .span2 { grid-column: auto; } }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .ccard { text-align: left; font: inherit; color: var(--mc-text); cursor: pointer; background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-top: 3px solid var(--cc, #38bdf8); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .ccard[aria-pressed="true"] { border-color: var(--mc-cyan); box-shadow: 0 0 0 2px rgba(6, 182, 212, .25); }
+    :root[data-theme="light"] .ccard { background: #fff; }
+    .ccard .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); }
+    .ccard .num { font-size: 17px; font-weight: 800; letter-spacing: 1px; }
+    .ccard .row { display: flex; justify-content: space-between; font-size: 11px; color: var(--mc-muted); }
+    .ccard .row b { color: var(--mc-text); font-variant-numeric: tabular-nums; }
+    .ccard .ig-barra { height: 6px; }
+    .ccard .ig-barra span { background: var(--cc, #38bdf8); }
+    .cc-in { min-width: 170px; }
+    .form-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+    .form-2 .span-2 { grid-column: 1 / -1; }
+    .form-2 .mc-field { min-width: 0; }
+    .seg { display: inline-flex; border: 1px solid var(--mc-line); border-radius: 8px; padding: 2px; flex-wrap: wrap; }
+    .seg button { min-height: 30px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; color: var(--mc-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: rgba(20, 184, 166, .18); color: var(--mc-text); }
+    @media (max-width: 560px) { .form-2 { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body data-page="credit-cards" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Credit cards</h1>
-        <p class="muted">Company cards with their limits and balances. Every charge goes to a cost center before the statement is paid.</p>
+  <main id="content">
+    <section class="mc-panel">
+      <div class="mc-filters">
+        <div class="mc-field w-sm"><label data-i18n="company"></label><div class="static">DEMO</div></div>
+        <div class="mc-field" style="max-width:220px"><label for="fBank" data-i18n="fBank"></label><select id="fBank"></select></div>
+        <button type="button" class="btn btn-teal" id="btnNew"><span class="material-icons" aria-hidden="true">add_card</span><span data-i18n="newCard"></span></button>
       </div>
-      <button class="btn btn-primary" type="button" id="addCardBtn">Add card</button>
-    </div>
-
-    <section class="kpis" aria-label="All cards" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Total limit</div><div class="kpi-value" id="kLimit">–</div></div>
-      <div class="card kpi"><div class="kpi-label">Balance owed</div><div class="kpi-value" id="kBal">–</div></div>
-      <div class="card kpi"><div class="kpi-label">Available</div><div class="kpi-value" id="kAvail">–</div></div>
-      <div class="card kpi"><div class="kpi-label">Charges to assign</div><div class="kpi-value" id="kPend">–</div><div class="kpi-delta muted">without cost center</div></div>
     </section>
 
-    <section aria-labelledby="cardsTitle">
-      <h2 id="cardsTitle" class="sr-only">Cards</h2>
-      <div class="cards" id="cards"></div>
-    </section>
+    <div class="mc-kpis" id="kpis"></div>
+    <div class="cards" id="cards" role="group"></div>
 
-    <section class="card">
-      <div class="card-head">
-        <h2 id="stTitle">Statement</h2>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span class="chip chip-warn" id="pendChip"></span>
-          <button class="btn btn-primary" type="button" id="payBtn">Register payment</button>
+    <section class="mc-panel" id="detail">
+      <div class="mc-panel-title">
+        <h3><span class="material-icons" aria-hidden="true">credit_card</span><span id="dTitle"></span></h3>
+        <div class="mc-tabs" role="tablist" id="tabs"></div>
+      </div>
+      <div id="pBalance" role="tabpanel">
+        <div class="mc-filters" style="margin-bottom:10px">
+          <div class="mc-field" style="max-width:170px"><label for="bDate" data-i18n="bDate"></label><input type="date" id="bDate"></div>
+          <div class="mc-field" style="max-width:200px"><label for="bAmount" data-i18n="bAmount"></label><input id="bAmount" class="num" inputmode="decimal"><span class="mc-field-error" id="eBal"></span></div>
+          <button type="button" class="btn btn-teal" id="btnBal"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button>
+        </div>
+        <div class="table-wrap"><table class="grid" id="tHist"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div id="pCharges" role="tabpanel" hidden>
+        <p class="mc-hint" id="chargesHint" style="margin-bottom:8px"></p>
+        <div class="table-wrap"><table class="grid" id="tCharges"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </div>
+      <div id="pPay" role="tabpanel" hidden>
+        <div class="form-2" style="max-width:760px">
+          <div class="mc-field span-2"><label data-i18n="payOption"></label><div class="seg" id="payOpt"></div></div>
+          <div class="mc-field"><label for="pAccount" data-i18n="pAccount"></label><select id="pAccount"></select></div>
+          <div class="mc-field"><label for="pAmount" data-i18n="pAmount"></label><input id="pAmount" class="num" inputmode="decimal"><span class="mc-field-error" id="ePay"></span></div>
+        </div>
+        <div class="table-wrap" style="margin-top:10px;max-width:760px"><table class="grid" id="tEntry"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button type="button" class="btn btn-teal" id="btnPay"><span class="material-icons" aria-hidden="true">payments</span><span data-i18n="registerPay"></span></button>
         </div>
       </div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="charges">
-          <thead><tr><th>Date</th><th>Merchant</th><th>Description</th><th class="r">Amount</th><th>Cost center</th></tr></thead>
-          <tbody></tbody>
-          <tfoot></tfoot>
-        </table>
-      </div>
     </section>
-
-    <section class="card">
-      <div class="card-head"><h2>Payments registered</h2></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="payments"><thead><tr><th>Date</th><th>Card</th><th>From account</th><th class="r">Amount</th></tr></thead><tbody></tbody></table>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Card numbers are always formatted as XXXX-XXXX-XXXX-XXXX and must have exactly 16 digits. Lists show only the last four.</li>
-        <li>Every charge must be assigned to a cost center; the count of pending charges stays visible until the statement is clean.</li>
-        <li>Paying a card lowers its balance and generates the entry with one line per account and side.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
-  <!-- Add card -->
-  <div class="modal-backdrop" id="cardModal" role="dialog" aria-modal="true" aria-labelledby="cardTitle">
-    <div class="modal sm">
-      <div class="modal-head"><h2 id="cardTitle">Add card</h2></div>
+  <div class="modal-backdrop" id="mCard">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mCardTitle">
+      <div class="modal-head"><h3 id="mCardTitle"><span class="material-icons" aria-hidden="true">add_card</span><span data-i18n="formTitle"></span></h3></div>
       <div class="modal-body">
-        <div class="form-grid">
-          <div class="field"><label for="cBank">Bank</label><select class="input" id="cBank"><option value="">Choose…</option></select><span class="field-error" id="eBank"></span></div>
-          <div class="field"><label for="cHolder">Holder</label><input class="input" id="cHolder" maxlength="60"><span class="field-error" id="eHolder"></span></div>
-          <div class="field span2"><label for="cNumber">Card number</label><input class="input num" id="cNumber" inputmode="numeric" maxlength="19" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"><span class="field-error" id="eNumber"></span></div>
-          <div class="field"><label for="cLimit">Credit limit</label><input class="input num" id="cLimit" inputmode="decimal" placeholder="0.00"><span class="field-error" id="eLimit"></span></div>
-          <div class="field"><label for="cCut">Cut-off day</label><input class="input num" id="cCut" inputmode="numeric" maxlength="2" placeholder="1–28"><span class="field-error" id="eCut"></span></div>
-          <div class="field"><label for="cDue">Payment day</label><input class="input num" id="cDue" inputmode="numeric" maxlength="2" placeholder="1–28"><span class="field-error" id="eDue"></span></div>
+        <div class="form-2">
+          <div class="mc-field span-2"><label for="cNumber" data-i18n="cNumber"></label><input id="cNumber" inputmode="numeric" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19"><span class="mc-field-error" id="eNumber"></span></div>
+          <div class="mc-field"><label for="cBank" data-i18n="fBank"></label><select id="cBank"></select></div>
+          <div class="mc-field"><label for="cBrand" data-i18n="cBrand"></label><select id="cBrand"></select></div>
+          <div class="mc-field"><label for="cHolder" data-i18n="cHolder"></label><input id="cHolder" maxlength="60"><span class="mc-field-error" id="eHolder"></span></div>
+          <div class="mc-field"><label for="cLimit" data-i18n="cLimit"></label><input id="cLimit" class="num" inputmode="decimal"><span class="mc-field-error" id="eLimit"></span></div>
+          <div class="mc-field"><label for="cCut" data-i18n="cCut"></label><input id="cCut" class="num" inputmode="numeric" maxlength="2"><span class="mc-field-error" id="eCut"></span></div>
+          <div class="mc-field"><label for="cPayDay" data-i18n="cPayDay"></label><input id="cPayDay" class="num" inputmode="numeric" maxlength="2"><span class="mc-field-error" id="ePayDay"></span></div>
+          <div class="mc-field span-2"><label for="cAccount" data-i18n="cAccount"></label><input id="cAccount" value="2-01-03-01-001" readonly></div>
         </div>
       </div>
       <div class="modal-foot">
-        <button class="btn btn-primary" type="button" id="cardSave">Save card</button>
-        <button class="btn" type="button" id="cardClose">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Register payment -->
-  <div class="modal-backdrop" id="payModal" role="dialog" aria-modal="true" aria-labelledby="payTitle">
-    <div class="modal sm">
-      <div class="modal-head"><h2 id="payTitle">Register payment</h2></div>
-      <div class="modal-body">
-        <fieldset style="border:0;padding:0;margin:0">
-          <legend class="muted" style="font-size:.8rem;margin-bottom:6px">Amount</legend>
-          <label class="opt"><input type="radio" name="payOpt" value="min"> Minimum payment<span class="amt" id="oMin"></span></label>
-          <label class="opt"><input type="radio" name="payOpt" value="total"> Total balance<span class="amt" id="oTotal"></span></label>
-          <label class="opt"><input type="radio" name="payOpt" value="other"> Other amount<input class="input num" id="oOther" inputmode="decimal" placeholder="0.00" style="margin-left:auto;max-width:160px" aria-label="Other amount"></label>
-          <span class="field-error" id="eAmt"></span>
-        </fieldset>
-        <div class="field" style="margin-top:var(--space-3)"><label for="payFrom">Pay from</label><select class="input" id="payFrom"></select><span class="field-error" id="eFrom"></span></div>
-        <h3 style="margin:var(--space-4) 0 var(--space-2)">Entry preview</h3>
-        <div class="table-wrap"><table class="grid" id="entry"><thead><tr><th>Account</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" type="button" id="paySave">Register payment</button>
-        <button class="btn" type="button" id="payClose">Close</button>
+        <button type="button" class="btn btn-teal" id="cSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button>
+        <button type="button" class="btn" id="cClose"><span data-i18n="close"></span></button>
       </div>
     </div>
   </div>
@@ -139,164 +102,190 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const r = UI.rng(4242);
-    const BANKS = ["First Harbor Bank", "Union Trust", "Metro Bank"];
-    const ACCOUNTS = [["1-01-02-01-001", "Bank checking account", 1850000], ["1-01-02-01-002", "Bank savings account", 640000]];
-    const MERCHANTS = [["Cloud Hosting Inc.", "Monthly servers", "IT"], ["Fuel Station 24", "Fleet fuel", "Logistics"], ["Office Plus Supplies", "Printer paper and toner", "Administration"], ["Airline Express", "Flight for branch visit", "Sales North"],
-      ["Hotel Central", "Lodging, two nights", "Sales Coast"], ["Software Store", "Annual license", "IT"], ["Tire Center", "Truck tires", "Logistics"], ["Coffee Corner", "Client meeting", "Sales Center"], ["Parcel Courier", "Document shipping", "Administration"]];
-    const pad = n => String(n).padStart(4, "0");
-    const cards = [0, 1, 2, 3, 4].map(i => {
-      const limit = [150000, 80000, 60000, 120000, 40000][i];
-      const charges = [];
-      const n = 6 + Math.floor(r() * 8);
-      for (let k = 0; k < n; k++) {
-        const m = UI.pick(r, MERCHANTS);
-        charges.push({ date: "2026-11-" + String(1 + Math.floor(r() * 15)).padStart(2, "0"), merchant: m[0], desc: m[1], amount: Math.round(UI.between(r, 120, 9800) * 100) / 100, cc: r() < 0.65 ? m[2] : "" });
-      }
-      charges.sort((a, b) => a.date < b.date ? -1 : 1);
-      const prior = Math.round(UI.between(r, 2000, limit * 0.4) * 100) / 100;
-      const bal = Math.round((prior + charges.reduce((a, c) => a + c.amount, 0)) * 100) / 100;
-      return { bank: BANKS[i % 3], holder: UI.pick(r, D.firstNames) + " " + UI.pick(r, D.lastNames), last4: pad(1000 + Math.floor(r() * 8999)), limit, balance: bal, cut: [5, 10, 15, 20, 25][i], due: [25, 30, 5, 10, 15][i], charges };
-    });
-    const payments = [];
-    let current = 0;
+  UI.strings({
+    en: {
+      fBank: "Bank", newCard: "New card", formTitle: "Card form", cNumber: "Card number", cBrand: "Issuer", cHolder: "Holder", cLimit: "Credit limit", cCut: "Cut-off day", cPayDay: "Payment day", cAccount: "Accounting account",
+      kCards: "Active cards", kLimit: "Total limit", kBal: "Pending balance", kAvail: "Available", kUse: "Average use",
+      limit: "Limit", balance: "Balance", available: "Available", cutPay: "Cut {c} · pays {p}", balDate: "Balance of {d}",
+      tabBal: "Card balance", tabCharges: "Charges", tabPay: "Payment", bDate: "Balance date", bAmount: "Pending balance",
+      colDate: "Date", colBal: "Balance", colUser: "Registered by", colDesc: "Description", colAmount: "Amount", colCenter: "Cost center", colStatus: "Status",
+      assigned: "Assigned", toAssign: "To assign", chargesHint: "{n} charges still need a cost center.", chooseCenter: "Choose…",
+      payOption: "Amount to pay", optMin: "Minimum", optTotal: "Total balance", optOther: "Other amount", pAccount: "Pay from bank account", pAmount: "Amount",
+      registerPay: "Register payment", colAcc: "Account", colDebit: "Debit", colCredit: "Credit", accCard: "Credit cards payable · ****{l}", accBank: "Bank · {b}",
+      eNumReq: "Enter the 16 digits of the card.", eNumDup: "That card already exists.", eReq: "Required.", eDay: "Day from 1 to 28.", eAmt: "Enter an amount greater than zero.", eOverBal: "It is more than the card balance.", eOverBank: "The bank account does not have that balance.",
+      savedCard: "Card ****{l} added.", savedBal: "Balance of ****{l} registered.", paidMsg: "Payment of {a} registered for ****{l}.", fixErrors: "Check the fields marked in red.", detailTitle: "{b} · ****{l} · {h}",
+      aboutText: "The catalog keeps every <b>company credit card</b> with its bank, issuer, limit, cut-off and payment days and its accounting account. The number is always typed and shown as <b>XXXX-XXXX-XXXX-XXXX</b>, must have exactly 16 digits and lists only show the last 4. Treasury registers the <b>pending balance</b> of each card by date; the history keeps who registered each balance, and the operations dashboard takes the last one. Each <b>charge</b> is assigned to a cost center so it reaches the budget, and the <b>payment</b> (minimum, total or another amount) cannot exceed the card balance or the bank account, and shows its entry with one line per account and side. All the data on this page is generated."
+    },
+    es: {
+      fBank: "Banco", newCard: "Nueva tarjeta", formTitle: "Formulario de tarjeta", cNumber: "Número de tarjeta", cBrand: "Emisor", cHolder: "Titular", cLimit: "Límite de crédito", cCut: "Día de corte", cPayDay: "Día de pago", cAccount: "Cuenta contable",
+      kCards: "Tarjetas activas", kLimit: "Límite total", kBal: "Saldo pendiente", kAvail: "Disponible", kUse: "Uso promedio",
+      limit: "Límite", balance: "Saldo", available: "Disponible", cutPay: "Corte {c} · paga {p}", balDate: "Saldo del {d}",
+      tabBal: "Saldo de la tarjeta", tabCharges: "Cargos", tabPay: "Pago", bDate: "Fecha del saldo", bAmount: "Saldo pendiente",
+      colDate: "Fecha", colBal: "Saldo", colUser: "Registró", colDesc: "Descripción", colAmount: "Monto", colCenter: "Centro de costo", colStatus: "Estado",
+      assigned: "Asignado", toAssign: "Por asignar", chargesHint: "Faltan {n} cargos por asignar a un centro de costo.", chooseCenter: "Elija…",
+      payOption: "Monto a pagar", optMin: "Mínimo", optTotal: "Saldo total", optOther: "Otro monto", pAccount: "Pagar desde la cuenta bancaria", pAmount: "Monto",
+      registerPay: "Registrar pago", colAcc: "Cuenta", colDebit: "Debe", colCredit: "Haber", accCard: "Tarjetas de crédito por pagar · ****{l}", accBank: "Banco · {b}",
+      eNumReq: "Escriba los 16 dígitos de la tarjeta.", eNumDup: "Esa tarjeta ya existe.", eReq: "Obligatorio.", eDay: "Día del 1 al 28.", eAmt: "Escriba un monto mayor a cero.", eOverBal: "Es más que el saldo de la tarjeta.", eOverBank: "La cuenta bancaria no tiene ese saldo.",
+      savedCard: "Se agregó la tarjeta ****{l}.", savedBal: "Se registró el saldo de ****{l}.", paidMsg: "Se registró el pago de {a} a ****{l}.", fixErrors: "Revise los campos marcados en rojo.", detailTitle: "{b} · ****{l} · {h}",
+      aboutText: "El catálogo guarda cada <b>tarjeta de crédito de la empresa</b> con su banco, emisor, límite, días de corte y de pago y su cuenta contable. El número siempre se escribe y se muestra como <b>XXXX-XXXX-XXXX-XXXX</b>, debe tener exactamente 16 dígitos y en las listas solo se ven los últimos 4. Tesorería registra el <b>saldo pendiente</b> de cada tarjeta por fecha; el histórico guarda quién registró cada saldo y el dashboard operativo toma el último. Cada <b>cargo</b> se asigna a un centro de costo para que llegue al presupuesto, y el <b>pago</b> (mínimo, total u otro monto) no puede pasar del saldo de la tarjeta ni de la cuenta bancaria, y muestra su partida con una línea por cuenta y lado. Todos los datos de esta página son generados."
+    }
+  });
 
-    const WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>';
-    const OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>';
-    const masked = c => "XXXX-XXXX-XXXX-" + c.last4;
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi, D = UI.DATA;
+    function s2($el, opts) { if ($el.hasClass("select2-hidden-accessible")) $el.select2("destroy"); $el.select2(Object.assign({ width: "100%" }, opts)); }
+    const COLORS = ["#38bdf8", "#a78bfa", "#14b8a6", "#f59e0b", "#fb7185"];
+    const USERS = ["A. Torres", "M. Reyes", "L. Castro"];
+    const r = UI.rng(9090);
+    const CARDS = [
+      ["4417561203984417", 0, "VISA", "Ana Torres", 2500000, 5, 25], ["5521330012002111", 1, "MASTERCARD", "Luis Medina", 1500000, 10, 30],
+      ["5310998877667036", 0, "MASTERCARD", "Maria Ramos", 1200000, 15, 5], ["4532001122330172", 2, "VISA", "Carlos Ortiz", 900000, 20, 10]
+    ].map((c, i) => ({ number: c[0], bank: c[1], brand: c[2], holder: c[3], limit: c[4], cut: c[5], pay: c[6], color: COLORS[i],
+      hist: Array.from({ length: 4 }, (_, k) => ({ d: new Date(Date.UTC(2026, 10, 16 - k * 4)), bal: Math.round(c[4] * UI.between(r, .25, .8) * 100) / 100, user: USERS[k % 3] })) }));
+    CARDS.forEach(c => { c.charges = Array.from({ length: 6 }, (_, k) => ({ d: new Date(Date.UTC(2026, 10, 2 + k * 2)), desc: UI.pick(r, ["Software subscription", "Fuel", "Hotel", "Flights", "Office supplies", "Online ads"]), amt: Math.round(UI.between(r, 800, 42000) * 100) / 100, center: k % 3 === 0 ? null : Math.floor(r() * 7) })); });
+    const BANKACC = D.banks.map((b, i) => ({ name: b + " · **** " + (3010 + i * 1173), bal: [1854220.5, 962410.25, 418300, 86240.9][i] }));
+    const last4 = c => c.number.slice(-4);
+    const fmtCard = s => s.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1-");
+    const balOf = c => c.hist[0].bal;
+    let selIdx = 0, tab = "bal", payOpt = "total";
+
+    function fillSelects() {
+      const fb = $("#fBank"), cb = $("#cBank"), br = $("#cBrand"), pa = $("#pAccount");
+      const v1 = fb.val() || "all", v2 = cb.val() || "0", v3 = br.val() || "VISA", v4 = pa.val() || "0";
+      fb.empty().append(new Option(t("all"), "all")); D.banks.forEach((b, i) => fb.append(new Option(b, String(i))));
+      cb.empty(); D.banks.forEach((b, i) => cb.append(new Option(b, String(i))));
+      br.empty(); ["VISA", "MASTERCARD", "AMEX"].forEach(b => br.append(new Option(b, b)));
+      pa.empty(); BANKACC.slice(0, 3).forEach((b, i) => pa.append(new Option(b.name, String(i))));
+      fb.val(v1); cb.val(v2); br.val(v3); pa.val(v4);
+      s2(fb, { minimumResultsForSearch: Infinity }); s2(cb, { dropdownParent: $("#mCard") }); s2(br, { minimumResultsForSearch: Infinity, dropdownParent: $("#mCard") }); s2(pa, {});
+    }
+
+    function visible() { const b = $("#fBank").val(); return CARDS.map((c, i) => [c, i]).filter(x => b === "all" || String(x[0].bank) === b); }
 
     function renderCards() {
-      document.getElementById("cards").innerHTML = cards.map((c, i) => {
-        const u = c.balance / c.limit, color = u >= .9 ? "var(--negative)" : u >= .7 ? "var(--warning)" : "var(--positive)";
-        const pend = c.charges.filter(x => !x.cc).length;
-        return '<button type="button" class="card ccard" data-i="' + i + '" aria-pressed="' + (i === current) + '">' +
-          '<div class="top"><span class="bank">' + c.bank + '</span><span class="muted" style="font-size:.8rem">' + c.holder + "</span></div>" +
-          '<div class="digits">' + masked(c) + "</div>" +
-          '<div class="row"><span class="muted">Limit</span><span class="num">' + UI.fmtMoney(c.limit) + "</span></div>" +
-          '<div class="row"><span class="muted">Balance</span><span class="num">' + UI.fmtMoney(c.balance) + "</span></div>" +
-          '<div class="row"><span class="muted">Available</span><span class="num">' + UI.fmtMoney(c.limit - c.balance) + "</span></div>" +
-          '<div class="util"><div class="bar-track"><span style="width:' + Math.min(u, 1) * 100 + "%;background:" + color + '"></span></div><span class="num" style="font-size:.8rem">' + UI.fmtPct(u, 0) + " used</span></div>" +
-          '<div class="row"><span class="muted">Cut-off day ' + c.cut + " · pay by day " + c.due + "</span></div>" +
-          (pend ? '<span class="warnline" style="color:var(--warning)">' + WARN + pend + " charge" + (pend === 1 ? "" : "s") + " without cost center</span>" : '<span class="warnline pos">' + OK + "All charges assigned</span>") +
-          "</button>";
+      const list = visible();
+      if (!list.find(x => x[1] === selIdx) && list.length) selIdx = list[0][1];
+      const lim = list.reduce((a, x) => a + x[0].limit, 0), bal = list.reduce((a, x) => a + balOf(x[0]), 0);
+      document.getElementById("kpis").innerHTML = [["kCards", list.length], ["kLimit", M(lim)], ["kBal", M(bal)], ["kAvail", M(lim - bal)], ["kUse", lim ? UI.fmtPct(bal / lim) : "—"]]
+        .map(k => '<div class="mc-kpi"><div class="k-label">' + t(k[0]) + '</div><div class="k-value">' + k[1] + "</div></div>").join("");
+      document.getElementById("cards").innerHTML = list.map(([c, i]) => {
+        const b = balOf(c), use = b / c.limit;
+        return '<button type="button" class="ccard" style="--cc:' + c.color + '" data-i="' + i + '" aria-pressed="' + (i === selIdx) + '">' +
+          '<div class="top"><span>' + D.banks[c.bank] + "</span><span>" + c.brand + '</span></div><div class="num">**** **** **** ' + last4(c) + "</div>" +
+          '<div class="row"><span>' + c.holder + "</span><span>" + t("cutPay", { c: c.cut, p: c.pay }) + "</span></div>" +
+          '<div class="row"><span>' + t("limit") + "</span><b>" + M(c.limit) + '</b></div><div class="row"><span>' + t("balance") + "</span><b>" + M(b) + '</b></div><div class="row"><span>' + t("available") + "</span><b>" + M(c.limit - b) + "</b></div>" +
+          '<div class="ig-barra"><span style="width:' + Math.min(100, use * 100) + '%"></span></div><div class="row"><span>' + t("balDate", { d: UI.fmtDay(c.hist[0].d) }) + "</span><b>" + UI.fmtPct(use) + "</b></div></button>";
       }).join("");
-      const lim = cards.reduce((a, c) => a + c.limit, 0), bal = cards.reduce((a, c) => a + c.balance, 0);
-      $("#kLimit").text(UI.fmtMoney(lim)); $("#kBal").text(UI.fmtMoney(bal)); $("#kAvail").text(UI.fmtMoney(lim - bal));
-      $("#kPend").text(UI.fmtInt(cards.reduce((a, c) => a + c.charges.filter(x => !x.cc).length, 0)));
+      renderDetail();
     }
 
-    function renderStatement() {
-      const c = cards[current];
-      $("#stTitle").text("Statement · " + c.bank + " ···· " + c.last4);
-      $("#charges tbody .ccsel").each(function () { if ($(this).data("select2")) $(this).select2("destroy"); });
-      document.querySelector("#charges tbody").innerHTML = c.charges.map((x, k) =>
-        '<tr><td class="num">' + x.date + "</td><td>" + x.merchant + "</td><td>" + x.desc + '</td><td class="r num">' + UI.fmtMoney(x.amount) +
-        '</td><td class="cc"><select class="ccsel" data-k="' + k + '" aria-label="Cost center for ' + x.merchant + '"><option value=""></option>' + D.costCenters.map(cc => "<option" + (cc === x.cc ? " selected" : "") + ">" + cc + "</option>").join("") + "</select></td></tr>").join("") ||
-        '<tr><td colspan="5" class="muted">No charges this period</td></tr>';
-      $("#charges .ccsel").select2({ placeholder: "Assign…", width: "100%" }).on("change", function () {
-        c.charges[+this.dataset.k].cc = this.value; renderCards(); updatePend();
-      });
-      const total = c.charges.reduce((a, x) => a + x.amount, 0);
-      document.querySelector("#charges tfoot").innerHTML = '<tr><td colspan="3">Charges this period</td><td class="r num">' + UI.fmtMoney(total) + '</td><td class="muted" style="font-weight:400">Balance ' + UI.fmtMoney(c.balance) + "</td></tr>";
-      updatePend();
+    function renderDetail() {
+      const c = CARDS[selIdx];
+      document.getElementById("dTitle").textContent = t("detailTitle", { b: D.banks[c.bank], l: last4(c), h: c.holder });
+      const tabs = [["bal", "tabBal"], ["charges", "tabCharges"], ["pay", "tabPay"]];
+      document.getElementById("tabs").innerHTML = tabs.map(x => '<button type="button" class="mc-tab" role="tab" aria-selected="' + (tab === x[0]) + '" data-tab="' + x[0] + '">' + t(x[1]) + "</button>").join("");
+      document.getElementById("pBalance").hidden = tab !== "bal";
+      document.getElementById("pCharges").hidden = tab !== "charges";
+      document.getElementById("pPay").hidden = tab !== "pay";
+      document.querySelector("#tHist thead").innerHTML = "<tr><th>" + t("colDate") + '</th><th class="r">' + t("colBal") + "</th><th>" + t("colUser") + "</th></tr>";
+      document.querySelector("#tHist tbody").innerHTML = c.hist.map(h => "<tr><td>" + UI.fmtDay(h.d) + '</td><td class="r">' + M(h.bal) + "</td><td>" + h.user + "</td></tr>").join("");
+      const pending = c.charges.filter(x => x.center == null).length;
+      document.getElementById("chargesHint").textContent = pending ? t("chargesHint", { n: pending }) : "";
+      document.querySelector("#tCharges thead").innerHTML = "<tr><th>" + t("colDate") + "</th><th>" + t("colDesc") + '</th><th class="r">' + t("colAmount") + "</th><th>" + t("colCenter") + "</th><th>" + t("colStatus") + "</th></tr>";
+      document.querySelector("#tCharges tbody").innerHTML = c.charges.map((x, k) => "<tr><td>" + UI.fmtDay(x.d) + "</td><td>" + x.desc + '</td><td class="r">' + M(x.amt) + '</td><td class="cc-in"><select class="cc-center" data-k="' + k + '" aria-label="' + t("colCenter") + " " + x.desc + '"><option value="">' + t("chooseCenter") + "</option>" +
+        D.costCenters.map((cc, j) => '<option value="' + j + '"' + (x.center === j ? " selected" : "") + ">" + UI.L(cc) + "</option>").join("") + "</select></td><td>" +
+        (x.center == null ? '<span class="chip chip-warn">' + mi("pending") + t("toAssign") + "</span>" : '<span class="chip chip-pos">' + mi("check_circle") + t("assigned") + "</span>") + "</td></tr>").join("");
+      document.querySelector("#tCharges tfoot").innerHTML = '<tr><td colspan="2">' + t("total") + '</td><td class="r">' + M(c.charges.reduce((a, x) => a + x.amt, 0)) + "</td><td></td><td></td></tr>";
+      $("#tCharges .cc-center").each(function () { s2($(this), {}); }).on("change", function () { c.charges[Number(this.dataset.k)].center = this.value === "" ? null : Number(this.value); renderDetail(); });
+      renderPay();
     }
-    function updatePend() {
-      const n = cards[current].charges.filter(x => !x.cc).length;
-      $("#pendChip").attr("class", "chip " + (n ? "chip-warn" : "chip-pos")).html((n ? WARN : OK).replace('aria-hidden="true"', 'aria-hidden="true" width="14" height="14"') + (n ? n + " to assign" : "All assigned"));
-    }
 
-    document.getElementById("cards").addEventListener("click", e => {
-      const b = e.target.closest("[data-i]"); if (!b) return;
-      current = +b.dataset.i; renderCards(); renderStatement();
-      const again = document.querySelector('.ccard[data-i="' + current + '"]'); if (again) again.focus();
-    });
-
-    // ---- Add card ----
-    $("#cBank").append(BANKS.map(b => "<option>" + b + "</option>").join(""));
-    const num = document.getElementById("cNumber");
-    num.addEventListener("input", () => {
-      const d = num.value.replace(/\D/g, "").slice(0, 16);
-      num.value = d.replace(/(\d{4})(?=\d)/g, "$1-");
-    });
-    UI.maskMoney(document.getElementById("cLimit"));
-    ["cCut", "cDue"].forEach(id => document.getElementById(id).addEventListener("input", function () { this.value = this.value.replace(/\D/g, ""); }));
-    $("#addCardBtn").on("click", () => {
-      $("#cBank, #cHolder, #cNumber, #cLimit, #cCut, #cDue").val("").attr("aria-invalid", false);
-      $("#cardModal .field-error").text("");
-      UI.openModal("cardModal");
-    });
-    $("#cardClose").on("click", () => UI.closeModal("cardModal"));
-    $("#cardSave").on("click", () => {
-      const digits = num.value.replace(/\D/g, ""), lim = UI.parseMoney($("#cLimit").val()), cut = +$("#cCut").val(), due = +$("#cDue").val();
-      const errs = {
-        eBank: $("#cBank").val() ? "" : "Choose the bank.",
-        eHolder: $("#cHolder").val().trim().length >= 3 ? "" : "Enter the holder's name.",
-        eNumber: digits.length === 16 ? (cards.some(c => c.last4 === digits.slice(-4) && c.bank === $("#cBank").val()) ? "This card is already registered." : "") : "The number must have exactly 16 digits.",
-        eLimit: lim > 0 ? "" : "Enter the credit limit.",
-        eCut: cut >= 1 && cut <= 28 ? "" : "A day from 1 to 28.",
-        eDue: due >= 1 && due <= 28 ? (due === cut ? "Must differ from the cut-off day." : "") : "A day from 1 to 28."
-      };
-      const map = { eBank: "cBank", eHolder: "cHolder", eNumber: "cNumber", eLimit: "cLimit", eCut: "cCut", eDue: "cDue" };
-      let ok = true;
-      Object.keys(errs).forEach(k => { $("#" + k).text(errs[k]); $("#" + map[k]).attr("aria-invalid", !!errs[k]); if (errs[k]) ok = false; });
-      if (!ok) { $("#" + map[Object.keys(errs).find(k => errs[k])]).focus(); return; }
-      cards.push({ bank: $("#cBank").val(), holder: $("#cHolder").val().trim(), last4: digits.slice(-4), limit: lim, balance: 0, cut, due, charges: [] });
-      current = cards.length - 1;
-      UI.closeModal("cardModal"); renderCards(); renderStatement();
-      UI.toast("Card ···· " + digits.slice(-4) + " added");
-    });
-
-    // ---- Register payment ----
-    $("#payFrom").html('<option value="">Choose…</option>' + ACCOUNTS.map((a, i) => '<option value="' + i + '">' + a[1] + " · available " + UI.fmtMoney(a[2]) + "</option>").join(""));
-    UI.maskMoney(document.getElementById("oOther"));
-    const minPay = c => Math.min(c.balance, Math.round(Math.max(c.balance * 0.05, 500) * 100) / 100);
     function payAmount() {
-      const c = cards[current], opt = $("input[name=payOpt]:checked").val();
-      return opt === "min" ? minPay(c) : opt === "total" ? c.balance : opt === "other" ? UI.parseMoney($("#oOther").val()) : 0;
+      const c = CARDS[selIdx], b = balOf(c);
+      if (payOpt === "min") return Math.round(b * .05 * 100) / 100;
+      if (payOpt === "total") return b;
+      return UI.parseMoney(document.getElementById("pAmount").value);
     }
-    function preview() {
-      const c = cards[current], amt = payAmount(), from = ACCOUNTS[$("#payFrom").val()];
-      const lines = amt > 0 ? [["2-01-04-01-001", "Credit cards payable · ···· " + c.last4, amt, 0], from ? [from[0], from[1], 0, amt] : ["—", "Bank account (choose one)", 0, amt]] : [];
-      document.querySelector("#entry tbody").innerHTML = lines.map(l => '<tr><td><span class="num">' + l[0] + "</span> " + l[1] + '</td><td class="r num">' + (l[2] ? UI.fmtMoney(l[2]) : "") + '</td><td class="r num">' + (l[3] ? UI.fmtMoney(l[3]) : "") + "</td></tr>").join("") ||
-        '<tr><td colspan="3" class="muted">Choose an amount to see the entry.</td></tr>';
-      document.querySelector("#entry tfoot").innerHTML = amt > 0 ? '<tr><td>Total</td><td class="r num">' + UI.fmtMoney(amt) + '</td><td class="r num">' + UI.fmtMoney(amt) + "</td></tr>" : "";
-    }
-    $("#payBtn").on("click", () => {
-      const c = cards[current];
-      if (c.balance <= 0) { UI.toast("This card has no balance to pay"); return; }
-      $("#payTitle").text("Pay card ···· " + c.last4);
-      $("#oMin").text(UI.fmtMoney(minPay(c))); $("#oTotal").text(UI.fmtMoney(c.balance));
-      $("input[name=payOpt]").prop("checked", false); $("#oOther, #payFrom").val(""); $("#eAmt, #eFrom").text("");
-      preview(); UI.openModal("payModal");
-    });
-    $("input[name=payOpt], #payFrom").on("change", preview);
-    $("#oOther").on("input", () => { $("input[name=payOpt][value=other]").prop("checked", true); preview(); }).on("focus", () => $("input[name=payOpt][value=other]").prop("checked", true));
-    $("#payClose").on("click", () => UI.closeModal("payModal"));
-    $("#paySave").on("click", () => {
-      const c = cards[current], amt = payAmount(), fi = $("#payFrom").val();
-      let ok = true;
-      if (!$("input[name=payOpt]:checked").length || amt <= 0) { $("#eAmt").text("Choose how much to pay."); ok = false; }
-      else if (amt > c.balance + 0.005) { $("#eAmt").text("It can't be more than the balance (" + UI.fmtMoney(c.balance) + ")."); ok = false; }
-      else $("#eAmt").text("");
-      if (fi === "") { $("#eFrom").text("Choose the bank account."); ok = false; }
-      else if (amt > ACCOUNTS[fi][2]) { $("#eFrom").text("Not enough available in this account."); ok = false; }
-      else $("#eFrom").text("");
-      if (!ok) return;
-      c.balance = Math.round((c.balance - amt) * 100) / 100;
-      ACCOUNTS[fi][2] -= amt;
-      payments.unshift({ date: "2026-11-17", card: c.bank + " ···· " + c.last4, from: ACCOUNTS[fi][1], amt });
-      $("#payFrom").html('<option value="">Choose…</option>' + ACCOUNTS.map((a, i) => '<option value="' + i + '">' + a[1] + " · available " + UI.fmtMoney(a[2]) + "</option>").join(""));
-      UI.closeModal("payModal"); renderCards(); renderStatement(); renderPayments();
-      UI.toast("Payment of " + UI.fmtMoney(amt) + " registered");
-    });
-    function renderPayments() {
-      document.querySelector("#payments tbody").innerHTML = payments.map(p => '<tr><td class="num">' + p.date + "</td><td>" + p.card + "</td><td>" + p.from + '</td><td class="r num">' + UI.fmtMoney(p.amt) + "</td></tr>").join("") ||
-        '<tr><td colspan="4" class="muted">No payments registered in this session.</td></tr>';
+    function renderPay() {
+      const c = CARDS[selIdx];
+      document.getElementById("payOpt").innerHTML = [["min", "optMin"], ["total", "optTotal"], ["other", "optOther"]].map(x => '<button type="button" data-v="' + x[0] + '" aria-pressed="' + (payOpt === x[0]) + '">' + t(x[1]) + "</button>").join("");
+      const inp = document.getElementById("pAmount");
+      inp.readOnly = payOpt !== "other";
+      if (payOpt !== "other") inp.value = M(payAmount());
+      const amt = payAmount(), bank = BANKACC[Number($("#pAccount").val() || 0)];
+      let err = "";
+      if (!(amt > 0)) err = t("eAmt"); else if (amt > balOf(c) + .005) err = t("eOverBal"); else if (amt > bank.bal) err = t("eOverBank");
+      document.getElementById("ePay").textContent = err;
+      inp.setAttribute("aria-invalid", String(!!err));
+      document.getElementById("btnPay").disabled = !!err;
+      document.querySelector("#tEntry thead").innerHTML = "<tr><th>" + t("colAcc") + '</th><th class="r">' + t("colDebit") + '</th><th class="r">' + t("colCredit") + "</th></tr>";
+      document.querySelector("#tEntry tbody").innerHTML = "<tr><td>" + t("accCard", { l: last4(c) }) + '</td><td class="r">' + M(amt > 0 ? amt : 0) + '</td><td></td></tr><tr><td>' + t("accBank", { b: bank.name }) + '</td><td></td><td class="r">' + M(amt > 0 ? amt : 0) + "</td></tr>";
+      document.querySelector("#tEntry tfoot").innerHTML = "<tr><td>" + t("totals") + '</td><td class="r">' + M(amt > 0 ? amt : 0) + '</td><td class="r">' + M(amt > 0 ? amt : 0) + "</td></tr>";
     }
 
-    renderCards(); renderStatement(); renderPayments();
+    // Card number input: digits only, formatted XXXX-XXXX-XXXX-XXXX while typing
+    const cn = document.getElementById("cNumber");
+    cn.addEventListener("input", () => { cn.value = fmtCard(cn.value); });
+    ["cLimit", "bAmount", "pAmount"].forEach(id => UI.maskMoney(document.getElementById(id)));
+    ["cCut", "cPayDay"].forEach(id => document.getElementById(id).addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 2); }));
+
+    function saveCard() {
+      const errs = {};
+      const digits = cn.value.replace(/\D/g, "");
+      if (digits.length !== 16) errs.Number = t("eNumReq"); else if (CARDS.some(c => c.number === digits)) errs.Number = t("eNumDup");
+      if (!document.getElementById("cHolder").value.trim()) errs.Holder = t("eReq");
+      if (!(UI.parseMoney(document.getElementById("cLimit").value) > 0)) errs.Limit = t("eAmt");
+      ["Cut", "PayDay"].forEach(k => { const v = Number(document.getElementById("c" + k).value); if (!(v >= 1 && v <= 28)) errs[k] = t("eDay"); });
+      ["Number", "Holder", "Limit", "Cut", "PayDay"].forEach(k => { document.getElementById("e" + k).textContent = errs[k] || ""; const el = document.getElementById("c" + k); if (el) el.setAttribute("aria-invalid", String(!!errs[k])); });
+      if (Object.keys(errs).length) { const first = ["Number", "Holder", "Limit", "Cut", "PayDay"].find(k => errs[k]); document.getElementById("c" + first).focus(); return; }
+      CARDS.push({ number: digits, bank: Number($("#cBank").val()), brand: $("#cBrand").val(), holder: document.getElementById("cHolder").value.trim(), limit: UI.parseMoney(document.getElementById("cLimit").value),
+        cut: Number(document.getElementById("cCut").value), pay: Number(document.getElementById("cPayDay").value), color: COLORS[CARDS.length % COLORS.length],
+        hist: [{ d: new Date(Date.UTC(2026, 10, 16)), bal: 0, user: "Demo" }], charges: [] });
+      selIdx = CARDS.length - 1;
+      UI.closeModal("mCard");
+      $("#fBank").val("all").trigger("change.select2");
+      renderCards();
+      UI.toast(t("savedCard", { l: digits.slice(-4) }));
+    }
+
+    document.getElementById("btnNew").addEventListener("click", () => {
+      ["cNumber", "cHolder", "cLimit", "cCut", "cPayDay"].forEach(id => { const el = document.getElementById(id); el.value = ""; el.removeAttribute("aria-invalid"); });
+      ["eNumber", "eHolder", "eLimit", "eCut", "ePayDay"].forEach(id => document.getElementById(id).textContent = "");
+      UI.openModal("mCard");
+    });
+    document.getElementById("cSave").addEventListener("click", saveCard);
+    document.getElementById("cClose").addEventListener("click", () => UI.closeModal("mCard"));
+    document.getElementById("cards").addEventListener("click", e => { const b = e.target.closest(".ccard"); if (b) { selIdx = Number(b.dataset.i); renderCards(); } });
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; renderDetail(); } });
+    document.getElementById("payOpt").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { payOpt = b.dataset.v; if (payOpt === "other") document.getElementById("pAmount").value = ""; renderPay(); } });
+    document.getElementById("pAmount").addEventListener("input", renderPay);
+    $("#pAccount").on("change", renderPay);
+    $("#fBank").on("change", renderCards);
+    document.getElementById("btnBal").addEventListener("click", () => {
+      const v = UI.parseMoney(document.getElementById("bAmount").value), d = document.getElementById("bDate").value;
+      if (!d || !(v >= 0) || document.getElementById("bAmount").value === "") { document.getElementById("eBal").textContent = t("eReq"); return; }
+      document.getElementById("eBal").textContent = "";
+      const c = CARDS[selIdx];
+      c.hist.unshift({ d: new Date(d + "T00:00:00Z"), bal: v, user: "Demo" });
+      c.hist.sort((a, b) => b.d - a.d);
+      document.getElementById("bAmount").value = "";
+      renderCards();
+      UI.toast(t("savedBal", { l: last4(c) }));
+    });
+    document.getElementById("btnPay").addEventListener("click", () => {
+      const c = CARDS[selIdx], amt = payAmount(), bank = BANKACC[Number($("#pAccount").val() || 0)];
+      bank.bal -= amt;
+      c.hist.unshift({ d: new Date(Date.UTC(2026, 10, 16)), bal: Math.round((balOf(c) - amt) * 100) / 100, user: "Demo" });
+      payOpt = "total";
+      renderCards();
+      UI.toast(t("paidMsg", { a: M(amt), l: last4(c) }));
+    });
+    document.addEventListener("langchange", () => { fillSelects(); renderCards(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); });
+
+    document.getElementById("bDate").value = "2026-11-16";
+    fillSelects();
+    renderCards();
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
   });
   </script>
 </body>

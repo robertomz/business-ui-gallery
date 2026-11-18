@@ -3,267 +3,204 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Expense Verification · Business UI Gallery</title>
+  <title>Expense verification · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--space-4); align-items: start; }
-    .layout > * { min-width: 0; }
-    .center-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: .88rem; }
-    .center-row .bar-track { grid-column: 1 / -1; height: 8px; }
-    .st { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
-    .st svg { width: 14px; height: 14px; }
-    .st-ok { background: var(--positive-bg); color: var(--positive); }
-    .st-rev { background: var(--warning-bg); color: var(--warning); }
-    .st-bad { background: var(--negative-bg); color: var(--negative); }
-    .st-none { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
-    #exp td { vertical-align: middle; }
-    .ocr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
-    .check-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: .9rem; }
-    .modal.sm { width: min(680px, 100%); }
-    .drop { border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: var(--space-4); text-align: center; background: var(--surface-2); }
-    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) { .ocr { grid-template-columns: 1fr; } }
+    .score { display: flex; flex-direction: column; gap: 10px; }
+    .score-item header { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-bottom: 4px; }
+    .score-item header b { font-variant-numeric: tabular-nums; }
+    .score-item .bar-track { height: 8px; }
+    .score-item p { font-size: 10.5px; color: var(--mc-muted); margin-top: 3px; }
+    .checks { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 6px; }
+    .checks li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; padding: 6px 8px; border: 1px solid var(--mc-line); border-radius: 6px; }
+    .ocr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    .drop { border: 1px dashed var(--mc-line); border-radius: 8px; padding: 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    @media (max-width: 600px) { .ocr { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body data-page="expense-verification" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Expense verification</h1>
-        <p class="muted">Every posted expense is checked against its receipt before the month is closed for each cost center.</p>
-      </div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field" style="max-width:170px"><label for="fMonth" data-i18n="fMonth"></label><select id="fMonth"></select></div>
+        <div class="mc-field"><label for="fCenter" data-i18n="fCenter"></label><select id="fCenter"></select></div>
+        <div class="mc-field"><label for="fStatus" data-i18n="fStatus"></label><select id="fStatus"></select></div>
+        <div class="mc-field"><label for="fSearch" data-i18n="search"></label><input id="fSearch" data-i18n-ph="searchPh"></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
+    </section>
+
+    <div class="mc-kpis" id="kpis"></div>
+
+    <div class="split">
+      <section class="mc-panel">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">fact_check</span><span data-i18n="expenses"></span></h3><span class="mc-hint" data-i18n="expensesHint"></span></div>
+        <div class="table-wrap" style="max-height:560px"><table class="grid" id="tExp"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </section>
+      <section class="mc-panel">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">leaderboard</span><span data-i18n="scoreTitle"></span></h3></div>
+        <p class="mc-hint" style="margin-bottom:10px" data-i18n="scoreHint"></p>
+        <div class="score" id="score"></div>
+      </section>
     </div>
 
-    <section class="card card-body" aria-label="Filters">
-      <div class="filters">
-        <div class="field"><label for="fCenter">Cost center</label><select class="input" id="fCenter"><option value="">All centers</option></select></div>
-        <div class="field"><label for="fStatus">Status</label>
-          <select class="input" id="fStatus"><option value="">All</option><option value="none">Pending receipt</option><option value="ok">Verified</option><option value="rev">Needs review</option><option value="bad">Mismatch</option></select></div>
-        <div class="field"><label for="fQ">Search</label><input class="input" id="fQ" type="search" placeholder="Supplier, document, account"></div>
-      </div>
-    </section>
-
-    <section class="kpis" aria-label="Totals for the filtered expenses" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Expenses</div><div class="kpi-value" id="kCount"></div><div class="kpi-delta muted" id="kAmount"></div></div>
-      <div class="card kpi"><div class="kpi-label">Verified amount</div><div class="kpi-value" id="kVer"></div><div class="kpi-delta muted" id="kVerPct"></div></div>
-      <div class="card kpi"><div class="kpi-label">Needs review</div><div class="kpi-value" id="kRev"></div><div class="kpi-delta muted">a person has to look at it</div></div>
-      <div class="card kpi"><div class="kpi-label">Pending receipt</div><div class="kpi-value" id="kNone"></div><div class="kpi-delta muted">no file attached yet</div></div>
-    </section>
-
-    <section class="layout">
-      <div class="card">
-        <div class="card-head"><h2>Posted expenses, October 2026</h2><span class="muted" style="font-size:.82rem">Attach a receipt to verify a line</span></div>
-        <div class="card-body table-wrap">
-          <table class="grid" id="exp">
-            <thead><tr><th>Document</th><th>Date</th><th>Center</th><th>Account</th><th>Supplier</th><th class="r">Amount</th><th>Status</th><th class="r">Verified</th><th><span class="sr-only">Action</span></th></tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
-        </div>
-      </div>
-      <aside class="card">
-        <div class="card-head"><h2>Score by cost center</h2></div>
-        <div class="card-body" id="centers"></div>
-        <p class="muted card-body" style="font-size:.8rem;padding-top:0">Share of each center's expense value that is verified. It follows the search and status filters.</p>
-      </aside>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>The real screen stores the scanned receipt and reads it; here the reading is simulated from the file you pick, only its name is used.</li>
-        <li>Supplier names never match exactly ("Northwind Foods Inc." vs "NORTHWIND FOODS"), so the check compares words and gives a similarity score instead of a yes or no.</li>
-        <li>A line is Verified when supplier ≥ 80%, the amount matches to the cent and the date is within 3 days. Small gaps go to Needs review; big ones are a Mismatch.</li>
-        <li>The verification is informative: it does not change the accounting, it tells each center how much of its spending is backed by a receipt.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
-  <div class="modal-backdrop" id="rcModal" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
-    <div class="modal sm">
-      <div class="modal-head"><h2 id="rcTitle">Attach receipt</h2><span class="muted num" id="rcDoc" style="font-size:.85rem"></span></div>
+  <div class="modal-backdrop" id="mRev">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mRevT">
+      <div class="modal-head"><h3 id="mRevT"><span class="material-icons" aria-hidden="true">document_scanner</span><span data-i18n="revTitle"></span></h3></div>
       <div class="modal-body">
-        <div class="drop">
-          <label for="rcFile" class="btn">Choose file</label>
-          <input id="rcFile" type="file" accept="image/*,.pdf" class="sr-only">
-          <p class="muted" style="font-size:.85rem;margin-top:8px" id="rcName">PDF or image of the receipt</p>
+        <div class="grid-2" id="revInfo"></div>
+        <div class="drop" style="margin-top:12px">
+          <span class="material-icons" aria-hidden="true" style="color:var(--mc-cyan)">upload_file</span>
+          <div class="mc-field" style="flex:1 1 220px"><label for="rFile" data-i18n="attach"></label><input type="file" id="rFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+          <span class="mc-hint" data-i18n="attachHint"></span>
         </div>
-        <div id="rcResult" hidden style="margin-top:var(--space-4)">
-          <h3 style="margin-bottom:8px">Read from the receipt</h3>
-          <div class="ocr">
-            <div class="field"><label>Supplier</label><div id="oSup"></div></div>
-            <div class="field"><label>Amount</label><div class="num" id="oAmt"></div></div>
-            <div class="field"><label>Date</label><div class="num" id="oDate"></div></div>
+        <div id="revResult" hidden>
+          <div class="mc-label" style="margin-top:12px" data-i18n="ocrTitle"></div>
+          <div class="ocr" id="ocr"></div>
+          <ul class="checks" id="checks"></ul>
+          <div class="grid-2" style="margin-top:10px">
+            <div class="mc-field"><label for="rVal" data-i18n="colVerified"></label><input class="num" id="rVal" inputmode="decimal"><span class="mc-field-error" id="rValErr"></span></div>
+            <div class="mc-field"><label for="rObs" data-i18n="colObs"></label><input id="rObs"></div>
           </div>
-          <h3 style="margin:var(--space-4) 0 4px">Checks against the posted expense</h3>
-          <div id="checks"></div>
-          <div style="margin-top:var(--space-3)" id="rcStatus"></div>
         </div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="rcSave" type="button" disabled>Save verification</button>
-        <button class="btn" id="rcClose" type="button">Close</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="rSave" disabled><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button><button class="btn" type="button" id="rClose" data-i18n="close"></button></div>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const r = UI.rng(4242);
-    const CENTERS = D.costCenters;
-    const ACCOUNTS = ["6-01 Fuel", "6-02 Vehicle repairs", "6-03 Office supplies", "6-04 Cleaning services", "6-05 Electricity", "6-06 Telephone and internet", "6-07 Travel", "6-08 Equipment repairs"];
-    const SUPPLIERS = ["Northwind Fuel Station", "Contoso Auto Parts", "Fabrikam Office Supply", "Litware Cleaning Services", "City Power Company", "Tailspin Telecom", "Adventure Travel Agency", "Proseware Repairs"];
-    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
-    const ST = {
-      none: { cls: "st-none", text: "Pending receipt", icon: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>') },
-      ok: { cls: "st-ok", text: "Verified", icon: SVG('<path d="M5 12l5 5 9-10"/>') },
-      rev: { cls: "st-rev", text: "Needs review", icon: SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>') },
-      bad: { cls: "st-bad", text: "Mismatch", icon: SVG('<path d="M6 6l12 12M18 6L6 18"/>') }
-    };
-    const chip = s => '<span class="st ' + ST[s].cls + '">' + ST[s].icon + ST[s].text + "</span>";
+  UI.strings({
+    en: {
+      fMonth: "Expense month", fCenter: "Management center", fStatus: "Verification", searchPh: "Supplier, description or account…", allCenters: "All centers", allStatus: "All",
+      expenses: "Expenses of the center", expensesHint: "Use Review to attach the receipt", scoreTitle: "Score by center", scoreHint: "% of the expense value that was verified with its receipt.",
+      kCount: "Expenses", kTotal: "Expense value", kVer: "Verified value", kScore: "% verified", kPend: "Pending review",
+      colDate: "Date", colCenter: "Center", colAccount: "Account", colDesc: "Expense", colSupplier: "Supplier", colValue: "Value", colBy: "Registered by", colRevBy: "Reviewed by", colVerified: "Verified value", colObs: "Observation", colStatus: "Status", colNd: "Non-deductible", colAction: "Action",
+      stVer: "Verified", stReview: "Needs review", stMis: "Mismatch", stPend: "Not reviewed", review: "Review",
+      revTitle: "Review expense", attach: "Receipt (PDF or image)", attachHint: "Only the file name is read; the receipt reading is simulated.",
+      ocrTitle: "Read from the receipt", oSup: "Supplier", oAmt: "Amount", oDate: "Date",
+      cSup: "Supplier matches the creditor ({p} similar, 80% needed)", cAmt: "Amount matches to the cent", cDate: "Date within 3 days",
+      ok: "OK", fail: "Does not match", errVal: "The verified value cannot be greater than the expense.",
+      savedMsg: "Expense {d} reviewed: {s}.", infoCenter: "Center", infoAccount: "Account", infoSupplier: "Posted supplier", infoValue: "Posted value",
+      aboutText: "Mirrors the <b>Review</b> step of the management center: each expense entered against a center's budget is checked against its receipt. The receipt is attached, the supplier, amount and date are read, and the supplier is compared with the posted creditor word by word (<b>fuzzy match</b>, 80% needed). The amount must match to the cent and the date may differ up to 3 days. The result is <b>Verified</b>, <b>Needs review</b> or <b>Mismatch</b> (icon and text). The <b>verified value</b> feeds the score of each center: the % of its expense value that has a valid receipt. This review is informative and does not change the accounting. All data is generated."
+    },
+    es: {
+      fMonth: "Mes gasto", fCenter: "Centro de gestión", fStatus: "Verificación", searchPh: "Proveedor, descripción o cuenta…", allCenters: "Todos los centros", allStatus: "Todos",
+      expenses: "Gastos del centro", expensesHint: "Use Revisar para adjuntar el comprobante", scoreTitle: "Puntaje por centro", scoreHint: "% del valor del gasto que se verificó con su comprobante.",
+      kCount: "Gastos", kTotal: "Valor de gastos", kVer: "Valor verificado", kScore: "% verificado", kPend: "Por revisar",
+      colDate: "Fecha", colCenter: "Centro", colAccount: "Cuenta", colDesc: "Gasto", colSupplier: "Proveedor", colValue: "Valor", colBy: "Registrado por", colRevBy: "Revisado por", colVerified: "Valor verificado", colObs: "Observación", colStatus: "Estado", colNd: "No deducible", colAction: "Acción",
+      stVer: "Verificado", stReview: "Revisar", stMis: "No coincide", stPend: "Sin revisar", review: "Revisar",
+      revTitle: "Revisar gasto", attach: "Comprobante (PDF o imagen)", attachHint: "Solo se lee el nombre del archivo; la lectura del comprobante es simulada.",
+      ocrTitle: "Leído del comprobante", oSup: "Proveedor", oAmt: "Monto", oDate: "Fecha",
+      cSup: "El proveedor coincide con el acreedor ({p} de parecido, se necesita 80%)", cAmt: "El monto coincide al centavo", cDate: "Fecha dentro de 3 días",
+      ok: "Correcto", fail: "No coincide", errVal: "El valor verificado no puede ser mayor que el gasto.",
+      savedMsg: "Gasto {d} revisado: {s}.", infoCenter: "Centro", infoAccount: "Cuenta", infoSupplier: "Proveedor registrado", infoValue: "Valor registrado",
+      aboutText: "Replica el paso <b>Revisar</b> del centro de gestión: cada gasto ingresado contra el presupuesto de un centro se compara con su comprobante. Se adjunta el comprobante, se leen proveedor, monto y fecha, y el proveedor se compara palabra por palabra con el acreedor registrado (<b>coincidencia aproximada</b>, se necesita 80%). El monto debe coincidir al centavo y la fecha puede diferir hasta 3 días. El resultado es <b>Verificado</b>, <b>Revisar</b> o <b>No coincide</b> (ícono y texto). El <b>valor verificado</b> alimenta el puntaje de cada centro: el % del valor de sus gastos con comprobante válido. Esta revisión es informativa y no cambia la contabilidad. Todos los datos son generados."
+    }
+  });
 
-    const rows = [];
-    for (let i = 0; i < 64; i++) {
-      const ai = Math.floor(r() * ACCOUNTS.length);
-      const d = new Date(Date.UTC(2026, 9, 1 + Math.floor(r() * 31)));
-      const row = { doc: "EXP-" + (10230 + i), date: d, center: UI.pick(r, CENTERS), account: ACCOUNTS[ai], supplier: SUPPLIERS[ai], amount: Math.round(UI.between(r, 180, 9800) * 100) / 100, status: "none", verified: 0, ocr: null };
-      // About two thirds already verified with the receipt on file.
-      if (r() < 0.66) applyOcr(row, simulateOcr(row, r));
-      rows.push(row);
-    }
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const ACC = [{ en: "Fuel", es: "Combustible" }, { en: "Vehicle maintenance", es: "Mantenimiento de vehículos" }, { en: "Office supplies", es: "Papelería y útiles" }, { en: "Cleaning supplies", es: "Artículos de limpieza" }, { en: "Meals and travel", es: "Viáticos" }, { en: "Telephone", es: "Teléfono" }];
+    const NO = ["6-02-03-001", "6-02-03-005", "6-04-01-001", "6-04-01-003", "6-02-04-001", "6-03-02-003"];
+    const PEOPLE = ["A. Torres", "B. Lopez", "C. Ramos", "D. Medina", "E. Castro"];
+    const r0 = UI.rng(4242);
+    let rows = Array.from({ length: 64 }, (_, i) => {
+      const c = Math.floor(r0() * D.costCenters.length), a = Math.floor(r0() * ACC.length);
+      const v = Math.round(UI.between(r0, 300, 9000) * 100) / 100;
+      const st = r0() < .55 ? (r0() < .8 ? "ver" : r0() < .5 ? "review" : "mis") : "pend";
+      return { id: "G-" + (5100 + i), c, a, day: 1 + Math.floor(r0() * 30), sup: UI.pick(r0, D.suppliers), v, by: UI.pick(r0, PEOPLE), st, rev: st === "pend" ? "" : UI.pick(r0, PEOPLE), ver: st === "ver" ? v : st === "review" ? Math.round(v * .6 * 100) / 100 : 0, obs: "", nd: r0() < .12 };
+    });
+    let cur = null, reading = null;
+    const statusChip = s => ({ ver: '<span class="chip chip-pos">' + mi("verified") + t("stVer") + "</span>", review: '<span class="chip chip-warn">' + mi("rule") + t("stReview") + "</span>", mis: '<span class="chip chip-neg">' + mi("report") + t("stMis") + "</span>", pend: '<span class="chip">' + mi("hourglass_empty") + t("stPend") + "</span>" })[s];
 
-    function tokens(s) { return s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(t => t && !["inc", "llc", "co", "the", "company", "sa"].includes(t)); }
-    function similarity(a, b) {
-      const A = new Set(tokens(a)), B = new Set(tokens(b));
-      if (!A.size || !B.size) return 0;
-      let inter = 0; A.forEach(t => { if (B.has(t)) inter++; });
-      return (2 * inter) / (A.size + B.size);
+    function fill() {
+      const m = $("#fMonth").val() || "9", c = $("#fCenter").val() || "all", s = $("#fStatus").val() || "all";
+      $("#fMonth").empty(); [8, 9, 10].forEach(x => $("#fMonth").append(new Option(UI.monthName(x) + " 2026", String(x)))); $("#fMonth").val(m).select2({ width: "100%", minimumResultsForSearch: Infinity });
+      $("#fCenter").empty().append(new Option(t("allCenters"), "all")); D.costCenters.forEach((x, i) => $("#fCenter").append(new Option(UI.L(x), String(i)))); $("#fCenter").val(c).select2({ width: "100%" });
+      $("#fStatus").empty().append(new Option(t("allStatus"), "all")); ["ver", "review", "mis", "pend"].forEach(x => $("#fStatus").append(new Option(t({ ver: "stVer", review: "stReview", mis: "stMis", pend: "stPend" }[x]), x))); $("#fStatus").val(s).select2({ width: "100%", minimumResultsForSearch: Infinity });
     }
-    function simulateOcr(row, rr) {
-      const x = rr();
-      const words = row.supplier.split(" ");
-      let sup = row.supplier.toUpperCase() + (rr() < 0.5 ? " INC." : "");
-      let amt = row.amount, date = row.date;
-      if (x > 0.8) { amt = Math.round(row.amount * UI.between(rr, 1.02, 1.12) * 100) / 100; }
-      else if (x > 0.7) { date = new Date(row.date.getTime() + Math.round(UI.between(rr, 4, 9)) * 86400000); }
-      else if (x > 0.62) { sup = words[0].toUpperCase() + " " + UI.pick(rr, ["SERVICES", "GROUP", "STORE"]); }
-      else if (x > 0.58) { sup = UI.pick(rr, ["QUICK MART", "LAKESIDE SHOP"]); amt = Math.round(row.amount * 0.6 * 100) / 100; }
-      return { supplier: sup, amount: amt, date };
-    }
-    function evaluate(row, o) {
-      const sim = similarity(row.supplier, o.supplier);
-      const diff = Math.abs(o.amount - row.amount);
-      const days = Math.abs(o.date - row.date) / 86400000;
-      const supOk = sim >= 0.8, amtOk = diff < 0.005, dateOk = days <= 3;
-      let status;
-      if (supOk && amtOk && dateOk) status = "ok";
-      else if (sim < 0.4 || diff / row.amount > 0.2) status = "bad";
-      else status = "rev";
-      return { sim, diff, days, supOk, amtOk, dateOk, status };
-    }
-    function applyOcr(row, o) {
-      row.ocr = o;
-      const ev = evaluate(row, o);
-      row.status = ev.status;
-      row.verified = ev.status === "ok" ? row.amount : 0;
-    }
-
-    const fCenter = document.getElementById("fCenter");
-    CENTERS.forEach(c => fCenter.insertAdjacentHTML("beforeend", "<option>" + c + "</option>"));
-
     function filtered() {
-      const c = fCenter.value, s = document.getElementById("fStatus").value, q = document.getElementById("fQ").value.trim().toLowerCase();
-      return rows.filter(x => (!c || x.center === c) && (!s || x.status === s) &&
-        (!q || (x.doc + " " + x.supplier + " " + x.account + " " + x.center).toLowerCase().includes(q)));
+      const c = $("#fCenter").val(), s = $("#fStatus").val(), q = document.getElementById("fSearch").value.trim().toLowerCase();
+      return rows.filter(r => (c === "all" || r.c === Number(c)) && (s === "all" || r.st === s) && (!q || (r.sup + " " + UI.L(ACC[r.a]) + " " + NO[r.a] + " " + r.id).toLowerCase().includes(q)));
     }
-
     function render() {
-      const f = filtered();
-      const sum = (arr, k) => arr.reduce((a, x) => a + x[k], 0);
-      const amount = sum(f, "amount"), ver = sum(f, "verified");
-      document.getElementById("kCount").textContent = UI.fmtInt(f.length);
-      document.getElementById("kAmount").textContent = UI.fmtMoney(amount) + " posted";
-      document.getElementById("kVer").textContent = UI.fmtMoney(ver);
-      document.getElementById("kVerPct").textContent = amount ? UI.fmtPct(ver / amount) + " of the posted value" : "—";
-      document.getElementById("kRev").textContent = f.filter(x => x.status === "rev" || x.status === "bad").length;
-      document.getElementById("kNone").textContent = f.filter(x => x.status === "none").length;
-
-      const tb = document.querySelector("#exp tbody");
-      tb.innerHTML = f.length ? f.sort((a, b) => a.date - b.date).map(x =>
-        "<tr><td class='num'>" + x.doc + "</td><td class='num'>" + UI.fmtDate(x.date) + "</td><td>" + x.center + "</td><td>" + x.account + "</td><td>" + x.supplier +
-        "</td><td class='r num'>" + UI.fmtMoney(x.amount) + "</td><td>" + chip(x.status) + "</td><td class='r num'>" + (x.verified ? UI.fmtMoney(x.verified) : "—") +
-        "</td><td><button class='btn' type='button' data-doc='" + x.doc + "' style='min-height:32px'>" + (x.ocr ? "Review" : "Attach receipt") + "</button></td></tr>").join("")
-        : "<tr><td colspan='9' class='muted'>No expenses match these filters.</td></tr>";
-      document.querySelector("#exp tfoot").innerHTML = "<tr><td colspan='5'>Total (filtered)</td><td class='r num'>" + UI.fmtMoney(amount) + "</td><td></td><td class='r num'>" + UI.fmtMoney(ver) + "</td><td></td></tr>";
-
-      // Score per center follows the search and status filters (not the center filter, so they can be compared).
-      const s = document.getElementById("fStatus").value, q = document.getElementById("fQ").value.trim().toLowerCase();
-      const base = rows.filter(x => (!s || x.status === s) && (!q || (x.doc + " " + x.supplier + " " + x.account + " " + x.center).toLowerCase().includes(q)));
-      const byC = CENTERS.map(c => { const a = base.filter(x => x.center === c); return { c, amt: sum(a, "amount"), ver: sum(a, "verified") }; }).filter(x => x.amt > 0).sort((a, b) => b.ver / b.amt - a.ver / a.amt);
-      document.getElementById("centers").innerHTML = byC.length ? byC.map(x => {
-        const p = x.ver / x.amt;
-        const color = p >= 0.8 ? "var(--positive)" : p >= 0.5 ? "var(--warning)" : "var(--negative)";
-        return "<div class='center-row'><span>" + x.c + "</span><span class='num'>" + UI.fmtPct(p, 0) + "</span><div class='bar-track'><span style='width:" + (p * 100) + "%;background:" + color + "'></span></div><span class='muted' style='font-size:.78rem;grid-column:1/-1'>" + UI.fmtMoney(x.ver) + " of " + UI.fmtMoney(x.amt) + "</span></div>";
-      }).join("") : "<p class='muted'>Nothing to score.</p>";
+      const m = Number($("#fMonth").val());
+      const list = filtered();
+      const tot = list.reduce((a, r) => a + r.v, 0), ver = list.reduce((a, r) => a + r.ver, 0);
+      document.getElementById("kpis").innerHTML = [["kCount", UI.fmtInt(list.length)], ["kTotal", M(tot)], ["kVer", M(ver)], ["kScore", tot ? UI.fmtPct(ver / tot) : "—"], ["kPend", UI.fmtInt(list.filter(r => r.st === "pend").length)]]
+        .map(k => '<div class="mc-kpi"><div class="k-label">' + t(k[0]) + '</div><div class="k-value">' + k[1] + "</div></div>").join("");
+      document.querySelector("#tExp thead").innerHTML = "<tr><th>" + t("colDate") + "</th><th>" + t("colCenter") + "</th><th>" + t("colAccount") + "</th><th>" + t("colSupplier") + '</th><th class="r">' + t("colValue") + "</th><th>" + t("colBy") + "</th><th>" + t("colRevBy") + '</th><th class="r">' + t("colVerified") + "</th><th>" + t("colStatus") + "</th><th>" + t("colNd") + "</th><th>" + t("colAction") + "</th></tr>";
+      document.querySelector("#tExp tbody").innerHTML = list.map(r => "<tr><td>" + UI.fmtDay(new Date(Date.UTC(2026, m, Math.min(r.day, 28)))) + "</td><td>" + UI.L(D.costCenters[r.c]) + "</td><td>" + NO[r.a] + '<small class="muted" style="display:block">' + UI.L(ACC[r.a]) + "</small></td><td>" + r.sup + '</td><td class="r">' + M(r.v) + "</td><td>" + r.by + "</td><td>" + (r.rev || "—") + '</td><td class="r">' + M(r.ver) + "</td><td>" + statusChip(r.st) + (r.obs ? '<small class="muted" style="display:block">' + r.obs + "</small>" : "") + "</td><td>" + (r.nd ? '<span class="chip chip-warn">' + mi("money_off") + t("yes") + "</span>" : t("no")) +
+        '</td><td><button class="btn btn-sm btn-outline-teal" type="button" data-rev="' + r.id + '">' + mi("document_scanner") + t("review") + "</button></td></tr>").join("");
+      document.querySelector("#tExp tfoot").innerHTML = '<tr><td colspan="4">' + t("total") + " (" + list.length + ')</td><td class="r">' + M(tot) + '</td><td colspan="2"></td><td class="r">' + M(ver) + '</td><td colspan="3"></td></tr>';
+      // Score per center (always over all rows of the month)
+      document.getElementById("score").innerHTML = D.costCenters.map((c, i) => { const rs = rows.filter(r => r.c === i), tv = rs.reduce((a, r) => a + r.v, 0), vv = rs.reduce((a, r) => a + r.ver, 0), p = tv ? vv / tv : 0;
+        const col = p >= .8 ? "var(--mc-good)" : p >= .5 ? "var(--mc-amber)" : "var(--mc-bad)";
+        return { html: '<div class="score-item"><header><span>' + UI.L(c) + "</span><b>" + UI.fmtPct(p) + '</b></header><div class="bar-track"><span style="width:' + (p * 100) + "%;background:" + col + '"></span></div><p>' + M(vv) + " / " + M(tv) + "</p></div>", p }; })
+        .sort((a, b) => b.p - a.p).map(x => x.html).join("");
     }
-
-    // ---------- Receipt modal ----------
-    let current = null, pending = null;
-    const rcR = UI.rng(777);
-    function showResult(row, o) {
-      const ev = evaluate(row, o);
-      document.getElementById("rcResult").hidden = false;
-      document.getElementById("oSup").textContent = o.supplier;
-      document.getElementById("oAmt").textContent = UI.fmtMoney(o.amount);
-      document.getElementById("oDate").textContent = UI.fmtDate(o.date);
-      const line = (ok, label, detail) => "<div class='check-line'><span>" + label + " <span class='muted' style='font-size:.82rem'>" + detail + "</span></span>" + chip(ok ? "ok" : "rev").replace("Verified", "Match").replace("Needs review", "Differs") + "</div>";
-      document.getElementById("checks").innerHTML =
-        line(ev.supOk, "Supplier", "similarity " + UI.fmtPct(ev.sim, 0) + " with “" + row.supplier + "” (80% needed)") +
-        line(ev.amtOk, "Amount", ev.amtOk ? "same amount" : "differs by " + UI.fmtMoney(ev.diff)) +
-        line(ev.dateOk, "Date", ev.days === 0 ? "same day" : Math.round(ev.days) + " day(s) apart (3 allowed)");
-      document.getElementById("rcStatus").innerHTML = "Result: " + chip(ev.status);
+    // Simple word-overlap similarity (Dice coefficient on words and on letter pairs)
+    function similarity(a, b) {
+      const pairs = s => { const w = s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " "); const out = []; for (let i = 0; i < w.length - 1; i++) out.push(w.slice(i, i + 2)); return out; };
+      const A = pairs(a), B = pairs(b); let hit = 0; const bb = B.slice();
+      A.forEach(p => { const j = bb.indexOf(p); if (j >= 0) { hit++; bb.splice(j, 1); } });
+      return A.length + B.length ? (2 * hit) / (A.length + B.length) : 0;
     }
-    document.querySelector("#exp tbody").addEventListener("click", e => {
-      const b = e.target.closest("button[data-doc]");
-      if (!b) return;
-      current = rows.find(x => x.doc === b.dataset.doc);
-      pending = null;
-      document.getElementById("rcDoc").textContent = current.doc + " · " + current.supplier + " · " + UI.fmtMoney(current.amount);
-      document.getElementById("rcFile").value = "";
-      document.getElementById("rcName").textContent = current.ocr ? "A receipt is on file. Choose another file to read it again." : "PDF or image of the receipt";
-      document.getElementById("rcResult").hidden = !current.ocr;
-      if (current.ocr) showResult(current, current.ocr);
-      document.getElementById("rcSave").disabled = true;
-      UI.openModal("rcModal");
+    function openReview(id) {
+      cur = rows.find(r => r.id === id); reading = null;
+      const m = Number($("#fMonth").val());
+      document.getElementById("revInfo").innerHTML = [["infoCenter", UI.L(D.costCenters[cur.c])], ["infoAccount", NO[cur.a] + " · " + UI.L(ACC[cur.a])], ["infoSupplier", cur.sup], ["infoValue", M(cur.v) + " · " + UI.fmtDay(new Date(Date.UTC(2026, m, Math.min(cur.day, 28))))]]
+        .map(x => '<div class="mc-field"><span class="mc-label">' + t(x[0]) + '</span><div style="font-weight:700;padding-top:4px">' + x[1] + "</div></div>").join("");
+      document.getElementById("rFile").value = "";
+      document.getElementById("revResult").hidden = true;
+      document.getElementById("rSave").disabled = true;
+      document.getElementById("rValErr").textContent = "";
+      UI.openModal("mRev");
+    }
+    function readReceipt(fileName) {
+      const r = UI.rng(fileName.length * 31 + Number(cur.id.slice(2)));
+      const variant = r();
+      const sup = variant < .55 ? cur.sup : variant < .8 ? cur.sup.split(" ")[0] + " " + UI.pick(r, ["S.A.", "Ltd", "Group", "Trading"]) : UI.pick(r, D.suppliers.filter(s => s !== cur.sup));
+      const amt = r() < .75 ? cur.v : Math.round(cur.v * UI.between(r, .7, .98) * 100) / 100;
+      const shift = r() < .8 ? Math.floor(r() * 3) : 4 + Math.floor(r() * 6);
+      reading = { sup, amt, shift, sim: similarity(sup, cur.sup) };
+      const m = Number($("#fMonth").val());
+      document.getElementById("ocr").innerHTML = [["oSup", sup], ["oAmt", M(amt)], ["oDate", UI.fmtDay(new Date(Date.UTC(2026, m, Math.min(cur.day, 28) + shift)))]].map(x => '<div class="mc-kpi"><div class="k-label">' + t(x[0]) + '</div><div class="k-value" style="font-size:13px">' + x[1] + "</div></div>").join("");
+      const ck = (ok, txt) => "<li><span>" + txt + "</span>" + (ok ? '<span class="chip chip-pos">' + mi("check_circle") + t("ok") + "</span>" : '<span class="chip chip-neg">' + mi("cancel") + t("fail") + "</span>") + "</li>";
+      reading.okSup = reading.sim >= .8; reading.okAmt = Math.abs(amt - cur.v) < .005; reading.okDate = shift <= 3;
+      document.getElementById("checks").innerHTML = ck(reading.okSup, t("cSup", { p: UI.fmtPct(reading.sim, 0) })) + ck(reading.okAmt, t("cAmt")) + ck(reading.okDate, t("cDate"));
+      document.getElementById("rVal").value = M(Math.min(amt, cur.v));
+      document.getElementById("revResult").hidden = false;
+      document.getElementById("rSave").disabled = false;
+    }
+    UI.maskMoney(document.getElementById("rVal"));
+    document.getElementById("rFile").addEventListener("change", e => { const f = e.target.files[0]; if (f) readReceipt(f.name); });
+    document.getElementById("rSave").addEventListener("click", () => {
+      const v = UI.parseMoney(document.getElementById("rVal").value);
+      if (v > cur.v + .001) { document.getElementById("rValErr").textContent = t("errVal"); document.getElementById("rVal").setAttribute("aria-invalid", "true"); return; }
+      const all = reading.okSup && reading.okAmt && reading.okDate, none = !reading.okSup && !reading.okAmt;
+      cur.st = all ? "ver" : none ? "mis" : "review"; cur.ver = cur.st === "mis" ? 0 : v; cur.rev = "R. Demo"; cur.obs = document.getElementById("rObs").value.trim();
+      UI.closeModal("mRev"); render(); UI.toast(t("savedMsg", { d: cur.id, s: t({ ver: "stVer", review: "stReview", mis: "stMis" }[cur.st]) }));
     });
-    document.getElementById("rcFile").addEventListener("change", e => {
-      const f = e.target.files[0];
-      if (!f) return;
-      document.getElementById("rcName").textContent = "Reading " + f.name + "…";
-      setTimeout(() => {
-        pending = simulateOcr(current, rcR);
-        document.getElementById("rcName").textContent = f.name;
-        showResult(current, pending);
-        document.getElementById("rcSave").disabled = false;
-        document.getElementById("rcSave").focus();
-      }, 600);
-    });
-    document.getElementById("rcSave").addEventListener("click", () => {
-      applyOcr(current, pending);
-      UI.closeModal("rcModal");
-      render();
-      UI.toast(current.doc + ": " + ST[current.status].text.toLowerCase());
-    });
-    document.getElementById("rcClose").addEventListener("click", () => UI.closeModal("rcModal"));
-
-    ["fCenter", "fStatus"].forEach(id => document.getElementById(id).addEventListener("change", render));
-    document.getElementById("fQ").addEventListener("input", render);
-    render();
+    document.getElementById("rClose").addEventListener("click", () => UI.closeModal("mRev"));
+    document.getElementById("tExp").addEventListener("click", e => { const b = e.target.closest("[data-rev]"); if (b) openReview(b.dataset.rev); });
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); render(); });
+    $("#fCenter, #fStatus").on("change", render);
+    document.getElementById("fSearch").addEventListener("input", render);
+    const about = () => document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    document.addEventListener("langchange", () => { fill(); render(); about(); });
+    fill(); about(); render();
   });
   </script>
 </body>

@@ -3,207 +3,245 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Entry Reconciliation · Business UI Gallery</title>
+  <title>Entry reconciliation · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .type { display: inline-flex; align-items: center; gap: 6px; font-size: .84rem; font-weight: 500; white-space: nowrap; }
-    .type svg { width: 15px; height: 15px; flex: none; }
-    tr.pickable { cursor: pointer; }
-    tr.sel { background: var(--info-bg) !important; }
-    .switch { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; cursor: pointer; }
-    .switch input { width: 18px; height: 18px; accent-color: var(--primary); }
-    .legend { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: .82rem; }
-    .small { font-size: .82rem; }
-    .sides { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3); }
-    .sides > div { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
-    @media (max-width: 600px) { .sides { grid-template-columns: 1fr; } }
+    tr.pick { cursor: pointer; }
+    tr.pick.is-sel td { background: rgba(20, 184, 166, .14); }
+    tr.pick:focus-visible { outline: 2px solid var(--mc-cyan); outline-offset: -2px; }
+    .legend { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 4px 14px; margin-top: 8px; }
+    .legend b { font-weight: 800; }
+    .legend span { color: var(--mc-muted); }
+    @media (max-width: 600px) { .legend { grid-template-columns: 1fr; } .legend span { margin-bottom: 6px; } }
   </style>
 </head>
 <body data-page="reconciliation" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Entry reconciliation</h1>
-        <p class="muted">Compares what the source documents say should be posted (side A) with what accounting actually shows (side B).</p>
-      </div>
-      <div class="field" style="width:200px">
-        <label for="month">Month</label>
-        <select class="input" id="month"><option value="2026-11">November 2026</option><option value="2026-10">October 2026</option><option value="2026-09">September 2026</option></select>
-      </div>
-    </div>
-
-    <section class="card">
-      <div class="card-head"><h2>Summary by reconciliation code</h2><span class="muted small">Select a code to see it day by day</span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="summary">
-          <thead><tr><th>Code</th><th>Side A (documents)</th><th>Side B (account)</th><th class="r">Side A</th><th class="r">Side B</th><th class="r">Difference</th><th class="r">Days with difference</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field w-lg"><label for="fCode" data-i18n="fCode"></label><select id="fCode"></select></div>
+        <div class="mc-field" style="max-width:170px"><label for="fFrom" data-i18n="from"></label><input type="date" id="fFrom"></div>
+        <div class="mc-field" style="max-width:170px"><label for="fTo" data-i18n="to"></label><input type="date" id="fTo"></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
     </section>
+    <p class="mc-hint" id="hint" role="status"></p>
 
-    <section class="card" id="dailyCard">
-      <div class="card-head">
-        <h2 id="dailyTitle">Daily cross-check</h2>
-        <label class="switch"><input type="checkbox" id="onlyDiff"> Only days with difference</label>
-      </div>
-      <div class="card-body">
-        <div class="legend muted" id="legend" style="margin-bottom:var(--space-3)"></div>
-        <div class="table-wrap">
-          <table class="grid" id="daily">
-            <thead><tr><th>Day</th><th class="r">Side A</th><th class="r">Side B</th><th class="r">Difference</th><th>Result</th><th><span class="sr-only">Documents</span></th></tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
+    <div id="result" hidden>
+      <div class="mc-kpis" id="kpis"></div>
+
+      <section class="mc-panel" style="margin-top:12px">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">summarize</span><span data-i18n="summary"></span></h3><span class="mc-hint" data-i18n="summaryHint"></span></div>
+        <div class="table-wrap"><table class="grid" id="tSum"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </section>
+
+      <section class="mc-panel" style="margin-top:12px" id="dailyPanel">
+        <div class="mc-panel-title">
+          <h3><span class="material-icons" aria-hidden="true">calendar_month</span><span id="dailyTitle"></span></h3>
+          <label class="mc-check"><input type="checkbox" id="onlyDiff" checked><span data-i18n="onlyDiff"></span></label>
         </div>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Each reconciliation code pairs a group of documents with the accounts they should reach, so new checks are added by configuration, not code.</li>
-        <li>The result of each day is written as text with an icon, so it does not depend on color alone.</li>
-        <li>Totals follow the filter: with "only days with difference" on, the footer adds up only the days shown.</li>
-        <li>Opening a day lists the documents and entries involved, which usually explains the difference right away.</li>
-      </ul>
-    </section>
+        <div class="table-wrap"><table class="grid" id="tDay"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </section>
+    </div>
+    <div id="about"></div>
   </main>
 
-  <div class="modal-backdrop" id="dayModal" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
-    <div class="modal" style="width:min(980px,100%);max-height:92vh">
-      <div class="modal-head"><h2 id="dayTitle">Day</h2><span id="dayType"></span></div>
-      <div class="modal-body">
-        <div class="sides" id="daySides"></div>
-        <p class="small" id="dayExplain" style="margin-bottom:var(--space-3)"></p>
-        <div class="table-wrap">
-          <table class="grid" id="dayDocs"><thead><tr><th>Document</th><th>Detail</th><th class="r">Side A</th><th class="r">Side B</th><th>Entry</th></tr></thead><tbody></tbody></table>
-        </div>
-      </div>
-      <div class="modal-foot"><button class="btn" type="button" id="closeDay">Close</button></div>
+  <div class="modal-backdrop" id="mDetail">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mDetailTitle">
+      <div class="modal-head"><h3 id="mDetailTitle"><span class="material-icons" aria-hidden="true">manage_search</span><span></span></h3>
+        <div class="mc-field" style="max-width:240px;min-width:180px"><label for="fType" data-i18n="diffType"></label><select id="fType"></select></div></div>
+      <div class="modal-body"><div class="table-wrap"><table class="grid" id="tDetail"><thead></thead><tbody></tbody></table></div></div>
+      <div class="modal-foot"><button type="button" class="btn" id="mDetailClose"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const r2 = n => Math.round(n * 100) / 100;
-    const CODES = [
-      { id: "R01", a: "Card sales", b: "1-02-01-02-001 Card payments receivable", base: 15000, prefix: "INV" },
-      { id: "R02", a: "Cash sales", b: "1-01-01-01-001 Cash on hand", base: 42000, prefix: "INV" },
-      { id: "R03", a: "Credit sales", b: "1-02-01-01-001 Accounts receivable", base: 26000, prefix: "INV" },
-      { id: "R04", a: "Purchases received", b: "2-01-01-01-001 Accounts payable", base: 31000, prefix: "PUR" },
-      { id: "R05", a: "Bank deposits", b: "1-01-02-01-001 Bank checking account", base: 38000, prefix: "DEP" },
-      { id: "R06", a: "Payroll runs", b: "6-01-01-01-001 Salaries expense", base: 0, prefix: "PAY" }
-    ];
-    const TYPES = {
-      ok: { text: "Matched", cls: "pos", icon: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>' },
-      missing: { text: "Missing in accounting", cls: "neg", icon: '<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>' },
-      extra: { text: "Extra in accounting", cls: "neg", icon: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>' },
-      differs: { text: "Amount differs", cls: "neg", icon: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>' }
-    };
-    const typeHtml = t => '<span class="type ' + TYPES[t].cls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' + TYPES[t].icon + "</svg>" + TYPES[t].text + "</span>";
-    document.getElementById("legend").innerHTML = Object.keys(TYPES).map(typeHtml).join("");
-
-    // Daily data for one code and month: documents (side A) and what accounting shows (side B).
-    function monthDays(m) {
-      const [y, mo] = m.split("-").map(Number);
-      const last = m === "2026-11" ? 16 : new Date(Date.UTC(y, mo, 0)).getUTCDate();
-      const out = []; for (let d = 1; d <= last; d++) out.push(new Date(Date.UTC(y, mo - 1, d)));
-      return out;
+  UI.strings({
+    en: {
+      fCode: "Reconciliation", allCodes: "All enabled reconciliations", summary: "Summary by code", summaryHint: "Select a code to see it day by day",
+      onlyDiff: "Only days with difference", daily: "Daily cross-check · {c}", diffType: "Difference type", allTypes: "All types",
+      kCodes: "Codes reviewed", kDays: "Days with difference", kA: "Side A (documents)", kB: "Side B (entries)", kDiff: "Net difference",
+      colCode: "Code", colName: "Reconciliation", colA: "Side A", colB: "Side B", colDiff: "Difference", colDays: "Days with diff.", colStatus: "Status",
+      colDate: "Date", colDocs: "Documents", colEntries: "Entries", colValDocs: "Document value", colValEntries: "Entry value",
+      colType: "Type", colKey: "Document / key", colExpDate: "Expected date", colEntryDate: "Entry date", colExp: "Expected value", colPosted: "Posted value", colEntryNo: "Entry no.", colDetail: "Detail",
+      st_ok: "Matched", st_diff: "With difference", loaded: "{n} reconciliations loaded from {f} to {t}.", detailTitle: "Detail of {c} on {d}",
+      t_missing: "No entry", t_nodoc: "Entry without document", t_dup: "Duplicated", t_amount: "Amount differs", t_date: "Different date", t_unbal: "Unbalanced", t_onlyA: "Cross: only on side A", t_onlyB: "Cross: only on side B", t_cross: "Cross: amount differs",
+      d_missing: "The document exists in the source but no entry was generated. Generate the code for that date.",
+      d_nodoc: "There is an entry for the document but it is no longer in the source: it was voided, its date changed or its reference changed. If the detail says it was replaced, the old entry is a duplicate and should be deleted.",
+      d_dup: "The same document has more than one entry.", d_amount: "The entry does not have the document value (beyond the tolerance). The document was corrected after generating; generate that day again.",
+      d_date: "The entry is on a different day than the document.", d_unbal: "The entry does not have debit equal to credit.",
+      d_onlyAB: "The document, day or branch has entries on one side and not on the other.", d_cross: "Both sides have entries but they do not add up to the same (beyond the tolerance).",
+      c1: "Cash sales vs cash account", c2: "Card sales vs cards receivable", c3: "Purchases vs suppliers", c4: "Returns vs sales", c5: "Payroll vs salaries expense", c6: "Deposits vs bank accounts",
+      aboutText: "Each reconciliation checks a <b>side A</b> (one or several entry codes) against a <b>side B</b> (other codes that must add up the same), matching by document, by day or by day and branch. Each side's value is the total debit of its entries or, if the reconciliation has a cross account, the balance of that account (for example cash sales debit cash, and deposits in transit credit it). Codes with a <b>document source</b> are also checked document by document against the source system. Duplicated and unbalanced entries are always reviewed. Reconciliations are configured in a catalog. Difference types:"
+    },
+    es: {
+      fCode: "Conciliación", allCodes: "Todas las conciliaciones habilitadas", summary: "Resumen por código", summaryHint: "Elija un código para verlo día por día",
+      onlyDiff: "Solo días con diferencia", daily: "Cruce diario · {c}", diffType: "Tipo de diferencia", allTypes: "Todos los tipos",
+      kCodes: "Códigos revisados", kDays: "Días con diferencia", kA: "Lado A (documentos)", kB: "Lado B (partidas)", kDiff: "Diferencia neta",
+      colCode: "Código", colName: "Conciliación", colA: "Lado A", colB: "Lado B", colDiff: "Diferencia", colDays: "Días con dif.", colStatus: "Estado",
+      colDate: "Fecha", colDocs: "Documentos", colEntries: "Partidas", colValDocs: "Valor documentos", colValEntries: "Valor partidas",
+      colType: "Tipo", colKey: "Documento / llave", colExpDate: "Fecha esperada", colEntryDate: "Fecha partida", colExp: "Valor esperado", colPosted: "Valor registrado", colEntryNo: "No. partida", colDetail: "Detalle",
+      st_ok: "Cuadra", st_diff: "Con diferencia", loaded: "Se cargaron {n} conciliaciones del {f} al {t}.", detailTitle: "Detalle de {c} del {d}",
+      t_missing: "Sin partida", t_nodoc: "Partida sin documento", t_dup: "Duplicada", t_amount: "Monto distinto", t_date: "Fecha distinta", t_unbal: "Descuadrada", t_onlyA: "Cruce: solo en lado A", t_onlyB: "Cruce: solo en lado B", t_cross: "Cruce: monto distinto",
+      d_missing: "El documento existe en el origen pero no se generó su partida. Genere el código para esa fecha.",
+      d_nodoc: "Hay partida para el documento pero ya no sale en el origen: se anuló, cambió de fecha o cambió su referencia. Si el detalle dice que se reemplazó, la partida vieja está duplicada y hay que borrarla.",
+      d_dup: "El mismo documento tiene más de una partida.", d_amount: "La partida no tiene el valor del documento (más que la tolerancia). Se corrigió el documento después de generar; vuelva a generar ese día.",
+      d_date: "La partida está en otro día que el documento.", d_unbal: "La partida no tiene Debe igual a Haber.",
+      d_onlyAB: "El documento, día o sucursal tiene partidas en un lado y no en el otro.", d_cross: "Los dos lados tienen partidas pero no suman lo mismo (más que la tolerancia).",
+      c1: "Ventas de contado vs caja", c2: "Ventas con tarjeta vs tarjetas por cobrar", c3: "Compras vs proveedores", c4: "Devoluciones vs ventas", c5: "Planilla vs gasto de sueldos", c6: "Depósitos vs bancos",
+      aboutText: "Cada conciliación cuadra un <b>lado A</b> (uno o varios códigos de partida) contra un <b>lado B</b> (otros códigos que deben sumar lo mismo), emparejando por documento, por día o por día y sucursal. El valor de cada lado es el total Debe de sus partidas o, si la conciliación tiene cuenta de cruce, el saldo de esa cuenta (por ejemplo, las ventas de contado cargan a caja y los depósitos en tránsito la abonan). Los códigos con <b>fuente de documentos</b> además se revisan documento por documento contra el sistema de origen. Siempre se revisan las partidas duplicadas y descuadradas. Las conciliaciones se configuran en un catálogo. Tipos de diferencia:"
     }
-    function dayDetail(code, day) {
-      const seed = Math.floor(day.getTime() / 86400000) * 7 + CODES.indexOf(code);
+  });
+
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    function s2($el, opts) { if ($el.hasClass("select2-hidden-accessible")) $el.select2("destroy"); $el.select2(Object.assign({ width: "100%" }, opts)); }
+    const CODES = [["CNC-01", "c1", 42000], ["CNC-02", "c2", 26000], ["CNC-03", "c3", 61000], ["CNC-04", "c4", 1800], ["CNC-05", "c5", 38000], ["CNC-06", "c6", 52000]];
+    const TYPES = { missing: "t_missing", nodoc: "t_nodoc", dup: "t_dup", amount: "t_amount", date: "t_date", unbal: "t_unbal", onlyA: "t_onlyA", onlyB: "t_onlyB", cross: "t_cross" };
+    const TYPE_ICON = { missing: "remove_circle_outline", nodoc: "link_off", dup: "content_copy", amount: "difference", date: "event_busy", unbal: "balance", onlyA: "arrow_back", onlyB: "arrow_forward", cross: "compare_arrows" };
+    const $code = $("#fCode");
+    function fillCodes() {
+      const v = $code.val();
+      $code.empty().append(new Option(t("allCodes"), "all"));
+      CODES.forEach(c => $code.append(new Option(c[0] + " · " + t(c[1]), c[0])));
+      $code.val(v || "all"); s2($code, {});
+    }
+    fillCodes();
+    const fFrom = document.getElementById("fFrom"), fTo = document.getElementById("fTo");
+    fFrom.value = "2026-11-01"; fTo.value = "2026-11-16";
+
+    let state = null, selCode = null, detail = null;
+
+    // One deterministic day per code: side A (documents) vs side B (entries) and the issues behind any difference.
+    function dayRow(code, d) {
+      const seed = Math.floor(d.getTime() / 86400000) * 31 + CODES.findIndex(c => c[0] === code[0]) * 977;
       const r = UI.rng(seed);
-      const dd = day.getUTCDate();
-      let n = code.id === "R06" ? (dd === 15 || dd === 30 ? 1 : 0) : 3 + Math.floor(r() * 4);
-      if (day.getUTCDay() === 0 && code.id !== "R06") n = Math.max(0, n - 3);
-      const docs = [];
-      for (let i = 0; i < n; i++) {
-        const amt = r2(code.id === "R06" ? UI.between(r, 180000, 210000) : code.base / 4 * UI.between(r, 0.5, 1.5));
-        docs.push({ no: code.prefix + "-" + String(seed % 8000 + 1000 + i * 11), a: amt, b: amt, entry: "AE-" + (seed % 900 + 9000 + i), note: "Posted" });
+      const wd = d.getUTCDay() === 0 ? 0.25 : 1;
+      const docs = Math.max(1, Math.round(UI.between(r, 8, 40) * wd));
+      const A = code[2] * wd * UI.between(r, .8, 1.2);
+      const issues = [];
+      if (r() < .2) {
+        const kind = UI.pick(r, Object.keys(TYPES));
+        const n = 1 + Math.floor(r() * 2);
+        for (let i = 0; i < n; i++) {
+          const exp = UI.between(r, 200, 4500);
+          let posted = exp, diffDate = false;
+          if (kind === "missing" || kind === "onlyA") posted = 0;
+          else if (kind === "nodoc" || kind === "onlyB") posted = exp;
+          else if (kind === "dup") posted = exp * 2;
+          else if (kind === "amount" || kind === "cross") posted = exp + UI.between(r, -300, 300);
+          else if (kind === "date") diffDate = true;
+          issues.push({ kind, key: "DOC-" + (100000 + Math.floor(r() * 899999)), exp: kind === "nodoc" || kind === "onlyB" ? 0 : exp, posted: kind === "unbal" ? exp : posted,
+            entry: posted ? "PT-" + (40000 + Math.floor(r() * 9999)) : "—", diffDate, branch: UI.pick(r, UI.DATA.branches) });
+        }
       }
-      const roll = r();
-      let extra = null;
-      if (docs.length && roll < 0.08) { const d = docs[docs.length - 1]; d.b = 0; d.entry = "—"; d.note = "Document has no entry"; }
-      else if (docs.length && roll < 0.14) { const d = docs[0]; const delta = r2(UI.between(r, 5, 380)); d.b = r2(d.a - delta); d.note = "Posted with a different amount"; }
-      else if (roll < 0.19 && code.id !== "R06") { extra = { no: "—", a: 0, b: r2(UI.between(r, 150, 2400)), entry: "JE-" + (4000 + seed % 180), note: "Manual entry with no source document" }; docs.push(extra); }
-      const A = r2(docs.reduce((s, d) => s + d.a, 0)), B = r2(docs.reduce((s, d) => s + d.b, 0));
-      let type = "ok";
-      if (Math.abs(A - B) >= 0.005) type = extra ? "extra" : docs.some(d => d.b === 0 && d.a > 0) ? "missing" : "differs";
-      return { day, docs, A, B, diff: r2(A - B), type };
+      const B = A + issues.reduce((a, x) => a + (x.kind === "date" ? -x.exp : x.posted - x.exp), 0);
+      return { d, docs, entries: docs + issues.filter(x => x.kind === "dup").length - issues.filter(x => x.kind === "missing").length, A, B, diff: B - A, issues };
+    }
+    function days() { const out = []; for (let x = state.from.getTime(); x <= state.to.getTime(); x += 86400000) out.push(new Date(x)); return out; }
+
+    function statusChip(diff) {
+      return Math.abs(diff) < .005 ? '<span class="chip chip-pos">' + mi("check_circle") + t("st_ok") + "</span>" : '<span class="chip chip-neg">' + mi("error_outline") + t("st_diff") + "</span>";
     }
 
-    let selected = CODES[0];
-    function compute(m) {
-      return CODES.map(c => {
-        const ds = monthDays(m).map(d => dayDetail(c, d));
-        return { code: c, days: ds, A: r2(ds.reduce((s, x) => s + x.A, 0)), B: r2(ds.reduce((s, x) => s + x.B, 0)), bad: ds.filter(x => x.type !== "ok").length };
-      });
-    }
-    let data = [];
-    function renderSummary() {
-      data = compute(document.getElementById("month").value);
-      document.querySelector("#summary tbody").innerHTML = data.map(x => {
-        const diff = r2(x.A - x.B);
-        return '<tr class="pickable' + (x.code === selected ? " sel" : "") + '" tabindex="0" data-id="' + x.code.id + '" aria-selected="' + (x.code === selected) + '"><td class="num">' + x.code.id + "</td><td>" + x.code.a + "</td><td>" + x.code.b +
-          '</td><td class="r num">' + UI.fmtMoney(x.A) + '</td><td class="r num">' + UI.fmtMoney(x.B) + '</td><td class="r num ' + (diff ? "neg" : "") + '">' + UI.fmtMoney(diff) +
-          '</td><td class="r">' + (x.bad ? '<span class="chip chip-neg">' + x.bad + (x.bad === 1 ? " day" : " days") + "</span>" : '<span class="chip chip-pos">None</span>') + "</td></tr>";
-      }).join("");
+    function render() {
+      if (!state) return;
+      const codes = state.code === "all" ? CODES : CODES.filter(c => c[0] === state.code);
+      const sums = codes.map(c => { const rows = days().map(d => dayRow(c, d)); return { c, rows, A: rows.reduce((a, x) => a + x.A, 0), B: rows.reduce((a, x) => a + x.B, 0), nd: rows.filter(x => Math.abs(x.diff) >= .005).length }; });
+      if (!selCode || !codes.find(c => c[0] === selCode)) selCode = sums.find(s => s.nd)?.c[0] || codes[0][0];
+      const A = sums.reduce((a, s) => a + s.A, 0), B = sums.reduce((a, s) => a + s.B, 0);
+      document.getElementById("kpis").innerHTML = [["kCodes", UI.fmtInt(codes.length)], ["kDays", UI.fmtInt(sums.reduce((a, s) => a + s.nd, 0))], ["kA", M(A)], ["kB", M(B)], ["kDiff", '<span class="' + (Math.abs(B - A) >= .005 ? "neg" : "pos") + '">' + M(B - A) + "</span>"]]
+        .map(k => '<div class="mc-kpi"><div class="k-label">' + t(k[0]) + '</div><div class="k-value">' + k[1] + "</div></div>").join("");
+      document.querySelector("#tSum thead").innerHTML = "<tr><th>" + t("colCode") + "</th><th>" + t("colName") + '</th><th class="r">' + t("colA") + '</th><th class="r">' + t("colB") + '</th><th class="r">' + t("colDiff") + '</th><th class="r">' + t("colDays") + "</th><th>" + t("colStatus") + "</th></tr>";
+      document.querySelector("#tSum tbody").innerHTML = sums.map(s => '<tr class="pick' + (s.c[0] === selCode ? " is-sel" : "") + '" tabindex="0" data-code="' + s.c[0] + '" aria-selected="' + (s.c[0] === selCode) + '"><td>' + s.c[0] + "</td><td>" + t(s.c[1]) +
+        '</td><td class="r">' + M(s.A) + '</td><td class="r">' + M(s.B) + '</td><td class="r ' + (Math.abs(s.B - s.A) >= .005 ? "neg" : "") + '">' + M(s.B - s.A) + '</td><td class="r">' + s.nd + "</td><td>" + statusChip(s.B - s.A) + "</td></tr>").join("");
+      document.querySelector("#tSum tfoot").innerHTML = '<tr><td colspan="2">' + t("total") + '</td><td class="r">' + M(A) + '</td><td class="r">' + M(B) + '</td><td class="r">' + M(B - A) + '</td><td class="r">' + sums.reduce((a, s) => a + s.nd, 0) + "</td><td></td></tr>";
+      state.sums = sums;
       renderDaily();
     }
+
     function renderDaily() {
-      const x = data.find(d => d.code === selected);
+      const s = state.sums.find(x => x.c[0] === selCode);
+      document.getElementById("dailyTitle").textContent = t("daily", { c: s.c[0] + " · " + t(s.c[1]) });
       const only = document.getElementById("onlyDiff").checked;
-      const rows = x.days.filter(d => !only || d.type !== "ok");
-      document.getElementById("dailyTitle").textContent = selected.id + " · " + selected.a + " vs " + selected.b.replace(/^[\d-]+ /, "");
-      document.querySelector("#daily tbody").innerHTML = rows.length ? rows.map((d, i) =>
-        '<tr><td class="num">' + UI.fmtDate(d.day) + '</td><td class="r num">' + UI.fmtMoney(d.A) + '</td><td class="r num">' + UI.fmtMoney(d.B) + '</td><td class="r num ' + (d.diff ? "neg" : "") + '">' + UI.fmtMoney(d.diff) +
-        "</td><td>" + typeHtml(d.type) + '</td><td><button class="btn" type="button" data-day="' + UI.fmtDate(d.day) + '"' + (d.docs.length ? "" : " disabled") + ">Documents</button></td></tr>").join("")
-        : '<tr><td colspan="6" class="muted">Every day matches for this code.</td></tr>';
-      const A = r2(rows.reduce((s, d) => s + d.A, 0)), B = r2(rows.reduce((s, d) => s + d.B, 0));
-      document.querySelector("#daily tfoot").innerHTML = "<tr><td>" + rows.length + ' days shown</td><td class="r num">' + UI.fmtMoney(A) + '</td><td class="r num">' + UI.fmtMoney(B) + '</td><td class="r num">' + UI.fmtMoney(r2(A - B)) + "</td><td colspan=\"2\"></td></tr>";
+      const rows = s.rows.filter(x => !only || Math.abs(x.diff) >= .005);
+      document.querySelector("#tDay thead").innerHTML = "<tr><th>" + t("colDate") + "</th><th>" + t("colCode") + '</th><th class="r">' + t("colDocs") + '</th><th class="r">' + t("colEntries") + '</th><th class="r">' + t("colValDocs") + '</th><th class="r">' + t("colValEntries") + '</th><th class="r">' + t("colDiff") + "</th><th>" + t("colStatus") + "</th></tr>";
+      document.querySelector("#tDay tbody").innerHTML = rows.length ? rows.map(x => '<tr class="pick" tabindex="0" data-day="' + UI.fmtDate(x.d) + '"><td>' + UI.fmtDay(x.d) + "</td><td>" + s.c[0] + '</td><td class="r">' + x.docs + '</td><td class="r">' + x.entries + '</td><td class="r">' + M(x.A) + '</td><td class="r">' + M(x.B) +
+        '</td><td class="r ' + (Math.abs(x.diff) >= .005 ? "neg" : "") + '">' + M(x.diff) + "</td><td>" + statusChip(x.diff) + "</td></tr>").join("") : '<tr><td colspan="8" class="muted">' + t("noData") + "</td></tr>";
+      const sum = k => rows.reduce((a, x) => a + x[k], 0);
+      document.querySelector("#tDay tfoot").innerHTML = '<tr><td colspan="2">' + t("total") + '</td><td class="r">' + sum("docs") + '</td><td class="r">' + sum("entries") + '</td><td class="r">' + M(sum("A")) + '</td><td class="r">' + M(sum("B")) + '</td><td class="r">' + M(sum("diff")) + "</td><td></td></tr>";
     }
-    function pick(tr) {
-      selected = CODES.find(c => c.id === tr.dataset.id);
-      document.querySelectorAll("#summary tr.sel").forEach(t => { t.classList.remove("sel"); t.setAttribute("aria-selected", "false"); });
-      tr.classList.add("sel"); tr.setAttribute("aria-selected", "true");
-      renderDaily();
-    }
-    const sb = document.querySelector("#summary tbody");
-    sb.addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) pick(tr); });
-    sb.addEventListener("keydown", e => { const tr = e.target.closest("tr[data-id]"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick(tr); } });
-    document.getElementById("onlyDiff").addEventListener("change", renderDaily);
-    document.getElementById("month").addEventListener("change", renderSummary);
 
-    const EXPLAIN = {
-      ok: "Every document reached accounting with the same amount.",
-      missing: "At least one document has no accounting entry yet. Generating the entries for that day usually fixes it.",
-      extra: "Accounting shows an amount with no source document behind it, usually a manual entry posted to this account.",
-      differs: "A document was posted, but with a different amount. Compare the two columns of the highlighted line."
+    function openDetail(dayIso) {
+      const s = state.sums.find(x => x.c[0] === selCode);
+      const row = s.rows.find(x => UI.fmtDate(x.d) === dayIso);
+      detail = { s, row };
+      fillTypes();
+      renderDetail();
+      UI.openModal("mDetail");
+    }
+    function fillTypes() {
+      const $t = $("#fType"); $t.empty().append(new Option(t("allTypes"), "all"));
+      Object.keys(TYPES).forEach(k => $t.append(new Option(t(TYPES[k]), k)));
+      $t.val("all"); s2($t, { dropdownParent: $("#mDetail") });
+    }
+    function renderDetail() {
+      if (!detail) return;
+      const { s, row } = detail;
+      document.querySelector("#mDetailTitle span:last-child").textContent = t("detailTitle", { c: s.c[0], d: UI.fmtDay(row.d) });
+      const f = $("#fType").val() || "all";
+      const list = row.issues.filter(x => f === "all" || x.kind === f);
+      document.querySelector("#tDetail thead").innerHTML = "<tr><th>" + t("colCode") + "</th><th>" + t("colType") + "</th><th>" + t("colKey") + "</th><th>" + t("colExpDate") + "</th><th>" + t("colEntryDate") + '</th><th class="r">' + t("colExp") + '</th><th class="r">' + t("colPosted") + '</th><th class="r">' + t("colDiff") + "</th><th>" + t("colEntryNo") + "</th><th>" + t("colDetail") + "</th></tr>";
+      const desc = k => t({ missing: "d_missing", nodoc: "d_nodoc", dup: "d_dup", amount: "d_amount", date: "d_date", unbal: "d_unbal", onlyA: "d_onlyAB", onlyB: "d_onlyAB", cross: "d_cross" }[k]);
+      document.querySelector("#tDetail tbody").innerHTML = list.length ? list.map(x => {
+        const ed = x.diffDate ? new Date(row.d.getTime() + 86400000) : row.d;
+        return "<tr><td>" + s.c[0] + '</td><td><span class="chip chip-neg">' + mi(TYPE_ICON[x.kind]) + t(TYPES[x.kind]) + "</span></td><td>" + x.key + " · " + x.branch + "</td><td>" + UI.fmtDay(row.d) + "</td><td>" + (x.entry === "—" ? "—" : UI.fmtDay(ed)) +
+          '</td><td class="r">' + M(x.exp) + '</td><td class="r">' + M(x.posted) + '</td><td class="r neg">' + M(x.posted - x.exp) + "</td><td>" + x.entry + '</td><td style="min-width:240px;white-space:normal" class="muted">' + desc(x.kind) + "</td></tr>";
+      }).join("") : '<tr><td colspan="10" class="muted">' + t("noData") + "</td></tr>";
+    }
+
+    function about() {
+      const legend = [["t_missing", "d_missing"], ["t_nodoc", "d_nodoc"], ["t_dup", "d_dup"], ["t_amount", "d_amount"], ["t_date", "d_date"], ["t_unbal", "d_unbal"], ["t_onlyA", "d_onlyAB"], ["t_cross", "d_cross"]]
+        .map(x => "<b>" + (x[0] === "t_onlyA" ? t("t_onlyA").replace(/A$/, "A / B") : t(x[0])) + "</b><span>" + t(x[1]) + "</span>").join("");
+      document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+      document.querySelector("#about .mc-about > div").insertAdjacentHTML("afterend", '<div class="legend">' + legend + "</div>");
+    }
+
+    function load() {
+      state = { code: $code.val(), from: new Date(fFrom.value + "T00:00:00Z"), to: new Date(fTo.value + "T00:00:00Z") };
+      if (state.to < state.from) { const x = state.from; state.from = state.to; state.to = x; }
+      document.getElementById("result").hidden = false;
+      document.getElementById("hint").textContent = t("loaded", { n: state.code === "all" ? CODES.length : 1, f: UI.fmtDay(state.from), t: UI.fmtDay(state.to) });
+      render();
+    }
+
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); load(); });
+    document.getElementById("onlyDiff").addEventListener("change", renderDaily);
+    const onPick = e => {
+      const tr = e.target.closest("tr.pick");
+      if (!tr) return;
+      if (tr.dataset.code) { selCode = tr.dataset.code; render(); document.getElementById("dailyPanel").scrollIntoView({ behavior: "smooth", block: "start" }); }
+      else if (tr.dataset.day) openDetail(tr.dataset.day);
     };
-    document.querySelector("#daily tbody").addEventListener("click", e => {
-      const b = e.target.closest("[data-day]");
-      if (!b) return;
-      const d = data.find(x => x.code === selected).days.find(x => UI.fmtDate(x.day) === b.dataset.day);
-      document.getElementById("dayTitle").textContent = selected.id + " · " + b.dataset.day;
-      document.getElementById("dayType").innerHTML = typeHtml(d.type);
-      document.getElementById("daySides").innerHTML =
-        '<div><div class="muted small">Side A · ' + selected.a + '</div><div class="num" style="font-size:1.1rem;font-weight:600">' + UI.fmtMoney(d.A) + "</div></div>" +
-        '<div><div class="muted small">Side B · ' + selected.b + '</div><div class="num" style="font-size:1.1rem;font-weight:600">' + UI.fmtMoney(d.B) + "</div></div>";
-      document.getElementById("dayExplain").textContent = EXPLAIN[d.type];
-      document.querySelector("#dayDocs tbody").innerHTML = d.docs.map(x => {
-        const bad = Math.abs(x.a - x.b) >= 0.005;
-        return "<tr" + (bad ? ' style="background:var(--negative-bg)"' : "") + '><td class="num">' + x.no + "</td><td>" + (bad ? "<strong>" + x.note + "</strong>" : x.note) +
-          '</td><td class="r num">' + UI.fmtMoney(x.a) + '</td><td class="r num">' + UI.fmtMoney(x.b) + '</td><td class="num">' + x.entry + "</td></tr>";
-      }).join("");
-      UI.openModal("dayModal");
+    ["tSum", "tDay"].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener("click", onPick);
+      el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPick(e); } });
     });
-    document.getElementById("closeDay").addEventListener("click", () => UI.closeModal("dayModal"));
-    renderSummary();
+    $("#fType").on("change", renderDetail);
+    document.getElementById("mDetailClose").addEventListener("click", () => UI.closeModal("mDetail"));
+    document.addEventListener("langchange", () => { fillCodes(); about(); if (state) { load(); if (document.getElementById("mDetail").classList.contains("open")) { fillTypes(); renderDetail(); } } else document.getElementById("hint").textContent = t("loadHint"); });
+    about();
+    document.getElementById("hint").textContent = t("loadHint");
+    load();
   });
   </script>
 </body>

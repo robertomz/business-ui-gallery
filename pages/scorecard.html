@@ -3,270 +3,187 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Balanced Scorecard · Business UI Gallery</title>
+  <title>Balanced scorecard · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); overflow-x: auto; }
-    .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 12px; font: inherit; font-size: .9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; min-height: 44px; }
-    .tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
-    .state-bar { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-    .flow { display: flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--text-muted); flex-wrap: wrap; }
-    .flow .on { color: var(--text); font-weight: 600; }
-    .persp td { background: var(--surface-2); font-weight: 600; }
-    .obj td:first-child { padding-left: 22px; color: var(--text-muted); font-style: italic; }
-    .kpi-row td:first-child { padding-left: 36px; }
-    input.w { width: 72px; min-height: 32px; padding: 2px 6px; text-align: right; }
-    .weight-msg { font-size: .85rem; display: flex; align-items: center; gap: 6px; }
-    .weight-msg svg { width: 16px; height: 16px; }
-    .area-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-    .area { padding: 10px 0; border-bottom: 1px dashed var(--border); }
-    .area .bar-track { height: 10px; margin-top: 6px; position: relative; }
-    .area .mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text); left: 80%; }
+    tr.drill { cursor: pointer; } tr.drill.is-sel td { background: rgba(20, 184, 166, .12); }
+    .w-in { width: 74px; min-height: 30px; padding: 3px 6px; border: 1px solid var(--mc-line); border-radius: 5px; background: var(--mc-panel-2); color: var(--mc-text); text-align: right; font-size: 12px; }
+    .w-in:disabled { opacity: .6; }
+    .bsc-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .bsc-head h3 { font-size: 15px; font-weight: 900; }
+    .persp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
     .chart-box { position: relative; height: 300px; }
-    .months td, .months th { font-size: .8rem; padding: 6px 8px; }
-    @media (max-width: 900px) { .area-grid { grid-template-columns: 1fr; } }
+    .months { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+    @media (max-width: 900px) { .persp { grid-template-columns: repeat(2, minmax(0, 1fr)); } .months { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   </style>
 </head>
 <body data-page="scorecard" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Balanced scorecard 2026</h1>
-        <p class="muted">Objectives grouped in four perspectives, each measured by weighted KPIs with a monthly target.</p>
-      </div>
-      <div class="field" style="width:220px"><label for="fMonth">Results up to</label><select class="input" id="fMonth"></select></div>
-    </div>
-
-    <section class="card card-body state-bar" aria-label="Scorecard state">
-      <span>State:</span> <span id="stateChip"></span>
-      <div class="flow" aria-hidden="true"><span data-s="Draft">Draft</span>→<span data-s="Approved">Approved</span>→<span data-s="Closed">Closed</span></div>
-      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-primary" id="approveBtn" type="button">Approve</button>
-        <button class="btn" id="closeBtn" type="button">Close year</button>
-        <button class="btn" id="reopenBtn" type="button">Back to draft</button>
-      </div>
-      <p class="muted" style="font-size:.82rem;flex-basis:100%" id="stateHelp"></p>
+  <main id="content">
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">speed</span><span data-i18n="listTitle"></span></h3></div>
+      <div class="table-wrap"><table class="grid" id="tBsc"><thead></thead><tbody></tbody></table></div>
     </section>
 
-    <section class="kpis" aria-label="Scorecard totals">
-      <div class="card kpi"><div class="kpi-label">Total score</div><div class="kpi-value" id="kScore"></div><div class="kpi-delta muted">weighted result, 80% is the goal</div></div>
-      <div class="card kpi"><div class="kpi-label">KPIs on target</div><div class="kpi-value" id="kOn"></div></div>
-      <div class="card kpi"><div class="kpi-label">KPIs at risk</div><div class="kpi-value" id="kRisk"></div><div class="kpi-delta muted">between 70% and 100%</div></div>
-      <div class="card kpi"><div class="kpi-label">KPIs off target</div><div class="kpi-value" id="kOff"></div><div class="kpi-delta muted">below 70%</div></div>
+    <section class="mc-panel">
+      <div class="bsc-head">
+        <div><h3 id="bName"></h3><p class="mc-hint" id="bSub"></p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" id="bActions"></div>
+      </div>
+      <div class="mc-tabs" role="tablist" id="tabs"></div>
+      <div id="panel" style="margin-top:10px"></div>
     </section>
 
-    <section class="card">
-      <div class="tabs" role="tablist" aria-label="Scorecard views">
-        <button class="tab" role="tab" id="tab-design" aria-controls="panel-design" aria-selected="true">Scorecard</button>
-        <button class="tab" role="tab" id="tab-months" aria-controls="panel-months" aria-selected="false" tabindex="-1">Monthly targets</button>
-        <button class="tab" role="tab" id="tab-dash" aria-controls="panel-dash" aria-selected="false" tabindex="-1">Dashboard</button>
-      </div>
-      <div class="card-body" role="tabpanel" id="panel-design" aria-labelledby="tab-design">
-        <div class="weight-msg" id="weightMsg" aria-live="polite" style="margin-bottom:10px"></div>
-        <div class="table-wrap">
-          <table class="grid" id="sc">
-            <thead><tr><th>Perspective / objective / KPI</th><th class="r">Weight %</th><th class="r">Annual target</th><th class="r">Target to date</th><th class="r">Actual to date</th><th class="r">Result</th><th class="r">Score</th><th>Status</th></tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
-        </div>
-      </div>
-      <div class="card-body" role="tabpanel" id="panel-months" aria-labelledby="tab-months" hidden>
-        <div class="field" style="max-width:360px;margin-bottom:10px"><label for="fKpi">KPI</label><select class="input" id="fKpi"></select></div>
-        <p class="muted" style="font-size:.82rem;margin-bottom:8px">The annual target is spread by month with a seasonal profile; the cumulative line is what the KPI is measured against.</p>
-        <div class="table-wrap"><table class="grid months" id="months"></table></div>
-      </div>
-      <div class="card-body" role="tabpanel" id="panel-dash" aria-labelledby="tab-dash" hidden>
-        <div class="area-grid">
-          <div>
-            <h3 style="margin-bottom:6px">Score by perspective</h3>
-            <div id="areas"></div>
-            <p class="muted" style="font-size:.8rem;margin-top:8px">The vertical mark is the 80% goal.</p>
-          </div>
-          <div><div class="chart-box"><canvas id="radar" role="img" aria-label="Score by perspective"></canvas></div></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>The weights of all KPIs must add up to exactly 100%; the screen says how far off it is and blocks approval until it does.</li>
-        <li>Each KPI is compared with its cumulative target to date, not with the annual one, so October is not judged against December.</li>
-        <li>KPIs where lower is better (costs, days, complaints) invert the result. The result is capped at 120% so one KPI cannot hide the others.</li>
-        <li>Draft can be edited; Approved freezes targets and weights; Closed freezes everything. Every state change would be logged in the real system.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const SEASON = [0.07, 0.07, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.09, 0.09, 0.12];
-    const r = UI.rng(2026);
-    const SC = [
-      { p: "Financial", objs: [
-        { o: "Grow profitable sales", kpis: [["Net sales (millions)", 12, 84, false, "m"], ["Gross margin %", 8, 24, false, "pct"]] },
-        { o: "Control operating cost", kpis: [["Operating expense (millions)", 10, 18, true, "m"]] }] },
-      { p: "Customer", objs: [
-        { o: "Serve every order complete", kpis: [["Order fill rate %", 10, 96, false, "pct"]] },
-        { o: "Keep customers satisfied", kpis: [["Satisfaction score", 8, 85, false, "n"], ["Complaints per month", 7, 30, true, "n"]] }] },
-      { p: "Process", objs: [
-        { o: "Collect on time", kpis: [["Days sales outstanding", 10, 32, true, "n"]] },
-        { o: "Keep stock healthy", kpis: [["Days of inventory", 8, 28, true, "n"], ["Route compliance %", 7, 92, false, "pct"]] }] },
-      { p: "People", objs: [
-        { o: "Develop the team", kpis: [["Training hours per person", 10, 40, false, "n"], ["Staff turnover %", 10, 12, true, "pct"]] }] }
+  UI.strings({
+    en: {
+      listTitle: "Balanced scorecards", colName: "Name", colPeriod: "Period", colOwner: "Main responsible", colKpis: "KPIs", colStatus: "Status", colScore: "Score",
+      sDraft: "Draft", sApproved: "Approved", sClosed: "Closed", approveBtn: "Approve", closeBtn: "Close period", reopen: "Back to draft",
+      tabKpis: "KPIs and weights", tabGoal: "Cumulative goal distribution", tabDash: "Dashboard",
+      pFin: "Financial", pCus: "Customer", pPro: "Internal process", pPeo: "People and learning",
+      colKpi: "KPI / Name", colType: "Type", colWeight: "Weight %", colTarget: "Annual goal", colGoalTd: "Goal to date", colActual: "Actual to date", colResult: "Result", colWeighted: "Weighted score",
+      tUp: "Higher is better", tDown: "Lower is better",
+      wOk: "Weights add up to 100%.", wMissing: "Weights add up to {s}%: add {d} points.", wExtra: "Weights add up to {s}%: remove {d} points.",
+      lockedNote: "The scorecard is approved: weights and goals are locked.", closedNote: "The period is closed: results are final.",
+      cantApprove: "Fix the weights before approving.", approvedMsg: "Scorecard approved.", closedMsg: "Period closed.", draftMsg: "Scorecard back to draft.",
+      goalKpi: "KPI", goalHint: "Cumulative % of the annual goal that must be reached by the end of each month. December must be 100%.", goalOk: "The distribution ends at 100%.", goalErr: "December must be 100% and each month at least the previous one.",
+      saveGoals: "Save distribution", savedGoals: "Distribution saved.", byPersp: "Score by perspective", radar: "Result by perspective",
+      sub: "Period {p} · Responsible {r}",
+      aboutText: "Mirrors the balanced scorecard module: each scorecard groups <b>objectives</b> in four <b>perspectives</b> and measures them with <b>KPIs</b>. Every KPI has a type (higher or lower is better), a <b>weight</b> (weights must add up to 100% before approving) and an annual goal split by month as a <b>cumulative distribution</b> (December = 100%). The result compares the actual to date with the goal to date (capped at 120%, inverted for lower-is-better KPIs), and the weighted score adds up to the scorecard score. States go <b>Draft → Approved → Closed</b>: approving locks weights and goals, closing makes results final. All data is generated."
+    },
+    es: {
+      listTitle: "Gestión de BSC", colName: "Nombre", colPeriod: "Período", colOwner: "Responsable principal", colKpis: "KPIs", colStatus: "Estado", colScore: "Puntaje",
+      sDraft: "Borrador", sApproved: "Aprobado", sClosed: "Cerrado", approveBtn: "Aprobar", closeBtn: "Cerrar período", reopen: "Volver a borrador",
+      tabKpis: "KPIs y pesos", tabGoal: "Distribución de meta acumulativa", tabDash: "Dashboard",
+      pFin: "Financiera", pCus: "Cliente", pPro: "Procesos internos", pPeo: "Personas y aprendizaje",
+      colKpi: "KPI / Nombre", colType: "Tipo", colWeight: "Peso %", colTarget: "Meta anual", colGoalTd: "Meta a la fecha", colActual: "Real a la fecha", colResult: "Resultado", colWeighted: "Puntaje ponderado",
+      tUp: "Mayor es mejor", tDown: "Menor es mejor",
+      wOk: "Los pesos suman 100%.", wMissing: "Los pesos suman {s}%: faltan {d} puntos.", wExtra: "Los pesos suman {s}%: sobran {d} puntos.",
+      lockedNote: "El BSC está aprobado: pesos y metas quedan bloqueados.", closedNote: "El período está cerrado: los resultados son finales.",
+      cantApprove: "Corrija los pesos antes de aprobar.", approvedMsg: "BSC aprobado.", closedMsg: "Período cerrado.", draftMsg: "El BSC volvió a borrador.",
+      goalKpi: "KPI", goalHint: "% acumulado de la meta anual que se debe alcanzar al final de cada mes. Diciembre debe ser 100%.", goalOk: "La distribución termina en 100%.", goalErr: "Diciembre debe ser 100% y cada mes al menos igual al anterior.",
+      saveGoals: "Guardar distribución", savedGoals: "Distribución guardada.", byPersp: "Puntaje por perspectiva", radar: "Resultado por perspectiva",
+      sub: "Período {p} · Responsable {r}",
+      aboutText: "Replica el módulo de Balanced Scorecard: cada BSC agrupa <b>objetivos</b> en cuatro <b>perspectivas</b> y los mide con <b>KPIs</b>. Cada KPI tiene un tipo (mayor o menor es mejor), un <b>peso</b> (los pesos deben sumar 100% para aprobar) y una meta anual repartida por mes como <b>distribución acumulativa</b> (diciembre = 100%). El resultado compara el real a la fecha con la meta a la fecha (con tope de 120%, invertido en los KPIs donde menor es mejor), y el puntaje ponderado suma el puntaje del BSC. Los estados van <b>Borrador → Aprobado → Cerrado</b>: aprobar bloquea pesos y metas, cerrar deja los resultados finales. Todos los datos son generados."
+    }
+  });
+
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const PERSP = ["pFin", "pCus", "pPro", "pPeo"];
+    const KPIS = [
+      ["pFin", { en: "Net sales", es: "Venta neta" }, "up", 48000000, "m"], ["pFin", { en: "Gross margin %", es: "Margen bruto %" }, "up", .24, "p"], ["pFin", { en: "Operating expenses", es: "Gastos de operación" }, "down", 7200000, "m"],
+      ["pCus", { en: "Active customers", es: "Clientes activos" }, "up", 1450, "n"], ["pCus", { en: "Order fill rate", es: "Fill rate de pedidos" }, "up", .95, "p"], ["pCus", { en: "Overdue % of receivables", es: "% de cartera en mora" }, "down", .12, "p"],
+      ["pPro", { en: "Days of inventory", es: "Días de inventario" }, "down", 32, "n"], ["pPro", { en: "On-time deliveries", es: "Entregas a tiempo" }, "up", .93, "p"], ["pPro", { en: "Route compliance", es: "Cumplimiento de rutas" }, "up", .9, "p"],
+      ["pPeo", { en: "Training hours", es: "Horas de capacitación" }, "up", 1200, "n"], ["pPeo", { en: "Staff turnover", es: "Rotación de personal" }, "down", .08, "p"]
     ];
-    // Flatten KPIs with a deterministic monthly actual.
-    const KPIS = [];
-    SC.forEach(p => p.objs.forEach(o => o.kpis.forEach(k => {
-      const perf = UI.between(r, 0.72, 1.12);
-      const cumulative = k[4] === "m" || (k[0].startsWith("Training"));
-      KPIS.push({ persp: p.p, obj: o.o, name: k[0], weight: k[1], target: k[2], lower: k[3], unit: k[4], cumulative,
-        actual: MONTHS.map((m, i) => { const noise = UI.between(r, 0.9, 1.1); return k[3] ? (cumulative ? k[2] * SEASON[i] : k[2]) / (perf * noise) : (cumulative ? k[2] * SEASON[i] : k[2]) * perf * noise; }) });
-    })));
-
-    const fMonth = document.getElementById("fMonth");
-    MONTHS.slice(0, 10).forEach((m, i) => fMonth.insertAdjacentHTML("beforeend", "<option value='" + i + "'" + (i === 9 ? " selected" : "") + ">" + m + " 2026</option>"));
-    let state = "Draft";
-    let chart;
-
-    const fmtV = (v, u) => u === "pct" ? v.toFixed(1) + "%" : u === "m" ? v.toFixed(2) : v.toFixed(1);
-    function targetTo(k, m) { return k.cumulative ? k.target * SEASON.slice(0, m + 1).reduce((a, b) => a + b, 0) : k.target; }
-    function actualTo(k, m) { const a = k.actual.slice(0, m + 1); return k.cumulative ? a.reduce((x, y) => x + y, 0) : a.reduce((x, y) => x + y, 0) / a.length; }
-    function result(k, m) { const t = targetTo(k, m), a = actualTo(k, m); return Math.min(1.2, k.lower ? t / a : a / t); }
-    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px">' + p + "</svg>";
-    function status(res) {
-      if (res >= 1) return '<span class="chip chip-pos">' + SVG('<path d="M5 12l5 5 9-10"/>') + "On target</span>";
-      if (res >= 0.7) return '<span class="chip chip-warn">' + SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4"/>') + "At risk</span>";
-      return '<span class="chip chip-neg">' + SVG('<path d="M6 6l12 12M18 6L6 18"/>') + "Off target</span>";
+    const MONTH = 10; // November
+    const defaultDist = Array.from({ length: 12 }, (_, i) => Math.round((i + 1) / 12 * 1000) / 10);
+    function build(seed, name, owner, status) {
+      const r = UI.rng(seed);
+      const weights = [14, 8, 8, 10, 10, 8, 9, 9, 8, 8, 8];
+      return { name, owner, status, period: "2026", kpis: KPIS.map((k, i) => {
+        const goalTd = k[4] === "p" ? k[3] : k[3] * defaultDist[MONTH] / 100;
+        const act = goalTd * (k[2] === "up" ? UI.between(r, .78, 1.12) : UI.between(r, .85, 1.25));
+        return { p: k[0], name: k[1], type: k[2], target: k[3], fmt: k[4], weight: weights[i] + (seed % 3 === 0 && i === 0 ? 3 : 0), act, dist: defaultDist.slice() };
+      }) };
     }
-    const totalWeight = () => KPIS.reduce((a, k) => a + k.weight, 0);
+    const BSC = [build(11, { en: "Company scorecard 2026", es: "BSC empresa 2026" }, "D. Medina", "approved"), build(12, { en: "Sales area 2026", es: "Área de ventas 2026" }, "A. Torres", "draft"), build(13, { en: "Operations area 2025", es: "Área de operaciones 2025" }, "C. Ramos", "closed")];
+    BSC[2].period = "2025";
+    let sel = 0, tab = "kpis", goalIdx = 0, chart;
 
-    function renderState() {
-      const chipCls = { Draft: "chip-info", Approved: "chip-pos", Closed: "chip-warn" }[state];
-      document.getElementById("stateChip").innerHTML = '<span class="chip ' + chipCls + '">' + state + "</span>";
-      document.querySelectorAll(".flow span[data-s]").forEach(s => s.classList.toggle("on", s.dataset.s === state));
-      const w = totalWeight();
-      document.getElementById("approveBtn").disabled = state !== "Draft" || Math.abs(w - 100) > 0.001;
-      document.getElementById("closeBtn").disabled = state !== "Approved";
-      document.getElementById("reopenBtn").disabled = state !== "Approved";
-      document.getElementById("stateHelp").textContent = state === "Draft" ? "Weights can be edited. Approve when they add up to 100%." :
-        state === "Approved" ? "Targets and weights are frozen; results keep updating every month." : "The year is closed. Nothing can change.";
+    const fmtV = (k, v) => k.fmt === "m" ? M(v) : k.fmt === "p" ? UI.fmtPct(v) : UI.fmtInt(v);
+    const goalTd = k => k.fmt === "p" ? k.target : k.target * k.dist[MONTH] / 100;
+    const result = k => { const g = goalTd(k); const res = k.type === "up" ? k.act / g : g / k.act; return Math.min(1.2, Math.max(0, res)); };
+    const wsum = b => b.kpis.reduce((a, k) => a + Number(k.weight || 0), 0);
+    const score = b => b.kpis.reduce((a, k) => a + result(k) * k.weight / 100, 0);
+    const chipSt = s => s === "draft" ? '<span class="chip chip-warn">' + mi("edit") + t("sDraft") + "</span>" : s === "approved" ? '<span class="chip chip-pos">' + mi("verified") + t("sApproved") + "</span>" : '<span class="chip chip-info">' + mi("lock") + t("sClosed") + "</span>";
+    const resChip = v => '<span class="' + (v >= 1 ? "pos" : v >= .9 ? "" : "neg") + '">' + (v >= 1 ? "▲ " : v >= .9 ? "■ " : "▼ ") + UI.fmtPct(v) + "</span>";
+
+    function renderList() {
+      document.querySelector("#tBsc thead").innerHTML = "<tr><th>" + t("colName") + "</th><th>" + t("colPeriod") + "</th><th>" + t("colOwner") + '</th><th class="r">' + t("colKpis") + "</th><th>" + t("colStatus") + '</th><th class="r">' + t("colScore") + "</th></tr>";
+      document.querySelector("#tBsc tbody").innerHTML = BSC.map((b, i) => '<tr class="drill' + (i === sel ? " is-sel" : "") + '" tabindex="0" data-i="' + i + '"><td><b>' + UI.L(b.name) + "</b></td><td>" + b.period + "</td><td>" + b.owner + '</td><td class="r">' + b.kpis.length + "</td><td>" + chipSt(b.status) + '</td><td class="r">' + resChip(score(b)) + "</td></tr>").join("");
     }
-
-    function renderWeightMsg() {
-      const w = totalWeight();
-      const el = document.getElementById("weightMsg");
-      if (Math.abs(w - 100) < 0.001) el.innerHTML = '<span class="pos">' + SVG('<path d="M5 12l5 5 9-10"/>') + "</span> Weights add up to 100%.";
-      else el.innerHTML = '<span class="neg">' + SVG('<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>') + '</span><span class="neg">Weights add up to ' + w.toFixed(1) + "%. " + (w > 100 ? "Remove " : "Add ") + Math.abs(100 - w).toFixed(1) + " points before approving.</span>";
+    function renderDetail() {
+      const b = BSC[sel];
+      document.getElementById("bName").textContent = UI.L(b.name);
+      document.getElementById("bSub").innerHTML = t("sub", { p: b.period, r: b.owner }) + " · " + chipSt(b.status);
+      document.getElementById("bActions").innerHTML = b.status === "draft" ? '<button class="btn btn-teal" type="button" data-act="approve">' + mi("verified") + t("approveBtn") + "</button>"
+        : b.status === "approved" ? '<button class="btn btn-violet" type="button" data-act="close">' + mi("lock") + t("closeBtn") + '</button><button class="btn" type="button" data-act="draft">' + mi("undo") + t("reopen") + "</button>" : "";
+      document.getElementById("tabs").innerHTML = [["kpis", "tabKpis"], ["goal", "tabGoal"], ["dash", "tabDash"]].map(x => '<button type="button" role="tab" class="mc-tab" aria-selected="' + (tab === x[0]) + '" data-tab="' + x[0] + '">' + t(x[1]) + "</button>").join("");
+      const P = document.getElementById("panel");
+      const locked = b.status !== "draft";
+      if (tab === "kpis") {
+        const s = wsum(b), msg = s === 100 ? '<p class="chip chip-pos" style="margin-bottom:8px">' + mi("check_circle") + t("wOk") + "</p>" : '<p class="chip chip-neg" style="margin-bottom:8px" role="alert">' + mi("error") + t(s < 100 ? "wMissing" : "wExtra", { s, d: Math.abs(100 - s) }) + "</p>";
+        P.innerHTML = (locked ? '<p class="ig-nota">' + t(b.status === "closed" ? "closedNote" : "lockedNote") + "</p>" : "") + '<div id="wMsg">' + msg + "</div>" +
+          '<div class="table-wrap"><table class="grid"><thead><tr><th>' + t("colKpi") + "</th><th>" + t("colType") + '</th><th class="r">' + t("colWeight") + '</th><th class="r">' + t("colTarget") + '</th><th class="r">' + t("colGoalTd") + '</th><th class="r">' + t("colActual") + '</th><th class="r">' + t("colResult") + '</th><th class="r">' + t("colWeighted") + "</th></tr></thead><tbody>" +
+          PERSP.map(p => '<tr class="group"><td colspan="8">' + t(p) + "</td></tr>" + b.kpis.map((k, i) => k.p !== p ? "" : "<tr><td>" + UI.L(k.name) + "</td><td>" + (k.type === "up" ? mi("north_east") + " " + t("tUp") : mi("south_east") + " " + t("tDown")) +
+            '</td><td class="r"><input class="w-in" type="number" min="0" max="100" step="1" data-w="' + i + '" value="' + k.weight + '"' + (locked ? " disabled" : "") + ' aria-label="' + t("colWeight") + " " + UI.L(k.name) + '"></td><td class="r">' + fmtV(k, k.target) + '</td><td class="r">' + fmtV(k, goalTd(k)) + '</td><td class="r">' + fmtV(k, k.act) + '</td><td class="r">' + resChip(result(k)) + '</td><td class="r">' + UI.fmtPct(result(k) * k.weight / 100, 2) + "</td></tr>").join("")).join("") +
+          '</tbody><tfoot><tr><td colspan="2">' + t("total") + '</td><td class="r" id="wTot">' + s + '%</td><td colspan="4"></td><td class="r">' + UI.fmtPct(score(b), 2) + "</td></tr></tfoot></table></div>";
+      } else if (tab === "goal") {
+        const k = b.kpis[goalIdx];
+        P.innerHTML = '<div class="mc-filters" style="margin-bottom:8px"><div class="mc-field w-lg"><label for="gKpi">' + t("goalKpi") + '</label><select id="gKpi"></select></div></div><p class="mc-hint" style="margin-bottom:8px">' + t("goalHint") + "</p>" +
+          '<div class="months">' + k.dist.map((v, m) => '<div class="mc-field"><label for="g' + m + '">' + UI.monthName(m, true) + '</label><input class="num" type="number" step="0.1" min="0" max="100" id="g' + m + '" data-g="' + m + '" value="' + v + '"' + (locked ? " disabled" : "") + "></div>").join("") + '</div><p id="gMsg" style="margin-top:8px"></p>' +
+          (locked ? "" : '<div style="margin-top:8px"><button class="btn btn-teal" type="button" id="gSave">' + mi("save") + t("saveGoals") + "</button></div>");
+        const $g = $("#gKpi"); b.kpis.forEach((x, i) => $g.append(new Option(t(x.p) + " · " + UI.L(x.name), String(i)))); $g.val(String(goalIdx)).select2({ width: "100%" });
+        $g.on("change", () => { goalIdx = Number($g.val()); renderDetail(); });
+        checkGoal();
+      } else {
+        const per = PERSP.map(p => { const ks = b.kpis.filter(k => k.p === p), w = ks.reduce((a, k) => a + k.weight, 0); return { p, w, s: ks.reduce((a, k) => a + result(k) * k.weight, 0) / (w || 1) }; });
+        P.innerHTML = '<div class="persp">' + per.map(x => '<div class="mc-kpi is-accent" style="--k-color:' + (x.s >= 1 ? "#2dd4bf" : x.s >= .9 ? "#f59e0b" : "#fb7185") + '"><div class="k-label">' + t(x.p) + '</div><div class="k-value">' + resChip(x.s) + '</div><div class="k-sub">' + t("colWeight") + " " + x.w + '%</div><div class="bar-track" style="margin-top:6px"><span style="width:' + Math.min(100, x.s / 1.2 * 100) + "%;background:" + (x.s >= 1 ? "var(--mc-good)" : x.s >= .9 ? "var(--mc-amber)" : "var(--mc-bad)") + '"></span></div></div>').join("") +
+          '</div><div class="chart-box" style="margin-top:12px"><canvas id="radar" role="img" aria-label="' + t("radar") + '"></canvas></div>';
+        const tx = UI.cssVar("--mc-muted"), grid = UI.cssVar("--mc-line");
+        if (chart) chart.destroy();
+        chart = new Chart(document.getElementById("radar"), { type: "radar", data: { labels: per.map(x => t(x.p)), datasets: [{ label: t("radar"), data: per.map(x => Math.round(x.s * 1000) / 10), borderColor: "#14b8a6", backgroundColor: "rgba(20,184,166,.2)", pointBackgroundColor: "#14b8a6" }, { label: "100%", data: per.map(() => 100), borderColor: "#f59e0b", borderDash: [5, 4], pointRadius: 0, backgroundColor: "transparent" }] },
+          options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: tx } } }, scales: { r: { min: 0, max: 120, ticks: { color: tx, backdropColor: "transparent", stepSize: 20 }, grid: { color: grid }, angleLines: { color: grid }, pointLabels: { color: tx, font: { size: 11 } } } } } });
+      }
     }
-
-    function render() {
-      const m = +fMonth.value;
-      let html = "", total = 0, on = 0, risk = 0, off = 0;
-      SC.forEach(p => {
-        const ks = KPIS.filter(k => k.persp === p.p);
-        const pw = ks.reduce((a, k) => a + k.weight, 0);
-        html += "<tr class='persp'><td>" + p.p + "</td><td class='r num'>" + pw.toFixed(1) + "</td><td colspan='6'></td></tr>";
-        p.objs.forEach(o => {
-          html += "<tr class='obj'><td colspan='8'>" + o.o + "</td></tr>";
-          KPIS.filter(k => k.obj === o.o).forEach(k => {
-            const res = result(k, m), score = res * k.weight;
-            total += score;
-            if (res >= 1) on++; else if (res >= 0.7) risk++; else off++;
-            const idx = KPIS.indexOf(k);
-            html += "<tr class='kpi-row'><td>" + k.name + (k.lower ? " <span class='muted' style='font-size:.78rem'>(lower is better)</span>" : "") + "</td>" +
-              "<td class='r'><label class='sr-only' for='w" + idx + "'>Weight of " + k.name + "</label><input class='input w num' id='w" + idx + "' data-i='" + idx + "' value='" + k.weight + "' inputmode='decimal'" + (state !== "Draft" ? " disabled" : "") + "></td>" +
-              "<td class='r num'>" + fmtV(k.target, k.unit) + "</td><td class='r num'>" + fmtV(targetTo(k, m), k.unit) + "</td><td class='r num'>" + fmtV(actualTo(k, m), k.unit) +
-              "</td><td class='r num'>" + UI.fmtPct(res, 0) + "</td><td class='r num'>" + score.toFixed(1) + "</td><td>" + status(res) + "</td></tr>";
-          });
-        });
-      });
-      document.querySelector("#sc tbody").innerHTML = html;
-      document.querySelector("#sc tfoot").innerHTML = "<tr><td>Total</td><td class='r num'>" + totalWeight().toFixed(1) + "</td><td colspan='4'></td><td class='r num'>" + total.toFixed(1) + "</td><td>" + status(total / 100 / 0.8 >= 1 ? 1 : total / 100 / 0.8) + "</td></tr>";
-      document.getElementById("kScore").textContent = total.toFixed(1) + "%";
-      document.getElementById("kOn").textContent = on;
-      document.getElementById("kRisk").textContent = risk;
-      document.getElementById("kOff").textContent = off;
-      renderWeightMsg(); renderState(); renderMonths(); renderDash();
+    function checkGoal() {
+      const vals = Array.from({ length: 12 }, (_, m) => Number(document.getElementById("g" + m).value));
+      const ok = Math.abs(vals[11] - 100) < .001 && vals.every((v, i) => i === 0 || v >= vals[i - 1]);
+      document.getElementById("gMsg").innerHTML = ok ? '<span class="chip chip-pos">' + mi("check_circle") + t("goalOk") + "</span>" : '<span class="chip chip-neg" role="alert">' + mi("error") + t("goalErr") + "</span>";
+      const s = document.getElementById("gSave"); if (s) s.disabled = !ok;
+      return ok ? vals : null;
     }
-
-    document.querySelector("#sc tbody").addEventListener("input", e => {
-      const i = e.target.dataset.i;
-      if (i == null) return;
-      const v = parseFloat(e.target.value.replace(/[^0-9.]/g, ""));
-      KPIS[i].weight = isNaN(v) ? 0 : v;
-      e.target.setAttribute("aria-invalid", isNaN(v) ? "true" : "false");
-      renderWeightMsg(); renderState();
-      // Keep focus: refresh the totals only.
-      document.querySelector("#sc tfoot td:nth-child(2)").textContent = totalWeight().toFixed(1);
+    document.getElementById("panel").addEventListener("input", e => {
+      const w = e.target.closest("[data-w]");
+      if (w) { const b = BSC[sel]; b.kpis[Number(w.dataset.w)].weight = Math.max(0, Number(w.value) || 0); const s = wsum(b);
+        document.getElementById("wTot").textContent = s + "%";
+        document.getElementById("wMsg").innerHTML = s === 100 ? '<p class="chip chip-pos" style="margin-bottom:8px">' + mi("check_circle") + t("wOk") + "</p>" : '<p class="chip chip-neg" style="margin-bottom:8px" role="alert">' + mi("error") + t(s < 100 ? "wMissing" : "wExtra", { s, d: Math.abs(100 - s) }) + "</p>";
+        renderList(); }
+      if (e.target.closest("[data-g]")) checkGoal();
     });
-    document.querySelector("#sc tbody").addEventListener("change", render);
-
-    const fKpi = document.getElementById("fKpi");
-    KPIS.forEach((k, i) => fKpi.insertAdjacentHTML("beforeend", "<option value='" + i + "'>" + k.persp + " · " + k.name + "</option>"));
-    fKpi.addEventListener("change", renderMonths);
-    function renderMonths() {
-      const k = KPIS[+fKpi.value], m = +fMonth.value;
-      const row = (label, f) => "<tr><th>" + label + "</th>" + MONTHS.map((x, i) => "<td class='r num'>" + f(i) + "</td>").join("") + "</tr>";
-      document.getElementById("months").innerHTML = "<thead><tr><th></th>" + MONTHS.map(x => "<th class='r'>" + x + "</th>").join("") + "</tr></thead><tbody>" +
-        row("Target (month)", i => fmtV(k.cumulative ? k.target * SEASON[i] : k.target, k.unit)) +
-        row("Target (cumulative)", i => fmtV(targetTo(k, i), k.unit)) +
-        row("Actual (cumulative)", i => i <= m ? fmtV(actualTo(k, i), k.unit) : "—") +
-        row("Result", i => i <= m ? UI.fmtPct(result(k, i), 0) : "—") + "</tbody>";
-    }
-
-    function renderDash() {
-      const m = +fMonth.value;
-      const areas = SC.map(p => {
-        const ks = KPIS.filter(k => k.persp === p.p);
-        const w = ks.reduce((a, k) => a + k.weight, 0);
-        const s = ks.reduce((a, k) => a + result(k, m) * k.weight, 0);
-        return { p: p.p, v: w ? s / w : 0 };
-      });
-      document.getElementById("areas").innerHTML = areas.map(a => {
-        const color = a.v >= 0.8 ? "var(--positive)" : a.v >= 0.6 ? "var(--warning)" : "var(--negative)";
-        return "<div class='area'><div style='display:flex;justify-content:space-between'><span>" + a.p + "</span><span class='num'>" + UI.fmtPct(a.v, 0) + "</span></div><div class='bar-track'><span style='width:" + Math.min(100, a.v / 1.2 * 100) + "%;background:" + color + "'></span><i class='mark' style='left:" + (0.8 / 1.2 * 100) + "%'></i></div></div>";
-      }).join("");
-      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border"), c1 = UI.cssVar("--chart-1");
-      if (chart) chart.destroy();
-      chart = new Chart(document.getElementById("radar"), {
-        type: "radar",
-        data: { labels: areas.map(a => a.p), datasets: [
-          { label: "Score", data: areas.map(a => +(a.v * 100).toFixed(1)), borderColor: c1, backgroundColor: c1 + "33", pointBackgroundColor: c1 },
-          { label: "Goal 80%", data: areas.map(() => 80), borderColor: text, borderDash: [4, 4], pointRadius: 0, backgroundColor: "transparent" }] },
-        options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: text } } },
-          scales: { r: { min: 0, max: 120, ticks: { color: text, backdropColor: "transparent", stepSize: 40 }, grid: { color: grid }, angleLines: { color: grid }, pointLabels: { color: UI.cssVar("--text"), font: { size: 12 } } } } }
-      });
-    }
-
-    // Tabs with arrow keys.
-    const tabs = [...document.querySelectorAll(".tab")];
-    function selectTab(t) {
-      tabs.forEach(x => { const on = x === t; x.setAttribute("aria-selected", on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute("aria-controls")).hidden = !on; });
-      t.focus();
-      if (t.id === "tab-dash") renderDash();
-    }
-    tabs.forEach((t, i) => {
-      t.addEventListener("click", () => selectTab(t));
-      t.addEventListener("keydown", e => {
-        if (e.key === "ArrowRight") selectTab(tabs[(i + 1) % tabs.length]);
-        if (e.key === "ArrowLeft") selectTab(tabs[(i - 1 + tabs.length) % tabs.length]);
-      });
+    document.getElementById("panel").addEventListener("change", e => { if (e.target.closest("[data-w]")) renderDetail(); });
+    document.getElementById("panel").addEventListener("click", e => {
+      if (e.target.closest("#gSave")) { const v = checkGoal(); if (v) { BSC[sel].kpis[goalIdx].dist = v; renderList(); UI.toast(t("savedGoals")); } }
     });
-
-    document.getElementById("approveBtn").addEventListener("click", () => { state = "Approved"; render(); UI.toast("Scorecard approved. Targets and weights are frozen."); });
-    document.getElementById("closeBtn").addEventListener("click", () => { state = "Closed"; render(); UI.toast("Year closed."); });
-    document.getElementById("reopenBtn").addEventListener("click", () => { state = "Draft"; render(); UI.toast("Back to draft."); });
-    fMonth.addEventListener("change", render);
-    document.addEventListener("themechange", renderDash);
-    render();
+    document.getElementById("bActions").addEventListener("click", e => {
+      const a = e.target.closest("[data-act]"); if (!a) return; const b = BSC[sel];
+      if (a.dataset.act === "approve") { if (wsum(b) !== 100) { UI.toast(t("cantApprove")); tab = "kpis"; renderDetail(); return; } b.status = "approved"; UI.toast(t("approvedMsg")); }
+      if (a.dataset.act === "close") { b.status = "closed"; UI.toast(t("closedMsg")); }
+      if (a.dataset.act === "draft") { b.status = "draft"; UI.toast(t("draftMsg")); }
+      renderList(); renderDetail();
+    });
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; renderDetail(); } });
+    document.getElementById("tabs").addEventListener("keydown", e => { if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return; const order = ["kpis", "goal", "dash"]; tab = order[(order.indexOf(tab) + (e.key === "ArrowRight" ? 1 : 2)) % 3]; renderDetail(); document.querySelector('#tabs [data-tab="' + tab + '"]').focus(); });
+    const tb = document.getElementById("tBsc");
+    tb.addEventListener("click", e => { const tr = e.target.closest("tr.drill"); if (tr) { sel = Number(tr.dataset.i); goalIdx = 0; renderList(); renderDetail(); } });
+    tb.addEventListener("keydown", e => { const tr = e.target.closest("tr.drill"); if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); tr.click(); } });
+    const about = () => document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    document.addEventListener("langchange", () => { renderList(); renderDetail(); about(); });
+    document.addEventListener("themechange", () => { if (tab === "dash") renderDetail(); });
+    renderList(); renderDetail(); about();
   });
   </script>
 </body>

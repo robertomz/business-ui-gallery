@@ -3,715 +3,301 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Price Check · Business UI Gallery</title>
+  <title>Price check · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    /* DataTables themed to the tokens (same fixes as the sales report) */
-    #prices { font-size: .84rem; }
-    #prices td, #prices th { white-space: nowrap; padding: 6px 10px; }
-    #prices tbody tr { height: 38px; }
-    #prices tbody td { border-bottom: 1px solid var(--border); }
-    #prices tbody tr, #prices tbody td { background: var(--surface) !important; box-shadow: none !important; color: var(--text); }
-    #prices tbody tr:hover td { background: var(--surface-2) !important; }
-    .dataTables_scrollHead thead th { font-family: var(--font-sans) !important; padding: 8px 10px !important; white-space: nowrap; background: var(--surface-2); color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
-    .dataTables_scrollHead { background: var(--surface-2); }
-    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field { margin-top: 8px; color: var(--text); font-family: inherit; }
-    .select2-container--default .select2-selection--multiple .select2-selection__rendered { padding: 0 8px; }
-
-    .chip svg { width: 13px; height: 13px; flex: none; }
-    .chips { display: flex; gap: 4px; flex-wrap: nowrap; }
-    .btn-sm { min-height: 30px; padding: 0 10px; font-size: .82rem; }
-    .check { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; font-size: .9rem; cursor: pointer; }
-    .check input { width: 18px; height: 18px; accent-color: var(--primary); }
-
-    .kpi-mini { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; margin-top: 4px; font-size: .84rem; }
-
-    /* Tabs */
-    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); overflow-x: auto; }
-    .tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; padding: 12px 10px; font: inherit; font-size: .92rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
-    .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--primary); font-weight: 500; }
-    .tab:hover { color: var(--text); }
-    .count { font-family: var(--font-mono); font-size: .74rem; padding: 0 6px; border-radius: 999px; background: var(--warning-bg); color: var(--warning); }
-    .panel { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
-    .panel-bar { display: flex; gap: var(--space-3); align-items: end; flex-wrap: wrap; justify-content: space-between; }
-
-    /* Edit modal */
-    .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-3); padding: var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
-    .fact-label { font-size: .75rem; color: var(--text-muted); }
-    .fact-value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
-    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-    .notice { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-sm); font-size: .86rem; }
-    .notice svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
-    .notice-warn { background: var(--warning-bg); color: var(--warning); }
-    .notice-info { background: var(--info-bg); color: var(--info); }
-    textarea.input { min-height: 70px; resize: vertical; }
-    .stack-gap { display: flex; flex-direction: column; gap: var(--space-3); }
-    .stack-gap > * { flex-shrink: 0; }
-    .compare td:first-child { color: var(--text-muted); }
-
-    @media (max-width: 560px) {
-      .pair { grid-template-columns: 1fr; }
-      .tabs { padding: 0 var(--space-2); }
-      .panel { padding: var(--space-3); }
-    }
+    tr.click { cursor: pointer; }
+    tr.click:focus-visible { outline: 2px solid var(--mc-cyan); outline-offset: -2px; }
+    tr.is-checked td { opacity: .62; }
+    .cost-up { color: var(--mc-bad); font-weight: 800; } .cost-down { color: var(--mc-good); font-weight: 800; }
+    .progress-line { display: flex; align-items: center; gap: 10px; min-width: 220px; font-size: 12px; }
+    .progress-line .progress { flex: 1; }
+    .cfg-table input { width: 100%; min-height: 30px; padding: 4px 7px; border: 1px solid var(--mc-line); border-radius: 5px; background: var(--mc-panel-2); color: var(--mc-text); font-size: 12px; text-align: right; }
+    .cfg-table input[aria-invalid="true"] { border-color: var(--mc-bad); }
+    .chk { width: 18px; height: 18px; accent-color: var(--mc-teal); }
   </style>
 </head>
 <body data-page="price-check" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Price check</h1>
-        <p class="muted">Prices by list against the current cost. Margin is measured over the sale price, and every change goes through approval.</p>
-      </div>
-      <button class="btn" type="button" id="goSim">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
-        Simulate cost increase
-      </button>
+  <main id="content">
+    <div class="mc-tabs" role="tablist" id="tabs"></div>
+
+    <!-- 1. Check by purchase -->
+    <div id="vCheck" style="display:flex;flex-direction:column;gap:12px">
+      <section class="mc-panel">
+        <form class="mc-filters" id="fCheck">
+          <div class="mc-field" style="max-width:300px"><label for="fPo" data-i18n="purchase"></label><select id="fPo"></select></div>
+          <label class="mc-check"><input type="checkbox" id="onlyReq"><span data-i18n="onlyReq"></span></label>
+          <label class="mc-check"><input type="checkbox" id="onlyPend"><span data-i18n="onlyPend"></span></label>
+          <span style="flex:1"></span>
+          <div class="progress-line"><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="chkBar"><span></span></div><b class="num" id="chkTxt"></b></div>
+        </form>
+      </section>
+      <section class="mc-kpis" id="kCheck"></section>
+      <section class="mc-panel">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">fact_check</span><span data-i18n="checkTitle"></span></h3><span class="mc-hint" data-i18n="checkHint"></span></div>
+        <div class="table-wrap"><table class="grid" id="tCheck"><thead></thead><tbody></tbody></table></div>
+      </section>
     </div>
 
-    <section class="kpis" aria-label="Figures for the filtered prices" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Products</div><div class="kpi-value" id="kProducts">–</div><div class="kpi-delta muted" id="kRows"></div></div>
-      <div class="card kpi"><div class="kpi-label">Prices with alerts</div><div class="kpi-value" id="kAlerts">–</div><div class="kpi-delta muted" id="kAlertsD"></div></div>
-      <div class="card kpi"><div class="kpi-label">Pending approvals</div><div class="kpi-value" id="kPending">–</div><div class="kpi-delta muted">Price change requests</div></div>
-      <div class="card kpi"><div class="kpi-label">Average margin by list</div><div class="kpi-mini" id="kMargins"></div></div>
-    </section>
+    <!-- 2. Catalog prices -->
+    <div id="vCat" hidden style="display:flex;flex-direction:column;gap:12px">
+      <section class="mc-panel">
+        <form class="mc-filters" id="fCat">
+          <div class="mc-field"><label for="cSup" data-i18n="supplier"></label><select id="cSup"></select></div>
+          <div class="mc-field"><label for="cBuyer" data-i18n="buyer"></label><select id="cBuyer"></select></div>
+          <div class="mc-field"><label for="cCat" data-i18n="category"></label><select id="cCat"></select></div>
+          <div class="mc-field"><label for="cList" data-i18n="priceList"></label><select id="cList"></select></div>
+          <div class="mc-field"><label for="cAlert" data-i18n="alert"></label><select id="cAlert"></select></div>
+          <label class="mc-check"><input type="checkbox" id="cActive" checked><span data-i18n="onlyActive"></span></label>
+          <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+        </form>
+      </section>
+      <section class="mc-kpis" id="kCat"></section>
+      <section class="mc-panel"><div class="table-wrap" style="max-height:560px"><table class="grid" id="tCat"><thead></thead><tbody></tbody><tfoot></tfoot></table></div></section>
+    </div>
 
-    <section class="card">
-      <div class="tabs" role="tablist" aria-label="Price check views">
-        <button class="tab" role="tab" id="tab-prices" aria-controls="panel-prices" aria-selected="true">Prices</button>
-        <button class="tab" role="tab" id="tab-approvals" aria-controls="panel-approvals" aria-selected="false" tabindex="-1">Approvals <span class="count" id="pendingCount">0</span></button>
-        <button class="tab" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1">History</button>
-        <button class="tab" role="tab" id="tab-sim" aria-controls="panel-sim" aria-selected="false" tabindex="-1">Cost simulation</button>
-      </div>
-
-      <!-- Prices -->
-      <div class="panel" role="tabpanel" id="panel-prices" aria-labelledby="tab-prices">
-        <div class="filters">
-          <div class="field"><label for="fCategory">Category</label><select id="fCategory" multiple></select></div>
-          <div class="field"><label for="fList">Price list</label><select id="fList" multiple></select></div>
-          <div class="field"><label for="fAlert">Alert</label><select id="fAlert" multiple></select></div>
-          <div class="field"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Product, code, supplier…"></div>
-          <div class="field"><label class="sr-only" for="fOnly">Only prices with alerts</label><span class="check"><input type="checkbox" id="fOnly"><label for="fOnly" style="color:var(--text);font-size:.9rem">Only prices with alerts</label></span></div>
-          <div class="field"><button class="btn" id="clearBtn" type="button">Clear filters</button></div>
-        </div>
-        <table id="prices" style="width:100%">
-          <thead><tr>
-            <th>Code</th><th>Product</th><th>Category</th><th>Supplier</th><th>List</th>
-            <th class="r">Avg cost</th><th class="r">Last cost</th><th class="r">Cost change</th>
-            <th class="r">Price</th><th class="r">Margin</th><th class="r">Minimum</th><th>Alerts</th><th>Status</th><th><span class="sr-only">Actions</span></th>
-          </tr></thead>
-        </table>
-      </div>
-
-      <!-- Approvals -->
-      <div class="panel" role="tabpanel" id="panel-approvals" aria-labelledby="tab-approvals" hidden>
-        <div class="panel-bar">
-          <p class="muted" style="font-size:.88rem">Changes only reach the price list after approval. A rejection needs a reason.</p>
-          <div class="field" style="width:200px">
-            <label for="aStatus">Show</label>
-            <select class="input" id="aStatus">
-              <option value="Pending" selected>Pending</option>
-              <option value="">All requests</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-              <option value="Replaced">Replaced</option>
-            </select>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table class="grid" id="approvals">
-            <thead><tr>
-              <th>Request</th><th>Date</th><th>Product</th><th>List</th><th class="r">Old price</th><th class="r">New price</th>
-              <th class="r">Margin</th><th>Requested by</th><th>Reason</th><th>Status</th><th><span class="sr-only">Actions</span></th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- History -->
-      <div class="panel" role="tabpanel" id="panel-history" aria-labelledby="tab-history" hidden>
-        <div class="panel-bar">
-          <p class="muted" style="font-size:.88rem">Every approved change: who asked, who approved, when, and the margin before and after.</p>
-          <div class="field" style="width:280px;max-width:100%"><label for="hProduct">Product</label><select id="hProduct"></select></div>
-        </div>
-        <div class="table-wrap">
-          <table class="grid" id="history">
-            <thead><tr>
-              <th>Date</th><th>Product</th><th>List</th><th class="r">Old price</th><th class="r">New price</th><th class="r">Change</th>
-              <th class="r">Margin</th><th>Requested by</th><th>Approved by</th><th>Reason</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Cost simulation -->
-      <div class="panel" role="tabpanel" id="panel-sim" aria-labelledby="tab-sim" hidden>
-        <p class="muted" style="font-size:.88rem">What happens to the margins if a supplier or a category raises its cost? Prices that would fall below the minimum are listed with the price that restores it.</p>
-        <div class="filters">
-          <div class="field">
-            <label for="sScope">Apply to</label>
-            <select class="input" id="sScope"><option value="supplier">Supplier</option><option value="category">Category</option></select>
-          </div>
-          <div class="field"><label for="sValue">Supplier</label><select class="input" id="sValue"></select></div>
-          <div class="field">
-            <label for="sPct">Cost increase (%)</label>
-            <input class="input num" type="text" inputmode="decimal" id="sPct" placeholder="e.g. 8" aria-describedby="sPctErr">
-            <span class="field-error" id="sPctErr"></span>
-          </div>
-          <div class="field"><button class="btn btn-primary" id="sRun" type="button">Run simulation</button><span class="field-error"></span></div>
-        </div>
-        <div id="simOut" hidden class="stack-gap">
-          <div class="panel-bar">
-            <p id="simSummary" aria-live="polite"></p>
-            <button class="btn" type="button" id="simRequest">Request suggested prices</button>
-          </div>
-          <div class="table-wrap">
-            <table class="grid" id="simTable">
-              <thead><tr>
-                <th>Product</th><th>List</th><th class="r">Cost now</th><th class="r">New cost</th><th class="r">Price</th>
-                <th class="r">Margin now</th><th class="r">New margin</th><th class="r">Minimum</th><th class="r">Suggested price</th><th class="r">Change</th>
-              </tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Margin is calculated over the sale price: (price − cost) / price. A 25% margin means price = cost / (1 − 0.25), not cost × 1.25.</li>
-        <li>Cost change compares the last purchase cost with the cost when the price was last changed, so a supplier increase shows up before it eats the margin.</li>
-        <li>Nobody changes a price list directly: each change becomes a request with its reason, and the approver sees the margin before and after.</li>
-        <li>Percentages are stored as fractions (0.25) and only formatted as 25.0% on screen.</li>
-      </ul>
-    </section>
+    <!-- 3. Cost increase simulation -->
+    <div id="vSim" hidden style="display:flex;flex-direction:column;gap:12px">
+      <section class="mc-panel">
+        <form class="mc-filters" id="fSim">
+          <div class="mc-field" style="max-width:180px"><label for="sBy" data-i18n="simBy"></label><select id="sBy"></select></div>
+          <div class="mc-field" style="max-width:260px"><label for="sWho" data-i18n="simWho"></label><select id="sWho"></select></div>
+          <div class="mc-field w-sm"><label for="sPct" data-i18n="simPct"></label><input id="sPct" class="num" inputmode="decimal" value="8"></div>
+          <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">calculate</span><span data-i18n="simulate"></span></button>
+        </form>
+      </section>
+      <section class="mc-kpis" id="kSim"></section>
+      <section class="mc-panel"><div class="table-wrap" style="max-height:560px"><table class="grid" id="tSim"><thead></thead><tbody></tbody></table></div></section>
+    </div>
+    <div id="about"></div>
   </main>
 
-  <!-- Edit price modal -->
-  <div class="modal-backdrop" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
-    <div class="modal" style="width:min(680px,100%)">
-      <div class="modal-head">
-        <div><h2 id="editTitle">Change price</h2><p class="muted" style="font-size:.86rem" id="editSub"></p></div>
-      </div>
-      <div class="modal-body stack-gap">
-        <div class="facts" id="eFacts"></div>
-        <div id="ePendingNote" hidden></div>
-        <div class="pair">
-          <div class="field">
-            <label for="ePrice">New price</label>
-            <input class="input num" type="text" inputmode="decimal" id="ePrice" autocomplete="off" aria-describedby="ePriceErr">
-            <span class="field-error" id="ePriceErr"></span>
-          </div>
-          <div class="field">
-            <label for="eMargin">Target margin (%)</label>
-            <input class="input num" type="text" inputmode="decimal" id="eMargin" autocomplete="off" aria-describedby="eMarginErr">
-            <span class="field-error" id="eMarginErr"></span>
-          </div>
-        </div>
-        <p class="muted" style="font-size:.8rem;margin-top:-6px">Type a price or a margin; the other one updates. Price = cost / (1 − margin).</p>
-        <div class="table-wrap">
-          <table class="grid compare">
-            <thead><tr><th></th><th class="r">Before</th><th class="r">After</th></tr></thead>
-            <tbody id="eCompare"></tbody>
-          </table>
-        </div>
-        <div id="eWarn" aria-live="polite"></div>
-        <div class="field">
-          <label for="eReason">Reason</label>
-          <textarea class="input" id="eReason" aria-describedby="eReasonErr" placeholder="Why does this price change?"></textarea>
-          <span class="field-error" id="eReasonErr"></span>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" type="button" id="eSave">Submit for approval</button>
-        <button class="btn" type="button" id="eCancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Reject modal -->
-  <div class="modal-backdrop" id="rejectModal" role="dialog" aria-modal="true" aria-labelledby="rejectTitle">
-    <div class="modal" style="width:min(520px,100%)">
-      <div class="modal-head"><div><h2 id="rejectTitle">Reject request</h2><p class="muted" style="font-size:.86rem" id="rejectSub"></p></div></div>
+  <div class="modal-backdrop" id="mCfg">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mCfgT">
+      <div class="modal-head"><h3 id="mCfgT"><span class="material-icons" aria-hidden="true">sell</span><span id="cfgTitle"></span></h3></div>
       <div class="modal-body">
-        <div class="field">
-          <label for="rReason">Reason for rejecting</label>
-          <textarea class="input" id="rReason" aria-describedby="rReasonErr"></textarea>
-          <span class="field-error" id="rReasonErr"></span>
-        </div>
+        <div class="mc-kpis" id="cfgInfo" style="margin-bottom:10px"></div>
+        <p class="mc-hint" style="margin-bottom:8px" data-i18n="cfgHint"></p>
+        <div class="table-wrap"><table class="grid cfg-table" id="tCfg"><thead></thead><tbody></tbody></table></div>
+        <div class="mc-field-error" id="cfgErr" role="alert" style="margin-top:8px"></div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" type="button" id="rSave">Reject request</button>
-        <button class="btn" type="button" id="rCancel">Cancel</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="cfgSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="saveCheck"></span></button><button class="btn" type="button" id="cfgClose" data-i18n="close"></button></div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/scroller/2.3.0/js/dataTables.scroller.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const r = UI.rng(20261117);
-    const TODAY = "2026-11-17";
-    const r2 = n => Math.round(n * 100) / 100;
-    const ceil2 = n => Math.ceil(n * 100 - 1e-9) / 100;
-    const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  UI.strings({
+    en: {
+      tabCheck: "Price check by purchase", tabCat: "Configure prices", tabSim: "Cost increase simulation", purchase: "Purchase received", onlyReq: "Only required", onlyPend: "Only pending",
+      checked: "{a} / {b} checked", checkTitle: "Products of the purchase", checkHint: "Select a row to review its prices. Required = the cost went up.",
+      code: "Code", desc: "Description", pres: "Presentation", qty: "Qty.", oldCost: "Prev. cost", newCost: "New cost", costState: "Cost state", type: "Type", check: "Check",
+      up: "Cost went up", down: "Cost went down", same: "Same cost", required: "Required", optional: "Optional", done: "Checked", pend: "Pending",
+      k_lines: "Lines", k_up: "Cost went up", k_req: "Required", k_done: "Checked", k_below: "Below minimum margin",
+      buyer: "Buyer", priceList: "Price list", alert: "Alert", onlyActive: "Only active", cost: "Avg. cost", lastCost: "Last cost", price: "Price", margin: "Margin over sale", minMargin: "Min. margin",
+      a_all: "All", a_any: "Any alert", a_belowCost: "Price below cost", a_belowMin: "Below minimum margin", a_costUp: "Cost up > 5%", a_ok: "OK",
+      k_prices: "Prices", k_alerts: "With alerts", k_avg: "Avg. margin", configure: "Configure prices",
+      cfgTitle: "Configure product prices: {p}", cfgHint: "Change the price or the margin; the other is calculated (price = cost ÷ (1 − margin)). The margin is over the sale price.",
+      list: "List", curPrice: "Current price", curMargin: "Current margin", newPrice: "New price", newMargin: "New margin %", after: "Margin after", saveCheck: "Save and mark as checked",
+      errBelowCost: "{l}: the price cannot be below the cost.", errMargin: "{l}: the margin must be less than 100%.", warnMin: "{l}: below the minimum margin ({m}).", savedOk: "Prices of {p} saved and checked.",
+      simBy: "Increase by", simWho: "Supplier / category", simPct: "Increase %", simulate: "Simulate", bySup: "Supplier", byCat: "Category",
+      newCostS: "New cost", newMarginS: "Margin with new cost", suggested: "Suggested price", k_affected: "Prices affected", k_fall: "Fall below minimum", k_already: "Already below",
+      already: "Already below", falls: "Falls below", stays: "Stays OK",
+      aboutText: "When a purchase is received, every product whose cost changed shows up here. <b>Required</b> lines are the ones where the cost went up: they must be reviewed before the purchase is closed. Each row opens <b>Configure product prices</b>, where every price list (retail, wholesale, supermarkets, route) shows its current price and its <b>margin over sale</b> = (price − cost) ÷ price; typing a new price calculates the margin and typing a margin calculates the price. A price below cost is not allowed, and a margin under the category minimum is flagged. <b>Configure prices</b> lists the whole catalog with its alerts, and the <b>simulation</b> shows which prices would fall below the minimum if a supplier or a category raised its costs, with the suggested price. All data is generated."
+    },
+    es: {
+      tabCheck: "Verificación de precios por compra", tabCat: "Configurar precios", tabSim: "Simulación de alza de costo", purchase: "Compra recibida", onlyReq: "Solo obligatorios", onlyPend: "Solo pendientes",
+      checked: "{a} / {b} chequeados", checkTitle: "Productos de la compra", checkHint: "Elija una fila para revisar sus precios. Obligatorio = el costo subió.",
+      code: "Código", desc: "Descripción", pres: "Presentación", qty: "Cant.", oldCost: "Costo ant.", newCost: "Costo nuevo", costState: "Estado del costo", type: "Tipo", check: "Chequeo",
+      up: "Costo subió", down: "Costo bajó", same: "Mismo costo", required: "Obligatorio", optional: "Opcional", done: "Chequeado", pend: "Pendiente",
+      k_lines: "Líneas", k_up: "Costo subió", k_req: "Obligatorios", k_done: "Chequeados", k_below: "Bajo el margen mínimo",
+      buyer: "Comprador", priceList: "Lista de precio", alert: "Alerta", onlyActive: "Solo activos", cost: "Costo prom.", lastCost: "Último costo", price: "Precio", margin: "Margen sobre venta", minMargin: "Margen mín.",
+      a_all: "Todas", a_any: "Con alguna alerta", a_belowCost: "Precio bajo el costo", a_belowMin: "Bajo el margen mínimo", a_costUp: "Costo subió > 5%", a_ok: "OK",
+      k_prices: "Precios", k_alerts: "Con alertas", k_avg: "Margen prom.", configure: "Configurar precios",
+      cfgTitle: "Configurar precios del producto: {p}", cfgHint: "Cambie el precio o el margen; el otro se calcula (precio = costo ÷ (1 − margen)). El margen es sobre el precio de venta.",
+      list: "Lista", curPrice: "Precio actual", curMargin: "Margen actual", newPrice: "Precio nuevo", newMargin: "Margen nuevo %", after: "Margen después", saveCheck: "Guardar y marcar chequeado",
+      errBelowCost: "{l}: el precio no puede quedar bajo el costo.", errMargin: "{l}: el margen debe ser menor a 100%.", warnMin: "{l}: queda bajo el margen mínimo ({m}).", savedOk: "Precios de {p} guardados y chequeados.",
+      simBy: "Alza por", simWho: "Proveedor / categoría", simPct: "% de alza", simulate: "Simular", bySup: "Proveedor", byCat: "Categoría",
+      newCostS: "Costo nuevo", newMarginS: "Margen con costo nuevo", suggested: "Precio sugerido", k_affected: "Precios afectados", k_fall: "Caen bajo el mínimo", k_already: "Ya estaban bajo",
+      already: "Ya estaba bajo", falls: "Cae bajo el mínimo", stays: "Sigue bien",
+      aboutText: "Cuando se recibe una compra, aquí aparecen los productos cuyo costo cambió. Las líneas <b>obligatorias</b> son las que subieron de costo: hay que revisarlas antes de cerrar la compra. Cada fila abre <b>Configurar precios del producto</b>, donde cada lista de precio (detalle, mayoreo, supermercados, ruta) muestra su precio actual y su <b>margen sobre venta</b> = (precio − costo) ÷ precio; al escribir un precio nuevo se calcula el margen y al escribir un margen se calcula el precio. No se permite un precio bajo el costo y se marca cuando el margen queda bajo el mínimo de la categoría. <b>Configurar precios</b> muestra todo el catálogo con sus alertas, y la <b>simulación</b> dice qué precios quedarían bajo el mínimo si un proveedor o una categoría sube sus costos, con el precio sugerido. Todos los datos son generados."
+    }
+  });
 
-    // ---------- Sample data ----------
-    const LISTS = [
-      { name: "Retail", extra: 0.10, share: 0.35 },
-      { name: "Wholesale", extra: 0.02, share: 0.30 },
-      { name: "Supermarkets", extra: 0.02, share: 0.20 },
-      { name: "Route sales", extra: 0.06, share: 0.15 }
-    ];
-    const MIN = { "Beverages": 0.18, "Dairy": 0.15, "Snacks": 0.22, "Cleaning": 0.20, "Personal care": 0.25, "Canned goods": 0.16, "Grains": 0.12 };
-    const SUP = { "Beverages": "Contoso Beverages", "Dairy": "Litware Dairy", "Snacks": "Adventure Snacks", "Cleaning": "Fabrikam Home", "Personal care": "Fabrikam Home", "Canned goods": "Northwind Foods", "Grains": "Tailspin Grains" };
-    const USERS = ["L. Rivera", "C. Mendoza", "P. Herrera", "D. Aguilar"];
-
-    const products = D.products.map((p, i) => {
-      const base = r2(UI.between(r, 8, 180));            // cost when the prices were last set
-      const up = r() < 0.3;
-      const last = r2(base * (1 + (up ? UI.between(r, 0.055, 0.14) : UI.between(r, -0.02, 0.04))));
-      return { code: "P-" + (1001 + i), name: p[0], category: p[1], supplier: SUP[p[1]], base, last, avg: r2(base * 0.6 + last * 0.4), units: Math.round(UI.between(r, 300, 3200)), min: MIN[p[1]] };
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const LISTS = [{ en: "Retail", es: "Detalle", k: 1.42 }, { en: "Wholesale", es: "Mayoreo", k: 1.24 }, { en: "Supermarkets", es: "Supermercados", k: 1.3 }, { en: "Route sales", es: "Ruta", k: 1.36 }];
+    const MINM = [.22, .18, .25, .2, .24, .16, .12];
+    const BUYERS = ["N. Cruz", "P. Aguilar", "S. Herrera"];
+    const PRES = [{ en: "Unit", es: "Unidad" }, { en: "Box of 6", es: "Caja de 6" }, { en: "Case of 12", es: "Fardo de 12" }, { en: "Case of 24", es: "Fardo de 24" }];
+    const supOf = cat => D.suppliers[[1, 3, 4, 2, 2, 0, 5][cat]];
+    const r = UI.rng(3131);
+    const PROD = D.products.map((p, i) => {
+      const cost = UI.between(r, 18, 260), prevCost = cost / UI.between(r, .96, 1.08);
+      const prices = LISTS.map(l => prevCost * l.k * UI.between(r, .95, 1.08));
+      return { code: "A-" + (10000 + i * 37), name: p[0], cat: p[1], sup: supOf(p[1]), buyer: BUYERS[p[1] % 3], pres: (i % 3) + 1, cost, prevCost, priceCost: prevCost, prices, active: r() > .06, checked: false };
     });
+    const margin = (price, cost) => price ? (price - cost) / price : 0;
+    const PURCHASES = D.suppliers.map((s, i) => ({ no: "OC-" + (8700 + i * 3), sup: s, date: new Date(Date.UTC(2026, 10, 10 + i)) }));
+    let tab = "check", editing = null, simRows = [];
 
-    const rows = [];
-    products.forEach(p => LISTS.forEach(l => {
-      const roll = r();
-      let target = p.min + l.extra + UI.between(r, 0, 0.06);
-      if (roll < 0.1) target = p.min - UI.between(r, 0.01, 0.06);
-      let price = r2(p.base / (1 - target));
-      if (roll > 0.97) price = r2(p.avg * UI.between(r, 0.93, 0.99));
-      rows.push({ id: rows.length, p, list: l.name, share: l.share, price, costRef: p.base });
-    }));
+    function fill(sel, items, keepAll, opts) {
+      const $s = $(sel), v = $s.val();
+      $s.empty(); if (keepAll) $s.append(new Option(t("a_all"), "all"));
+      items.forEach((x, i) => $s.append(new Option(UI.L(x), String(i))));
+      $s.val(v || (keepAll ? "all" : "0")).select2(Object.assign({ width: "100%" }, opts || {}));
+    }
+    function fillSelects() {
+      fill("#fPo", PURCHASES.map(p => p.no + " · " + p.sup + " · " + UI.fmtDay(p.date)), false);
+      fill("#cSup", D.suppliers, true); fill("#cBuyer", BUYERS, true); fill("#cCat", D.categories, true); fill("#cList", LISTS, true);
+      fill("#cAlert", [{ en: "Any alert", es: "Con alguna alerta" }, { en: "Price below cost", es: "Precio bajo el costo" }, { en: "Below minimum margin", es: "Bajo el margen mínimo" }, { en: "Cost up > 5%", es: "Costo subió > 5%" }], true);
+      fill("#sBy", [{ en: "Supplier", es: "Proveedor" }, { en: "Category", es: "Categoría" }], false, { minimumResultsForSearch: Infinity });
+      fillWho();
+    }
+    function fillWho() { const by = $("#sBy").val() || "0"; $("#sWho").val(null); fill("#sWho", by === "0" ? D.suppliers : D.categories, false); }
+    fillSelects();
+    $("#sBy").on("change", fillWho);
 
-    const margin = (price, cost) => price > 0 ? (price - cost) / price : 0;
-    const rowMargin = x => margin(x.price, x.p.avg);
-    const costChange = x => (x.p.last - x.costRef) / x.costRef;
-    function alertsOf(x) {
-      const a = [];
-      if (x.price < x.p.avg) a.push("below");
-      else if (rowMargin(x) < x.p.min) a.push("min");
-      if (costChange(x) > 0.05) a.push("cost");
-      return a;
+    function alertsOf(p, li) {
+      const m = margin(p.prices[li], p.cost), out = [];
+      if (p.prices[li] < p.cost) out.push("belowCost"); else if (m < MINM[p.cat]) out.push("belowMin");
+      if (p.cost / p.priceCost - 1 > .05) out.push("costUp");
+      return out;
+    }
+    const ALERT = { belowCost: ["a_belowCost", "chip-neg", "money_off"], belowMin: ["a_belowMin", "chip-warn", "trending_down"], costUp: ["a_costUp", "chip-violet", "arrow_upward"] };
+    const alertChips = list => list.length ? list.map(a => '<span class="chip ' + ALERT[a][1] + '">' + mi(ALERT[a][2]) + t(ALERT[a][0]) + "</span>").join(" ") : '<span class="chip chip-pos">' + mi("check_circle") + t("a_ok") + "</span>";
+    const kpi = (l, v, color) => '<div class="mc-kpi is-accent" style="--k-color:' + color + '"><div class="k-label">' + t(l) + '</div><div class="k-value num">' + v + "</div></div>";
+
+    function renderTabs() {
+      document.getElementById("tabs").innerHTML = [["check", "tabCheck", "fact_check"], ["cat", "tabCat", "sell"], ["sim", "tabSim", "calculate"]].map(x => '<button type="button" class="mc-tab" role="tab" aria-selected="' + (tab === x[0]) + '" data-tab="' + x[0] + '">' + mi(x[2]) + " " + t(x[1]) + "</button>").join("");
+      document.getElementById("vCheck").hidden = tab !== "check"; document.getElementById("vCat").hidden = tab !== "cat"; document.getElementById("vSim").hidden = tab !== "sim";
+      if (tab === "check") renderCheck(); else if (tab === "cat") renderCat(); else renderSim();
     }
 
-    const SVG = p => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>";
-    const ALERTS = {
-      below: { text: "Price below cost", cls: "chip-neg", icon: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>' },
-      min: { text: "Below minimum margin", cls: "chip-warn", icon: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16h.01"/>' },
-      cost: { text: "Cost up > 5%", cls: "chip-info", icon: '<path d="M7 17L17 7M9 7h8v8"/>' }
-    };
-    const STATUS = {
-      Pending: { cls: "chip-warn", icon: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' },
-      Approved: { cls: "chip-pos", icon: '<path d="M5 12l5 5L20 7"/>' },
-      Rejected: { cls: "chip-neg", icon: '<path d="M6 6l12 12M18 6L6 18"/>' },
-      Replaced: { cls: "chip-info", icon: '<path d="M4 12h12M12 6l6 6-6 6"/>' }
-    };
-    const alertChip = k => '<span class="chip ' + ALERTS[k].cls + '">' + SVG(ALERTS[k].icon) + ALERTS[k].text + "</span>";
-    const statusChip = s => '<span class="chip ' + STATUS[s].cls + '">' + SVG(STATUS[s].icon) + s + "</span>";
-
-    // ---------- Requests and history (seeded) ----------
-    let reqNo = 1041;
-    const requests = [];
-    const history = [];
-    rows.filter((x, i) => i % 9 === 0).forEach((x, j) => {
-      const n = 1 + (j % 2);
-      let price = x.price;
-      for (let k = 0; k < n; k++) {
-        const old = r2(price * (1 - UI.between(r, 0.03, 0.09)));
-        const month = 10 - k * 3 - (j % 3);
-        history.push({ date: "2026-" + String(Math.max(1, month)).padStart(2, "0") + "-" + String(3 + (j * 7) % 24).padStart(2, "0"),
-          rowId: x.id, old, new: price, oldMargin: margin(old, x.costRef), newMargin: margin(price, x.costRef),
-          by: USERS[j % USERS.length], approver: USERS[(j + 1) % USERS.length], reason: k === 0 ? "Supplier cost update" : "Annual price review" });
-        price = old;
-      }
-    });
-    function newRequest(x, newPrice, reason, by, date) {
-      const prev = pendingFor(x);
-      if (prev) prev.status = "Replaced";
-      const q = { id: "PR-" + (reqNo++), date: date || TODAY, rowId: x.id, old: x.price, new: newPrice,
-        oldMargin: rowMargin(x), newMargin: margin(newPrice, x.p.avg), by: by || "You", reason, status: "Pending" };
-      requests.push(q);
-      return q;
+    // ---------- 1. Check by purchase ----------
+    function poLines() {
+      const po = PURCHASES[+$("#fPo").val() || 0];
+      return PROD.filter(p => p.sup === po.sup).map(p => ({ p, qty: 5 + (p.code.charCodeAt(4) % 30), state: p.cost > p.prevCost * 1.001 ? "up" : p.cost < p.prevCost * .999 ? "down" : "same" }));
     }
-    function pendingFor(x) { return requests.find(q => q.rowId === x.id && q.status === "Pending"); }
-    rows.filter(x => alertsOf(x).length && x.price >= x.p.avg).slice(0, 3).forEach((x, i) => {
-      newRequest(x, ceil2(x.p.avg / (1 - x.p.min - 0.01)), "Restore the minimum margin after the cost change", USERS[i], "2026-11-1" + (4 + i));
-    });
-
-    // ---------- Filters ----------
-    function fill(id, values) {
-      $("#" + id).html(values.map(v => '<option value="' + esc(v) + '">' + esc(v) + "</option>").join(""))
-        .select2({ placeholder: "All", allowClear: true, width: "100%" });
+    function renderCheck() {
+      const all = poLines();
+      let list = all;
+      if (document.getElementById("onlyReq").checked) list = list.filter(x => x.state === "up");
+      if (document.getElementById("onlyPend").checked) list = list.filter(x => !x.p.checked);
+      const done = all.filter(x => x.p.checked).length;
+      document.getElementById("chkTxt").textContent = t("checked", { a: done, b: all.length });
+      document.querySelector("#chkBar span").style.width = (all.length ? done / all.length * 100 : 0) + "%";
+      document.getElementById("chkBar").setAttribute("aria-valuenow", Math.round(all.length ? done / all.length * 100 : 0));
+      const below = list.filter(x => LISTS.some((l, i) => margin(x.p.prices[i], x.p.cost) < MINM[x.p.cat])).length;
+      document.getElementById("kCheck").innerHTML = kpi("k_lines", list.length, "#38bdf8") + kpi("k_up", list.filter(x => x.state === "up").length, "#fb7185") + kpi("k_req", list.filter(x => x.state === "up").length, "#f59e0b") + kpi("k_done", list.filter(x => x.p.checked).length, "#14b8a6") + kpi("k_below", below, "#8b5cf6");
+      document.querySelector("#tCheck thead").innerHTML = "<tr><th>" + t("code") + "</th><th>" + t("desc") + "</th><th>" + t("pres") + '</th><th class="r">' + t("qty") + '</th><th class="r">' + t("oldCost") + '</th><th class="r">' + t("newCost") + "</th><th>" + t("costState") + "</th><th>" + t("type") + "</th><th>" + t("check") + "</th></tr>";
+      const ST = { up: ["up", "cost-up", "arrow_upward"], down: ["down", "cost-down", "arrow_downward"], same: ["same", "muted", "remove"] };
+      document.querySelector("#tCheck tbody").innerHTML = list.map(x => '<tr class="click' + (x.p.checked ? " is-checked" : "") + '" tabindex="0" data-code="' + x.p.code + '"><td>' + x.p.code + "</td><td>" + x.p.name + "</td><td>" + UI.L(PRES[x.p.pres]) + '</td><td class="r">' + x.qty + '</td><td class="r">' + M(x.p.prevCost) + '</td><td class="r ' + ST[x.state][1] + '">' + M(x.p.cost) + '</td><td><span class="' + ST[x.state][1] + '">' + mi(ST[x.state][2]) + " " + t(ST[x.state][0]) + " (" + (x.p.cost / x.p.prevCost - 1 >= 0 ? "+" : "") + UI.fmtPct(x.p.cost / x.p.prevCost - 1) + ")</span></td><td>" +
+        (x.state === "up" ? '<span class="chip chip-warn">' + mi("priority_high") + t("required") + "</span>" : '<span class="chip">' + t("optional") + "</span>") + "</td><td>" + (x.p.checked ? '<span class="chip chip-pos">' + mi("check_circle") + t("done") + "</span>" : '<span class="chip">' + mi("schedule") + t("pend") + "</span>") + "</td></tr>").join("") || '<tr><td colspan="9" class="muted" style="text-align:center;padding:20px">' + t("noData") + "</td></tr>";
     }
-    fill("fCategory", D.categories);
-    fill("fList", LISTS.map(l => l.name));
-    $("#fAlert").html(Object.keys(ALERTS).map(k => '<option value="' + k + '">' + ALERTS[k].text + "</option>").join(""))
-      .select2({ placeholder: "All", allowClear: true, width: "100%" });
+    $("#fPo").on("change", renderCheck);
+    ["onlyReq", "onlyPend"].forEach(id => document.getElementById(id).addEventListener("change", renderCheck));
+    function rowOpen(e) { const tr = e.target.closest("tr.click"); if (tr) openCfg(tr.dataset.code); }
+    document.getElementById("tCheck").addEventListener("click", rowOpen);
+    document.getElementById("tCat").addEventListener("click", rowOpen);
+    ["tCheck", "tCat"].forEach(id => document.getElementById(id).addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr.click")) { e.preventDefault(); rowOpen(e); } }));
 
-    let F = {};
-    function readFilters() {
-      const set = id => { const v = $("#" + id).val() || []; return v.length ? new Set(v) : null; };
-      F = { cat: set("fCategory"), list: set("fList"), alert: set("fAlert"), only: $("#fOnly").is(":checked") };
+    // ---------- Configure modal ----------
+    function openCfg(code) {
+      const p = PROD.find(x => x.code === code);
+      editing = { p, prices: p.prices.slice() };
+      document.getElementById("cfgTitle").textContent = t("cfgTitle", { p: p.name });
+      document.getElementById("cfgInfo").innerHTML = kpi("oldCost", M(p.prevCost), "#64748b") + kpi("newCost", M(p.cost), p.cost > p.prevCost ? "#fb7185" : "#14b8a6") + kpi("minMargin", UI.fmtPct(MINM[p.cat], 0), "#f59e0b") + kpi("category", UI.L(D.categories[p.cat]), "#38bdf8");
+      document.querySelector("#tCfg thead").innerHTML = "<tr><th>" + t("list") + '</th><th class="r">' + t("curPrice") + '</th><th class="r">' + t("curMargin") + '</th><th class="r" style="width:140px">' + t("newPrice") + '</th><th class="r" style="width:120px">' + t("newMargin") + "</th><th>" + t("after") + "</th></tr>";
+      document.querySelector("#tCfg tbody").innerHTML = LISTS.map((l, i) => "<tr><td>" + UI.L(l) + '</td><td class="r">' + M(p.prices[i]) + '</td><td class="r">' + UI.fmtPct(margin(p.prices[i], p.cost)) + '</td><td><input data-i="' + i + '" data-k="price" inputmode="decimal" value="' + M(p.prices[i]) + '" aria-label="' + t("newPrice") + " " + UI.L(l) + '"></td><td><input data-i="' + i + '" data-k="margin" inputmode="decimal" value="' + (margin(p.prices[i], p.cost) * 100).toFixed(1) + '" aria-label="' + t("newMargin") + " " + UI.L(l) + '"></td><td id="aft' + i + '"></td></tr>').join("");
+      validateCfg();
+      UI.openModal("mCfg");
     }
-    readFilters();
-    $.fn.dataTable.ext.search.push(function (settings, data, idx) {
-      if (settings.nTable.id !== "prices") return true;
-      const x = rows[idx];
-      if (F.cat && !F.cat.has(x.p.category)) return false;
-      if (F.list && !F.list.has(x.list)) return false;
-      if (F.alert || F.only) {
-        const a = alertsOf(x);
-        if (F.only && !a.length) return false;
-        if (F.alert && !a.some(k => F.alert.has(k))) return false;
-      }
-      return true;
-    });
-
-    // ---------- Prices table ----------
-    const table = $("#prices").DataTable({
-      data: rows,
-      deferRender: true,
-      scrollY: 440,
-      scrollX: true,
-      scroller: { rowHeight: 38, displayBuffer: 4 },
-      dom: "rti",
-      order: [[1, "asc"], [4, "asc"]],
-      columns: [
-        { data: x => x.p.code, className: "num" },
-        { data: x => x.p.name },
-        { data: x => x.p.category },
-        { data: x => x.p.supplier },
-        { data: "list" },
-        { data: x => x.p.avg, className: "dt-right num", render: (v, t) => t === "display" ? UI.fmtMoney(v) : v },
-        { data: x => x.p.last, className: "dt-right num", render: (v, t) => t === "display" ? UI.fmtMoney(v) : v },
-        { data: x => costChange(x), className: "dt-right num", render: (v, t) => {
-            if (t !== "display") return v;
-            const cls = v > 0.05 ? "neg" : "muted";
-            return '<span class="' + cls + '">' + (v >= 0 ? "▲ " : "▼ ") + UI.fmtPct(Math.abs(v)) + "</span>";
-          } },
-        { data: "price", className: "dt-right num", render: (v, t) => t === "display" ? UI.fmtMoney(v) : v },
-        { data: x => rowMargin(x), className: "dt-right num", render: (v, t, x) => t === "display" ? '<span class="' + (v < x.p.min ? "neg" : "") + '">' + UI.fmtPct(v) + "</span>" : v },
-        { data: x => x.p.min, className: "dt-right num", render: (v, t) => t === "display" ? UI.fmtPct(v) : v },
-        { data: x => alertsOf(x).map(k => ALERTS[k].text).join(" "), render: (v, t, x) => {
-            if (t !== "display") return v;
-            const a = alertsOf(x);
-            return a.length ? '<span class="chips">' + a.map(alertChip).join("") + "</span>" : '<span class="muted">No alerts</span>';
-          } },
-        { data: x => pendingFor(x) ? "Pending" : "", render: (v, t, x) => {
-            if (t !== "display") return v;
-            const q = pendingFor(x);
-            return q ? statusChip("Pending") + ' <span class="muted num" style="font-size:.78rem">' + q.id + "</span>" : '<span class="muted">Current</span>';
-          } },
-        { data: null, orderable: false, searchable: false, render: (v, t, x) => '<button class="btn btn-sm" type="button" data-edit="' + x.id + '" aria-label="Change price of ' + esc(x.p.name) + " for " + x.list + '">Change price</button>' }
-      ],
-      language: { info: "_TOTAL_ prices", infoFiltered: "(filtered from _MAX_)", infoEmpty: "No prices match the filters", zeroRecords: "No prices match the filters" }
-    });
-
-    // ---------- KPIs follow the table ----------
-    function summarize() {
-      const data = table.rows({ search: "applied" }).data().toArray();
-      const prods = new Set(data.map(x => x.p.code));
-      let below = 0, min = 0, cost = 0, withAlert = 0;
-      const byList = {};
-      LISTS.forEach(l => byList[l.name] = { rev: 0, profit: 0 });
-      data.forEach(x => {
-        const a = alertsOf(x);
-        if (a.length) withAlert++;
-        if (a.includes("below")) below++;
-        if (a.includes("min")) min++;
-        if (a.includes("cost")) cost++;
-        const u = x.p.units * x.share;
-        byList[x.list].rev += x.price * u;
-        byList[x.list].profit += (x.price - x.p.avg) * u;
+    function validateCfg() {
+      const p = editing.p, errs = [];
+      LISTS.forEach((l, i) => {
+        const pr = editing.prices[i], m = margin(pr, p.cost), cell = document.getElementById("aft" + i);
+        const inP = document.querySelector('#tCfg input[data-i="' + i + '"][data-k="price"]'), inM = document.querySelector('#tCfg input[data-i="' + i + '"][data-k="margin"]');
+        inP.removeAttribute("aria-invalid"); inM.removeAttribute("aria-invalid");
+        if (!(pr >= p.cost)) { errs.push(t("errBelowCost", { l: UI.L(l) })); inP.setAttribute("aria-invalid", "true"); }
+        if (m >= 1) { errs.push(t("errMargin", { l: UI.L(l) })); inM.setAttribute("aria-invalid", "true"); }
+        cell.innerHTML = '<span class="num ' + (m < MINM[p.cat] ? "neg" : "pos") + '">' + UI.fmtPct(m) + "</span> " + (m < MINM[p.cat] && pr >= p.cost ? '<span class="chip chip-warn">' + mi("trending_down") + t("a_belowMin") + "</span>" : "");
       });
-      $("#kProducts").text(UI.fmtInt(prods.size));
-      $("#kRows").text(UI.fmtInt(data.length) + " prices across " + new Set(data.map(x => x.list)).size + " lists");
-      $("#kAlerts").text(UI.fmtInt(withAlert));
-      $("#kAlertsD").text(below + " below cost · " + min + " below minimum · " + cost + " cost up");
-      $("#kMargins").html(LISTS.map(l => {
-        const b = byList[l.name];
-        return "<span>" + l.name + '</span><span class="num">' + (b.rev ? UI.fmtPct(b.profit / b.rev) : "–") + "</span>";
-      }).join(""));
+      const warns = LISTS.map((l, i) => editing.prices[i] >= p.cost && margin(editing.prices[i], p.cost) < MINM[p.cat] ? t("warnMin", { l: UI.L(l), m: UI.fmtPct(MINM[p.cat], 0) }) : null).filter(Boolean);
+      document.getElementById("cfgErr").innerHTML = errs.concat(warns.map(w => '<span style="color:var(--mc-warn)">' + w + "</span>")).join("<br>");
+      document.getElementById("cfgSave").disabled = errs.length > 0;
     }
-    function refreshPending() {
-      const n = requests.filter(q => q.status === "Pending").length;
-      $("#kPending").text(UI.fmtInt(n));
-      $("#pendingCount").text(n);
-    }
-    table.on("draw", summarize);
-    summarize();
-    refreshPending();
-
-    function redraw() { readFilters(); table.draw(); }
-    $("#fCategory, #fList, #fAlert").on("change", redraw);
-    $("#fOnly").on("change", redraw);
-    let st;
-    $("#fSearch").on("input", function () { clearTimeout(st); const v = this.value; st = setTimeout(() => table.search(v).draw(), 200); });
-    $("#clearBtn").on("click", () => {
-      $("#fCategory, #fList, #fAlert").val(null).trigger("change.select2");
-      $("#fOnly").prop("checked", false); $("#fSearch").val(""); table.search("");
-      redraw();
+    document.getElementById("tCfg").addEventListener("input", e => {
+      const i = +e.target.dataset.i, k = e.target.dataset.k; if (isNaN(i)) return;
+      const v = UI.parseMoney(e.target.value), cost = editing.p.cost;
+      if (k === "price") { editing.prices[i] = v; document.querySelector('#tCfg input[data-i="' + i + '"][data-k="margin"]').value = v ? (margin(v, cost) * 100).toFixed(1) : ""; }
+      else { const m = v / 100; editing.prices[i] = m < 1 ? cost / (1 - m) : NaN; document.querySelector('#tCfg input[data-i="' + i + '"][data-k="price"]').value = m < 1 ? M(cost / (1 - m)) : ""; }
+      validateCfg();
     });
+    document.getElementById("tCfg").addEventListener("blur", e => { if (e.target.dataset.k === "price" && e.target.value) e.target.value = M(UI.parseMoney(e.target.value)); }, true);
+    document.getElementById("cfgSave").addEventListener("click", () => {
+      editing.p.prices = editing.prices.slice(); editing.p.priceCost = editing.p.cost; editing.p.checked = true;
+      UI.closeModal("mCfg"); UI.toast(t("savedOk", { p: editing.p.name })); renderTabs();
+    });
+    document.getElementById("cfgClose").addEventListener("click", () => UI.closeModal("mCfg"));
 
-    // ---------- Tabs ----------
-    const tabs = [...document.querySelectorAll('[role="tab"]')];
-    function selectTab(tab, focus) {
-      tabs.forEach(t => {
-        const on = t === tab;
-        t.setAttribute("aria-selected", String(on));
-        t.tabIndex = on ? 0 : -1;
-        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    // ---------- 2. Catalog ----------
+    let catApplied = null;
+    function readCat() { return { sup: $("#cSup").val(), buyer: $("#cBuyer").val(), cat: $("#cCat").val(), list: $("#cList").val(), alert: $("#cAlert").val(), active: document.getElementById("cActive").checked }; }
+    function renderCat() {
+      const f = catApplied || readCat();
+      const rows = [];
+      PROD.forEach(p => {
+        if ((f.sup !== "all" && p.sup !== D.suppliers[+f.sup]) || (f.buyer !== "all" && p.buyer !== BUYERS[+f.buyer]) || (f.cat !== "all" && p.cat !== +f.cat) || (f.active && !p.active)) return;
+        LISTS.forEach((l, li) => {
+          if (f.list !== "all" && li !== +f.list) return;
+          const al = alertsOf(p, li);
+          const want = ["any", "belowCost", "belowMin", "costUp"][+f.alert];
+          if (f.alert !== "all" && (want === "any" ? !al.length : !al.includes(want))) return;
+          rows.push({ p, li, al, m: margin(p.prices[li], p.cost) });
+        });
       });
-      if (focus) tab.focus();
-      if (tab.id === "tab-prices") table.columns.adjust();
-      if (tab.id === "tab-approvals") renderApprovals();
-      if (tab.id === "tab-history") renderHistory();
+      document.getElementById("kCat").innerHTML = kpi("k_prices", rows.length, "#38bdf8") + kpi("k_alerts", rows.filter(x => x.al.length).length, "#fb7185") +
+        LISTS.map((l, li) => { const s = rows.filter(x => x.li === li); return kpi("k_avg", s.length ? UI.fmtPct(s.reduce((a, x) => a + x.m, 0) / s.length) : "—", "#14b8a6").replace(t("k_avg"), t("k_avg") + " · " + UI.L(l)); }).join("");
+      document.querySelector("#tCat thead").innerHTML = "<tr><th>" + t("code") + "</th><th>" + t("desc") + "</th><th>" + t("category") + "</th><th>" + t("supplier") + "</th><th>" + t("priceList") + '</th><th class="r">' + t("cost") + '</th><th class="r">' + t("lastCost") + '</th><th class="r">' + t("price") + '</th><th class="r">' + t("margin") + '</th><th class="r">' + t("minMargin") + "</th><th>" + t("alert") + "</th></tr>";
+      document.querySelector("#tCat tbody").innerHTML = rows.map(x => '<tr class="click" tabindex="0" data-code="' + x.p.code + '"><td>' + x.p.code + "</td><td>" + x.p.name + "</td><td>" + UI.L(D.categories[x.p.cat]) + "</td><td>" + x.p.sup + "</td><td>" + UI.L(LISTS[x.li]) + '</td><td class="r">' + M(x.p.cost) + '</td><td class="r">' + M(x.p.priceCost) + '</td><td class="r">' + M(x.p.prices[x.li]) + '</td><td class="r ' + (x.m < MINM[x.p.cat] ? "neg" : "") + '">' + UI.fmtPct(x.m) + '</td><td class="r">' + UI.fmtPct(MINM[x.p.cat], 0) + "</td><td>" + alertChips(x.al) + "</td></tr>").join("");
+      document.querySelector("#tCat tfoot").innerHTML = '<tr><td colspan="8">' + t("total") + ": " + rows.length + '</td><td class="r">' + (rows.length ? UI.fmtPct(rows.reduce((a, x) => a + x.m, 0) / rows.length) : "—") + '</td><td colspan="2"></td></tr>';
     }
-    tabs.forEach((t, i) => {
-      t.addEventListener("click", () => selectTab(t));
-      t.addEventListener("keydown", e => {
-        let j = null;
-        if (e.key === "ArrowRight") j = (i + 1) % tabs.length;
-        if (e.key === "ArrowLeft") j = (i - 1 + tabs.length) % tabs.length;
-        if (e.key === "Home") j = 0;
-        if (e.key === "End") j = tabs.length - 1;
-        if (j !== null) { e.preventDefault(); selectTab(tabs[j], true); }
+    document.getElementById("fCat").addEventListener("submit", e => { e.preventDefault(); catApplied = readCat(); renderCat(); });
+
+    // ---------- 3. Simulation ----------
+    function renderSim() {
+      const by = $("#sBy").val() || "0", who = +($("#sWho").val() || 0), pct = UI.parseMoney(document.getElementById("sPct").value) / 100;
+      simRows = [];
+      PROD.forEach(p => {
+        if (by === "0" ? p.sup !== D.suppliers[who] : p.cat !== who) return;
+        const nc = p.cost * (1 + pct);
+        LISTS.forEach((l, li) => {
+          const m0 = margin(p.prices[li], p.cost), m1 = margin(p.prices[li], nc), min = MINM[p.cat];
+          const st = m0 < min ? "already" : m1 < min ? "falls" : "stays";
+          simRows.push({ p, li, nc, m0, m1, st, sug: st === "stays" ? null : nc / (1 - min) });
+        });
       });
-    });
-    $("#goSim").on("click", () => selectTab(document.getElementById("tab-sim"), true));
-
-    // ---------- Edit price modal ----------
-    let editing = null;
-    const ePrice = document.getElementById("ePrice");
-    const eMargin = document.getElementById("eMargin");
-    UI.maskMoney(ePrice);
-    eMargin.addEventListener("input", () => {
-      let v = eMargin.value.replace(/[^0-9.]/g, "");
-      const i = v.indexOf(".");
-      if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, "").slice(0, 2);
-      eMargin.value = v;
-    });
-
-    function setErr(id, msg) {
-      document.getElementById(id + "Err").textContent = msg || "";
-      document.getElementById(id).setAttribute("aria-invalid", msg ? "true" : "false");
+      document.getElementById("kSim").innerHTML = kpi("k_affected", simRows.length, "#38bdf8") + kpi("k_fall", simRows.filter(x => x.st === "falls").length, "#fb7185") + kpi("k_already", simRows.filter(x => x.st === "already").length, "#f59e0b");
+      const ST = { already: ["already", "chip-warn", "warning"], falls: ["falls", "chip-neg", "trending_down"], stays: ["stays", "chip-pos", "check_circle"] };
+      document.querySelector("#tSim thead").innerHTML = "<tr><th>" + t("code") + "</th><th>" + t("desc") + "</th><th>" + t("priceList") + '</th><th class="r">' + t("cost") + '</th><th class="r">' + t("newCostS") + '</th><th class="r">' + t("price") + '</th><th class="r">' + t("curMargin") + '</th><th class="r">' + t("newMarginS") + '</th><th class="r">' + t("minMargin") + "</th><th>" + t("status") + '</th><th class="r">' + t("suggested") + "</th></tr>";
+      document.querySelector("#tSim tbody").innerHTML = simRows.sort((a, b) => a.m1 - b.m1).map(x => "<tr><td>" + x.p.code + "</td><td>" + x.p.name + "</td><td>" + UI.L(LISTS[x.li]) + '</td><td class="r">' + M(x.p.cost) + '</td><td class="r">' + M(x.nc) + '</td><td class="r">' + M(x.p.prices[x.li]) + '</td><td class="r">' + UI.fmtPct(x.m0) + '</td><td class="r ' + (x.st !== "stays" ? "neg" : "") + '">' + UI.fmtPct(x.m1) + '</td><td class="r">' + UI.fmtPct(MINM[x.p.cat], 0) + '</td><td><span class="chip ' + ST[x.st][1] + '">' + mi(ST[x.st][2]) + t(ST[x.st][0]) + '</span></td><td class="r"><b>' + (x.sug ? M(x.sug) : "—") + "</b></td></tr>").join("");
     }
-    function newPriceValue() { return ePrice.value === "" ? null : r2(UI.parseMoney(ePrice.value)); }
+    document.getElementById("fSim").addEventListener("submit", e => { e.preventDefault(); renderSim(); });
+    document.getElementById("sPct").addEventListener("input", e => { e.target.value = e.target.value.replace(/[^0-9.]/g, ""); });
 
-    ePrice.addEventListener("input", () => {
-      const p = newPriceValue();
-      if (p && p > 0) eMargin.value = (margin(p, editing.p.avg) * 100).toFixed(1);
-      else eMargin.value = "";
-      setErr("ePrice", ""); setErr("eMargin", "");
-      paintCompare();
-    });
-    eMargin.addEventListener("input", () => {
-      setErr("ePrice", ""); setErr("eMargin", "");
-      if (eMargin.value === "") { ePrice.value = ""; paintCompare(); return; }
-      const m = parseFloat(eMargin.value) / 100;
-      if (!isNaN(m) && m < 1) ePrice.value = UI.fmtMoney(ceil2(editing.p.avg / (1 - m)));
-      else { ePrice.value = ""; setErr("eMargin", "Margin must be below 100%"); }
-      paintCompare();
-    });
-
-    function paintCompare() {
-      const x = editing;
-      const p = newPriceValue();
-      const has = p && p > 0;
-      const before = rowMargin(x);
-      const after = has ? margin(p, x.p.avg) : null;
-      const units = Math.round(x.p.units * x.share);
-      const impact = has ? (p - x.price) * units : null;
-      const dash = '<span class="muted">–</span>';
-      document.getElementById("eCompare").innerHTML =
-        '<tr><td>Price</td><td class="r num">' + UI.fmtMoney(x.price) + '</td><td class="r num">' + (has ? UI.fmtMoney(p) : dash) + "</td></tr>" +
-        '<tr><td>Margin over sale</td><td class="r num ' + (before < x.p.min ? "neg" : "") + '">' + UI.fmtPct(before) + '</td><td class="r num ' + (has && after < x.p.min ? "neg" : has ? "pos" : "") + '">' + (has ? UI.fmtPct(after) : dash) + "</td></tr>" +
-        '<tr><td>Change vs current price</td><td class="r num muted">–</td><td class="r num">' + (has ? (p >= x.price ? "+" : "") + UI.fmtPct((p - x.price) / x.price) : dash) + "</td></tr>" +
-        '<tr><td>Monthly revenue impact <span class="muted">(' + UI.fmtInt(units) + " units)</span></td><td class=\"r num muted\">–</td><td class=\"r num " + (has ? (impact >= 0 ? "pos" : "neg") : "") + '">' + (has ? (impact >= 0 ? "+" : "") + UI.fmtMoney(impact) : dash) + "</td></tr>";
-      const warn = document.getElementById("eWarn");
-      if (has && p >= x.p.avg && after < x.p.min) {
-        warn.innerHTML = '<div class="notice notice-warn">' + SVG(ALERTS.min.icon) + "<span>The new margin (" + UI.fmtPct(after) + ") is below the minimum for " + esc(x.p.category) + " (" + UI.fmtPct(x.p.min) + "). The approver will see this warning.</span></div>";
-      } else warn.innerHTML = "";
-    }
-
-    function openEdit(x) {
-      editing = x;
-      document.getElementById("editSub").textContent = x.p.code + " · " + x.p.name + " · " + x.list + " list";
-      document.getElementById("eFacts").innerHTML = [
-        ["Avg cost", UI.fmtMoney(x.p.avg)], ["Last purchase cost", UI.fmtMoney(x.p.last)], ["Current price", UI.fmtMoney(x.price)],
-        ["Current margin", UI.fmtPct(rowMargin(x))], ["Minimum margin", UI.fmtPct(x.p.min)]
-      ].map(f => '<div><div class="fact-label">' + f[0] + '</div><div class="fact-value">' + f[1] + "</div></div>").join("");
-      const q = pendingFor(x);
-      const note = document.getElementById("ePendingNote");
-      note.hidden = !q;
-      note.innerHTML = q ? '<div class="notice notice-info">' + SVG(STATUS.Pending.icon) + "<span>" + q.id + " is already waiting for approval (new price " + UI.fmtMoney(q.new) + "). Submitting this one replaces it.</span></div>" : "";
-      ePrice.value = ""; eMargin.value = ""; document.getElementById("eReason").value = "";
-      ePrice.placeholder = UI.fmtMoney(x.price);
-      eMargin.placeholder = (rowMargin(x) * 100).toFixed(1);
-      ["ePrice", "eMargin", "eReason"].forEach(id => setErr(id, ""));
-      paintCompare();
-      UI.openModal("editModal");
-    }
-    $("#prices").on("click", "button[data-edit]", function () { openEdit(rows[+this.dataset.edit]); });
-    $("#eCancel").on("click", () => UI.closeModal("editModal"));
-    $("#eSave").on("click", () => {
-      const x = editing;
-      const p = newPriceValue();
-      const reason = document.getElementById("eReason").value.trim();
-      let ok = true;
-      if (p === null) { setErr("ePrice", "Enter a new price or a target margin"); ok = false; }
-      else if (p <= 0) { setErr("ePrice", "The price must be greater than zero"); ok = false; }
-      else if (p < x.p.avg) { setErr("ePrice", "This price is below the average cost (" + UI.fmtMoney(x.p.avg) + ") and cannot be requested"); ok = false; }
-      else if (p === x.price) { setErr("ePrice", "This is already the current price"); ok = false; }
-      if (!reason) { setErr("eReason", "Write why the price changes"); ok = false; } else setErr("eReason", "");
-      if (!ok) { const f = document.querySelector('#editModal [aria-invalid="true"]'); if (f) f.focus(); return; }
-      const q = newRequest(x, p, reason);
-      table.row(x.id).invalidate().draw(false);
-      refreshPending();
-      UI.closeModal("editModal");
-      UI.toast(q.id + " sent for approval");
-    });
-
-    // ---------- Approvals ----------
-    function renderApprovals() {
-      const show = $("#aStatus").val();
-      const list = requests.filter(q => !show || q.status === show).slice().reverse();
-      $("#approvals tbody").html(list.map(q => {
-        const x = rows[q.rowId];
-        const actions = q.status === "Pending"
-          ? '<div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" type="button" data-approve="' + q.id + '">Approve</button><button class="btn btn-sm" type="button" data-reject="' + q.id + '">Reject</button></div>'
-          : (q.status === "Rejected" ? '<span class="muted" style="font-size:.8rem">' + esc(q.rejectReason) + "</span>" : "");
-        return '<tr><td class="num">' + q.id + '</td><td class="num">' + q.date + "</td><td>" + esc(x.p.name) + "</td><td>" + x.list +
-          '</td><td class="r num">' + UI.fmtMoney(q.old) + '</td><td class="r num">' + UI.fmtMoney(q.new) +
-          '</td><td class="r num">' + UI.fmtPct(q.oldMargin) + ' → <span class="' + (q.newMargin < x.p.min ? "neg" : "pos") + '">' + UI.fmtPct(q.newMargin) + "</span></td><td>" + esc(q.by) +
-          '</td><td style="white-space:normal;min-width:180px">' + esc(q.reason) + "</td><td>" + statusChip(q.status) + "</td><td>" + actions + "</td></tr>";
-      }).join("") || '<tr><td colspan="11" class="muted">No requests ' + (show ? "with status " + show.toLowerCase() : "yet") + ".</td></tr>");
-    }
-    $("#aStatus").on("change", renderApprovals);
-    $("#approvals").on("click", "button[data-approve]", function () {
-      const q = requests.find(z => z.id === this.dataset.approve);
-      const x = rows[q.rowId];
-      history.push({ date: TODAY, rowId: x.id, old: x.price, new: q.new, oldMargin: rowMargin(x), newMargin: margin(q.new, x.p.avg), by: q.by, approver: "You", reason: q.reason });
-      x.price = q.new;
-      x.costRef = x.p.last;
-      q.status = "Approved";
-      table.row(x.id).invalidate().draw(false);
-      refreshPending(); renderApprovals();
-      UI.toast(q.id + " approved: " + x.p.name + " (" + x.list + ") now " + UI.fmtMoney(q.new));
-    });
-    let rejecting = null;
-    $("#approvals").on("click", "button[data-reject]", function () {
-      rejecting = requests.find(z => z.id === this.dataset.reject);
-      document.getElementById("rejectSub").textContent = rejecting.id + " · " + rows[rejecting.rowId].p.name + " · " + UI.fmtMoney(rejecting.old) + " → " + UI.fmtMoney(rejecting.new);
-      document.getElementById("rReason").value = "";
-      setErr("rReason", "");
-      UI.openModal("rejectModal");
-    });
-    $("#rCancel").on("click", () => UI.closeModal("rejectModal"));
-    $("#rSave").on("click", () => {
-      const reason = document.getElementById("rReason").value.trim();
-      if (!reason) { setErr("rReason", "A rejection needs a reason"); document.getElementById("rReason").focus(); return; }
-      rejecting.status = "Rejected";
-      rejecting.rejectReason = reason;
-      table.row(rejecting.rowId).invalidate().draw(false);
-      refreshPending();
-      UI.closeModal("rejectModal");
-      renderApprovals();
-      UI.toast(rejecting.id + " rejected");
-    });
-
-    // ---------- History ----------
-    $("#hProduct").html('<option value="">All products</option>' + products.map(p => '<option value="' + p.code + '">' + p.code + " · " + esc(p.name) + "</option>").join(""))
-      .select2({ width: "100%" });
-    function renderHistory() {
-      const code = $("#hProduct").val();
-      const list = history.filter(h => !code || rows[h.rowId].p.code === code).slice().sort((a, b) => b.date.localeCompare(a.date));
-      $("#history tbody").html(list.map(h => {
-        const x = rows[h.rowId];
-        const ch = (h.new - h.old) / h.old;
-        return '<tr><td class="num">' + h.date + "</td><td>" + esc(x.p.name) + "</td><td>" + x.list + '</td><td class="r num">' + UI.fmtMoney(h.old) + '</td><td class="r num">' + UI.fmtMoney(h.new) +
-          '</td><td class="r num ' + (ch >= 0 ? "pos" : "neg") + '">' + (ch >= 0 ? "+" : "") + UI.fmtPct(ch) + '</td><td class="r num">' + UI.fmtPct(h.oldMargin) + " → " + UI.fmtPct(h.newMargin) +
-          "</td><td>" + esc(h.by) + "</td><td>" + esc(h.approver) + '</td><td style="white-space:normal;min-width:160px">' + esc(h.reason) + "</td></tr>";
-      }).join("") || '<tr><td colspan="10" class="muted">No price changes recorded for this product.</td></tr>');
-    }
-    $("#hProduct").on("change", renderHistory);
-
-    // ---------- Cost simulation ----------
-    const sScope = document.getElementById("sScope");
-    const sValue = document.getElementById("sValue");
-    const sPct = document.getElementById("sPct");
-    function fillScope() {
-      const isSup = sScope.value === "supplier";
-      document.querySelector('label[for="sValue"]').textContent = isSup ? "Supplier" : "Category";
-      const vals = isSup ? [...new Set(products.map(p => p.supplier))].sort() : D.categories;
-      sValue.innerHTML = vals.map(v => '<option value="' + esc(v) + '">' + esc(v) + "</option>").join("");
-    }
-    fillScope();
-    $(sScope).on("change", fillScope);
-    sPct.addEventListener("input", () => {
-      let v = sPct.value.replace(/[^0-9.]/g, "");
-      const i = v.indexOf(".");
-      if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, "").slice(0, 1);
-      sPct.value = v;
-      setErr("sPct", "");
-    });
-    let simRows = [], simLabel = "";
-    $("#sRun").on("click", () => {
-      const pct = parseFloat(sPct.value) / 100;
-      if (isNaN(pct) || pct <= 0) { setErr("sPct", "Enter an increase greater than 0"); sPct.focus(); return; }
-      if (pct > 1) { setErr("sPct", "Use 100% or less"); sPct.focus(); return; }
-      const key = sScope.value, val = sValue.value;
-      const scope = rows.filter(x => (key === "supplier" ? x.p.supplier : x.p.category) === val);
-      simRows = scope.map(x => {
-        const newCost = r2(x.p.avg * (1 + pct));
-        const nm = margin(x.price, newCost);
-        return { x, newCost, nm, suggested: ceil2(newCost / (1 - x.p.min)) };
-      }).filter(s => s.nm < s.x.p.min);
-      simLabel = "+" + (pct * 100).toFixed(1) + "% for " + val;
-      $("#simOut").prop("hidden", false);
-      $("#simSummary").html("<strong>" + simRows.length + " of " + scope.length + "</strong> prices of " + esc(val) + " would fall below the minimum margin with a " + (pct * 100).toFixed(1) + "% cost increase.");
-      $("#simRequest").prop("disabled", !simRows.length);
-      $("#simTable tbody").html(simRows.map(s => {
-        const x = s.x, ch = (s.suggested - x.price) / x.price, now = rowMargin(x);
-        return "<tr><td>" + esc(x.p.name) + (now < x.p.min ? ' <span class="chip chip-warn" style="margin-left:4px">' + SVG(ALERTS.min.icon) + "Already below</span>" : "") + "</td><td>" + x.list +
-          '</td><td class="r num">' + UI.fmtMoney(x.p.avg) + '</td><td class="r num">' + UI.fmtMoney(s.newCost) + '</td><td class="r num">' + UI.fmtMoney(x.price) +
-          '</td><td class="r num">' + UI.fmtPct(now) + '</td><td class="r num neg">' + UI.fmtPct(s.nm) + '</td><td class="r num">' + UI.fmtPct(x.p.min) +
-          '</td><td class="r num"><strong>' + UI.fmtMoney(s.suggested) + '</strong></td><td class="r num">+' + UI.fmtPct(ch) + "</td></tr>";
-      }).join("") || '<tr><td colspan="10" class="muted">Every price keeps at least its minimum margin. Nothing to change.</td></tr>');
-    });
-    $("#simRequest").on("click", () => {
-      if (!simRows.length) return;
-      let n = 0, skipped = 0;
-      simRows.forEach(s => {
-        if (pendingFor(s.x)) { skipped++; return; }
-        newRequest(s.x, s.suggested, "Cost increase simulation: " + simLabel);
-        table.row(s.x.id).invalidate();
-        n++;
-      });
-      table.draw(false);
-      refreshPending();
-      $("#simRequest").prop("disabled", true);
-      UI.toast(n + " requests sent for approval" + (skipped ? " · " + skipped + " already pending" : ""));
-    });
-
-    window.addEventListener("resize", () => table.columns.adjust());
-    if (document.fonts) document.fonts.ready.then(() => table.columns.adjust());
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; renderTabs(); } });
+    document.addEventListener("langchange", () => { fillSelects(); renderTabs(); if (editing && document.getElementById("mCfg").classList.contains("open")) openCfg(editing.p.code); document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutScreen"); });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutScreen");
+    catApplied = readCat();
+    renderTabs();
   });
   </script>
 </body>

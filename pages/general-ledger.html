@@ -3,123 +3,77 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Journal Book · Business UI Gallery</title>
+  <title>Journal book · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .scroll { max-height: 600px; overflow: auto; }
-    #book td { white-space: nowrap; }
-    #book td.desc { white-space: normal; min-width: 220px; }
-    .xbtn { width: 30px; height: 30px; min-height: 30px; padding: 0; }
-    .xbtn svg { width: 14px; height: 14px; transition: transform .15s var(--ease); }
-    .xbtn[aria-expanded="true"] svg { transform: rotate(90deg); }
-    tr.detail > td { background: var(--surface-2); padding: 0 10px 10px 48px; }
-    tr.detail table { width: 100%; border-collapse: collapse; font-size: .84rem; }
-    tr.detail th, tr.detail td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-    tr.detail th { font-size: .72rem; text-transform: uppercase; color: var(--text-muted); }
-    .status { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 500; }
-    .status svg { width: 15px; height: 15px; }
-    .check-row label { display: inline-flex; gap: 6px; align-items: center; font-size: .88rem; cursor: pointer; }
-    .doc { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-4); background: var(--surface-2); }
-    .doc-head { display: flex; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-3); }
-    .doc-title { font-size: 1.05rem; font-weight: 600; letter-spacing: .02em; }
-    .ro { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px var(--space-4); margin: 0 0 var(--space-3); }
-    .ro dt { font-size: .76rem; color: var(--text-muted); }
-    .ro dd { margin: 0 0 6px; }
-    .steps { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); }
-    .steps span { font-size: .8rem; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); }
-    .steps span.on { background: var(--info-bg); color: var(--info); border-color: transparent; font-weight: 500; }
-    .countdown { font-family: var(--font-mono); font-size: 1rem; font-weight: 600; }
-    .code-box { font-family: var(--font-mono); font-size: 1.3rem; letter-spacing: .2em; padding: var(--space-3); text-align: center; border: 1px dashed var(--border); border-radius: var(--radius-sm); margin: var(--space-3) 0; }
-    .modal.md { width: min(760px, 100%); }
+    tr.lines-row td { background: var(--mc-panel-2); padding: 8px 12px 12px 34px; }
+    tr.lines-row table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    tr.lines-row th { text-align: left; color: var(--mc-muted); font-size: 10px; text-transform: uppercase; padding: 4px 6px; border-bottom: 1px solid var(--mc-line); }
+    tr.lines-row td td { padding: 4px 6px; border-bottom: 1px dashed var(--mc-line); background: transparent; }
+    .exp-btn { border: 0; background: transparent; color: var(--mc-muted); cursor: pointer; padding: 2px; border-radius: 4px; }
+    .acts { display: flex; gap: 4px; }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px 14px; margin-bottom: 12px; }
+    .doc-grid .mc-field { min-width: 0; }
+    .code-box { font-size: 26px; font-weight: 900; letter-spacing: 6px; text-align: center; padding: 10px; border: 1px dashed var(--mc-teal); border-radius: 8px; color: var(--mc-good); }
+    .countdown { font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body data-page="general-ledger" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Journal book</h1>
-        <p class="muted">Every entry of the period, checked for balance, with the document that created it one click away.</p>
-      </div>
-    </div>
-
-    <section class="card card-body" aria-label="Filters">
-      <div class="filters">
-        <div class="field"><label for="fFrom">From</label><input class="input" type="date" id="fFrom"></div>
-        <div class="field"><label for="fTo">To</label><input class="input" type="date" id="fTo"></div>
-        <div class="field"><label for="fType">Entry type</label><select id="fType" multiple></select></div>
-        <div class="field"><label for="fSource">Source</label><select id="fSource" multiple></select></div>
-        <div class="field"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Number or description"></div>
-      </div>
-      <div class="check-row" style="margin-top:var(--space-3)"><label><input type="checkbox" id="fUnb"> Only unbalanced entries</label></div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field w-sm"><label data-i18n="company"></label><div class="static">DEMO</div></div>
+        <div class="mc-field" style="max-width:165px"><label for="fFrom" data-i18n="from"></label><input type="date" id="fFrom"></div>
+        <div class="mc-field" style="max-width:165px"><label for="fTo" data-i18n="to"></label><input type="date" id="fTo"></div>
+        <div class="mc-field" style="max-width:220px"><label for="fType" data-i18n="entryType"></label><select id="fType"></select></div>
+        <div class="mc-field" style="max-width:160px"><label for="fNo" data-i18n="entryNo"></label><input type="text" id="fNo" data-i18n-ph="entryNoPh"></div>
+        <label class="mc-check"><input type="checkbox" id="fUnbal"><span data-i18n="onlyUnbal"></span></label>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
     </section>
-
-    <section class="kpis" aria-label="Totals for the filtered entries" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Entries</div><div class="kpi-value" id="kCount">–</div></div>
-      <div class="card kpi"><div class="kpi-label">Total debit</div><div class="kpi-value" id="kDebit">–</div></div>
-      <div class="card kpi"><div class="kpi-label">Total credit</div><div class="kpi-value" id="kCredit">–</div></div>
-      <div class="card kpi"><div class="kpi-label">Unbalanced</div><div class="kpi-value" id="kUnb">–</div><div class="kpi-delta muted" id="kUnbD"></div></div>
+    <section class="mc-kpis" id="kpis"></section>
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">menu_book</span><span data-i18n="listTitle"></span></h3><span class="mc-hint" data-i18n="listHint"></span></div>
+      <div class="table-wrap" style="max-height:560px"><table class="grid" id="tBook"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
     </section>
-
-    <section class="card">
-      <div class="card-head"><h2>Entries</h2><span class="muted" style="font-size:.82rem">Expand a row to see its lines</span></div>
-      <div class="card-body">
-        <div class="table-wrap scroll">
-          <table class="grid" id="book">
-            <thead><tr><th><span class="sr-only">Expand</span></th><th>Number</th><th>Date</th><th>Type</th><th>Source</th><th>Description</th><th class="r">Debit</th><th class="r">Credit</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
-            <tbody></tbody>
-            <tfoot></tfoot>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Each entry is checked for balance; unbalanced ones are flagged with an icon and text, and can be filtered on their own.</li>
-        <li>"Source document" opens the document that generated the entry, and its layout changes with the source: an invoice, a payroll summary, a bank movement.</li>
-        <li>Posted entries are locked. Editing one needs an approval code that expires after five minutes.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
-  <!-- Source document -->
-  <div class="modal-backdrop" id="docModal" role="dialog" aria-modal="true" aria-labelledby="docTitle">
-    <div class="modal md">
-      <div class="modal-head"><h2 id="docTitle">Source document</h2><span class="chip chip-info" id="docChip"></span></div>
+  <div class="modal-backdrop" id="mDoc">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="docTitle">
+      <div class="modal-head"><h3 id="docTitle"><span class="material-icons" aria-hidden="true">description</span><span id="docTitleTxt"></span></h3><span id="docChip"></span></div>
       <div class="modal-body" id="docBody"></div>
-      <div class="modal-foot"><button class="btn" type="button" id="closeDoc">Close</button></div>
+      <div class="modal-foot"><button type="button" class="btn btn-danger" id="btnCloseDoc"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
     </div>
   </div>
 
-  <!-- Edit with approval -->
-  <div class="modal-backdrop" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
-    <div class="modal md">
-      <div class="modal-head"><h2 id="editTitle">Edit entry</h2><span id="editTimer"></span></div>
+  <div class="modal-backdrop" id="mEdit">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <div class="modal-head"><h3 id="editTitle"><span class="material-icons" aria-hidden="true">lock</span><span id="editTitleTxt"></span></h3><span id="editChip"></span></div>
       <div class="modal-body">
-        <div class="steps" aria-hidden="true"><span id="st1">1 Request</span><span id="st2">2 Enter code</span><span id="st3">3 Edit</span></div>
+        <div class="mc-steps" id="editSteps" style="margin-bottom:12px"></div>
         <div id="step1">
-          <p class="muted" style="margin-bottom:var(--space-3)">Posted entries are locked. Ask your supervisor for a one-time approval code.</p>
-          <div class="field"><label for="reqReason">Why do you need to edit it?</label><input class="input" id="reqReason" maxlength="160" placeholder="For example: wrong description on the invoice reference"><span class="field-error" id="eReason"></span></div>
+          <div class="mc-field"><label for="tokReason" data-i18n="tokReason"></label><textarea id="tokReason" maxlength="200"></textarea><div class="mc-field-error" id="errReason"></div></div>
         </div>
         <div id="step2" hidden>
-          <p class="muted">Code sent to your supervisor. In this demo it is shown here:</p>
-          <div class="code-box" id="demoCode" aria-label="Demo approval code"></div>
-          <div class="field"><label for="codeIn">Approval code</label><input class="input num" id="codeIn" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><span class="field-error" id="eCode"></span></div>
+          <p class="mc-hint" data-i18n="tokSent"></p>
+          <div class="code-box" id="tokShown" style="margin:10px 0"></div>
+          <div class="mc-field"><label for="tokCode" data-i18n="tokCode"></label><input type="text" id="tokCode" inputmode="numeric" maxlength="6" autocomplete="off"><div class="mc-field-error" id="errCode"></div></div>
         </div>
         <div id="step3" hidden>
-          <p class="chip chip-pos" style="margin-bottom:var(--space-3)">Unlocked</p>
-          <div class="field"><label for="editDesc">Description</label><input class="input" id="editDesc" maxlength="200"><span class="field-error" id="eDesc"></span></div>
-          <p class="muted" style="font-size:.8rem;margin-top:var(--space-2)">Amounts come from the source document and can't be edited here.</p>
+          <p class="ig-nota" id="tokTimer"></p>
+          <div class="mc-field"><label for="newSyn" data-i18n="synopsis"></label><textarea id="newSyn" maxlength="250"></textarea><div class="mc-field-error" id="errSyn"></div></div>
+          <p class="mc-hint" data-i18n="onlySyn"></p>
         </div>
       </div>
       <div class="modal-foot">
-        <button class="btn btn-primary" type="button" id="editPrimary">Request code</button>
-        <button class="btn" type="button" id="closeEdit">Close</button>
+        <button type="button" class="btn btn-teal" id="btnEditMain"></button>
+        <button type="button" class="btn btn-danger" id="btnCloseEdit"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
       </div>
     </div>
   </div>
@@ -128,161 +82,215 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const r = UI.rng(5521);
-    const A = {
-      cash: ["1-01-01-01-001", "Cash on hand"], bank: ["1-01-02-01-001", "Bank checking account"], ar: ["1-02-01-01-001", "Accounts receivable, customers"],
-      inv: ["1-03-01-01-001", "Merchandise inventory"], ap: ["2-01-01-01-001", "Accounts payable, suppliers"], sal: ["2-01-02-01-001", "Salaries payable"],
-      ss: ["2-01-02-01-002", "Social security payable"], tax: ["2-01-03-01-001", "Sales tax payable"], rev: ["4-01-01-01-001", "Sales revenue"],
-      ret: ["4-01-01-02-001", "Sales returns"], cogs: ["5-01-01-01-001", "Cost of goods sold"], salx: ["6-01-01-01-001", "Salaries expense"],
-      emp: ["6-01-01-01-002", "Employer contributions"], rent: ["6-02-01-01-001", "Rent"], fuel: ["6-02-02-01-001", "Fuel"], dep: ["6-04-01-01-001", "Depreciation expense"],
-      accdep: ["1-04-01-02-001", "Accumulated depreciation, vehicles"]
-    };
-    const round = v => Math.round(v * 100) / 100;
-    const SOURCES = ["Sales", "Purchases", "Returns", "Payroll", "Bank", "Manual"];
-    const TYPES = ["Daily", "Adjustment", "Provision", "Reclassification"];
-    const entries = [];
-    let no = 9001;
-    function add(date, type, source, desc, lines, doc) { entries.push({ no: "JB-" + (no++), date, type, source, desc, lines, doc }); }
-
-    for (let d = 1; d <= 16; d++) {
-      const date = "2026-11-" + String(d).padStart(2, "0");
-      D.branches.slice(0, 3).forEach(b => {
-        const net = round(UI.between(r, 18000, 62000)), tax = round(net * 0.15), cash = round((net + tax) * UI.between(r, .45, .7));
-        const lines = [{ a: A.cash, d: cash, c: 0 }, { a: A.ar, d: round(net + tax - cash), c: 0 }, { a: A.rev, d: 0, c: net }, { a: A.tax, d: 0, c: tax }];
-        add(date, "Daily", "Sales", "Sales of the day · " + b, lines, { kind: "invoice", branch: b, net, tax, invoices: 40 + Math.floor(r() * 90) });
-        const cost = round(net * UI.between(r, .62, .72));
-        add(date, "Daily", "Sales", "Cost of sales · " + b, [{ a: A.cogs, d: cost, c: 0 }, { a: A.inv, d: 0, c: cost }], { kind: "cost", branch: b, cost, net });
-      });
-      if (d % 2 === 0) {
-        const sup = UI.pick(r, D.suppliers), amt = round(UI.between(r, 8000, 45000));
-        add(date, "Daily", "Purchases", "Purchase · " + sup, [{ a: A.inv, d: amt, c: 0 }, { a: A.ap, d: 0, c: amt }], { kind: "purchase", supplier: sup, amt, ref: "PI-" + (3300 + d * 7) });
-      }
-      if (d % 3 === 0) {
-        const amt = round(UI.between(r, 300, 2400)), b = UI.pick(r, D.branches);
-        add(date, "Daily", "Returns", "Customer return · " + b, [{ a: A.ret, d: amt, c: 0 }, { a: A.cash, d: 0, c: amt }], { kind: "return", branch: b, amt, ref: "CN-" + (700 + d), customer: UI.pick(r, D.customers) });
-      }
-      if (d % 4 === 1) {
-        const sup = UI.pick(r, D.suppliers), amt = round(UI.between(r, 5000, 30000));
-        add(date, "Daily", "Bank", "Payment to " + sup, [{ a: A.ap, d: amt, c: 0 }, { a: A.bank, d: 0, c: amt }], { kind: "bank", payee: sup, amt, method: r() < .5 ? "Check" : "Transfer", ref: "CHK-" + (12040 + d) });
-      }
+  UI.strings({
+    en: {
+      company: "Company", entryType: "Entry type", entryNo: "Entry No.", entryNoPh: "e.g. 2-1045", onlyUnbal: "Only unbalanced", all: "All",
+      listTitle: "Journal book", listHint: "Select ▸ to see the lines of an entry",
+      kEntries: "Entries", kDebit: "Debit", kCredit: "Credit", kUnbal: "Unbalanced", kVoid: "Voided",
+      colNo: "Entry No.", colDate: "Entry date", colType: "Entry type", synopsis: "Synopsis", colBranch: "Branch", colBal: "Balance", colBy: "Created by", colCreated: "Created on", colStatus: "Status",
+      debit: "Debit", credit: "Credit", actions: "Actions", balanced: "Balanced", unbalanced: "Unbalanced", active: "Active", voided: "Voided",
+      account: "Account", accountName: "Account name", costCenter: "Cost center", sourceDoc: "Source document", edit: "Edit", expand: "Show lines",
+      s_manual: "Manual", s_sales: "Sales", s_cost: "Cost of sales", s_purch: "Purchases", s_ret: "Returns", s_bank: "Bank movement", s_payroll: "Payroll",
+      docOf: "Source document · {n}", invoiceNo: "Invoice No.", customer: "Customer", seller: "Seller", subtotal: "Subtotal", tax: "Tax (sample 15%)", total: "Total",
+      payType: "Payment", product: "Product", qty: "Qty", price: "Price", unitCost: "Unit cost", movNo: "Movement No.", bankAcc: "Bank account", payee: "Payee", reference: "Reference", method: "Method",
+      period: "Period", employees: "Employees", gross: "Gross pay", deductions: "Deductions", employer: "Employer contributions", net: "Net pay", createdBy: "Created by", reason: "Reason",
+      purchaseNo: "Purchase invoice", returnNo: "Credit note", manualNote: "Manual entry: no source document. The lines are the document.",
+      editEntry: "Edit entry {n}", tokReason: "Why do you need to edit it?", tokRequest: "Request approval code", tokSent: "An approver received the request. In this demo the code is shown here:",
+      tokCode: "Approval code", tokValidate: "Validate code", tokOk: "Approved", tokPending: "Waiting for approval", tokTimer: "Unlocked. The code expires in {t}.", tokExpired: "The code expired. Request a new one.",
+      onlySyn: "Only the synopsis can be edited; amounts change through a new entry.", saveSyn: "Save", eReason: "Explain the reason (at least 10 characters).", eCode: "The code does not match.", eSyn: "Write the synopsis (at least 10 characters).",
+      st1: "Reason", st2: "Code", st3: "Edit", savedSyn: "Entry {n} updated.",
+      aboutText: "The journal book lists <b>every entry of the period</b>, manual and automatic, with its balance check: an entry is <b>balanced</b> when debit equals credit (icon and text, not only color). Each row opens its <b>lines</b>, and <b>Source document</b> opens the invoice, purchase, credit note, bank movement or payroll that created it, each with its own layout. <b>Editing an entry needs an approval code</b>: you explain the reason, an approver sends a code, and the entry stays unlocked for 5 minutes. Totals follow the filters. All data is generated."
+    },
+    es: {
+      company: "Empresa", entryType: "Tipo de partida", entryNo: "No. partida", entryNoPh: "ej. 2-1045", onlyUnbal: "Solo descuadradas", all: "Todas",
+      listTitle: "Libro diario", listHint: "Pulse ▸ para ver las líneas de una partida",
+      kEntries: "Partidas", kDebit: "Debe", kCredit: "Haber", kUnbal: "Descuadradas", kVoid: "Anuladas",
+      colNo: "Npartida", colDate: "Fecha partida", colType: "Tipo partida", synopsis: "Sinopsis", colBranch: "Sucursal", colBal: "Balance estado", colBy: "Creado por", colCreated: "Fecha creado", colStatus: "Estado",
+      debit: "Debe", credit: "Haber", actions: "Acciones", balanced: "Cuadrada", unbalanced: "Descuadrada", active: "Activa", voided: "Anulada",
+      account: "Cuenta", accountName: "Nombre de la cuenta", costCenter: "Centro de costo", sourceDoc: "Documento origen", edit: "Editar", expand: "Ver líneas",
+      s_manual: "Manual", s_sales: "Ventas", s_cost: "Costo de ventas", s_purch: "Compras", s_ret: "Devoluciones", s_bank: "Movimiento bancario", s_payroll: "Planilla",
+      docOf: "Documento origen · {n}", invoiceNo: "No. factura", customer: "Cliente", seller: "Vendedor", subtotal: "Subtotal", tax: "Impuesto (ejemplo 15%)", total: "Total",
+      payType: "Pago", product: "Producto", qty: "Cant.", price: "Precio", unitCost: "Costo unitario", movNo: "No. movimiento", bankAcc: "Cuenta bancaria", payee: "Beneficiario", reference: "Referencia", method: "Forma",
+      period: "Período", employees: "Empleados", gross: "Devengado", deductions: "Deducciones", employer: "Aportes patronales", net: "Neto a pagar", createdBy: "Creado por", reason: "Motivo",
+      purchaseNo: "Factura de compra", returnNo: "Nota de crédito", manualNote: "Partida manual: no tiene documento origen. Las líneas son el documento.",
+      editEntry: "Editar partida {n}", tokReason: "¿Por qué necesita editarla?", tokRequest: "Solicitar código de aprobación", tokSent: "Un aprobador recibió la solicitud. En esta demo el código se muestra aquí:",
+      tokCode: "Código de aprobación", tokValidate: "Validar código", tokOk: "Aprobado", tokPending: "Esperando aprobación", tokTimer: "Desbloqueada. El código vence en {t}.", tokExpired: "El código venció. Solicite uno nuevo.",
+      onlySyn: "Solo se puede editar la sinopsis; los montos se cambian con una partida nueva.", saveSyn: "Guardar", eReason: "Explique el motivo (mínimo 10 caracteres).", eCode: "El código no coincide.", eSyn: "Escriba la sinopsis (mínimo 10 caracteres).",
+      st1: "Motivo", st2: "Código", st3: "Editar", savedSyn: "Partida {n} actualizada.",
+      aboutText: "El libro diario muestra <b>todas las partidas del período</b>, manuales y automáticas, con su verificación de balance: una partida está <b>cuadrada</b> cuando el Debe es igual al Haber (con ícono y texto, no solo color). Cada fila abre sus <b>líneas</b>, y <b>Documento origen</b> abre la factura, compra, nota de crédito, movimiento bancario o planilla que la generó, cada uno con su propio formato. <b>Editar una partida requiere un código de aprobación</b>: se explica el motivo, un aprobador envía un código y la partida queda desbloqueada 5 minutos. Los totales siguen los filtros. Todos los datos son generados."
     }
-    // Payroll (1st half) and some manual entries.
-    const gross = 412380.55, ssE = round(gross * .035), ssP = round(gross * .07);
-    add("2026-11-15", "Provision", "Payroll", "Payroll Nov 1–15", [{ a: A.salx, d: gross, c: 0 }, { a: A.emp, d: ssP, c: 0 }, { a: A.sal, d: 0, c: round(gross - ssE) }, { a: A.ss, d: 0, c: round(ssE + ssP) }],
-      { kind: "payroll", period: "Nov 1 – Nov 15, 2026", employees: 118, gross, ssE, ssP });
-    const manual = [["Adjustment", "Rent of November", A.rent, A.ap, 18500], ["Provision", "Depreciation of vehicles", A.dep, A.accdep, 7240.5], ["Reclassification", "Fuel charged to wrong account", A.fuel, A.rent, 1320.75]];
-    manual.forEach((m, i) => add("2026-11-" + String(5 + i * 4).padStart(2, "0"), m[0], "Manual", m[1], [{ a: m[2], d: m[4], c: 0 }, { a: m[3], d: 0, c: i === 2 ? m[4] - 20 : m[4] }], { kind: "manual", author: UI.pick(r, ["A. Torres", "C. Ramos"]) }));
-    // One unbalanced automatic entry to show the check.
-    const bad = entries[17]; bad.lines[bad.lines.length - 1].c = round(bad.lines[bad.lines.length - 1].c - 12.4);
-    entries.sort((a, b) => a.date === b.date ? (a.no < b.no ? -1 : 1) : (a.date < b.date ? -1 : 1));
+  });
 
-    const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>';
-    const ICON_BAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>';
-    const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-    const sumD = e => e.lines.reduce((a, l) => a + l.d, 0), sumC = e => e.lines.reduce((a, l) => a + l.c, 0);
-    const balanced = e => Math.abs(sumD(e) - sumC(e)) < 0.005;
-    const status = e => balanced(e) ? '<span class="status pos">' + ICON_OK + "Balanced</span>" : '<span class="status neg">' + ICON_BAD + "Unbalanced · " + UI.fmtMoney(Math.abs(sumD(e) - sumC(e))) + "</span>";
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi, D = UI.DATA;
+    const SRC = ["s_sales", "s_cost", "s_purch", "s_ret", "s_bank", "s_payroll", "s_manual"];
+    const NAMES = {
+      "1-01-01-001": ["Cash on hand", "Caja general"], "1-01-02-001": ["Bank – First Harbor", "Banco First Harbor"], "1-01-03-001": ["Accounts receivable", "Clientes"],
+      "1-01-04-001": ["Merchandise inventory", "Inventario de mercadería"], "1-01-05-001": ["Sales tax credit", "Impuesto por acreditar"], "2-01-01-001": ["Accounts payable", "Proveedores"],
+      "2-01-02-001": ["Sales tax payable", "Impuesto sobre ventas por pagar"], "2-01-03-001": ["Salaries payable", "Sueldos por pagar"], "2-01-03-002": ["Withholdings payable", "Retenciones por pagar"],
+      "2-01-04-001": ["Accrued expenses", "Gastos acumulados por pagar"], "4-01-01-001": ["Sales", "Ventas"], "4-01-02-001": ["Sales returns", "Devoluciones sobre ventas"], "5-01-01-001": ["Cost of sales", "Costo de ventas"],
+      "6-01-01-001": ["Salaries", "Sueldos y salarios"], "6-01-01-002": ["Employer contributions", "Aportes patronales"], "6-01-04-001": ["Office supplies", "Papelería y útiles"], "6-01-07-001": ["Bank fees", "Comisiones bancarias"]
+    };
+    const nm = c => NAMES[c] ? NAMES[c][UI.lang === "es" ? 1 : 0] : c;
+    const users = ["mlopez", "jreyes", "acastro", "system"];
 
-    function fill(id, values) { $("#" + id).html(values.map(v => '<option value="' + v + '">' + v + "</option>").join("")).select2({ placeholder: "All", allowClear: true, width: "100%" }); }
-    fill("fType", TYPES); fill("fSource", SOURCES);
-    $("#fFrom").val("2026-11-01"); $("#fTo").val("2026-11-16");
+    // ---------- Sample book (deterministic) ----------
+    const r = UI.rng(2026);
+    const book = [];
+    let no = 1001;
+    for (let day = 1; day <= 16; day++) {
+      const date = new Date(Date.UTC(2026, 10, day));
+      if (date.getUTCDay() === 0) continue;
+      SRC.forEach((s, si) => {
+        if (s === "s_payroll" && day !== 15) return;
+        if (s === "s_manual" && r() > .45) return;
+        if ((s === "s_ret" || s === "s_bank") && r() > .7) return;
+        const branch = D.branches[Math.floor(r() * D.branches.length)];
+        const base = UI.between(r, 8000, 160000);
+        let lines;
+        if (s === "s_sales") { const net = base, tax = net * .15; lines = [["1-01-01-001", net * .4 + tax * .4, 0], ["1-01-03-001", net * .6 + tax * .6, 0], ["4-01-01-001", 0, net], ["2-01-02-001", 0, tax]]; }
+        else if (s === "s_cost") lines = [["5-01-01-001", base * .7, 0], ["1-01-04-001", 0, base * .7]];
+        else if (s === "s_purch") lines = [["1-01-04-001", base, 0], ["1-01-05-001", base * .15, 0], ["2-01-01-001", 0, base * 1.15]];
+        else if (s === "s_ret") lines = [["4-01-02-001", base * .05, 0], ["1-01-03-001", 0, base * .05]];
+        else if (s === "s_bank") lines = [["2-01-01-001", base * .6, 0], ["6-01-07-001", 45, 0], ["1-01-02-001", 0, base * .6 + 45]];
+        else if (s === "s_payroll") { const g = 240000, ded = g * .12, emp = g * .09; lines = [["6-01-01-001", g, 0], ["6-01-01-002", emp, 0], ["2-01-03-002", 0, ded + emp], ["2-01-03-001", 0, g - ded]]; }
+        else lines = [["6-01-04-001", base * .05, 0], ["2-01-04-001", 0, base * .05]];
+        lines = lines.map(l => ({ acc: l[0], d: Math.round(l[1] * 100) / 100, c: Math.round(l[2] * 100) / 100, cc: l[0].startsWith("6") ? Math.floor(r() * D.costCenters.length) : null }));
+        // Rounding cents: the last credit line absorbs the difference so the entry balances exactly
+        const dif = Math.round((lines.reduce((a, l) => a + l.d, 0) - lines.reduce((a, l) => a + l.c, 0)) * 100) / 100;
+        lines[lines.length - 1].c = Math.round((lines[lines.length - 1].c + dif) * 100) / 100;
+        if (no === 1023 || no === 1061) lines[lines.length - 1].c = Math.round(lines[lines.length - 1].c * .985 * 100) / 100;
+        const synEn = { s_sales: "Sales of the day", s_cost: "Cost of sales of the day", s_purch: "Purchases of the day", s_ret: "Returns of the day", s_bank: "Supplier payment", s_payroll: "Payroll 1st half of November", s_manual: "Month adjustment" }[s];
+        const synEs = { s_sales: "Ventas del día", s_cost: "Costo de ventas del día", s_purch: "Compras del día", s_ret: "Devoluciones del día", s_bank: "Pago a proveedor", s_payroll: "Planilla 1ra quincena de noviembre", s_manual: "Ajuste del mes" }[s];
+        book.push({ no: "2-" + (no++), date, src: s, branch, syn: { en: synEn + " · " + branch, es: synEs + " · " + branch }, lines, by: s === "s_manual" ? users[si % 3] : "system", created: new Date(date.getTime() + 86400000 * (s === "s_manual" ? 0 : 1)), voided: r() < .03, seed: no * 13 });
+      });
+    }
+    book.sort((a, b) => b.date - a.date || (a.no < b.no ? 1 : -1));
 
-    const open = new Set();
+    // ---------- Filters ----------
+    document.getElementById("fFrom").value = "2026-11-01"; document.getElementById("fTo").value = "2026-11-16";
+    function fillType() { const v = $("#fType").val(); $("#fType").empty().append(new Option(t("all"), "")); SRC.forEach(s => $("#fType").append(new Option(t(s), s))); $("#fType").val(v || "").select2({ width: "100%", minimumResultsForSearch: Infinity }); }
+    fillType();
+    const sum = (ls, k) => ls.reduce((a, l) => a + l[k], 0);
+    const bal = e => Math.abs(sum(e.lines, "d") - sum(e.lines, "c")) < .005;
+    const chipBal = ok => ok ? '<span class="chip chip-pos">' + mi("check_circle") + t("balanced") + "</span>" : '<span class="chip chip-neg">' + mi("error") + t("unbalanced") + " " + M(Math.abs(0)) + "</span>";
+    const chipBalE = e => bal(e) ? '<span class="chip chip-pos">' + mi("check_circle") + t("balanced") + "</span>" : '<span class="chip chip-neg">' + mi("error") + t("unbalanced") + " · " + M(sum(e.lines, "d") - sum(e.lines, "c")) + "</span>";
+    let open = new Set();
+
     function filtered() {
-      const from = $("#fFrom").val() || "0000", to = $("#fTo").val() || "9999";
-      const ty = $("#fType").val() || [], so = $("#fSource").val() || [], q = $("#fSearch").val().trim().toLowerCase(), unb = $("#fUnb").prop("checked");
-      return entries.filter(e => e.date >= from && e.date <= to && (!ty.length || ty.includes(e.type)) && (!so.length || so.includes(e.source)) &&
-        (!q || e.no.toLowerCase().includes(q) || e.desc.toLowerCase().includes(q)) && (!unb || !balanced(e)));
+      const f = document.getElementById("fFrom").value, to = document.getElementById("fTo").value, ty = $("#fType").val(), q = document.getElementById("fNo").value.trim().toLowerCase(), un = document.getElementById("fUnbal").checked;
+      return book.filter(e => UI.fmtDate(e.date) >= f && UI.fmtDate(e.date) <= to && (!ty || e.src === ty) && (!q || e.no.toLowerCase().includes(q)) && (!un || !bal(e)));
     }
     function render() {
-      const list = filtered();
-      const html = [];
-      list.forEach(e => {
-        const i = entries.indexOf(e), isOpen = open.has(i);
-        html.push('<tr><td><button class="btn icon-btn xbtn" type="button" data-x="' + i + '" aria-expanded="' + isOpen + '" aria-controls="det-' + i + '" aria-label="Show lines of ' + e.no + '">' + CHEV + "</button></td>" +
-          '<td class="num">' + e.no + '</td><td class="num">' + e.date + "</td><td>" + e.type + "</td><td>" + e.source + '</td><td class="desc">' + $("<div>").text(e.desc).html() + '</td><td class="r num">' + UI.fmtMoney(sumD(e)) +
-          '</td><td class="r num">' + UI.fmtMoney(sumC(e)) + "</td><td>" + status(e) + '</td><td style="display:flex;gap:6px"><button class="btn" type="button" data-doc="' + i + '">Source document</button><button class="btn" type="button" data-edit="' + i + '">Edit</button></td></tr>');
-        if (isOpen) html.push('<tr class="detail" id="det-' + i + '"><td colspan="10"><table><thead><tr><th>Account</th><th style="text-align:right">Debit</th><th style="text-align:right">Credit</th></tr></thead><tbody>' +
-          e.lines.map(l => '<tr><td><span class="num">' + l.a[0] + "</span> " + l.a[1] + '</td><td class="num" style="text-align:right">' + (l.d ? UI.fmtMoney(l.d) : "") + '</td><td class="num" style="text-align:right">' + (l.c ? UI.fmtMoney(l.c) : "") + "</td></tr>").join("") + "</tbody></table></td></tr>");
-      });
-      document.querySelector("#book tbody").innerHTML = html.join("") || '<tr><td colspan="10" class="muted">No entries match the filters</td></tr>';
-      const td = list.reduce((a, e) => a + sumD(e), 0), tc = list.reduce((a, e) => a + sumC(e), 0), unb = list.filter(e => !balanced(e)).length;
-      document.querySelector("#book tfoot").innerHTML = '<tr><td></td><td colspan="5">Total (filtered)</td><td class="r num">' + UI.fmtMoney(td) + '</td><td class="r num">' + UI.fmtMoney(tc) + '</td><td colspan="2">' + (Math.abs(td - tc) < 0.005 ? "" : '<span class="status neg">' + ICON_BAD + "Difference " + UI.fmtMoney(Math.abs(td - tc)) + "</span>") + "</td></tr>";
-      $("#kCount").text(UI.fmtInt(list.length)); $("#kDebit").text(UI.fmtMoney(td)); $("#kCredit").text(UI.fmtMoney(tc));
-      $("#kUnb").text(UI.fmtInt(unb)); $("#kUnbD").html(unb ? '<span class="neg">Needs review</span>' : '<span class="pos">All balanced</span>');
+      const rows = filtered();
+      document.querySelector("#tBook thead").innerHTML = '<tr><th style="width:30px"></th><th>' + t("colNo") + "</th><th>" + t("colDate") + "</th><th>" + t("colType") + "</th><th>" + t("synopsis") + "</th><th>" + t("colBranch") + '</th><th class="r">' + t("debit") + '</th><th class="r">' + t("credit") + "</th><th>" + t("colBal") + "</th><th>" + t("colBy") + "</th><th>" + t("colCreated") + "</th><th>" + t("colStatus") + "</th><th>" + t("actions") + "</th></tr>";
+      document.querySelector("#tBook tbody").innerHTML = rows.map(e => {
+        const o = open.has(e.no);
+        return "<tr><td><button type=\"button\" class=\"exp-btn\" data-exp=\"" + e.no + '" aria-expanded="' + o + '" aria-label="' + t("expand") + '">' + mi(o ? "expand_more" : "chevron_right") + "</button></td><td>" + e.no + "</td><td>" + UI.fmtDay(e.date) + "</td><td>" + t(e.src) + "</td><td>" + UI.L(e.syn) + "</td><td>" + e.branch +
+          '</td><td class="r">' + M(sum(e.lines, "d")) + '</td><td class="r">' + M(sum(e.lines, "c")) + "</td><td>" + chipBalE(e) + "</td><td>" + e.by + "</td><td>" + UI.fmtDay(e.created) + "</td><td>" +
+          (e.voided ? '<span class="chip chip-warn">' + mi("block") + t("voided") + "</span>" : '<span class="chip chip-info">' + mi("task_alt") + t("active") + "</span>") +
+          '</td><td><div class="acts"><button type="button" class="btn btn-sm" data-doc="' + e.no + '" title="' + t("sourceDoc") + '">' + mi("description") + '</button><button type="button" class="btn btn-sm" data-edit="' + e.no + '" title="' + t("edit") + '"' + (e.voided ? " disabled" : "") + ">" + mi("edit") + "</button></div></td></tr>" +
+          (o ? '<tr class="lines-row"><td colspan="13"><table><thead><tr><th>' + t("account") + "</th><th>" + t("accountName") + "</th><th>" + t("costCenter") + '</th><th style="text-align:right">' + t("debit") + '</th><th style="text-align:right">' + t("credit") + "</th></tr></thead><tbody>" +
+            e.lines.map(l => "<tr><td>" + l.acc + "</td><td>" + nm(l.acc) + "</td><td>" + (l.cc != null ? UI.L(D.costCenters[l.cc]) : "—") + '</td><td class="r num">' + (l.d ? M(l.d) : "") + '</td><td class="r num">' + (l.c ? M(l.c) : "") + "</td></tr>").join("") + "</tbody></table></td></tr>" : "");
+      }).join("");
+      const td = rows.reduce((a, e) => a + sum(e.lines, "d"), 0), tc = rows.reduce((a, e) => a + sum(e.lines, "c"), 0);
+      document.querySelector("#tBook tfoot").innerHTML = '<tr><td colspan="6">' + t("total") + " · " + rows.length + '</td><td class="r">' + M(td) + '</td><td class="r">' + M(tc) + '</td><td colspan="5"></td></tr>';
+      const un = rows.filter(e => !bal(e)).length, vo = rows.filter(e => e.voided).length;
+      document.getElementById("kpis").innerHTML =
+        '<div class="mc-kpi"><div class="k-label">' + t("kEntries") + '</div><div class="k-value">' + UI.fmtInt(rows.length) + "</div></div>" +
+        '<div class="mc-kpi"><div class="k-label">' + t("kDebit") + '</div><div class="k-value num">' + M(td) + "</div></div>" +
+        '<div class="mc-kpi"><div class="k-label">' + t("kCredit") + '</div><div class="k-value num">' + M(tc) + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:' + (un ? "var(--mc-bad)" : "var(--mc-good)") + '"><div class="k-label">' + t("kUnbal") + '</div><div class="k-value ' + (un ? "neg" : "pos") + '">' + un + "</div></div>" +
+        '<div class="mc-kpi"><div class="k-label">' + t("kVoid") + '</div><div class="k-value">' + vo + "</div></div>";
     }
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); render(); });
+    document.getElementById("fUnbal").addEventListener("change", render);
 
-    // ---- Source documents ----
-    function docHtml(e) {
-      const x = e.doc;
-      const head = (title, ref) => '<div class="doc-head"><div class="doc-title">' + title + '</div><div class="num muted">' + ref + "</div></div>";
-      const dl = pairs => '<dl class="ro">' + pairs.map(p => "<div><dt>" + p[0] + "</dt><dd>" + p[1] + "</dd></div>").join("") + "</dl>";
-      if (x.kind === "invoice") {
-        const rr = UI.rng(e.no.length * 991 + parseInt(e.no.slice(3)));
-        const lines = [0, 1, 2, 3].map(() => { const p = UI.pick(rr, D.products); const q = 6 + Math.floor(rr() * 60); return [p[0], q]; });
-        return '<div class="doc">' + head("Daily sales summary", "SUM-" + e.no.slice(3)) + dl([["Branch", x.branch], ["Date", e.date], ["Invoices", UI.fmtInt(x.invoices)], ["Net sales", UI.fmtMoney(x.net)], ["Sales tax", UI.fmtMoney(x.tax)], ["Total", UI.fmtMoney(x.net + x.tax)]]) +
-          '<table class="grid"><thead><tr><th>Top products</th><th class="r">Units</th></tr></thead><tbody>' + lines.map(l => "<tr><td>" + l[0] + '</td><td class="r num">' + l[1] + "</td></tr>").join("") + "</tbody></table></div>";
-      }
-      if (x.kind === "cost") return '<div class="doc">' + head("Cost of sales calculation", "COS-" + e.no.slice(3)) + dl([["Branch", x.branch], ["Date", e.date], ["Net sales", UI.fmtMoney(x.net)], ["Cost at average cost", UI.fmtMoney(x.cost)], ["Gross margin", UI.fmtPct(1 - x.cost / x.net)]]) + '<p class="muted" style="font-size:.84rem">Cost is each unit sold at the item\'s average cost on that day.</p></div>';
-      if (x.kind === "purchase") return '<div class="doc">' + head("Supplier invoice", x.ref) + dl([["Supplier", x.supplier], ["Date", e.date], ["Credit days", "30"], ["Due date", "2026-12-" + e.date.slice(8)], ["Total", UI.fmtMoney(x.amt)]]) + '<p class="muted" style="font-size:.84rem">Received in the main warehouse; the inventory entry uses the invoice cost.</p></div>';
-      if (x.kind === "return") return '<div class="doc">' + head("Credit note", x.ref) + dl([["Customer", x.customer], ["Branch", x.branch], ["Date", e.date], ["Amount refunded", UI.fmtMoney(x.amt)], ["Reason", "Damaged product"]]) + "</div>";
-      if (x.kind === "bank") return '<div class="doc">' + head("Bank movement", x.ref) + dl([["Bank account", "Checking ···· 4471"], ["Method", x.method], ["Payee", x.payee], ["Date", e.date], ["Amount", UI.fmtMoney(x.amt)], ["Applied to", "3 open invoices"]]) + "</div>";
-      if (x.kind === "payroll") return '<div class="doc">' + head("Payroll summary", "PR-2026-21") + dl([["Period", x.period], ["Employees", x.employees], ["Gross pay", UI.fmtMoney(x.gross)], ["Employee social security", UI.fmtMoney(x.ssE)], ["Employer contributions", UI.fmtMoney(x.ssP)], ["Net pay", UI.fmtMoney(x.gross - x.ssE)]]) + '<p class="muted" style="font-size:.84rem">Sample rates. The full breakdown per employee lives in the payroll run.</p></div>';
-      return '<div class="doc">' + head("Manual entry", e.no) + dl([["Entered by", x.author], ["Date", e.date], ["Type", e.type]]) + '<p class="muted" style="font-size:.84rem">Manual entries have no source document; the description and the author are the audit trail.</p></div>';
-    }
-
-    // ---- Approval code flow ----
-    let editIdx = null, step = 1, code = "", expires = 0, timer = null;
-    function setStep(s) {
-      step = s;
-      [1, 2, 3].forEach(n => { document.getElementById("step" + n).hidden = n !== s; document.getElementById("st" + n).classList.toggle("on", n === s); });
-      $("#editPrimary").text(s === 1 ? "Request code" : s === 2 ? "Unlock" : "Save changes");
-    }
-    function tick() {
-      const left = Math.max(0, Math.round((expires - Date.now()) / 1000));
-      $("#editTimer").html(left ? '<span class="countdown" aria-live="off">Expires in ' + Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0") + "</span>" : "");
-      if (!left && step === 3) { clearInterval(timer); setStep(1); $("#eReason").text("The approval expired. Request a new code."); }
-    }
-    function openEdit(i) {
-      editIdx = i; code = ""; clearInterval(timer); $("#editTimer").empty();
-      $("#editTitle").text("Edit entry " + entries[i].no);
-      $("#reqReason, #codeIn, #editDesc").val("").attr("aria-invalid", false); $("#eReason, #eCode, #eDesc").text("");
-      setStep(1); UI.openModal("editModal");
-    }
-    $("#editPrimary").on("click", () => {
-      if (step === 1) {
-        const reason = $("#reqReason").val().trim();
-        if (reason.length < 8) { $("#eReason").text("Explain the reason in at least 8 characters."); $("#reqReason").attr("aria-invalid", true).focus(); return; }
-        $("#eReason").text(""); $("#reqReason").attr("aria-invalid", false);
-        code = String(100000 + Math.floor(Math.random() * 900000));
-        $("#demoCode").text(code); setStep(2); $("#codeIn").focus();
-      } else if (step === 2) {
-        if ($("#codeIn").val().trim() !== code) { $("#eCode").text("The code doesn't match."); $("#codeIn").attr("aria-invalid", true).focus(); return; }
-        expires = Date.now() + 5 * 60 * 1000; tick(); timer = setInterval(tick, 1000);
-        $("#editDesc").val(entries[editIdx].desc); setStep(3); $("#editDesc").focus();
+    // ---------- Source document ----------
+    let docNo = null;
+    function field(l, v) { return '<div class="mc-field"><label>' + l + '</label><div class="static" style="color:var(--mc-text)">' + v + "</div></div>"; }
+    function renderDoc() {
+      const e = book.find(x => x.no === docNo); if (!e) return;
+      const rr = UI.rng(e.seed);
+      document.getElementById("docTitleTxt").textContent = t("docOf", { n: e.no });
+      document.getElementById("docChip").innerHTML = '<span class="chip chip-violet">' + mi("category") + t(e.src) + "</span>";
+      let h = "";
+      const items = n => { const out = []; for (let i = 0; i < n; i++) { const p = D.products[Math.floor(rr() * D.products.length)]; out.push({ p: p[0], q: Math.ceil(UI.between(rr, 2, 40)), pr: UI.between(rr, 1.2, 18) }); } return out; };
+      if (e.src === "s_sales" || e.src === "s_ret" || e.src === "s_purch" || e.src === "s_cost") {
+        const its = items(6), sub = its.reduce((a, x) => a + x.q * x.pr, 0);
+        const head = e.src === "s_purch" ? t("purchaseNo") : e.src === "s_ret" ? t("returnNo") : t("invoiceNo");
+        const who = e.src === "s_purch" ? field(t("supplier"), UI.pick(rr, D.suppliers)) : field(t("customer"), UI.pick(rr, D.customers)) + field(t("seller"), UI.pick(rr, D.sellers));
+        h = '<div class="doc-grid">' + field(head, (e.src === "s_purch" ? "FC-" : e.src === "s_ret" ? "NC-" : "FA-") + (40000 + Math.floor(rr() * 9000))) + field(t("date"), UI.fmtDay(e.date)) + field(t("branch"), e.branch) + who + (e.src === "s_sales" ? field(t("payType"), UI.L(UI.pick(rr, D.payment))) : "") + "</div>" +
+          '<div class="table-wrap"><table class="grid"><thead><tr><th>' + t("product") + '</th><th class="r">' + t("qty") + '</th><th class="r">' + (e.src === "s_cost" ? t("unitCost") : t("price")) + '</th><th class="r">' + t("total") + "</th></tr></thead><tbody>" +
+          its.map(x => "<tr><td>" + x.p + '</td><td class="r">' + x.q + '</td><td class="r">' + M(x.pr) + '</td><td class="r">' + M(x.q * x.pr) + "</td></tr>").join("") +
+          '</tbody><tfoot><tr><td colspan="3">' + t("subtotal") + '</td><td class="r">' + M(sub) + "</td></tr>" + (e.src === "s_cost" ? "" : '<tr><td colspan="3">' + t("tax") + '</td><td class="r">' + M(sub * .15) + '</td></tr><tr><td colspan="3">' + t("total") + '</td><td class="r">' + M(sub * 1.15) + "</td></tr>") + "</tfoot></table></div>";
+      } else if (e.src === "s_bank") {
+        h = '<div class="doc-grid">' + field(t("movNo"), "DB-" + (7000 + Math.floor(rr() * 900))) + field(t("date"), UI.fmtDay(e.date)) + field(t("bankAcc"), D.banks[0] + " ···4417") + field(t("method"), UI.lang === "es" ? "Transferencia" : "Transfer") +
+          field(t("payee"), UI.pick(rr, D.suppliers)) + field(t("reference"), "TR-" + Math.floor(rr() * 1e6)) + field(t("amount"), M(sum(e.lines, "c"))) + "</div>";
+      } else if (e.src === "s_payroll") {
+        const g = e.lines[0].d, emp = e.lines[1].d, ded = e.lines[2].c - emp;
+        h = '<div class="doc-grid">' + field(t("period"), UI.lang === "es" ? "01/11/2026 – 15/11/2026" : "11/01/2026 – 11/15/2026") + field(t("employees"), "120") + field(t("gross"), M(g)) + field(t("deductions"), M(ded)) + field(t("employer"), M(emp)) + field(t("net"), M(g - ded)) + "</div>";
       } else {
-        const v = $("#editDesc").val().trim();
-        if (v.length < 4) { $("#eDesc").text("The description is too short."); $("#editDesc").attr("aria-invalid", true); return; }
-        entries[editIdx].desc = v; clearInterval(timer); UI.closeModal("editModal"); render(); UI.toast(entries[editIdx].no + " updated; the change was logged with the approval");
+        h = '<p class="ig-nota">' + t("manualNote") + '</p><div class="doc-grid">' + field(t("createdBy"), e.by) + field(t("date"), UI.fmtDay(e.date)) + field(t("synopsis"), UI.L(e.syn)) + "</div>";
+      }
+      document.getElementById("docBody").innerHTML = h;
+    }
+    document.getElementById("btnCloseDoc").addEventListener("click", () => UI.closeModal("mDoc"));
+
+    // ---------- Edit with approval code ----------
+    let editNo = null, step = 1, code = "", timer = null, left = 0;
+    function paintEdit() {
+      document.getElementById("editTitleTxt").textContent = t("editEntry", { n: editNo });
+      document.getElementById("editSteps").innerHTML = [1, 2, 3].map(s => '<span class="mc-step' + (s < step ? " done" : s === step ? " current" : "") + '"><i>' + (s < step ? "✓" : s) + "</i>" + t("st" + s) + "</span>").join("");
+      document.getElementById("editChip").innerHTML = step === 3 ? '<span class="chip chip-pos">' + mi("lock_open") + t("tokOk") + "</span>" : step === 2 ? '<span class="chip chip-warn">' + mi("hourglass_top") + t("tokPending") + "</span>" : "";
+      ["step1", "step2", "step3"].forEach((id, i) => document.getElementById(id).hidden = i + 1 !== step);
+      const btn = document.getElementById("btnEditMain");
+      btn.innerHTML = mi(step === 1 ? "send" : step === 2 ? "verified" : "save") + "<span>" + t(step === 1 ? "tokRequest" : step === 2 ? "tokValidate" : "saveSyn") + "</span>";
+      document.getElementById("tokShown").textContent = code;
+      paintTimer();
+    }
+    function paintTimer() {
+      if (step !== 3) return;
+      const mm = Math.floor(left / 60), ss = String(left % 60).padStart(2, "0");
+      document.getElementById("tokTimer").innerHTML = mi(left > 0 ? "timer" : "timer_off") + " " + (left > 0 ? t("tokTimer", { t: mm + ":" + ss }) : t("tokExpired"));
+      document.getElementById("btnEditMain").disabled = left <= 0;
+    }
+    function openEdit(n) {
+      editNo = n; step = 1; code = ""; clearInterval(timer);
+      ["tokReason", "tokCode"].forEach(id => document.getElementById(id).value = "");
+      ["errReason", "errCode", "errSyn"].forEach(id => document.getElementById(id).textContent = "");
+      document.getElementById("btnEditMain").disabled = false;
+      paintEdit(); UI.openModal("mEdit");
+    }
+    document.getElementById("btnEditMain").addEventListener("click", () => {
+      if (step === 1) {
+        const v = document.getElementById("tokReason").value.trim();
+        if (v.length < 10) { document.getElementById("errReason").textContent = t("eReason"); document.getElementById("tokReason").focus(); return; }
+        document.getElementById("errReason").textContent = "";
+        code = String(100000 + Math.floor(Math.random() * 900000)); step = 2; paintEdit(); document.getElementById("tokCode").focus();
+      } else if (step === 2) {
+        if (document.getElementById("tokCode").value.trim() !== code) { document.getElementById("errCode").textContent = t("eCode"); document.getElementById("tokCode").setAttribute("aria-invalid", "true"); return; }
+        document.getElementById("tokCode").setAttribute("aria-invalid", "false");
+        step = 3; left = 300; document.getElementById("newSyn").value = UI.L(book.find(x => x.no === editNo).syn); paintEdit();
+        timer = setInterval(() => { left--; paintTimer(); if (left <= 0) clearInterval(timer); }, 1000);
+        document.getElementById("newSyn").focus();
+      } else {
+        const v = document.getElementById("newSyn").value.trim();
+        if (v.length < 10) { document.getElementById("errSyn").textContent = t("eSyn"); return; }
+        const e = book.find(x => x.no === editNo); e.syn = { en: v, es: v };
+        clearInterval(timer); UI.closeModal("mEdit"); render(); UI.toast(t("savedSyn", { n: editNo }));
       }
     });
-    $("#closeEdit").on("click", () => { clearInterval(timer); UI.closeModal("editModal"); });
-    $("#codeIn").on("input", function () { this.value = this.value.replace(/\D/g, ""); });
+    document.getElementById("btnCloseEdit").addEventListener("click", () => { clearInterval(timer); UI.closeModal("mEdit"); });
 
-    document.querySelector("#book tbody").addEventListener("click", ev => {
-      const x = ev.target.closest("[data-x]"), dc = ev.target.closest("[data-doc]"), ed = ev.target.closest("[data-edit]");
-      if (x) { const i = +x.dataset.x; open.has(i) ? open.delete(i) : open.add(i); render(); const b = document.querySelector('[data-x="' + i + '"]'); if (b) b.focus(); }
-      if (dc) { const e = entries[+dc.dataset.doc]; $("#docTitle").text("Source of " + e.no); $("#docChip").text(e.source); $("#docBody").html(docHtml(e)); UI.openModal("docModal"); }
-      if (ed) openEdit(+ed.dataset.edit);
+    document.getElementById("tBook").addEventListener("click", ev => {
+      const x = ev.target.closest("[data-exp]"); if (x) { const n = x.dataset.exp; open.has(n) ? open.delete(n) : open.add(n); render(); const nb = document.querySelector('[data-exp="' + n + '"]'); if (nb) nb.focus(); return; }
+      const d = ev.target.closest("[data-doc]"); if (d) { docNo = d.dataset.doc; renderDoc(); UI.openModal("mDoc"); return; }
+      const ed = ev.target.closest("[data-edit]"); if (ed) openEdit(ed.dataset.edit);
     });
-    $("#closeDoc").on("click", () => UI.closeModal("docModal"));
-
-    $("#fType, #fSource").on("change", render);
-    $("#fFrom, #fTo, #fUnb").on("change", render);
-    let t; $("#fSearch").on("input", () => { clearTimeout(t); t = setTimeout(render, 150); });
-    render();
+    function about() { document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); }
+    document.addEventListener("langchange", () => { fillType(); render(); if (docNo && document.getElementById("mDoc").classList.contains("open")) renderDoc(); if (document.getElementById("mEdit").classList.contains("open")) paintEdit(); about(); });
+    render(); about();
   });
   </script>
 </body>

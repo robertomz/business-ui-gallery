@@ -3,216 +3,182 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stock by Warehouse · Business UI Gallery</title>
+  <title>Stock by warehouse · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--space-4); align-items: start; }
-    .scroll { max-height: 560px; overflow: auto; }
-    #stock tbody tr { cursor: pointer; }
-    #stock tbody tr[aria-selected="true"] td { background: var(--info-bg); }
-    #stock td { white-space: nowrap; }
-    .pres { font-size: .8rem; color: var(--text-muted); }
-    .check-row { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: center; }
-    .check-row label { display: inline-flex; gap: 6px; align-items: center; font-size: .88rem; cursor: pointer; }
-    .side { position: sticky; top: 72px; }
-    .log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); max-height: 300px; overflow: auto; }
-    .log li { border-left: 3px solid var(--primary); padding: 4px 0 4px 10px; font-size: .86rem; }
-    .log .meta { font-size: .76rem; color: var(--text-muted); }
-    .obs-dot { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; color: var(--warning); }
-    .obs-dot svg { width: 14px; height: 14px; }
-    .zero { color: var(--text-muted); }
-    textarea.input { min-height: 80px; resize: vertical; font-family: inherit; }
-    .layout > * { min-width: 0; }
-    @media (max-width: 1100px) { .layout { grid-template-columns: minmax(0, 1fr); } .side { position: static; } }
+    tr.clickable { cursor: pointer; }
+    tr.sel td { background: rgba(20,184,166,.12) !important; }
+    .obs-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow: auto; }
+    .obs-log li { border: 1px solid var(--mc-line); border-left: 3px solid var(--mc-teal); border-radius: 6px; padding: 8px 10px; font-size: 12px; }
+    .obs-log li header { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; color: var(--mc-muted); font-size: 11px; margin-bottom: 4px; }
+    .obs-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .obs-form .span2 { grid-column: 1 / -1; }
+    .pres { font-size: 10.5px; color: var(--mc-muted); display: block; }
+    @media (max-width: 760px) { .obs-form { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body data-page="stock-check" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Stock by warehouse</h1>
-        <p class="muted">Every item in every warehouse, counted in its presentations. Auditors leave observations that can never be edited.</p>
-      </div>
-    </div>
-
-    <section class="card card-body" aria-label="Filters">
-      <div class="filters">
-        <div class="field"><label for="fWh">Warehouse</label><select id="fWh" multiple></select></div>
-        <div class="field"><label for="fCat">Category</label><select id="fCat" multiple></select></div>
-        <div class="field"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Item code or name"></div>
-      </div>
-      <div class="check-row" style="margin-top:var(--space-3)">
-        <label><input type="checkbox" id="fStock"> Only with stock</label>
-        <label><input type="checkbox" id="fObs"> Only with observations</label>
-      </div>
+  <main id="content">
+    <section class="mc-panel">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field"><label for="fBranch" data-i18n="branch"></label><select id="fBranch"></select></div>
+        <div class="mc-field"><label for="fWh" data-i18n="warehouse"></label><select id="fWh"></select></div>
+        <div class="mc-field"><label for="fSup" data-i18n="supplier"></label><select id="fSup"></select></div>
+        <div class="mc-field"><label for="fCat" data-i18n="category"></label><select id="fCat"></select></div>
+        <div class="mc-field"><label for="fBuyer" data-i18n="buyer"></label><select id="fBuyer"></select></div>
+        <div class="mc-field w-lg"><label for="fItem" data-i18n="item"></label><input type="text" id="fItem" data-i18n-ph="itemPh"></div>
+        <div class="mc-field" style="max-width:170px"><label for="fObs" data-i18n="observation"></label><select id="fObs"></select></div>
+        <label class="mc-check"><input type="checkbox" id="fStock"><span data-i18n="inWarehouse"></span></label>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+        <button class="btn" type="button" id="btnClear"><span class="material-icons" aria-hidden="true">filter_alt_off</span><span data-i18n="clear"></span></button>
+      </form>
     </section>
 
-    <section class="kpis" aria-label="Totals for the filtered rows" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Items</div><div class="kpi-value" id="kItems">–</div><div class="kpi-delta muted" id="kRows"></div></div>
-      <div class="card kpi"><div class="kpi-label">Units (base)</div><div class="kpi-value" id="kUnits">–</div></div>
-      <div class="card kpi"><div class="kpi-label">Inventory value</div><div class="kpi-value" id="kValue">–</div></div>
-      <div class="card kpi"><div class="kpi-label">With observations</div><div class="kpi-value" id="kObs">–</div><div class="kpi-delta muted">item-warehouse pairs</div></div>
-    </section>
+    <section class="mc-kpis" id="kpis"></section>
 
-    <div class="layout">
-      <section class="card">
-        <div class="card-head"><h2>Stock</h2><span class="muted" style="font-size:.82rem">Select a row to see or add observations</span></div>
-        <div class="card-body">
-          <div class="table-wrap scroll">
-            <table class="grid" id="stock">
-              <thead><tr><th>Item</th><th>Warehouse</th><th>Presentations</th><th class="r">Stock</th><th class="r">Base units</th><th class="r">Avg cost</th><th class="r">Value</th><th>Notes</th></tr></thead>
-              <tbody></tbody>
-              <tfoot></tfoot>
-            </table>
-          </div>
-        </div>
+    <div class="split">
+      <section class="mc-panel">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">inventory_2</span><span data-i18n="listTitle"></span></h3><span class="mc-hint" data-i18n="listHint"></span></div>
+        <div class="table-wrap" style="max-height:560px"><table class="grid" id="tItems"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
       </section>
-
-      <aside class="card side" aria-labelledby="sideTitle">
-        <div class="card-head"><h2 id="sideTitle">Observations</h2></div>
-        <div class="card-body" id="sideBody">
-          <p class="muted" id="sideEmpty">Select a row in the table.</p>
-          <div id="sidePanel" hidden>
-            <p style="font-weight:600" id="sideItem"></p>
-            <p class="muted" style="font-size:.84rem;margin-bottom:var(--space-3)" id="sideWh"></p>
-            <ul class="log" id="log" aria-live="polite"></ul>
-            <form id="obsForm" style="margin-top:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3)" novalidate>
-              <div class="field"><label for="obsAuthor">Auditor</label><select class="input" id="obsAuthor"><option value="">Choose…</option></select><span class="field-error" id="eAuthor"></span></div>
-              <div class="field"><label for="obsText">Observation</label><textarea class="input" id="obsText" maxlength="300" placeholder="What did you find?"></textarea><span class="field-error" id="eText"></span></div>
-              <button class="btn btn-primary" type="submit">Add observation</button>
-              <p class="muted" style="font-size:.78rem">Observations are added to the log. They cannot be edited or deleted.</p>
-            </form>
-          </div>
-        </div>
+      <aside class="mc-panel" id="side" aria-live="polite">
+        <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">rate_review</span><span data-i18n="obsTitle"></span></h3></div>
+        <div id="sideBody"></div>
       </aside>
     </div>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Stock is stored in base units and shown in each item's presentations, for example 12 boxes and 5 units.</li>
-        <li>Observations are insert-only: each one keeps its date and author, so the audit trail can't be rewritten.</li>
-        <li>The cards and the table footer follow every filter.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const r = UI.rng(7314);
-    const WAREHOUSES = ["Main warehouse", "North Plaza store", "Harbor store", "Central Market store"];
-    const AUDITORS = ["L. Rivera", "M. Cruz", "P. Herrera", "S. Aguilar"];
-    const PACKS = { Beverages: ["Case", 24], Dairy: ["Box", 12], Snacks: ["Box", 12], Cleaning: ["Box", 6], "Personal care": ["Box", 12], "Canned goods": ["Case", 24], Grains: ["Bag", 10] };
+  UI.strings({
+    en: {
+      warehouse: "Warehouse", buyer: "Buyer", item: "Item", itemPh: "Code, barcode or name", observation: "Observations", inWarehouse: "Only with stock",
+      obsAll: "All", obsWith: "With observations", obsWithout: "Without observations",
+      kItems: "Item × warehouse", kUnits: "Units (base)", kValue: "Stock value", kObs: "With observations", kZero: "Without stock",
+      listTitle: "Items by warehouse", listHint: "Select a row to see or add observations",
+      colCode: "Code", colItem: "Item", colWh: "Warehouse", colPres: "Presentation", colStock: "Stock", colBase: "Base units", colCost: "Avg. cost", colValue: "Value", colObs: "Obs.",
+      obsTitle: "Observations", pickRow: "Select an item to see its observations. Observations are only added, never edited or deleted.",
+      noObs: "No observations yet.", addObs: "Add observation", state: "Status", appliesTo: "Applies to", user: "Auditor", text: "Observation",
+      st_ok: "Checked", st_diff: "Difference", st_pending: "To review", ap_this: "This warehouse", ap_all: "Every warehouse",
+      eText: "Write the observation (at least 5 characters).", eUser: "Choose the auditor.", added: "Observation added to {i}.", units: "units", box: "box", boxes: "boxes", unit: "unit",
+      aboutText: "Each row is an <b>item in a warehouse</b>, with its presentations (for example a box of 12) and the stock shown both <b>by presentation</b> and in <b>base units</b>, at average cost. Filters by branch, warehouse, supplier, category and buyer narrow the list, and the cards and totals follow the filters. Auditors leave <b>observations</b> per item and warehouse (or for every warehouse); they are <b>only added</b>, never edited or deleted, so the history stays complete. All data is generated."
+    },
+    es: {
+      warehouse: "Bodega", buyer: "Comprador", item: "Artículo", itemPh: "Código, código de barras o nombre", observation: "Observaciones", inWarehouse: "Solo con existencia",
+      obsAll: "Todas", obsWith: "Con observaciones", obsWithout: "Sin observaciones",
+      kItems: "Artículo × bodega", kUnits: "Unidades (base)", kValue: "Valor de existencia", kObs: "Con observaciones", kZero: "Sin existencia",
+      listTitle: "Artículos por bodega", listHint: "Elija una fila para ver o agregar observaciones",
+      colCode: "Código", colItem: "Artículo", colWh: "Bodega", colPres: "Presentación", colStock: "Existencia", colBase: "Unidades base", colCost: "Costo prom.", colValue: "Valor", colObs: "Obs.",
+      obsTitle: "Observaciones", pickRow: "Elija un artículo para ver sus observaciones. Las observaciones solo se agregan; nunca se editan ni se borran.",
+      noObs: "Sin observaciones todavía.", addObs: "Agregar observación", state: "Estado", appliesTo: "Aplica a", user: "Auditor", text: "Observación",
+      st_ok: "Revisado", st_diff: "Diferencia", st_pending: "Por revisar", ap_this: "Esta bodega", ap_all: "Todas las bodegas",
+      eText: "Escriba la observación (mínimo 5 caracteres).", eUser: "Elija el auditor.", added: "Observación agregada a {i}.", units: "unidades", box: "caja", boxes: "cajas", unit: "unid.",
+      aboutText: "Cada fila es un <b>artículo en una bodega</b>, con sus presentaciones (por ejemplo caja de 12) y la existencia mostrada <b>por presentación</b> y en <b>unidades base</b>, a costo promedio. Los filtros de sucursal, bodega, proveedor, categoría y comprador acotan la lista, y las tarjetas y totales siguen los filtros. Los auditores dejan <b>observaciones</b> por artículo y bodega (o para todas las bodegas); <b>solo se agregan</b>, nunca se editan ni se borran, así el historial queda completo. Todos los datos son generados."
+    }
+  });
 
-    const items = D.products.map((p, i) => ({ code: "IT-" + String(1001 + i), name: p[0], cat: p[1], pack: PACKS[p[1]], cost: Math.round(UI.between(r, 8, 140) * 100) / 100 }));
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi, D = UI.DATA;
+    const WH = [["Central warehouse", "Bodega central", 0], ["North Plaza store", "Tienda North Plaza", 0], ["Harbor store", "Tienda Harbor", 1], ["Riverside store", "Tienda Riverside", 3]];
+    const BUYERS = ["R. Medina", "L. Castro", "P. Ortiz"];
+    const AUDITORS = ["auditor1", "auditor2", "auditor3"];
+    const r = UI.rng(777);
+    const items = D.products.map((p, i) => ({ code: "ART-" + String(1001 + i), barcode: "7501" + String(100000 + i * 37).slice(0, 6), name: p[0], cat: p[1], sup: D.suppliers[p[1] % D.suppliers.length], buyer: BUYERS[i % 3], factor: [12, 24, 6][i % 3], cost: UI.between(r, .6, 9) }));
     const rows = [];
-    items.forEach(it => WAREHOUSES.forEach((wh, w) => {
-      const main = w === 0;
-      const units = r() < 0.12 ? 0 : Math.floor(UI.between(r, main ? 120 : 10, main ? 1600 : 380));
-      rows.push({ it, wh, units, cost: Math.round(it.cost * UI.between(r, 0.97, 1.03) * 100) / 100, obs: [] });
-    }));
-    // A few seeded observations.
-    const notes = ["Count differs by 3 units from the system.", "Two boxes damaged, set aside for return.", "Expiry date close: next 30 days.", "Item stored in the wrong aisle.", "Count matches."];
-    for (let i = 0; i < 9; i++) {
-      const row = UI.pick(r, rows);
-      row.obs.push({ date: "2026-11-" + String(3 + Math.floor(r() * 12)).padStart(2, "0") + " " + String(8 + Math.floor(r() * 9)).padStart(2, "0") + ":" + String(Math.floor(r() * 60)).padStart(2, "0"), author: UI.pick(r, AUDITORS), text: UI.pick(r, notes) });
-    }
-    rows.forEach(x => x.obs.sort((a, b) => a.date < b.date ? -1 : 1));
+    items.forEach(it => WH.forEach((w, wi) => { const units = r() < .12 ? 0 : Math.round(UI.between(r, 4, wi === 0 ? 1800 : 420)); rows.push({ it, wi, units, cost: it.cost * UI.between(r, .97, 1.03) }); }));
+    // Insert-only observation log
+    const log = [];
+    [[2, 0, "st_diff", { en: "Count found 3 boxes less than the system.", es: "El conteo encontró 3 cajas menos que el sistema." }], [5, 1, "st_ok", { en: "Counted and matches.", es: "Contado y coincide." }],
+     [11, 2, "st_pending", { en: "Damaged packaging on the shelf, check with supplier.", es: "Empaque dañado en estante, revisar con proveedor." }], [17, 0, "st_ok", { en: "Matches after relocation.", es: "Coincide después de reubicar." }], [20, 3, "st_diff", { en: "Two units without barcode.", es: "Dos unidades sin código de barras." }]]
+      .forEach((o, k) => log.push({ item: items[o[0]].code, wi: o[1], all: false, st: o[2], text: o[3], user: AUDITORS[k % 3], date: new Date(Date.UTC(2026, 10, 10 + k, 9 + k, 15)) }));
+    const obsFor = (code, wi) => log.filter(o => o.item === code && (o.all || o.wi === wi));
+    let sel = null;
 
-    const NOTE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"/></svg>';
-    function presentation(x) {
-      const [packName, size] = x.it.pack;
-      const packs = Math.floor(x.units / size), loose = x.units % size;
-      if (!x.units) return "0";
-      return (packs ? UI.fmtInt(packs) + " " + packName.toLowerCase() + (packs === 1 ? "" : (packName === "Box" ? "es" : "s")) : "") + (packs && loose ? " + " : "") + (loose ? loose + " unit" + (loose === 1 ? "" : "s") : "");
+    function sel2(id, opts, allTxt) {
+      const $s = $("#" + id), v = $s.val();
+      if ($s.data("select2")) $s.select2("destroy");
+      $s.empty().append(new Option(allTxt || t("all"), "")); opts.forEach(o => $s.append(new Option(o[1], o[0])));
+      $s.val(v || "").select2({ width: "100%" });
     }
-
-    function fill(id, values) {
-      $("#" + id).html(values.map(v => '<option value="' + v + '">' + v + "</option>").join("")).select2({ placeholder: "All", allowClear: true, width: "100%" });
+    function fillFilters() {
+      sel2("fBranch", D.branches.slice(0, 4).map((b, i) => [String(i), b]));
+      sel2("fWh", WH.map((w, i) => [String(i), UI.lang === "es" ? w[1] : w[0]]));
+      sel2("fSup", D.suppliers.map(s => [s, s]));
+      sel2("fCat", D.categories.map((c, i) => [String(i), UI.L(c)]));
+      sel2("fBuyer", BUYERS.map(b => [b, b]));
+      sel2("fObs", [["with", t("obsWith")], ["without", t("obsWithout")]], t("obsAll"));
     }
-    fill("fWh", WAREHOUSES);
-    fill("fCat", D.categories);
-    $("#obsAuthor").append(AUDITORS.map(a => '<option value="' + a + '">' + a + "</option>").join(""));
-
-    let selected = null;
+    fillFilters();
+    const branchOfWh = [0, 0, 1, 3];
+    function stockTxt(units, f) {
+      const b = Math.floor(units / f), u = units % f;
+      return (b ? b + " " + (b === 1 ? t("box") : t("boxes")) : "") + (b && u ? " + " : "") + (u || !b ? u + " " + t("unit") : "");
+    }
     function filtered() {
-      const wh = $("#fWh").val() || [], cat = $("#fCat").val() || [];
-      const q = $("#fSearch").val().trim().toLowerCase();
-      const onlyStock = $("#fStock").prop("checked"), onlyObs = $("#fObs").prop("checked");
-      return rows.filter(x => (!wh.length || wh.includes(x.wh)) && (!cat.length || cat.includes(x.it.cat)) &&
-        (!q || x.it.code.toLowerCase().includes(q) || x.it.name.toLowerCase().includes(q)) &&
-        (!onlyStock || x.units > 0) && (!onlyObs || x.obs.length));
+      const br = $("#fBranch").val(), wh = $("#fWh").val(), sup = $("#fSup").val(), cat = $("#fCat").val(), buy = $("#fBuyer").val(), ob = $("#fObs").val(), q = document.getElementById("fItem").value.trim().toLowerCase(), st = document.getElementById("fStock").checked;
+      return rows.filter(x => (br === "" || String(branchOfWh[x.wi]) === br) && (wh === "" || String(x.wi) === wh) && (!sup || x.it.sup === sup) && (cat === "" || String(x.it.cat) === cat) && (!buy || x.it.buyer === buy) &&
+        (!q || x.it.code.toLowerCase().includes(q) || x.it.barcode.includes(q) || x.it.name.toLowerCase().includes(q)) && (!st || x.units > 0) &&
+        (!ob || (ob === "with") === (obsFor(x.it.code, x.wi).length > 0)));
     }
-
     function render() {
       const list = filtered();
-      const tbody = document.querySelector("#stock tbody");
-      tbody.innerHTML = list.map(x => {
-        const i = rows.indexOf(x);
-        return '<tr tabindex="0" data-i="' + i + '" aria-selected="' + (selected === i) + '"><td><span class="num">' + x.it.code + "</span> " + x.it.name + "<div class='pres'>" + x.it.cat + "</div></td><td>" + x.wh +
-          '</td><td class="pres">Unit · ' + x.it.pack[0] + " of " + x.it.pack[1] + '</td><td class="r ' + (x.units ? "" : "zero") + '">' + presentation(x) + '</td><td class="r num ' + (x.units ? "" : "zero") + '">' + UI.fmtInt(x.units) +
-          '</td><td class="r num">' + UI.fmtMoney(x.cost) + '</td><td class="r num">' + UI.fmtMoney(x.units * x.cost) + "</td><td>" +
-          (x.obs.length ? '<span class="obs-dot">' + NOTE_ICON + x.obs.length + " note" + (x.obs.length === 1 ? "" : "s") + "</span>" : "") + "</td></tr>";
-      }).join("") || '<tr><td colspan="8" class="muted">No rows match the filters</td></tr>';
-      const units = list.reduce((a, x) => a + x.units, 0), value = list.reduce((a, x) => a + x.units * x.cost, 0);
-      const itemsCount = new Set(list.map(x => x.it.code)).size;
-      $("#kItems").text(UI.fmtInt(itemsCount));
-      $("#kRows").text(UI.fmtInt(list.length) + " item-warehouse rows");
-      $("#kUnits").text(UI.fmtInt(units));
-      $("#kValue").text(UI.fmtMoney(value));
-      $("#kObs").text(UI.fmtInt(list.filter(x => x.obs.length).length));
-      document.querySelector("#stock tfoot").innerHTML = '<tr><td colspan="4">Total (filtered)</td><td class="r num">' + UI.fmtInt(units) + '</td><td></td><td class="r num">' + UI.fmtMoney(value) + "</td><td></td></tr>";
+      document.querySelector("#tItems thead").innerHTML = "<tr><th>" + t("colCode") + "</th><th>" + t("colItem") + "</th><th>" + t("category") + "</th><th>" + t("supplier") + "</th><th>" + t("colWh") + "</th><th>" + t("colPres") + "</th><th>" + t("colStock") + '</th><th class="r">' + t("colBase") + '</th><th class="r">' + t("colCost") + '</th><th class="r">' + t("colValue") + "</th><th>" + t("colObs") + "</th></tr>";
+      document.querySelector("#tItems tbody").innerHTML = list.map(x => {
+        const n = obsFor(x.it.code, x.wi).length, k = x.it.code + "|" + x.wi;
+        return '<tr class="clickable' + (sel === k ? " sel" : "") + '" tabindex="0" data-k="' + k + '"><td>' + x.it.code + '<span class="pres">' + x.it.barcode + "</span></td><td>" + x.it.name + "</td><td>" + UI.L(D.categories[x.it.cat]) + "</td><td>" + x.it.sup + "</td><td>" + (UI.lang === "es" ? WH[x.wi][1] : WH[x.wi][0]) +
+          "</td><td>" + (UI.lang === "es" ? "Caja x" : "Box x") + x.it.factor + "<span class=\"pres\">" + (UI.lang === "es" ? "Unidad" : "Unit") + "</span></td><td>" + (x.units ? stockTxt(x.units, x.it.factor) : '<span class="chip chip-warn">' + mi("remove_shopping_cart") + "0</span>") +
+          '</td><td class="r">' + UI.fmtInt(x.units) + '</td><td class="r">' + M(x.cost) + '</td><td class="r">' + M(x.units * x.cost) + "</td><td>" + (n ? '<span class="chip chip-info">' + mi("chat") + n + "</span>" : "—") + "</td></tr>";
+      }).join("");
+      const units = list.reduce((a, x) => a + x.units, 0), val = list.reduce((a, x) => a + x.units * x.cost, 0), withObs = list.filter(x => obsFor(x.it.code, x.wi).length).length;
+      document.querySelector("#tItems tfoot").innerHTML = '<tr><td colspan="7">' + t("total") + " · " + list.length + '</td><td class="r">' + UI.fmtInt(units) + '</td><td></td><td class="r">' + M(val) + "</td><td></td></tr>";
+      document.getElementById("kpis").innerHTML =
+        '<div class="mc-kpi"><div class="k-label">' + t("kItems") + '</div><div class="k-value">' + UI.fmtInt(list.length) + "</div></div>" +
+        '<div class="mc-kpi"><div class="k-label">' + t("kUnits") + '</div><div class="k-value">' + UI.fmtInt(units) + "</div></div>" +
+        '<div class="mc-kpi"><div class="k-label">' + t("kValue") + '</div><div class="k-value num">' + M(val) + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:var(--mc-cyan)"><div class="k-label">' + t("kObs") + '</div><div class="k-value">' + withObs + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:var(--mc-amber)"><div class="k-label">' + t("kZero") + '</div><div class="k-value">' + list.filter(x => !x.units).length + "</div></div>";
+      renderSide();
     }
-
-    function showSide() {
-      const x = rows[selected];
-      $("#sideEmpty").prop("hidden", true);
-      $("#sidePanel").prop("hidden", false);
-      $("#sideItem").text(x.it.code + " · " + x.it.name);
-      $("#sideWh").text(x.wh + " · " + presentation(x) + " (" + UI.fmtInt(x.units) + " units)");
-      document.getElementById("log").innerHTML = x.obs.length
-        ? x.obs.slice().reverse().map(o => '<li><div class="meta">' + o.date + " · " + o.author + "</div>" + $("<div>").text(o.text).html() + "</li>").join("")
-        : '<li style="border-color:var(--border)" class="muted">No observations yet.</li>';
+    function renderSide() {
+      const body = document.getElementById("sideBody");
+      if (!sel) { body.innerHTML = '<p class="mc-hint">' + t("pickRow") + "</p>"; return; }
+      const [code, wiS] = sel.split("|"), wi = Number(wiS), it = items.find(i => i.code === code);
+      const list = obsFor(code, wi).slice().sort((a, b) => b.date - a.date);
+      const stC = s => s === "st_ok" ? "chip-pos" : s === "st_diff" ? "chip-neg" : "chip-warn", stI = s => s === "st_ok" ? "check_circle" : s === "st_diff" ? "error" : "schedule";
+      body.innerHTML = '<p style="font-weight:800;margin-bottom:2px">' + it.code + " · " + it.name + '</p><p class="mc-hint" style="margin-bottom:10px">' + (UI.lang === "es" ? WH[wi][1] : WH[wi][0]) + "</p>" +
+        (list.length ? '<ul class="obs-log">' + list.map(o => "<li><header><span>" + UI.fmtDay(o.date) + " · " + o.user + '</span><span class="chip ' + stC(o.st) + '">' + mi(stI(o.st)) + t(o.st) + "</span></header>" + UI.L(o.text) + (o.all ? '<div class="mc-hint" style="margin-top:4px">' + t("ap_all") + "</div>" : "") + "</li>").join("") + "</ul>" : '<p class="mc-hint">' + t("noObs") + "</p>") +
+        '<form class="obs-form" id="obsForm" novalidate>' +
+          '<div class="mc-field"><label for="oState">' + t("state") + '</label><select id="oState"><option value="st_ok">' + t("st_ok") + '</option><option value="st_diff">' + t("st_diff") + '</option><option value="st_pending">' + t("st_pending") + "</option></select></div>" +
+          '<div class="mc-field"><label for="oApplies">' + t("appliesTo") + '</label><select id="oApplies"><option value="this">' + t("ap_this") + '</option><option value="all">' + t("ap_all") + "</option></select></div>" +
+          '<div class="mc-field span2"><label for="oUser">' + t("user") + '</label><select id="oUser"><option value="">—</option>' + AUDITORS.map(a => '<option value="' + a + '">' + a + "</option>").join("") + '</select><div class="mc-field-error" id="eUser"></div></div>' +
+          '<div class="mc-field span2"><label for="oText">' + t("text") + '</label><textarea id="oText" maxlength="250"></textarea><div class="mc-field-error" id="eText"></div></div>' +
+          '<div class="span2"><button type="submit" class="btn btn-teal">' + mi("add_comment") + t("addObs") + "</button></div></form>";
+      document.getElementById("obsForm").addEventListener("submit", e => {
+        e.preventDefault();
+        const txt = document.getElementById("oText").value.trim(), user = document.getElementById("oUser").value;
+        document.getElementById("eText").textContent = txt.length < 5 ? t("eText") : "";
+        document.getElementById("eUser").textContent = user ? "" : t("eUser");
+        document.getElementById("oText").setAttribute("aria-invalid", txt.length < 5 ? "true" : "false");
+        if (txt.length < 5 || !user) { (user ? document.getElementById("oText") : document.getElementById("oUser")).focus(); return; }
+        log.push({ item: code, wi, all: document.getElementById("oApplies").value === "all", st: document.getElementById("oState").value, text: { en: txt, es: txt }, user, date: new Date() });
+        UI.toast(t("added", { i: code })); render();
+      });
     }
-
-    document.querySelector("#stock tbody").addEventListener("click", e => {
-      const tr = e.target.closest("tr[data-i]"); if (!tr) return;
-      selected = +tr.dataset.i; render(); showSide();
-    });
-    document.querySelector("#stock tbody").addEventListener("keydown", e => {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      const tr = e.target.closest("tr[data-i]"); if (!tr) return;
-      e.preventDefault(); selected = +tr.dataset.i; render(); showSide();
-      const again = document.querySelector('#stock tr[data-i="' + selected + '"]'); if (again) again.focus();
-    });
-
-    document.getElementById("obsForm").addEventListener("submit", e => {
-      e.preventDefault();
-      const author = $("#obsAuthor").val(), text = $("#obsText").val().trim();
-      $("#eAuthor").text(author ? "" : "Choose who is writing.");
-      $("#eText").text(text.length >= 5 ? "" : "Write at least 5 characters.");
-      $("#obsAuthor").attr("aria-invalid", !author); $("#obsText").attr("aria-invalid", text.length < 5);
-      if (!author || text.length < 5) return;
-      const now = new Date();
-      const stamp = UI.fmtDate(now) + " " + String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
-      rows[selected].obs.push({ date: stamp, author, text });
-      $("#obsText").val("");
-      render(); showSide();
-      UI.toast("Observation added to the log");
-    });
-
-    $("#fWh, #fCat").on("change", render);
-    $("#fStock, #fObs").on("change", render);
-    let t; $("#fSearch").on("input", () => { clearTimeout(t); t = setTimeout(render, 150); });
-    render();
+    document.getElementById("tItems").addEventListener("click", e => { const tr = e.target.closest("tr[data-k]"); if (!tr) return; sel = tr.dataset.k; render(); const again = document.querySelector('tr[data-k="' + sel + '"]'); if (again) again.focus(); });
+    document.getElementById("tItems").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr[data-k]")) { e.preventDefault(); e.target.click(); } });
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); render(); });
+    document.getElementById("btnClear").addEventListener("click", () => { ["fBranch", "fWh", "fSup", "fCat", "fBuyer", "fObs"].forEach(id => $("#" + id).val("").trigger("change.select2")); document.getElementById("fItem").value = ""; document.getElementById("fStock").checked = false; render(); });
+    function about() { document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); }
+    document.addEventListener("langchange", () => { fillFilters(); render(); about(); });
+    render(); about();
   });
   </script>
 </body>

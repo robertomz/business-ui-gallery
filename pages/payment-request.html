@@ -3,117 +3,85 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Payment Request · Business UI Gallery</title>
+  <title>Payment request · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .head-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3); }
-    .head-grid .span2 { grid-column: span 2; }
-    /* Keeps select2's hidden <select> inside the scrolling wrapper on narrow screens. */
-    .table-wrap { position: relative; }
-    #lines td { vertical-align: top; }
-    #lines .c-acc { min-width: 250px; }
-    #lines .c-desc { min-width: 170px; }
-    #lines .c-qty { width: 90px; min-width: 80px; }
-    #lines .c-price { min-width: 120px; }
-    #lines .c-nd { text-align: center; }
-    #lines .c-tot { min-width: 110px; }
-    .row-err { font-size: .76rem; color: var(--negative); margin-top: 4px; }
-    .sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
-    .sum > div { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
-    .sum .lbl { font-size: .78rem; color: var(--text-muted); }
-    .sum .val { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 600; }
-    .actions { display: flex; gap: var(--space-2); justify-content: flex-end; margin-top: var(--space-4); flex-wrap: wrap; }
-    .status { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
-    .status svg { width: 14px; height: 14px; }
-    .hint { font-size: .78rem; color: var(--text-muted); }
-    .modal.sm { width: min(520px, 100%); }
-    textarea.input { min-height: 80px; resize: vertical; font-family: inherit; }
-    @media (max-width: 640px) { .head-grid .span2 { grid-column: auto; } .sum { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 12px; }
+    .form-grid .span-2 { grid-column: span 2; }
+    .form-grid .span-4 { grid-column: 1 / -1; }
+    .form-grid .mc-field, .line-grid .mc-field { min-width: 0; }
+    .line-grid { display: grid; grid-template-columns: 2fr 2fr 1.4fr .8fr .9fr 1fr auto; gap: 10px; align-items: end; }
+    .line-grid .mc-check { min-height: 34px; }
+    .budget-hint { font-size: 11px; color: var(--mc-muted); margin-top: 6px; }
+    .totals { display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: flex-end; margin-top: 10px; font-size: 12px; }
+    .totals b { font-variant-numeric: tabular-nums; }
+    @media (max-width: 1100px) { .line-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 1000px) { .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .form-grid, .line-grid { grid-template-columns: minmax(0, 1fr); } .form-grid .span-2 { grid-column: auto; } }
   </style>
 </head>
 <body data-page="payment-request" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Payment request</h1>
-        <p class="muted">Ask treasury to pay a supplier or creditor. Expense lines must use an account that has budget in the chosen cost center.</p>
-      </div>
-    </div>
-
-    <section class="card" aria-labelledby="formTitle">
-      <div class="card-head"><h2 id="formTitle">New request</h2><span class="chip chip-info" id="nextNo"></span></div>
-      <div class="card-body">
-        <div class="head-grid">
-          <div class="field span2"><label for="payee">Payee</label><select id="payee"></select><span class="field-error" id="ePayee"></span></div>
-          <div class="field"><label for="center">Cost center</label><select class="input" id="center"></select><span class="field-error" id="eCenter"></span></div>
-          <div class="field"><label for="docRef">Document number</label><input class="input" id="docRef" maxlength="30" placeholder="Supplier invoice no."><span class="field-error" id="eRef"></span></div>
-          <div class="field"><label for="docDate">Document date</label><input class="input" type="date" id="docDate"><span class="field-error" id="eDate"></span></div>
-          <div class="field"><label for="credit">Credit days</label><input class="input num" id="credit" inputmode="numeric" maxlength="3" value="30"><span class="field-error" id="eCredit"></span></div>
-          <div class="field"><label for="due">Due date</label><input class="input" type="date" id="due" disabled><span class="hint">Document date + credit days</span></div>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin:var(--space-5) 0 var(--space-2);gap:8px;flex-wrap:wrap">
-          <h3>Lines</h3>
-          <button class="btn" type="button" id="addLine">Add line</button>
-        </div>
-        <p class="hint" id="budgetHint" style="margin-bottom:var(--space-2)"></p>
-        <div class="table-wrap">
-          <table class="grid" id="lines">
-            <thead><tr><th>Account</th><th>Description</th><th class="r">Qty</th><th class="r">Unit price</th><th>Non-deductible</th><th class="r">Line total</th><th><span class="sr-only">Remove</span></th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="sum" aria-live="polite">
-          <div><div class="lbl">Subtotal</div><div class="val" id="tSub">0.00</div></div>
-          <div><div class="lbl">Sales tax 15% (sample)</div><div class="val" id="tTax">0.00</div></div>
-          <div><div class="lbl">Total to pay</div><div class="val" id="tTotal">0.00</div></div>
-          <div><div class="lbl">Non-deductible</div><div class="val" id="tNd">0.00</div></div>
-        </div>
-        <p id="formMsg" class="field-error" style="margin-top:var(--space-3)"></p>
-        <div class="actions">
-          <button class="btn btn-primary" type="button" id="saveBtn">Save request</button>
-          <button class="btn" type="button" id="clearBtn">Clear</button>
-        </div>
+  <main id="content">
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">request_quote</span><span data-i18n="secHeader"></span></h3><span class="chip chip-info" id="reqChip"></span></div>
+      <div class="form-grid">
+        <div class="mc-field"><label data-i18n="company"></label><div class="static">DEMO</div></div>
+        <div class="mc-field"><label for="fBranch" data-i18n="branch"></label><select id="fBranch"></select></div>
+        <div class="mc-field span-2"><label for="fPayee" data-i18n="fPayee"></label><select id="fPayee"></select><span class="mc-field-error" id="ePayee"></span></div>
+        <div class="mc-field"><label for="fId" data-i18n="fId"></label><input id="fId" readonly></div>
+        <div class="mc-field"><label for="fDocDate" data-i18n="fDocDate"></label><input type="date" id="fDocDate"></div>
+        <div class="mc-field"><label for="fAccDate" data-i18n="fAccDate"></label><input type="date" id="fAccDate"></div>
+        <div class="mc-field"><label for="fPayDate" data-i18n="fPayDate"></label><input type="date" id="fPayDate"></div>
+        <div class="mc-field"><label for="fBuyType" data-i18n="fBuyType"></label><select id="fBuyType"></select></div>
+        <div class="mc-field"><label for="fTerm" data-i18n="fTerm"></label><input id="fTerm" class="num" inputmode="numeric"></div>
+        <div class="mc-field"><label for="fDue" data-i18n="fDue"></label><input id="fDue" readonly></div>
+        <div class="mc-field"><label for="fDocType" data-i18n="fDocType"></label><select id="fDocType"></select></div>
+        <div class="mc-field"><label for="fDoc" data-i18n="fDoc"></label><input id="fDoc" maxlength="30"><span class="mc-field-error" id="eDoc"></span></div>
+        <div class="mc-field"><label for="fCur" data-i18n="fCur"></label><select id="fCur"></select></div>
+        <div class="mc-field span-2"><label for="fConcept" data-i18n="fConcept"></label><input id="fConcept" maxlength="200"><span class="mc-field-error" id="eConcept"></span></div>
       </div>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2>Requests</h2><span class="muted" style="font-size:.82rem" id="pendingNote"></span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="list">
-          <thead><tr><th>Number</th><th>Payee</th><th>Cost center</th><th>Due date</th><th class="r">Total</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
-          <tbody></tbody>
-          <tfoot></tfoot>
-        </table>
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">add_box</span><span data-i18n="secLine"></span></h3></div>
+      <div class="line-grid">
+        <div class="mc-field"><label for="lAcc" data-i18n="lAcc"></label><select id="lAcc"></select></div>
+        <div class="mc-field"><label for="lConcept" data-i18n="lConcept"></label><input id="lConcept" maxlength="120"></div>
+        <div class="mc-field"><label for="lCenter" data-i18n="lCenter"></label><select id="lCenter"></select></div>
+        <div class="mc-field"><label for="lQty" data-i18n="lQty"></label><input id="lQty" class="num" inputmode="decimal" value="1"></div>
+        <div class="mc-field"><label for="lPrice" data-i18n="lPrice"></label><input id="lPrice" class="num" inputmode="decimal"></div>
+        <label class="mc-check"><input type="checkbox" id="lNd"><span data-i18n="lNd"></span></label>
+        <button type="button" class="btn btn-teal" id="btnAdd"><span class="material-icons" aria-hidden="true">add</span><span data-i18n="add"></span></button>
+      </div>
+      <p class="budget-hint" id="budgetHint"></p>
+      <p class="mc-field-error" id="eLine"></p>
+      <div class="table-wrap" style="margin-top:8px"><table class="grid" id="tLines"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <div class="totals" id="totals"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap">
+        <button type="button" class="btn btn-teal" id="btnSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button>
+        <button type="button" class="btn" id="btnClear"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
       </div>
     </section>
 
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>The due date is the document date plus the payee's credit days, so treasury sees what is coming before it is due.</li>
-        <li>Expense accounts (code 6) only appear enabled when the selected cost center has budget for them. The rest stay visible but disabled, with the reason.</li>
-        <li>Lines marked non-deductible are still paid, but they are reported apart for taxes.</li>
-        <li>Every request starts as pending. Rejecting one requires a reason, which goes back to the person who asked.</li>
-      </ul>
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">list_alt</span><span data-i18n="secList"></span></h3>
+        <div class="mc-field" style="max-width:200px;flex:0 1 200px"><label for="fStatus" data-i18n="status"></label><select id="fStatus"></select></div></div>
+      <div class="table-wrap"><table class="grid" id="tReq"><thead></thead><tbody></tbody></table></div>
     </section>
+    <div id="about"></div>
   </main>
 
-  <!-- Reject -->
-  <div class="modal-backdrop" id="rejectModal" role="dialog" aria-modal="true" aria-labelledby="rejTitle">
-    <div class="modal sm">
-      <div class="modal-head"><h2 id="rejTitle">Reject request</h2></div>
-      <div class="modal-body">
-        <div class="field"><label for="rejReason">Reason</label><textarea class="input" id="rejReason" maxlength="240" placeholder="Tell the requester what to fix"></textarea><span class="field-error" id="eRej"></span></div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" type="button" id="rejOk">Reject request</button>
-        <button class="btn" type="button" id="rejClose">Close</button>
-      </div>
+  <div class="modal-backdrop" id="mReject">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mRejectTitle">
+      <div class="modal-head"><h3 id="mRejectTitle"><span class="material-icons" aria-hidden="true">block</span><span data-i18n="rejectTitle"></span></h3></div>
+      <div class="modal-body"><div class="mc-field"><label for="rReason" data-i18n="reason"></label><textarea id="rReason" maxlength="200"></textarea><span class="mc-field-error" id="eReason"></span></div></div>
+      <div class="modal-foot"><button type="button" class="btn btn-danger" id="rOk"><span class="material-icons" aria-hidden="true">block</span><span data-i18n="reject"></span></button>
+        <button type="button" class="btn" id="rCancel"><span data-i18n="close"></span></button></div>
     </div>
   </div>
 
@@ -121,184 +89,207 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    let touched = false; // show errors only after the first save attempt
+  UI.strings({
+    en: {
+      secHeader: "Payment request to creditor", secLine: "Document lines", secList: "Payment requests", newReq: "New request",
+      fPayee: "Beneficiary", fId: "Tax ID", fDocDate: "Document date", fAccDate: "Accounting date", fPayDate: "Payment date", fBuyType: "Purchase type", cash: "Cash", credit: "Credit",
+      fTerm: "Term (days)", fDue: "Due date", fDocType: "Document type", dInvoice: "Invoice", dReceipt: "Receipt", dOther: "Other document", fDoc: "Document", fCur: "Currency", fConcept: "Concept",
+      lAcc: "Accounting account", lConcept: "Line concept", lCenter: "Cost center", lQty: "Quantity", lPrice: "Unit value", lNd: "Not deductible", add: "Add",
+      noBudget: "(no budget for this account)", budgetHint: "Expense accounts (6-) only accept a cost center with budget for that account. Budgeted for {a}: {c}.",
+      colAcc: "Account", colConcept: "Concept", colQty: "Qty", colPrice: "Unit value", colSub: "Subtotal", colTax: "Tax", colAdj: "Adjust", colTotal: "Total", colLocal: "Total (local)", colCenter: "Center", colNd: "N.D.",
+      subtotal: "Subtotal", tax: "Tax (15% sample)", ndAmount: "Not deductible", grand: "Total", grandLocal: "Total (local)",
+      eAcc: "Choose an account.", eCenter: "This center has no budget for the account.", eQty: "Quantity must be greater than zero.", ePrice: "Enter the unit value.", eLines: "Add at least one line.",
+      ePayeeReq: "Choose the beneficiary.", eDocReq: "Enter the document number.", eConceptReq: "Enter the concept.", fixErrors: "Check the fields marked in red.",
+      savedMsg: "Request {n} saved: pending approval.", approvedMsg: "Request {n} approved.", rejectedMsg: "Request {n} rejected.", rejectTitle: "Reject request", eReason: "Write the reason.",
+      colNo: "# Req.", colPayDate: "Payment date", colPayee: "Beneficiary", colDocNo: "Document", colDocDate: "Doc. date", colNet: "Net value", colBal: "Balance", colActions: "",
+      removeLine: "Remove line",
+      aboutText: "A <b>payment request</b> asks Treasury to pay a creditor. The due date is the document date plus the <b>credit term</b>. Each line has an accounting account, a cost center, quantity and unit value; lines marked <b>not deductible</b> keep their tax but are reported apart. <b>Expense accounts (6-)</b> only list the cost centers that have budget for that account in the month, so a request cannot spend what was not budgeted. Saved requests wait for approval; a rejection needs a reason. Approved requests appear in the bank payment screen to be paid. All the data on this page is generated."
+    },
+    es: {
+      secHeader: "Solicitud de pago a acreedor", secLine: "Líneas del documento", secList: "Solicitudes de pago", newReq: "Nueva solicitud",
+      fPayee: "Beneficiario", fId: "Identidad / RTN", fDocDate: "Fecha documento", fAccDate: "Fecha contable", fPayDate: "Fecha pago", fBuyType: "Tipo compra", cash: "Contado", credit: "Crédito",
+      fTerm: "Plazo días", fDue: "Fecha vence", fDocType: "Tipo documento", dInvoice: "Factura", dReceipt: "Recibo", dOther: "Otro documento", fDoc: "Documento", fCur: "Moneda", fConcept: "Concepto",
+      lAcc: "Cuenta contable", lConcept: "Concepto de la línea", lCenter: "Centro", lQty: "Cantidad", lPrice: "Valor unit.", lNd: "No deducible", add: "Agregar",
+      noBudget: "(sin presupuesto para esta cuenta)", budgetHint: "Las cuentas de gasto (6-) solo aceptan un centro con presupuesto para esa cuenta. Presupuestada para {a}: {c}.",
+      colAcc: "Cuenta", colConcept: "Concepto", colQty: "Cant.", colPrice: "Val. unit.", colSub: "SubTotal", colTax: "ISV", colAdj: "Ajuste", colTotal: "Total", colLocal: "Total local", colCenter: "Centro", colNd: "N.D.",
+      subtotal: "SubTotal", tax: "Impuesto (15% de ejemplo)", ndAmount: "No deducible", grand: "Total", grandLocal: "Total local",
+      eAcc: "Elija una cuenta.", eCenter: "Este centro no tiene presupuesto para la cuenta.", eQty: "La cantidad debe ser mayor a cero.", ePrice: "Escriba el valor unitario.", eLines: "Agregue al menos una línea.",
+      ePayeeReq: "Elija el beneficiario.", eDocReq: "Escriba el número de documento.", eConceptReq: "Escriba el concepto.", fixErrors: "Revise los campos marcados en rojo.",
+      savedMsg: "Se guardó la solicitud {n}: pendiente de aprobación.", approvedMsg: "Solicitud {n} aprobada.", rejectedMsg: "Solicitud {n} rechazada.", rejectTitle: "Rechazar solicitud", eReason: "Escriba el motivo.",
+      colNo: "# Sol.", colPayDate: "Fecha pago", colPayee: "Beneficiario", colDocNo: "Documento", colDocDate: "Fecha doc.", colNet: "Valor neto", colBal: "Saldo", colActions: "",
+      removeLine: "Quitar línea",
+      aboutText: "Una <b>solicitud de pago</b> pide a Tesorería pagar a un acreedor. La fecha de vencimiento es la fecha del documento más el <b>plazo en días</b>. Cada línea lleva cuenta contable, centro, cantidad y valor unitario; las líneas <b>no deducibles</b> conservan su impuesto pero se reportan aparte. Las <b>cuentas de gasto (6-)</b> solo muestran los centros que tienen presupuesto para esa cuenta en el mes, así una solicitud no puede gastar lo que no se presupuestó. Las solicitudes guardadas esperan aprobación; un rechazo exige motivo. Las aprobadas aparecen en el movimiento débito para pagarlas. Todos los datos de esta página son generados."
+    }
+  });
+
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi, D = UI.DATA;
+    function s2($el, opts) { if ($el.hasClass("select2-hidden-accessible")) $el.select2("destroy"); $el.select2(Object.assign({ width: "100%" }, opts)); }
+    const RATE = 24.7312, TAX = .15;
+    const PAYEES = [["Office Supplies Co.", "0801-1990-00123", 30], ["City Utilities", "0801-2001-04567", 15], ["Fleet Services", "0501-1985-07788", 45], ["Legal Partners", "0801-1979-09912", 30], ["Clean Facilities", "0601-2010-03344", 15]];
     const ACCOUNTS = [
-      ["1-05-01-01-001", "Prepaid expenses"], ["1-04-02-01-001", "Office equipment"],
-      ["6-02-01-01-001", "Rent"], ["6-02-01-01-002", "Utilities"], ["6-02-02-01-001", "Fuel"], ["6-02-02-01-002", "Vehicle maintenance"],
-      ["6-03-01-01-001", "Office supplies"], ["6-03-01-01-002", "Software subscriptions"], ["6-03-02-01-001", "Professional fees"],
-      ["6-03-02-01-002", "Cleaning services"], ["6-03-03-01-001", "Advertising"], ["6-03-03-01-002", "Travel and meals"]
+      ["6-01-01-001", { en: "Office supplies", es: "Papelería y útiles" }], ["6-01-02-001", { en: "Electricity and water", es: "Energía y agua" }], ["6-01-03-001", { en: "Vehicle maintenance", es: "Mantenimiento de vehículos" }],
+      ["6-01-04-001", { en: "Professional fees", es: "Honorarios profesionales" }], ["6-01-05-001", { en: "Cleaning services", es: "Servicios de limpieza" }], ["6-01-06-001", { en: "Fuel", es: "Combustible" }],
+      ["1-01-05-001", { en: "Prepaid expenses", es: "Gastos pagados por anticipado" }], ["2-01-04-001", { en: "Other payables", es: "Otras cuentas por pagar" }]
     ];
-    const accName = {}; ACCOUNTS.forEach(a => accName[a[0]] = a[1]);
-    const isExp = c => c.charAt(0) === "6";
-    const rb = UI.rng(3141);
-    const BUDGET = {}; // center -> Set of budgeted expense accounts
-    D.costCenters.forEach(c => { BUDGET[c] = new Set(ACCOUNTS.filter(a => isExp(a[0]) && rb() > 0.45).map(a => a[0])); });
-    const CREDITORS = ["City Power & Light", "Metro Water Utility", "Office Plus Supplies", "Rapid Fleet Service", "Clean Team Services", "Bright Ads Agency", "Ledger & Co. Accountants"];
-    const PAYEES = D.suppliers.map(s => ({ name: s, kind: "Supplier", days: 30 })).concat(CREDITORS.map((c, i) => ({ name: c, kind: "Creditor", days: [15, 15, 30, 30, 15, 45, 30][i] })));
+    // Which centers have budget for each expense account (sample)
+    const BUDGET = { "6-01-01-001": [0, 1, 2, 5], "6-01-02-001": [3, 5], "6-01-03-001": [4], "6-01-04-001": [5], "6-01-05-001": [3, 5, 6], "6-01-06-001": [0, 1, 2, 4] };
+    const centerName = i => UI.L(D.costCenters[i]);
+    let lines = [], nextReq = 5106, rejectId = null, touched = false;
+    const REQS = [
+      { n: 5101, payee: 1, doc: "REC-88120", docDate: new Date(Date.UTC(2026, 10, 2)), pay: new Date(Date.UTC(2026, 10, 17)), net: 18240.5, bal: 18240.5, st: "pending" },
+      { n: 5102, payee: 0, doc: "FAC-11234", docDate: new Date(Date.UTC(2026, 10, 4)), pay: new Date(Date.UTC(2026, 11, 4)), net: 6420, bal: 6420, st: "approved" },
+      { n: 5103, payee: 2, doc: "FAC-9031", docDate: new Date(Date.UTC(2026, 9, 28)), pay: new Date(Date.UTC(2026, 11, 12)), net: 31780.25, bal: 0, st: "paid" },
+      { n: 5104, payee: 3, doc: "FAC-772", docDate: new Date(Date.UTC(2026, 10, 9)), pay: new Date(Date.UTC(2026, 11, 9)), net: 45000, bal: 45000, st: "rejected", reason: { en: "Duplicated with request 5099", es: "Duplicada con la solicitud 5099" } },
+      { n: 5105, payee: 4, doc: "REC-4410", docDate: new Date(Date.UTC(2026, 10, 12)), pay: new Date(Date.UTC(2026, 10, 27)), net: 9860.4, bal: 9860.4, st: "pending" }
+    ];
 
-    const ICONS = {
-      pending: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
-      approved: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>',
-      rejected: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>'
-    };
-    const STATUS = { pending: ["chip-warn", "Pending approval"], approved: ["chip-pos", "Approved"], rejected: ["chip-neg", "Rejected"] };
-
-    // ---- Header ----
-    $("#payee").html('<option value=""></option>' + PAYEES.map((p, i) => '<option value="' + i + '">' + p.name + " · " + p.kind + "</option>").join(""))
-      .select2({ placeholder: "Search supplier or creditor", width: "100%" });
-    $("#center").html('<option value="">Choose…</option>' + D.costCenters.map(c => "<option>" + c + "</option>").join(""));
-    const today = "2026-11-17";
-    $("#docDate").val(today);
-    function addDays(iso, n) { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return UI.fmtDate(d); }
-    function updateDue() {
-      const d = $("#docDate").val(), n = parseInt($("#credit").val(), 10);
-      $("#due").val(d && !isNaN(n) ? addDays(d, n) : "");
+    function fillSelects() {
+      const b = $("#fBranch"), p = $("#fPayee"), bt = $("#fBuyType"), dt = $("#fDocType"), cu = $("#fCur"), st = $("#fStatus");
+      const vb = b.val() || "0", vp = p.val() || "", vbt = bt.val() || "credit", vdt = dt.val() || "inv", vcu = cu.val() || "LCY", vst = st.val() || "all";
+      b.empty(); D.branches.forEach((x, i) => b.append(new Option(x, String(i))));
+      p.empty().append(new Option("—", "")); PAYEES.forEach((x, i) => p.append(new Option(x[0], String(i))));
+      bt.empty().append(new Option(t("credit"), "credit"), new Option(t("cash"), "cash"));
+      dt.empty().append(new Option(t("dInvoice"), "inv"), new Option(t("dReceipt"), "rec"), new Option(t("dOther"), "oth"));
+      cu.empty().append(new Option("LCY", "LCY"), new Option("USD", "USD"));
+      st.empty().append(new Option(t("all"), "all"), new Option(t("pending"), "pending"), new Option(t("approved"), "approved"), new Option(t("rejected"), "rejected"));
+      b.val(vb); p.val(vp); bt.val(vbt); dt.val(vdt); cu.val(vcu); st.val(vst);
+      s2(b, {}); s2(p, {}); s2(bt, { minimumResultsForSearch: Infinity }); s2(dt, { minimumResultsForSearch: Infinity }); s2(cu, { minimumResultsForSearch: Infinity }); s2(st, { minimumResultsForSearch: Infinity });
+      fillAccounts();
     }
-    $("#payee").on("change", function () { const p = PAYEES[this.value]; if (p) $("#credit").val(p.days); updateDue(); validate(); });
-    $("#docDate").on("change", () => { updateDue(); validate(); });
-    $("#credit").on("input", function () { this.value = this.value.replace(/\D/g, ""); updateDue(); validate(); });
-    updateDue();
-
-    // ---- Lines ----
-    const tbody = document.querySelector("#lines tbody");
-    function accOptions() {
-      const c = $("#center").val();
-      return '<option value=""></option>' + ACCOUNTS.map(a => {
-        const off = isExp(a[0]) && (!c || !BUDGET[c].has(a[0]));
-        const why = !c ? " (choose a cost center first)" : " (no budget in " + c + ")";
-        return '<option value="' + a[0] + '"' + (off ? " disabled" : "") + ">" + a[0] + " · " + a[1] + (off ? why : "") + "</option>";
-      }).join("");
+    function fillAccounts() {
+      const a = $("#lAcc"), v = a.val() || ACCOUNTS[0][0];
+      a.empty(); ACCOUNTS.forEach(x => a.append(new Option(x[0] + " · " + UI.L(x[1]), x[0])));
+      a.val(v); s2(a, {});
+      fillCenters();
     }
+    function fillCenters() {
+      const acc = $("#lAcc").val(), c = $("#lCenter"), v = c.val();
+      const allowed = BUDGET[acc];
+      c.empty();
+      D.costCenters.forEach((x, i) => { const o = new Option(UI.L(x) + (allowed && !allowed.includes(i) ? " " + t("noBudget") : ""), String(i)); if (allowed && !allowed.includes(i)) o.disabled = true; c.append(o); });
+      const first = allowed ? String(allowed[0]) : "0";
+      c.val(v && (!allowed || allowed.includes(Number(v))) ? v : first);
+      s2(c, {});
+      document.getElementById("budgetHint").textContent = allowed ? t("budgetHint", { a: acc, c: allowed.map(centerName).join(", ") }) : "";
+    }
+
+    function dueDate() {
+      const d = document.getElementById("fDocDate").value, term = Number(document.getElementById("fTerm").value) || 0;
+      if (!d) return "";
+      return UI.fmtDay(new Date(new Date(d + "T00:00:00Z").getTime() + term * 86400000));
+    }
+    function refreshHeader() {
+      const p = $("#fPayee").val();
+      document.getElementById("fId").value = p ? PAYEES[p][1] : "";
+      if ($("#fBuyType").val() === "cash") document.getElementById("fTerm").value = "0";
+      document.getElementById("fDue").value = dueDate();
+      document.getElementById("reqChip").innerHTML = mi("tag") + t("newReq") + " #" + nextReq;
+      validate(false);
+    }
+
+    const fx = () => $("#fCur").val() === "USD";
+    function renderLines() {
+      document.querySelector("#tLines thead").innerHTML = "<tr><th>" + t("colAcc") + "</th><th>" + t("colConcept") + '</th><th class="r">' + t("colQty") + '</th><th class="r">' + t("colPrice") + '</th><th class="r">' + t("colSub") + '</th><th class="r">' + t("colTax") + '</th><th class="r">' + t("colTotal") + '</th><th class="r">' + t("colLocal") + "</th><th>" + t("colCenter") + "</th><th>" + t("colNd") + "</th><th></th></tr>";
+      document.querySelector("#tLines tbody").innerHTML = lines.length ? lines.map((l, i) => {
+        const sub = l.qty * l.price, tax = sub * TAX, tot = sub + tax;
+        return "<tr><td>" + l.acc + "</td><td>" + (l.concept || "—") + '</td><td class="r">' + l.qty + '</td><td class="r">' + M(l.price) + '</td><td class="r">' + M(sub) + '</td><td class="r">' + M(tax) + '</td><td class="r">' + M(tot) + '</td><td class="r">' + M(tot * (fx() ? RATE : 1)) + "</td><td>" + centerName(l.center) +
+          "</td><td>" + (l.nd ? '<span class="chip chip-warn">' + mi("do_not_disturb_on") + t("yes") + "</span>" : "—") + '</td><td><button type="button" class="btn btn-sm icon-btn" data-rm="' + i + '" aria-label="' + t("removeLine") + '">' + mi("delete") + "</button></td></tr>";
+      }).join("") : '<tr><td colspan="11" class="muted">' + t("eLines") + "</td></tr>";
+      const sub = lines.reduce((a, l) => a + l.qty * l.price, 0), tax = sub * TAX, nd = lines.filter(l => l.nd).reduce((a, l) => a + l.qty * l.price * (1 + TAX), 0);
+      document.getElementById("totals").innerHTML = "<span>" + t("subtotal") + ": <b>" + M(sub) + "</b></span><span>" + t("tax") + ": <b>" + M(tax) + "</b></span><span>" + t("ndAmount") + ": <b>" + M(nd) + "</b></span><span>" + t("grand") + ": <b>" + M(sub + tax) + " " + $("#fCur").val() + "</b></span>" + (fx() ? "<span>" + t("grandLocal") + ": <b>" + M((sub + tax) * RATE) + "</b></span>" : "");
+    }
+
     function addLine() {
-      const tr = document.createElement("tr");
-      tr.innerHTML = '<td class="c-acc"><select class="acc" aria-label="Account"></select><div class="row-err" data-e="acc"></div></td>' +
-        '<td class="c-desc"><input class="input desc" maxlength="120" aria-label="Line description"><div class="row-err" data-e="desc"></div></td>' +
-        '<td class="c-qty"><input class="input num qty" inputmode="numeric" maxlength="5" value="1" aria-label="Quantity"><div class="row-err" data-e="qty"></div></td>' +
-        '<td class="c-price"><input class="input num price" inputmode="decimal" aria-label="Unit price"><div class="row-err" data-e="price"></div></td>' +
-        '<td class="c-nd"><input type="checkbox" class="nd" aria-label="Non-deductible"></td>' +
-        '<td class="c-tot r num tot">0.00</td>' +
-        '<td><button class="btn icon-btn rm" type="button" aria-label="Remove line">×</button></td>';
-      tbody.appendChild(tr);
-      const $acc = $(tr.querySelector(".acc")).html(accOptions()).select2({ placeholder: "Search by code or name", width: "100%" });
-      $acc.on("change", validate);
-      UI.maskMoney(tr.querySelector(".price"));
-      tr.querySelector(".qty").addEventListener("input", function () { this.value = this.value.replace(/\D/g, ""); validate(); });
-      tr.querySelector(".price").addEventListener("input", validate);
-      tr.querySelector(".price").addEventListener("blur", validate);
-      tr.querySelector(".desc").addEventListener("input", validate);
-      tr.querySelector(".nd").addEventListener("change", validate);
-      tr.querySelector(".rm").addEventListener("click", () => { $acc.select2("destroy"); tr.remove(); validate(); });
-      return tr;
+      const err = document.getElementById("eLine");
+      const acc = $("#lAcc").val(), center = Number($("#lCenter").val()), qty = UI.parseMoney(document.getElementById("lQty").value), price = UI.parseMoney(document.getElementById("lPrice").value);
+      if (!acc) return err.textContent = t("eAcc");
+      if (BUDGET[acc] && !BUDGET[acc].includes(center)) return err.textContent = t("eCenter");
+      if (!(qty > 0)) return err.textContent = t("eQty");
+      if (!(price > 0)) return err.textContent = t("ePrice");
+      err.textContent = "";
+      lines.push({ acc, concept: document.getElementById("lConcept").value.trim(), center, qty, price, nd: document.getElementById("lNd").checked });
+      document.getElementById("lConcept").value = ""; document.getElementById("lPrice").value = ""; document.getElementById("lQty").value = "1"; document.getElementById("lNd").checked = false;
+      renderLines();
     }
-    document.getElementById("addLine").addEventListener("click", () => { const tr = addLine(); $(tr.querySelector(".acc")).select2("open"); });
 
-    $("#center").on("change", () => {
-      // Rebuild the account lists for the new center; keep the chosen account so its error can be shown.
-      $(tbody).find("tr").each(function () {
-        const $s = $(this).find(".acc"), v = $s.val();
-        $s.html(accOptions());
-        if (v) { if (!$s.find('option[value="' + v + '"]').length) $s.append('<option value="' + v + '">' + v + "</option>"); $s.find('option[value="' + v + '"]').prop("disabled", false); $s.val(v); }
-        $s.trigger("change.select2");
-      });
-      const c = $("#center").val();
-      $("#budgetHint").text(c ? c + " has budget for " + BUDGET[c].size + " expense accounts. Others are shown disabled." : "Choose a cost center to see which expense accounts you can use.");
-      validate();
-    });
-    $("#center").trigger("change");
-
-    function validate() {
-      const c = $("#center").val();
-      let sub = 0, nd = 0, ok = true;
-      const rows = [...tbody.querySelectorAll("tr")];
-      rows.forEach(tr => {
-        const acc = $(tr).find(".acc").val(), desc = tr.querySelector(".desc").value.trim();
-        const qty = parseInt(tr.querySelector(".qty").value, 10) || 0, price = UI.parseMoney(tr.querySelector(".price").value);
-        const tot = Math.round(qty * price * 100) / 100;
-        tr.querySelector(".tot").textContent = UI.fmtMoney(tot);
-        sub += tot; if (tr.querySelector(".nd").checked) nd += tot;
-        const err = {};
-        if (!acc) err.acc = "Choose an account.";
-        else if (isExp(acc) && (!c || !BUDGET[c].has(acc))) err.acc = c ? "No budget for this account in " + c + "." : "Choose a cost center first.";
-        if (desc.length < 3) err.desc = "Describe the line.";
-        if (qty < 1) err.qty = "At least 1.";
-        if (price <= 0) err.price = "Enter a price.";
-        tr.querySelectorAll("[data-e]").forEach(el => { el.textContent = touched ? (err[el.dataset.e] || "") : ""; });
-        if (Object.keys(err).length) ok = false;
-      });
-      // Tax is paid on every line; non-deductible lines are only reported apart.
-      const tax = Math.round(sub * 0.15 * 100) / 100;
-      $("#tSub").text(UI.fmtMoney(sub)); $("#tTax").text(UI.fmtMoney(tax)); $("#tTotal").text(UI.fmtMoney(sub + tax)); $("#tNd").text(UI.fmtMoney(nd));
-      const head = {
-        ePayee: $("#payee").val() ? "" : "Choose who will be paid.",
-        eCenter: c ? "" : "Choose a cost center.",
-        eRef: $("#docRef").val().trim() ? "" : "Enter the document number.",
-        eDate: $("#docDate").val() ? "" : "Enter the document date.",
-        eCredit: $("#credit").val() !== "" && +$("#credit").val() <= 180 ? "" : "Between 0 and 180 days."
-      };
-      Object.keys(head).forEach(k => { $("#" + k).text(touched ? head[k] : ""); if (head[k]) ok = false; });
-      if (!rows.length) ok = false;
-      $("#formMsg").text(touched && !rows.length ? "Add at least one line." : "");
-      return { ok, sub, tax, total: sub + tax, nd };
+    function validate(show) {
+      const errs = {};
+      if (!$("#fPayee").val()) errs.Payee = t("ePayeeReq");
+      if (!document.getElementById("fDoc").value.trim()) errs.Doc = t("eDocReq");
+      if (!document.getElementById("fConcept").value.trim()) errs.Concept = t("eConceptReq");
+      ["Payee", "Doc", "Concept"].forEach(k => { document.getElementById("e" + k).textContent = (show || touched) ? (errs[k] || "") : ""; const el = document.getElementById("f" + k); if (el) el.setAttribute("aria-invalid", String(!!errs[k] && (show || touched))); });
+      return errs;
     }
-    $("#docRef").on("input", validate);
 
-    // ---- Requests list ----
-    const r = UI.rng(8080);
-    let seq = 2310;
-    const requests = [];
-    for (let i = 0; i < 6; i++) {
-      const p = UI.pick(r, PAYEES), c = UI.pick(r, D.costCenters), total = Math.round(UI.between(r, 900, 24000) * 100) / 100;
-      requests.push({ no: "PR-" + (seq++), payee: p.name, center: c, due: addDays("2026-11-" + String(2 + i * 2).padStart(2, "0"), p.days), total, status: i < 3 ? "pending" : i === 5 ? "rejected" : "approved", reason: i === 5 ? "Missing the signed receipt." : "" });
+    function chip(st) {
+      const m = { pending: ["chip-warn", "hourglass_top", "pending"], approved: ["chip-pos", "task_alt", "approved"], rejected: ["chip-neg", "block", "rejected"], paid: ["chip-info", "payments", "paidSt"] }[st];
+      return '<span class="chip ' + m[0] + '">' + mi(m[1]) + (st === "paid" ? (UI.lang === "es" ? "Pagada" : "Paid") : t(m[2])) + "</span>";
     }
-    $("#nextNo").text("Next: PR-" + seq);
-    function renderList() {
-      document.querySelector("#list tbody").innerHTML = requests.slice().reverse().map(q => {
-        const s = STATUS[q.status], i = requests.indexOf(q);
-        return '<tr><td class="num">' + q.no + "</td><td>" + q.payee + "</td><td>" + q.center + '</td><td class="num">' + q.due + '</td><td class="r num">' + UI.fmtMoney(q.total) +
-          '</td><td><span class="status ' + s[0] + '">' + ICONS[q.status] + s[1] + "</span>" + (q.reason ? '<div class="hint">' + $("<div>").text(q.reason).html() + "</div>" : "") + "</td><td>" +
-          (q.status === "pending" ? '<div style="display:flex;gap:6px"><button class="btn btn-primary" type="button" data-ok="' + i + '">Approve</button><button class="btn" type="button" data-no="' + i + '">Reject</button></div>' : "") + "</td></tr>";
-      }).join("");
-      const pend = requests.filter(q => q.status === "pending");
-      document.querySelector("#list tfoot").innerHTML = '<tr><td colspan="4">Pending approval</td><td class="r num">' + UI.fmtMoney(pend.reduce((a, q) => a + q.total, 0)) + '</td><td colspan="2">' + pend.length + " request" + (pend.length === 1 ? "" : "s") + "</td></tr>";
-      $("#pendingNote").text(pend.length + " waiting for approval");
+    function renderReqs() {
+      const f = $("#fStatus").val() || "all";
+      document.querySelector("#tReq thead").innerHTML = "<tr><th>" + t("colNo") + "</th><th>" + t("colPayDate") + "</th><th>" + t("colPayee") + "</th><th>" + t("colDocNo") + "</th><th>" + t("colDocDate") + '</th><th class="r">' + t("colNet") + '</th><th class="r">' + t("colBal") + "</th><th>" + t("status") + "</th><th></th></tr>";
+      document.querySelector("#tReq tbody").innerHTML = REQS.filter(x => f === "all" || x.st === f).slice().reverse().map(x => "<tr><td>" + x.n + "</td><td>" + UI.fmtDay(x.pay) + "</td><td>" + PAYEES[x.payee][0] + "</td><td>" + x.doc + "</td><td>" + UI.fmtDay(x.docDate) + '</td><td class="r">' + M(x.net) + '</td><td class="r">' + M(x.bal) + "</td><td>" + chip(x.st) +
+        (x.reason ? '<div class="mc-hint" style="font-size:11px">' + UI.L(x.reason) + "</div>" : "") + "</td><td>" +
+        (x.st === "pending" ? '<div style="display:flex;gap:6px"><button type="button" class="btn btn-sm btn-teal" data-ok="' + x.n + '">' + mi("check") + t("approve") + '</button><button type="button" class="btn btn-sm" data-no="' + x.n + '">' + mi("block") + t("reject") + "</button></div>" : "") + "</td></tr>").join("");
     }
-    renderList();
-
-    let rejIdx = null;
-    document.querySelector("#list tbody").addEventListener("click", e => {
-      const ok = e.target.closest("[data-ok]"), no = e.target.closest("[data-no]");
-      if (ok) { const q = requests[+ok.dataset.ok]; q.status = "approved"; renderList(); UI.toast(q.no + " approved and sent to the payment schedule"); }
-      if (no) { rejIdx = +no.dataset.no; $("#rejReason").val("").attr("aria-invalid", false); $("#eRej").text(""); $("#rejTitle").text("Reject " + requests[rejIdx].no); UI.openModal("rejectModal"); }
-    });
-    $("#rejOk").on("click", () => {
-      const v = $("#rejReason").val().trim();
-      if (v.length < 5) { $("#eRej").text("A reason is required (at least 5 characters)."); $("#rejReason").attr("aria-invalid", true).focus(); return; }
-      requests[rejIdx].status = "rejected"; requests[rejIdx].reason = v;
-      UI.closeModal("rejectModal"); renderList(); UI.toast(requests[rejIdx].no + " rejected");
-    });
-    $("#rejClose").on("click", () => UI.closeModal("rejectModal"));
 
     function clearForm() {
-      touched = false;
-      $(tbody).find(".acc").each(function () { $(this).select2("destroy"); });
-      tbody.innerHTML = "";
-      $("#payee").val("").trigger("change.select2"); $("#center").val("").trigger("change"); $("#docRef").val(""); $("#docDate").val(today); $("#credit").val("30");
-      updateDue(); addLine(); validate();
+      lines = []; touched = false;
+      ["fDoc", "fConcept", "lConcept", "lPrice"].forEach(id => document.getElementById(id).value = "");
+      $("#fPayee").val("").trigger("change.select2");
+      document.getElementById("fTerm").value = "30";
+      refreshHeader(); renderLines();
     }
-    $("#clearBtn").on("click", clearForm);
-    $("#saveBtn").on("click", () => {
+
+    // Init
+    fillSelects();
+    document.getElementById("fDocDate").value = "2026-11-16"; document.getElementById("fAccDate").value = "2026-11-16"; document.getElementById("fPayDate").value = "2026-12-16";
+    document.getElementById("fTerm").value = "30";
+    UI.maskMoney(document.getElementById("lPrice"));
+    $("#fPayee").on("change", () => { const p = $("#fPayee").val(); if (p) document.getElementById("fTerm").value = String(PAYEES[p][2]); refreshHeader(); });
+    $("#fBuyType").on("change", refreshHeader);
+    $("#fCur").on("change", renderLines);
+    $("#lAcc").on("change", fillCenters);
+    $("#fStatus").on("change", renderReqs);
+    ["fDocDate", "fTerm"].forEach(id => document.getElementById(id).addEventListener("input", refreshHeader));
+    ["fDoc", "fConcept"].forEach(id => document.getElementById(id).addEventListener("input", () => validate(false)));
+    document.getElementById("btnAdd").addEventListener("click", addLine);
+    document.getElementById("tLines").addEventListener("click", e => { const b = e.target.closest("[data-rm]"); if (b) { lines.splice(Number(b.dataset.rm), 1); renderLines(); } });
+    document.getElementById("btnSave").addEventListener("click", () => {
       touched = true;
-      const v = validate();
-      if (!v.ok) { const first = document.querySelector(".field-error:not(:empty), .row-err:not(:empty)"); if (first) first.scrollIntoView({ block: "center", behavior: "smooth" }); return; }
-      const p = PAYEES[$("#payee").val()];
-      const q = { no: "PR-" + (seq++), payee: p.name, center: $("#center").val(), due: $("#due").val(), total: v.total, status: "pending", reason: "" };
-      requests.push(q); renderList(); $("#nextNo").text("Next: PR-" + seq);
-      UI.toast(q.no + " saved · Pending approval");
-      clearForm();
+      const errs = validate(true);
+      if (!lines.length) { document.getElementById("eLine").textContent = t("eLines"); }
+      if (Object.keys(errs).length || !lines.length) { UI.toast(t("fixErrors")); return; }
+      const sub = lines.reduce((a, l) => a + l.qty * l.price, 0), net = sub * (1 + TAX) * (fx() ? RATE : 1);
+      REQS.push({ n: nextReq, payee: Number($("#fPayee").val()), doc: document.getElementById("fDoc").value.trim(), docDate: new Date(document.getElementById("fDocDate").value + "T00:00:00Z"), pay: new Date(document.getElementById("fPayDate").value + "T00:00:00Z"), net, bal: net, st: "pending" });
+      UI.toast(t("savedMsg", { n: nextReq }));
+      nextReq++;
+      renderReqs(); clearForm();
     });
-    addLine(); validate();
+    document.getElementById("btnClear").addEventListener("click", clearForm);
+    document.getElementById("tReq").addEventListener("click", e => {
+      const ok = e.target.closest("[data-ok]"), no = e.target.closest("[data-no]");
+      if (ok) { const r = REQS.find(x => x.n === Number(ok.dataset.ok)); r.st = "approved"; renderReqs(); UI.toast(t("approvedMsg", { n: r.n })); }
+      if (no) { rejectId = Number(no.dataset.no); document.getElementById("rReason").value = ""; document.getElementById("eReason").textContent = ""; UI.openModal("mReject"); }
+    });
+    document.getElementById("rOk").addEventListener("click", () => {
+      const reason = document.getElementById("rReason").value.trim();
+      if (!reason) { document.getElementById("eReason").textContent = t("eReason"); document.getElementById("rReason").focus(); return; }
+      const r = REQS.find(x => x.n === rejectId); r.st = "rejected"; r.reason = { en: reason, es: reason };
+      UI.closeModal("mReject"); renderReqs(); UI.toast(t("rejectedMsg", { n: r.n }));
+    });
+    document.getElementById("rCancel").addEventListener("click", () => UI.closeModal("mReject"));
+    document.addEventListener("langchange", () => { fillSelects(); refreshHeader(); renderLines(); renderReqs(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); });
+
+    // Example request already filled
+    $("#fPayee").val("0").trigger("change.select2");
+    document.getElementById("fTerm").value = "30";
+    document.getElementById("fDoc").value = "FAC-11288";
+    document.getElementById("fConcept").value = UI.lang === "es" ? "Compra de papelería de noviembre" : "November office supplies";
+    lines = [{ acc: "6-01-01-001", concept: UI.lang === "es" ? "Resmas de papel" : "Paper reams", center: 0, qty: 20, price: 145.5, nd: false }, { acc: "6-01-01-001", concept: UI.lang === "es" ? "Tóner" : "Toner", center: 5, qty: 3, price: 1890, nd: true }];
+    refreshHeader(); renderLines(); renderReqs();
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
   });
   </script>
 </body>

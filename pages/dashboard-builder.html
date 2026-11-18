@@ -3,353 +3,347 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dashboard Builder · Business UI Gallery</title>
+  <title>Dashboard builder · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
-    .palette { display: flex; flex-wrap: wrap; gap: 8px; }
-    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-    .seg button { border: 0; border-radius: 0; min-height: 36px; }
-    .seg button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
-    .canvas-wrap { padding: 8px; border-radius: var(--radius); }
-    .editing .canvas-wrap { background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 16px 16px; }
-    .grid-stack { min-height: 300px; }
-    .grid-stack-item-content { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden !important; inset: 6px !important; }
-    .w-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 10px 12px 4px; }
-    .w-head h3 { font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .w-tools { display: none; gap: 4px; }
-    .editing .w-tools { display: flex; }
-    .w-tools .btn { width: 30px; min-height: 30px; height: 30px; padding: 0; }
-    .w-sub { padding: 0 12px; font-size: .74rem; color: var(--text-muted); }
-    .w-body { flex: 1; min-height: 0; padding: 8px 12px 12px; position: relative; overflow: auto; }
-    .w-body.kpi-body { overflow: hidden; container-type: inline-size; }
-    .w-kpi { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: clamp(1.1rem, 16cqi, 1.9rem); font-weight: 600; white-space: nowrap; }
-    .w-kpi-full { font-size: .74rem; color: var(--text-muted); font-family: var(--font-mono); }
-    .w-text { font-size: .88rem; white-space: pre-wrap; }
-    .w-body table.grid { font-size: .8rem; }
-    .w-body table.grid th, .w-body table.grid td { padding: 6px; }
-    .w-body table.grid th { position: static; }
-    .editing .grid-stack-item-content { cursor: move; }
-    .grid-stack > .grid-stack-item > .ui-resizable-se { filter: none; }
-    .grid-stack-placeholder > .placeholder-content { background: var(--info-bg) !important; border: 2px dashed var(--primary); border-radius: var(--radius); }
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-    .modal.small { width: min(620px, 100%); }
-    textarea.input { min-height: 90px; resize: vertical; }
-    .empty-state { text-align: center; padding: 40px 16px; color: var(--text-muted); }
-    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .db-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 12px; align-items: start; }
+    .db-step { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--mc-cyan); margin: 2px 0 8px; display: flex; align-items: center; gap: 6px; }
+    .db-palette { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .db-pal { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border: 1px dashed var(--mc-line); border-radius: 8px; background: var(--mc-panel-2); color: var(--mc-text); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .db-pal .material-icons { color: var(--mc-cyan); font-size: 22px; }
+    .db-pal:hover { border-color: var(--mc-cyan); }
+    .db-tpl { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
+    .db-tpl button { text-align: left; padding: 8px 10px; border: 1px solid var(--mc-line); border-radius: 8px; background: transparent; color: var(--mc-text); cursor: pointer; font-size: 12px; }
+    .db-tpl button small { display: block; color: var(--mc-muted); font-size: 10.5px; margin-top: 2px; }
+    .db-tpl button:hover, .db-tpl button.is-active { border-color: var(--mc-teal); background: rgba(20,184,166,.08); }
+    .db-canvas-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .grid-stack { min-height: 420px; background: radial-gradient(circle at 1px 1px, rgba(148,163,184,.14) 1px, transparent 0) 0 0 / 22px 22px; border: 1px dashed var(--mc-line); border-radius: 8px; }
+    .grid-stack.view { border-style: solid; background: none; }
+    .grid-stack-item-content { background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-top: 3px solid var(--w, var(--mc-teal)); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; overflow: hidden !important; color: var(--mc-text); }
+    :root[data-theme="light"] .grid-stack-item-content { background: #fff; }
+    .w-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .w-head h4 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; color: var(--mc-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .w-tools { display: flex; gap: 2px; flex: none; }
+    .w-tools button { width: 26px; height: 26px; border: 0; background: transparent; color: var(--mc-muted); border-radius: 6px; cursor: pointer; display: grid; place-items: center; }
+    .w-tools button:hover { background: rgba(148,163,184,.14); color: var(--mc-text); }
+    .w-tools .material-icons { font-size: 16px; }
+    .grid-stack.view .w-tools .edit-only { display: none; }
+    .w-body { flex: 1; min-height: 0; position: relative; }
+    .w-kpi { font-size: clamp(20px, 2.2vw, 30px); font-weight: 900; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+    .w-body .ig-delta { white-space: normal; }
+    .w-kpi-sub { font-size: 11px; color: var(--mc-muted); }
+    .w-text { font-size: 12.5px; line-height: 1.55; color: var(--mc-text); overflow: auto; height: 100%; }
+    .w-table { overflow: auto; height: 100%; }
+    .w-table table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .w-table th { background: var(--mc-th-bg); color: #fff; text-align: left; padding: 5px 7px; position: sticky; top: 0; }
+    .w-table td { padding: 5px 7px; border-bottom: 1px solid var(--mc-line); font-variant-numeric: tabular-nums; }
+    .db-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--mc-muted); padding: 60px 10px; text-align: center; }
+    .db-empty .material-icons { font-size: 40px; }
+    .db-sql { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; min-height: 90px; }
+    @media (max-width: 1000px) { .db-layout { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body data-page="dashboard-builder" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Dashboard builder</h1>
-        <p class="muted">Build your own dashboard from saved queries: add widgets, drag them into place and resize them.</p>
-      </div>
-      <div class="seg" role="group" aria-label="Mode">
-        <button class="btn" type="button" id="modeEdit" aria-pressed="true">Edit</button>
-        <button class="btn" type="button" id="modeView" aria-pressed="false">View</button>
-      </div>
+  <main id="content">
+    <div class="mc-head"><div><h2 data-i18n="title"></h2><p data-i18n="subtitle"></p></div><span class="mc-chip-time" id="saveState"></span></div>
+
+    <div class="db-layout">
+      <aside class="mc-panel">
+        <div class="db-step"><span class="material-icons" aria-hidden="true">storage</span><span data-i18n="step1"></span></div>
+        <div class="mc-field" style="margin-bottom:10px"><label for="conn" data-i18n="conn"></label><select id="conn"></select></div>
+        <div class="mc-label" style="margin-bottom:6px" data-i18n="templates"></div>
+        <div class="db-tpl" id="tpls"></div>
+        <div class="db-step" style="margin-top:14px"><span class="material-icons" aria-hidden="true">widgets</span><span data-i18n="step2"></span></div>
+        <div class="db-palette" id="palette"></div>
+        <p class="mc-hint" style="margin-top:8px" data-i18n="paletteHint"></p>
+      </aside>
+
+      <section class="mc-panel" style="min-width:0">
+        <div class="db-canvas-bar">
+          <div class="mc-filters" style="flex:1">
+            <div class="mc-field w-sm"><label for="gYear" data-i18n="year"></label><select id="gYear"></select></div>
+            <div class="mc-field w-sm"><label for="gMonth" data-i18n="month"></label><select id="gMonth"></select></div>
+            <div class="mc-field" style="max-width:200px"><label for="gBranch" data-i18n="branch"></label><select id="gBranch"></select></div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <div class="mc-tabs" role="tablist" id="modeTabs"></div>
+            <button class="btn btn-teal" type="button" id="btnSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="saveLayout"></span></button>
+            <button class="btn" type="button" id="btnReset"><span class="material-icons" aria-hidden="true">restart_alt</span><span data-i18n="reset"></span></button>
+          </div>
+        </div>
+        <div class="grid-stack" id="grid" aria-label="Dashboard canvas"></div>
+        <div class="db-empty" id="empty" hidden><span class="material-icons" aria-hidden="true">dashboard_customize</span><b data-i18n="emptyT"></b><span data-i18n="emptyS"></span></div>
+      </section>
     </div>
 
-    <section class="card card-body" id="paletteCard">
-      <div class="toolbar">
-        <div>
-          <h2 style="margin-bottom:8px">Add a widget</h2>
-          <div class="palette" id="palette"></div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <span class="muted" style="font-size:.8rem;align-self:center" id="saveState" aria-live="polite"></span>
-          <button class="btn" type="button" id="resetBtn">Reset to sample</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="canvas-wrap" aria-label="Dashboard canvas">
-      <div class="grid-stack" id="grid"></div>
-      <div class="empty-state" id="empty" hidden>The dashboard is empty. Add a widget from the list above.</div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Each widget reads a saved query, so people build their own views without asking IT for a new report.</li>
-        <li>In Edit mode widgets can be moved and resized; View mode locks the layout for daily use.</li>
-        <li>The layout is saved in this browser. "Reset to sample" brings back the starting dashboard.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
-  <!-- Configure widget -->
-  <div class="modal-backdrop" id="mCfg" role="dialog" aria-modal="true" aria-labelledby="mCfgTitle">
-    <div class="modal small">
-      <div class="modal-head"><h2 id="mCfgTitle">Configure widget</h2></div>
+  <!-- Widget configuration -->
+  <div class="modal-backdrop" id="mCfg">
+    <div class="modal" style="width:min(760px,100%)" role="dialog" aria-modal="true" aria-labelledby="mCfgT">
+      <div class="modal-head"><h3 id="mCfgT"><span class="material-icons" aria-hidden="true">tune</span><span data-i18n="cfgTitle"></span></h3></div>
       <div class="modal-body">
-        <div class="form-grid">
-          <div class="field"><label for="cType">Widget type</label><select class="input" id="cType"></select></div>
-          <div class="field"><label for="cTitle">Title</label><input class="input" id="cTitle" maxlength="60" autocomplete="off"><span class="field-error" id="eTitle"></span></div>
-          <div class="field" data-for="data"><label for="cQuery">Saved query</label><select class="input" id="cQuery"></select><span class="field-error" id="eQuery"></span></div>
-          <div class="field" data-for="data"><label for="cPeriod">Period</label><select class="input" id="cPeriod"></select></div>
-          <div class="field" data-for="kpi"><label for="cMeasure">Measure</label><select class="input" id="cMeasure"></select></div>
-          <div class="field" data-for="text" style="grid-column:1/-1"><label for="cText">Text</label><textarea class="input" id="cText"></textarea><span class="field-error" id="eText"></span></div>
+        <div class="mc-filters">
+          <div class="mc-field"><label for="cType" data-i18n="wType"></label><select id="cType"></select></div>
+          <div class="mc-field w-lg"><label for="cTitle" data-i18n="wTitleReq"></label><input id="cTitle" maxlength="60"><span class="mc-field-error" id="cTitleErr"></span></div>
+          <div class="mc-field w-lg" style="flex-basis:100%"><label for="cQuery" data-i18n="savedQuery"></label><select id="cQuery"></select></div>
+          <div class="mc-field" data-for="chart"><label for="cX" data-i18n="xAxis"></label><select id="cX"></select></div>
+          <div class="mc-field" data-for="chart kpi"><label for="cMetric" data-i18n="metric"></label><select id="cMetric"></select></div>
+          <div class="mc-field" data-for="chart kpi"><label for="cAgg" data-i18n="agg"></label><select id="cAgg"></select></div>
+          <div class="mc-field" data-for="chart kpi table"><label for="cPeriod" data-i18n="period"></label><select id="cPeriod"></select></div>
+          <div class="mc-field" data-for="chart kpi table"><label for="cColor" data-i18n="color"></label><input type="color" id="cColor" value="#14b8a6" style="min-height:34px;padding:2px"></div>
+          <div class="mc-field w-lg" data-for="text" style="flex-basis:100%"><label for="cText" data-i18n="textReq"></label><textarea id="cText"></textarea></div>
+          <div class="mc-field w-lg" data-for="chart kpi table" style="flex-basis:100%"><label for="cSql" data-i18n="sql"></label><textarea id="cSql" class="db-sql" readonly></textarea></div>
         </div>
       </div>
-      <div class="modal-foot">
-        <button class="btn btn-primary" id="cSave" type="button">Save widget</button>
-        <button class="btn" id="cClose" type="button">Close</button>
-      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="cSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button><button class="btn" type="button" data-close="mCfg" data-i18n="close"></button></div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const KEY = "bug-dashboard-v1";
-    const TYPES = {
-      kpi:   { label: "KPI", w: 3, h: 2 },
-      line:  { label: "Line chart", w: 6, h: 4 },
-      bar:   { label: "Bar chart", w: 6, h: 4 },
-      table: { label: "Table", w: 4, h: 4 },
-      text:  { label: "Text note", w: 4, h: 2 }
-    };
-    const PERIODS = { d7: "Last 7 days", d30: "Last 30 days", year: "This year" };
-    const MEASURES = { total: "Total", avg: "Average", max: "Highest" };
+  UI.strings({
+    en: {
+      title: "Dashboard builder", subtitle: "Build your own dashboard: pick a data source, drop widgets on the canvas and connect them to the year, month and branch filters.",
+      step1: "1. Data source", step2: "2. Canvas and layers", conn: "Database connection", templates: "Report templates", paletteHint: "Click a widget to add it to the canvas.",
+      year: "Year", month: "Month", saveLayout: "Save layout", reset: "Reset to sample", edit: "Edit", view: "View",
+      emptyT: "The canvas is empty", emptyS: "Add a widget from the palette or open a template.",
+      savedAt: "Saved {t}", notSaved: "Not saved yet", saveBlocked: "This browser does not allow saving; the layout lasts this visit.", savedToast: "Layout saved in this browser.", resetToast: "Sample dashboard restored.",
+      cfgTitle: "Configure widget", wType: "Widget type", wTitleReq: "Title *", savedQuery: "Saved query", xAxis: "X axis / grouping", metric: "Metric column", agg: "Aggregation", period: "Period",
+      color: "Color", textReq: "Text", sql: "Generated query (read only)", titleErr: "Write a title.",
+      wKpi: "KPI", wLine: "Line chart", wBar: "Bar chart", wDoughnut: "Doughnut", wTable: "Table", wText: "Text note",
+      aSum: "Sum", aAvg: "Average", aCount: "Count", pMonth: "Selected month", pYear: "Year to date", p12: "Last 12 months",
+      q_sales: "Sales by day", q_cat: "Sales by category", q_branch: "Sales by branch", q_sup: "Purchases by supplier", q_stock: "Stock value by warehouse",
+      c_date: "Date", c_cat: "Category", c_branch: "Branch", c_sup: "Supplier", c_wh: "Warehouse", c_net: "Net sales", c_units: "Units", c_margin: "Margin", c_amount: "Amount", c_value: "Value",
+      t_sales: "Sales overview", t_salesD: "KPIs, daily trend and sales by category", t_buy: "Purchasing", t_buyD: "Purchases by supplier and month", t_stock: "Inventory", t_stockD: "Stock value by warehouse and category", t_blank: "Blank canvas", t_blankD: "Empty builder for your own queries",
+      remove: "Remove", configure: "Configure", vsPrev: "vs previous period", widgetAdded: "{w} added.", noteSample: "This dashboard is connected to the year, month and branch filters above. Change them and every widget recalculates.",
+      aboutText: "The real screen lets analysts build their own dashboards without programming: in <b>1. Data source</b> they choose the database connection and a report template or a saved query; in <b>2. Canvas and layers</b> they drop widgets on a free grid, move and resize them, and pick for each one the <b>X axis / grouping</b> column, the <b>metric</b> and the aggregation. Every widget is connected to the year, month and branch filters, so the whole dashboard recalculates together. The layout is saved per user; here it is saved in this browser only. All data is generated."
+    },
+    es: {
+      title: "Constructor de dashboards", subtitle: "Arme su propio dashboard: elija un origen de datos, coloque widgets en el lienzo y conéctelos a los filtros de año, mes y sucursal.",
+      step1: "1. Origen de datos", step2: "2. Lienzo gráfico y capas", conn: "Conexión de BD", templates: "Plantillas de reportes", paletteHint: "Pulse un widget para agregarlo al lienzo.",
+      year: "Año", month: "Mes", saveLayout: "Guardar diseño", reset: "Restaurar ejemplo", edit: "Editar", view: "Ver",
+      emptyT: "El lienzo está vacío", emptyS: "Agregue un widget de la paleta o abra una plantilla.",
+      savedAt: "Guardado {t}", notSaved: "Sin guardar", saveBlocked: "Este navegador no permite guardar; el diseño dura esta visita.", savedToast: "Diseño guardado en este navegador.", resetToast: "Se restauró el dashboard de ejemplo.",
+      cfgTitle: "Configurar widget", wType: "Tipo de widget", wTitleReq: "Título *", savedQuery: "Consulta guardada", xAxis: "Eje X / agrupación", metric: "Columna métrica", agg: "Agregación", period: "Período",
+      color: "Color", textReq: "Texto", sql: "Consulta generada (solo lectura)", titleErr: "Escriba un título.",
+      wKpi: "KPI", wLine: "Gráfico de líneas", wBar: "Gráfico de barras", wDoughnut: "Dona", wTable: "Tabla", wText: "Nota de texto",
+      aSum: "Suma", aAvg: "Promedio", aCount: "Conteo", pMonth: "Mes seleccionado", pYear: "Año a la fecha", p12: "Últimos 12 meses",
+      q_sales: "Ventas por día", q_cat: "Ventas por categoría", q_branch: "Ventas por sucursal", q_sup: "Compras por proveedor", q_stock: "Valor de inventario por bodega",
+      c_date: "Fecha", c_cat: "Categoría", c_branch: "Sucursal", c_sup: "Proveedor", c_wh: "Bodega", c_net: "Venta neta", c_units: "Unidades", c_margin: "Margen", c_amount: "Monto", c_value: "Valor",
+      t_sales: "Resumen de ventas", t_salesD: "KPIs, tendencia diaria y ventas por categoría", t_buy: "Compras", t_buyD: "Compras por proveedor y mes", t_stock: "Inventario", t_stockD: "Valor de inventario por bodega y categoría", t_blank: "Lienzo en blanco", t_blankD: "Constructor vacío para sus propias consultas",
+      remove: "Quitar", configure: "Configurar", vsPrev: "vs período anterior", widgetAdded: "Se agregó {w}.", noteSample: "Este dashboard está conectado a los filtros de año, mes y sucursal de arriba. Cámbielos y cada widget se recalcula.",
+      aboutText: "La pantalla real permite a los analistas armar sus propios dashboards sin programar: en <b>1. Origen de datos</b> eligen la conexión de base de datos y una plantilla de reporte o una consulta guardada; en <b>2. Lienzo gráfico y capas</b> colocan widgets en una cuadrícula libre, los mueven y cambian de tamaño, y eligen para cada uno la columna de <b>eje X / agrupación</b>, la <b>métrica</b> y la agregación. Cada widget está conectado a los filtros de año, mes y sucursal, así que todo el dashboard se recalcula junto. El diseño se guarda por usuario; aquí se guarda solo en este navegador. Todos los datos son generados."
+    }
+  });
 
-    // ---------- Saved queries (sample data) ----------
-    const days = n => Array.from({ length: n }, (_, i) => { const d = new Date(Date.UTC(2026, 10, 16) - (n - 1 - i) * 86400000); return UI.fmtDate(d).slice(5); });
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
-    function series(seed, labels, lo, hi) { const r = UI.rng(seed); return labels.map(() => Math.round(UI.between(r, lo, hi) * 100) / 100); }
+  $(function () {
+    const t = UI.t, mi = UI.mi, D = UI.DATA, M = UI.fmtMoney;
+    const KEY = "bug-dash-layout";
+    const TYPES = { kpi: ["wKpi", "tag", 3, 2], line: ["wLine", "show_chart", 6, 4], bar: ["wBar", "bar_chart", 6, 4], doughnut: ["wDoughnut", "donut_large", 4, 4], table: ["wTable", "table_rows", 6, 4], text: ["wText", "notes", 4, 2] };
     const QUERIES = {
-      salesDay:    { label: "Net sales by day", money: true, run: p => { const L = p === "year" ? months : days(p === "d7" ? 7 : 30); return { labels: L, values: series(11 + L.length, L, p === "year" ? 5.2e6 : 160000, p === "year" ? 7.4e6 : 260000) }; } },
-      salesBranch: { label: "Net sales by branch", money: true, run: p => { const f = p === "d7" ? 7 : p === "d30" ? 30 : 320; return { labels: UI.DATA.branches, values: series(21, UI.DATA.branches, 24000, 61000).map(v => Math.round(v * f)) }; } },
-      aging:       { label: "Receivables aging", money: true, run: () => ({ labels: ["Current", "1-30", "31-60", "61-90", "90+"], values: [812400.5, 304210.75, 118930.2, 46250, 38910.4] }) },
-      stock:       { label: "Stock value by category", money: true, run: () => ({ labels: UI.DATA.categories, values: series(31, UI.DATA.categories, 90000, 540000) }) },
-      expenses:    { label: "Expenses by cost center", money: true, run: p => { const f = p === "d7" ? 0.25 : p === "d30" ? 1 : 10.5; return { labels: UI.DATA.costCenters, values: series(41, UI.DATA.costCenters, 18000, 96000).map(v => Math.round(v * f * 100) / 100) }; } },
-      tickets:     { label: "IT tickets by status", money: false, run: p => { const f = p === "d7" ? 1 : p === "d30" ? 4 : 40; return { labels: ["New", "In progress", "Waiting", "Resolved"], values: [6, 9, 4, 31].map(v => v * f) }; } }
+      sales: { x: ["date"], m: ["net", "units", "margin"], table: "sales_daily" }, cat: { x: ["cat"], m: ["net", "units", "margin"], table: "sales_by_category" },
+      branch: { x: ["branch"], m: ["net", "units"], table: "sales_by_branch" }, sup: { x: ["sup"], m: ["amount"], table: "purchases_by_supplier" }, stock: { x: ["wh", "cat"], m: ["value", "units"], table: "stock_by_warehouse" }
     };
-    const fmt = (q, v) => QUERIES[q].money ? UI.fmtMoney(v) : UI.fmtInt(v);
-
     const SAMPLE = [
-      { x: 0, y: 0, w: 3, h: 2, cfg: { type: "kpi", title: "Net sales, 30 days", query: "salesDay", period: "d30", measure: "total" } },
-      { x: 3, y: 0, w: 3, h: 2, cfg: { type: "kpi", title: "Best day", query: "salesDay", period: "d30", measure: "max" } },
-      { x: 6, y: 0, w: 3, h: 2, cfg: { type: "kpi", title: "Receivables", query: "aging", period: "d30", measure: "total" } },
-      { x: 9, y: 0, w: 3, h: 2, cfg: { type: "kpi", title: "Open IT tickets", query: "tickets", period: "d7", measure: "total" } },
-      { x: 0, y: 2, w: 8, h: 4, cfg: { type: "line", title: "Daily net sales", query: "salesDay", period: "d30" } },
-      { x: 8, y: 2, w: 4, h: 4, cfg: { type: "table", title: "Receivables aging", query: "aging", period: "d30" } },
-      { x: 0, y: 6, w: 7, h: 4, cfg: { type: "bar", title: "Sales by branch", query: "salesBranch", period: "d30" } },
-      { x: 7, y: 6, w: 5, h: 4, cfg: { type: "text", title: "Notes for the meeting", text: "Harbor and Riverside are below last month.\nReview the 90+ receivables with the sales team on Friday." } }
+      { x: 0, y: 0, w: 3, h: 2, cfg: { type: "kpi", title: { en: "Net sales", es: "Venta neta" }, q: "sales", m: "net", agg: "sum", p: "month", color: "#14b8a6" } },
+      { x: 3, y: 0, w: 3, h: 2, cfg: { type: "kpi", title: { en: "Units sold", es: "Unidades vendidas" }, q: "sales", m: "units", agg: "sum", p: "month", color: "#38bdf8" } },
+      { x: 6, y: 0, w: 3, h: 2, cfg: { type: "kpi", title: { en: "Average margin", es: "Margen promedio" }, q: "sales", m: "margin", agg: "avg", p: "month", color: "#a78bfa" } },
+      { x: 9, y: 0, w: 3, h: 2, cfg: { type: "text", title: { en: "Note", es: "Nota" }, text: null, color: "#f59e0b" } },
+      { x: 0, y: 2, w: 8, h: 4, cfg: { type: "line", title: { en: "Sales evolution", es: "Evolución de ventas" }, q: "sales", x: "date", m: "net", agg: "sum", p: "month", color: "#14b8a6" } },
+      { x: 8, y: 2, w: 4, h: 4, cfg: { type: "doughnut", title: { en: "Sales by category", es: "Ventas por categoría" }, q: "cat", x: "cat", m: "net", agg: "sum", p: "month", color: "#38bdf8" } },
+      { x: 0, y: 6, w: 6, h: 4, cfg: { type: "bar", title: { en: "Sales by branch", es: "Ventas por sucursal" }, q: "branch", x: "branch", m: "net", agg: "sum", p: "month", color: "#f59e0b" } },
+      { x: 6, y: 6, w: 6, h: 4, cfg: { type: "table", title: { en: "Purchases by supplier", es: "Compras por proveedor" }, q: "sup", x: "sup", m: "amount", agg: "sum", p: "year", color: "#fb7185" } }
     ];
+    const TEMPLATES = { sales: SAMPLE, buy: [
+      { x: 0, y: 0, w: 4, h: 2, cfg: { type: "kpi", title: { en: "Purchases", es: "Compras" }, q: "sup", m: "amount", agg: "sum", p: "month", color: "#fb7185" } },
+      { x: 4, y: 0, w: 8, h: 4, cfg: { type: "bar", title: { en: "Purchases by supplier", es: "Compras por proveedor" }, q: "sup", x: "sup", m: "amount", agg: "sum", p: "year", color: "#fb7185" } },
+      { x: 0, y: 2, w: 4, h: 4, cfg: { type: "table", title: { en: "Top suppliers", es: "Principales proveedores" }, q: "sup", x: "sup", m: "amount", agg: "sum", p: "year", color: "#f59e0b" } }],
+      stock: [
+      { x: 0, y: 0, w: 4, h: 2, cfg: { type: "kpi", title: { en: "Stock value", es: "Valor del inventario" }, q: "stock", m: "value", agg: "sum", p: "month", color: "#f59e0b" } },
+      { x: 4, y: 0, w: 8, h: 4, cfg: { type: "bar", title: { en: "Value by warehouse", es: "Valor por bodega" }, q: "stock", x: "wh", m: "value", agg: "sum", p: "month", color: "#f59e0b" } },
+      { x: 0, y: 2, w: 4, h: 4, cfg: { type: "doughnut", title: { en: "Value by category", es: "Valor por categoría" }, q: "stock", x: "cat", m: "value", agg: "sum", p: "month", color: "#a78bfa" } }],
+      blank: [] };
 
-    // ---------- Grid ----------
-    const grid = GridStack.init({
-      column: 12, cellHeight: 80, margin: 6, float: false, animate: false,
-      columnOpts: { breakpointForWindow: false, breakpoints: [{ w: 520, c: 1 }] },
-      resizable: { handles: "se" }
-    }, "#grid");
-    const charts = new Map();
-    const configs = new Map();
-    let seq = 1;
-    let editing = true;
-
-    function headHtml(cfg, id) {
-      return '<div class="w-head"><h3>' + escapeHtml(cfg.title) + '</h3><div class="w-tools">' +
-        '<button class="btn" type="button" data-edit="' + id + '" aria-label="Edit ' + escapeAttr(cfg.title) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>' +
-        '<button class="btn" type="button" data-remove="' + id + '" aria-label="Remove ' + escapeAttr(cfg.title) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>' +
-        "</div></div>";
+    // ---- Data engine (sample, deterministic per filter) ----
+    function filtersSeed() { return Number($("#gYear").val() || 2026) * 100 + Number($("#gMonth").val() || 10) * 10 + (Number($("#gBranch").val()) + 2 || 1); }
+    function series(cfg) {
+      const r = UI.rng(filtersSeed() * 13 + cfg.q.length * 7 + (cfg.m || "").length);
+      const b = $("#gBranch").val() === "all" ? 1 : 0.22;
+      const scale = { net: 42000, units: 1800, margin: .24, amount: 30000, value: 180000 }[cfg.m] || 1000;
+      const lab = { date: Array.from({ length: cfg.p === "month" ? 30 : 12 }, (_, i) => cfg.p === "month" ? String(i + 1) : UI.monthName(i, true)),
+        cat: D.categories.map(c => UI.L(c)), branch: D.branches, sup: D.suppliers, wh: ["Main", "North", "Coast", "Transit"] }[cfg.x || "date"];
+      const vals = lab.map((_, i) => cfg.m === "margin" ? UI.between(r, .18, .32) : scale * b * UI.between(r, .55, 1.25) * (cfg.x === "date" && cfg.p !== "month" ? 26 : 1) * (1 + Math.sin(i / 2) * .12));
+      return { labels: lab, values: vals };
     }
-    function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-    function escapeAttr(s) { return escapeHtml(s); }
-
-    function renderWidget(el) {
-      const id = el.getAttribute("gs-id");
-      const cfg = configs.get(id);
-      const content = el.querySelector(".grid-stack-item-content");
-      if (charts.has(id)) { charts.get(id).destroy(); charts.delete(id); }
-      let body = "", sub = "";
-      if (cfg.type !== "text") {
-        const q = QUERIES[cfg.query];
-        sub = q.label + " · " + PERIODS[cfg.period];
-        const data = q.run(cfg.period);
-        if (cfg.type === "kpi") {
-          const v = cfg.measure === "avg" ? data.values.reduce((a, b) => a + b, 0) / data.values.length : cfg.measure === "max" ? Math.max.apply(null, data.values) : data.values.reduce((a, b) => a + b, 0);
-          sub += " · " + MEASURES[cfg.measure];
-          const big = Math.abs(v) >= 1e6;
-          const short = big ? (v / 1e6).toFixed(2) + "M" : Math.abs(v) >= 1e5 ? (v / 1e3).toFixed(1) + "k" : fmt(cfg.query, v);
-          body = '<div class="w-kpi" title="' + fmt(cfg.query, v) + '">' + short + "</div>" + (short !== fmt(cfg.query, v) ? '<div class="w-kpi-full">' + fmt(cfg.query, v) + "</div>" : "");
-        } else if (cfg.type === "table") {
-          const total = data.values.reduce((a, b) => a + b, 0);
-          body = '<table class="grid"><thead><tr><th>Item</th><th class="r">Value</th><th class="r">Share</th></tr></thead><tbody>' +
-            data.labels.map((l, i) => "<tr><td>" + l + '</td><td class="r num">' + fmt(cfg.query, data.values[i]) + '</td><td class="r num">' + UI.fmtPct(data.values[i] / total) + "</td></tr>").join("") +
-            '</tbody><tfoot><tr><td>Total</td><td class="r num">' + fmt(cfg.query, total) + '</td><td class="r num">100.0%</td></tr></tfoot></table>';
-        } else {
-          body = '<div style="position:absolute;inset:4px 12px 12px"><canvas role="img" aria-label="' + escapeAttr(cfg.title + ": " + q.label) + '"></canvas></div>';
-        }
-        content.innerHTML = headHtml(cfg, id) + '<div class="w-sub">' + sub + '</div><div class="w-body' + (cfg.type === "kpi" ? " kpi-body" : "") + '">' + body + "</div>";
-        if (cfg.type === "line" || cfg.type === "bar") drawChart(id, content.querySelector("canvas"), cfg, data);
-      } else {
-        content.innerHTML = headHtml(cfg, id) + '<div class="w-body"><p class="w-text">' + escapeHtml(cfg.text) + "</p></div>";
-      }
+    function kpiValue(cfg) {
+      const s = series(Object.assign({}, cfg, { x: "date" }));
+      const v = cfg.agg === "avg" ? s.values.reduce((a, x) => a + x, 0) / s.values.length : cfg.agg === "count" ? s.values.length : s.values.reduce((a, x) => a + x, 0);
+      const prev = v * (0.88 + (filtersSeed() % 17) / 70);
+      return { v, prev };
     }
-    function drawChart(id, canvas, cfg, data) {
-      const text = UI.cssVar("--text-muted"), gridc = UI.cssVar("--border"), c1 = UI.cssVar("--chart-1");
-      const money = QUERIES[cfg.query].money;
-      charts.set(id, new Chart(canvas, {
-        type: cfg.type,
-        data: { labels: data.labels, datasets: [{ label: QUERIES[cfg.query].label, data: data.values, borderColor: c1, backgroundColor: cfg.type === "bar" ? c1 : c1, tension: .3, pointRadius: 0, borderWidth: 2, borderRadius: 4 }] },
-        options: {
-          maintainAspectRatio: false, responsive: true, animation: false,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => money ? UI.fmtMoney(c.parsed.y) : UI.fmtInt(c.parsed.y) } } },
-          scales: { x: { ticks: { color: text, maxTicksLimit: 8 }, grid: { display: false } }, y: { ticks: { color: text, callback: v => money ? (v >= 1e6 ? (v / 1e6) + "M" : (v / 1000) + "k") : v }, grid: { color: gridc } } }
-        }
-      }));
-    }
+    const fmtM = (m, v) => m === "margin" ? UI.fmtPct(v) : m === "units" ? UI.fmtInt(v) : M(v);
 
-    function addItem(item) {
-      const id = "w" + seq++;
-      configs.set(id, item.cfg);
-      const el = document.createElement("div");
-      el.className = "grid-stack-item";
-      el.setAttribute("gs-id", id);
-      ["x", "y", "w", "h"].forEach(k => { if (item[k] != null) el.setAttribute("gs-" + k, item[k]); });
-      if (item.x == null) el.setAttribute("gs-auto-position", "true");
-      el.innerHTML = '<div class="grid-stack-item-content"></div>';
-      document.getElementById("grid").appendChild(el);
-      grid.makeWidget(el);
-      renderWidget(el);
+    // ---- Grid ----
+    let mode = "edit";
+    const charts = {};
+    let uid = 0;
+    const grid = GridStack.init({ column: 12, cellHeight: 70, margin: 6, float: false, animate: true, disableOneColumnMode: false, oneColumnSize: 640, handle: ".w-head" }, "#grid");
+    function widgetHtml(id, cfg) {
+      return '<div class="grid-stack-item-content" style="--w:' + (cfg.color || "#14b8a6") + '"><div class="w-head"><h4>' + UI.L(cfg.title) + '</h4><div class="w-tools">' +
+        '<button type="button" class="edit-only" data-cfg="' + id + '" aria-label="' + t("configure") + '" title="' + t("configure") + '">' + mi("tune") + "</button>" +
+        '<button type="button" class="edit-only" data-del="' + id + '" aria-label="' + t("remove") + '" title="' + t("remove") + '">' + mi("close") + '</button></div></div><div class="w-body" id="b' + id + '"></div></div>';
+    }
+    function addWidget(item, silent) {
+      const id = "w" + (++uid);
+      const el = grid.addWidget({ x: item.x, y: item.y, w: item.w, h: item.h, id, content: "" });
+      el.querySelector(".grid-stack-item-content").outerHTML = widgetHtml(id, item.cfg);
+      el._cfg = item.cfg; el.dataset.wid = id;
+      draw(el);
+      if (!silent) { UI.toast(t("widgetAdded", { w: UI.L(item.cfg.title) })); setDirty(); }
+      empty();
       return el;
     }
+    function rehead(el) { const c = el._cfg; const box = el.querySelector(".grid-stack-item-content"); box.style.setProperty("--w", c.color || "#14b8a6"); box.querySelector("h4").textContent = UI.L(c.title);
+      box.querySelectorAll("[data-cfg]").forEach(b => { b.title = t("configure"); b.setAttribute("aria-label", t("configure")); }); box.querySelectorAll("[data-del]").forEach(b => { b.title = t("remove"); b.setAttribute("aria-label", t("remove")); }); }
+    function draw(el) {
+      const c = el._cfg, id = el.dataset.wid, body = document.getElementById("b" + id);
+      if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+      const text = UI.cssVar("--mc-muted"), line = UI.cssVar("--mc-line");
+      if (c.type === "kpi") {
+        const k = kpiValue(c);
+        body.innerHTML = '<div class="w-kpi" style="color:' + c.color + '">' + fmtM(c.m, k.v) + '</div><div class="ig-deltas">' + UI.delta(k.v, k.prev, { label: t("vsPrev") }) + "</div>";
+      } else if (c.type === "text") {
+        body.innerHTML = '<div class="w-text"></div>'; body.firstChild.textContent = c.text ? UI.L(c.text) : t("noteSample");
+      } else if (c.type === "table") {
+        const s = series(c);
+        const rows = s.labels.map((l, i) => [l, s.values[i]]).sort((a, b) => b[1] - a[1]);
+        body.innerHTML = '<div class="w-table"><table><thead><tr><th>' + t("c_" + (c.x || "date")) + '</th><th style="text-align:right">' + t("c_" + c.m) + "</th></tr></thead><tbody>" +
+          rows.map(x => "<tr><td>" + x[0] + '</td><td style="text-align:right">' + fmtM(c.m, x[1]) + "</td></tr>").join("") + "</tbody></table></div>";
+      } else {
+        const s = series(c);
+        body.innerHTML = "<canvas></canvas>";
+        const pal = ["#14b8a6", "#38bdf8", "#f59e0b", "#a78bfa", "#fb7185", "#22c55e", "#06b6d4"];
+        charts[id] = new Chart(body.firstChild, {
+          type: c.type, data: { labels: s.labels, datasets: [{ label: t("c_" + c.m), data: s.values, borderColor: c.type === "doughnut" ? UI.cssVar("--mc-panel") : c.color, backgroundColor: c.type === "doughnut" ? pal : c.type === "bar" ? c.color + "cc" : c.color + "22",
+            fill: c.type === "line", tension: .35, pointRadius: 0, borderWidth: 2 }] },
+          options: { maintainAspectRatio: false, responsive: true, animation: false, plugins: { legend: { display: c.type === "doughnut", position: "right", labels: { color: text, boxWidth: 10, font: { size: 10 } } },
+            tooltip: { callbacks: { label: x => fmtM(c.m, x.parsed.y != null ? x.parsed.y : x.parsed) } } },
+            scales: c.type === "doughnut" ? {} : { x: { ticks: { color: text, font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 }, grid: { display: false } }, y: { ticks: { color: text, font: { size: 10 }, callback: v => c.m === "margin" ? Math.round(v * 100) + "%" : v >= 1000 ? Math.round(v / 1000) + "k" : v }, grid: { color: line } } } }
+        });
+      }
+    }
+    function drawAll() { grid.getGridItems().forEach(el => { rehead(el); draw(el); }); }
+    function empty() { const n = grid.getGridItems().length; document.getElementById("empty").hidden = n > 0; }
+    grid.on("resizestop", (e, el) => { const id = el.dataset.wid; if (charts[id]) charts[id].resize(); setDirty(); });
+    grid.on("change", () => setDirty());
 
-    // ---------- Persistence (this browser only) ----------
+    function serialize() { return grid.getGridItems().map(el => { const n = el.gridstackNode; return { x: n.x, y: n.y, w: n.w, h: n.h, cfg: el._cfg }; }); }
+    function load(items) {
+      Object.keys(charts).forEach(k => { charts[k].destroy(); delete charts[k]; });
+      const old = grid.getGridItems();
+      grid.removeAll(false);
+      old.forEach(el => el.remove());
+      items.forEach(it => addWidget(JSON.parse(JSON.stringify(it)), true));
+      empty();
+    }
+    let dirty = false, savedAt = null, storageOk = true;
+    function setDirty() { dirty = true; paintSave(); }
+    function paintSave() { document.getElementById("saveState").textContent = !storageOk ? t("saveBlocked") : savedAt && !dirty ? t("savedAt", { t: savedAt }) : t("notSaved"); }
     function save() {
-      if (grid.getColumn() !== 12) return; // never overwrite the desktop layout with the one-column phone layout
-      const items = grid.getGridItems().map(el => {
-        const n = el.gridstackNode;
-        return { x: n.x, y: n.y, w: n.w, h: n.h, cfg: configs.get(el.getAttribute("gs-id")) };
-      });
-      try { localStorage.setItem(KEY, JSON.stringify(items)); document.getElementById("saveState").textContent = "Layout saved in this browser"; }
-      catch (e) { document.getElementById("saveState").textContent = "Layout cannot be saved in this browser"; }
+      try { localStorage.setItem(KEY, JSON.stringify(serialize())); savedAt = new Date().toLocaleTimeString(UI.lang === "es" ? "es" : "en", { hour: "2-digit", minute: "2-digit" }); dirty = false; storageOk = true; UI.toast(t("savedToast")); }
+      catch (e) { storageOk = false; }
+      paintSave();
     }
-    function load() {
-      try { const s = localStorage.getItem(KEY); if (s) { const v = JSON.parse(s); if (Array.isArray(v)) return v; } } catch (e) { /* storage blocked or bad data: use the sample */ }
-      return null;
+    function setMode(m) {
+      mode = m; grid.setStatic(m === "view");
+      document.getElementById("grid").classList.toggle("view", m === "view");
+      document.getElementById("modeTabs").innerHTML = [["edit", "edit"], ["view", "visibility"]].map(x => '<button type="button" class="mc-tab" role="tab" aria-selected="' + (mode === x[0]) + '" data-mode="' + x[0] + '">' + mi(x[1]) + " " + t(x[0]) + "</button>").join("");
     }
-    function build(items) {
-      grid.removeAll(true);
-      charts.forEach(c => c.destroy()); charts.clear(); configs.clear();
-      grid.batchUpdate();
-      items.forEach(addItem);
-      grid.batchUpdate(false);
-      updateEmpty();
-    }
-    function updateEmpty() { document.getElementById("empty").hidden = grid.getGridItems().length > 0; }
 
-    grid.on("change", () => save());
-    grid.on("added removed", () => { updateEmpty(); save(); });
-
-    // ---------- Palette ----------
-    document.getElementById("palette").innerHTML = Object.keys(TYPES).map(t => '<button class="btn" type="button" data-add="' + t + '">+ ' + TYPES[t].label + "</button>").join("");
-    document.getElementById("palette").addEventListener("click", e => { const b = e.target.closest("[data-add]"); if (b) openConfig(null, b.dataset.add); });
-
-    // ---------- Configure modal ----------
-    const cType = document.getElementById("cType"), cTitle = document.getElementById("cTitle"), cQuery = document.getElementById("cQuery"), cPeriod = document.getElementById("cPeriod"), cMeasure = document.getElementById("cMeasure"), cText = document.getElementById("cText");
-    cType.innerHTML = Object.keys(TYPES).map(t => '<option value="' + t + '">' + TYPES[t].label + "</option>").join("");
-    cQuery.innerHTML = '<option value="">Choose a saved query</option>' + Object.keys(QUERIES).map(q => '<option value="' + q + '">' + QUERIES[q].label + "</option>").join("");
-    cPeriod.innerHTML = Object.keys(PERIODS).map(p => '<option value="' + p + '">' + PERIODS[p] + "</option>").join("");
-    cMeasure.innerHTML = Object.keys(MEASURES).map(m => '<option value="' + m + '">' + MEASURES[m] + "</option>").join("");
-    function syncFields() {
-      const t = cType.value;
-      document.querySelectorAll("#mCfg [data-for]").forEach(f => {
-        const k = f.dataset.for;
-        f.hidden = k === "data" ? t === "text" : k === "kpi" ? t !== "kpi" : t !== "text";
-      });
+    // ---- Left panel ----
+    function leftPanel() {
+      const $c = $("#conn"), cv = $c.val(); $c.empty(); ["ERP · Sales (read only)", "ERP · Purchasing (read only)", "Data warehouse"].forEach((x, i) => $c.append(new Option(x, String(i)))); $c.val(cv || "0");
+      document.getElementById("tpls").innerHTML = [["sales", "t_sales", "t_salesD", "query_stats"], ["buy", "t_buy", "t_buyD", "shopping_cart"], ["stock", "t_stock", "t_stockD", "inventory_2"], ["blank", "t_blank", "t_blankD", "add_box"]]
+        .map(x => '<button type="button" data-tpl="' + x[0] + '">' + mi(x[3]) + " <b>" + t(x[1]) + "</b><small>" + t(x[2]) + "</small></button>").join("");
+      document.getElementById("palette").innerHTML = Object.keys(TYPES).map(k => '<button type="button" class="db-pal" data-add="' + k + '">' + mi(TYPES[k][1]) + "<span>" + t(TYPES[k][0]) + "</span></button>").join("");
+      const fill = (sel, opts) => { const $s = $(sel), v = $s.val(); $s.empty(); opts.forEach(o => $s.append(new Option(o[1], o[0]))); if (v != null && $s.find('option[value="' + v + '"]').length) $s.val(v); };
+      fill("#gYear", [["2026", "2026"], ["2025", "2025"]]);
+      fill("#gMonth", Array.from({ length: 12 }, (_, i) => [String(i), UI.monthName(i)])); if ($("#gMonth").val() == null || !leftPanel.done) $("#gMonth").val("10");
+      fill("#gBranch", [["all", t("all")]].concat(D.branches.map((b, i) => [String(i), b])));
+      leftPanel.done = true;
     }
-    cType.addEventListener("change", syncFields);
-    let editingId = null;
-    function openConfig(id, type) {
-      editingId = id;
-      const cfg = id ? configs.get(id) : { type, title: "", query: "", period: "d30", measure: "total", text: "" };
-      document.getElementById("mCfgTitle").textContent = id ? "Edit widget" : "Add " + TYPES[type].label.toLowerCase();
-      cType.value = cfg.type; cTitle.value = cfg.title || ""; cQuery.value = cfg.query || ""; cPeriod.value = cfg.period || "d30"; cMeasure.value = cfg.measure || "total"; cText.value = cfg.text || "";
-      ["eTitle", "eQuery", "eText"].forEach(e => { document.getElementById(e).textContent = ""; });
-      [cTitle, cQuery, cText].forEach(el => el.removeAttribute("aria-invalid"));
-      syncFields();
+
+    // ---- Configure modal ----
+    let editing = null;
+    function cfgFields() {
+      const ty = $("#cType").val();
+      document.querySelectorAll("#mCfg [data-for]").forEach(f => { f.hidden = !f.dataset.for.split(" ").some(k => k === ty || (k === "chart" && ["line", "bar", "doughnut"].includes(ty))); });
+      const q = QUERIES[$("#cQuery").val()];
+      const fill = (sel, opts) => { const $s = $(sel), v = $s.val(); $s.empty(); opts.forEach(o => $s.append(new Option(o[1], o[0]))); if (v != null && $s.find('option[value="' + v + '"]').length) $s.val(v); };
+      fill("#cX", q.x.map(x => [x, t("c_" + x)])); fill("#cMetric", q.m.map(x => [x, t("c_" + x)]));
+      sql();
+    }
+    function sql() {
+      const ty = $("#cType").val(), q = QUERIES[$("#cQuery").val()], m = $("#cMetric").val(), x = $("#cX").val(), agg = { sum: "SUM", avg: "AVG", count: "COUNT" }[$("#cAgg").val()];
+      const per = { month: "MONTH(fecha) = :mes AND YEAR(fecha) = :anio", year: "YEAR(fecha) = :anio", "12": "fecha >= DATE_SUB(:fin, INTERVAL 12 MONTH)" }[$("#cPeriod").val()];
+      $("#cSql").val(ty === "kpi" ? "SELECT " + agg + "(" + m + ") AS valor\nFROM " + q.table + "\nWHERE " + per + "\n  AND (:sucursal IS NULL OR sucursal_id = :sucursal);" :
+        "SELECT " + x + ", " + agg + "(" + m + ") AS valor\nFROM " + q.table + "\nWHERE " + per + "\n  AND (:sucursal IS NULL OR sucursal_id = :sucursal)\nGROUP BY " + x + "\nORDER BY " + (x === "date" ? x : "valor DESC") + ";");
+    }
+    function openCfg(type, el) {
+      editing = el || null;
+      const c = el ? el._cfg : { type, title: { en: "", es: "" }, q: type === "doughnut" ? "cat" : type === "table" ? "sup" : "sales", m: type === "table" ? "amount" : "net", agg: "sum", p: "month", color: "#14b8a6" };
+      const fill = (sel, opts) => { const $s = $(sel); $s.empty(); opts.forEach(o => $s.append(new Option(o[1], o[0]))); };
+      fill("#cType", Object.keys(TYPES).map(k => [k, t(TYPES[k][0])])); $("#cType").val(c.type);
+      fill("#cQuery", Object.keys(QUERIES).map(k => [k, t("q_" + k)])); $("#cQuery").val(c.q || "sales");
+      fill("#cAgg", [["sum", t("aSum")], ["avg", t("aAvg")], ["count", t("aCount")]]); $("#cAgg").val(c.agg || "sum");
+      fill("#cPeriod", [["month", t("pMonth")], ["year", t("pYear")], ["12", t("p12")]]); $("#cPeriod").val(c.p || "month");
+      cfgFields(); if (c.x) $("#cX").val(c.x); if (c.m) $("#cMetric").val(c.m); sql();
+      $("#cTitle").val(UI.L(c.title) || "").removeAttr("aria-invalid"); $("#cTitleErr").text(""); $("#cColor").val(c.color || "#14b8a6"); $("#cText").val(c.text ? UI.L(c.text) : "");
       UI.openModal("mCfg");
     }
-    document.getElementById("cClose").addEventListener("click", () => UI.closeModal("mCfg"));
+    $("#cType, #cQuery").on("change", cfgFields); $("#cX, #cMetric, #cAgg, #cPeriod").on("change", sql);
     document.getElementById("cSave").addEventListener("click", () => {
-      const t = cType.value;
-      let ok = true;
-      const bad = (el, e, m) => { ok = false; el.setAttribute("aria-invalid", "true"); document.getElementById(e).textContent = m; };
-      ["eTitle", "eQuery", "eText"].forEach(e => { document.getElementById(e).textContent = ""; });
-      if (!cTitle.value.trim()) bad(cTitle, "eTitle", "Give the widget a title.");
-      if (t !== "text" && !cQuery.value) bad(cQuery, "eQuery", "Choose the query that feeds this widget.");
-      if (t === "text" && !cText.value.trim()) bad(cText, "eText", "Write the note.");
-      if (!ok) { document.querySelector('#mCfg [aria-invalid="true"]').focus(); return; }
-      const cfg = { type: t, title: cTitle.value.trim(), query: cQuery.value, period: cPeriod.value, measure: cMeasure.value, text: cText.value.trim() };
+      const title = $("#cTitle").val().trim();
+      if (!title) { $("#cTitleErr").text(t("titleErr")); $("#cTitle").attr("aria-invalid", "true").focus(); return; }
+      const ty = $("#cType").val();
+      const cfg = { type: ty, title: { en: title, es: title }, q: $("#cQuery").val(), x: $("#cX").val(), m: $("#cMetric").val(), agg: $("#cAgg").val(), p: $("#cPeriod").val(), color: $("#cColor").val(), text: ty === "text" ? { en: $("#cText").val(), es: $("#cText").val() } : null };
       UI.closeModal("mCfg");
-      if (editingId) {
-        const el = grid.getGridItems().find(x => x.getAttribute("gs-id") === editingId);
-        const oldType = configs.get(editingId).type;
-        configs.set(editingId, cfg);
-        if (oldType !== t) grid.update(el, { w: TYPES[t].w, h: TYPES[t].h });
-        renderWidget(el);
-        save();
-        UI.toast("Widget updated.");
-      } else {
-        const el = addItem({ w: TYPES[t].w, h: TYPES[t].h, cfg });
-        save();
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        UI.toast("Widget added. Drag it to place it.");
-      }
+      if (editing) { editing._cfg = cfg; rehead(editing); draw(editing); setDirty(); }
+      else { const sz = TYPES[ty]; const el = addWidget({ x: 0, y: 100, w: innerWidth < 640 ? 12 : sz[2], h: sz[3], cfg }); el.scrollIntoView({ behavior: "smooth", block: "center" }); }
     });
 
-    // ---------- Widget tools ----------
-    document.getElementById("grid").addEventListener("click", e => {
-      const ed = e.target.closest("[data-edit]");
-      if (ed) { openConfig(ed.dataset.edit); return; }
-      const rm = e.target.closest("[data-remove]");
-      if (rm) {
-        const el = grid.getGridItems().find(x => x.getAttribute("gs-id") === rm.dataset.remove);
-        if (charts.has(rm.dataset.remove)) { charts.get(rm.dataset.remove).destroy(); charts.delete(rm.dataset.remove); }
-        configs.delete(rm.dataset.remove);
-        grid.removeWidget(el);
-        UI.toast("Widget removed.");
-      }
+    // ---- Events ----
+    document.addEventListener("click", e => {
+      const a = e.target.closest("[data-add]"); if (a) { if (mode === "view") setMode("edit"); openCfg(a.dataset.add); return; }
+      const c = e.target.closest("[data-cfg]"); if (c) { openCfg(null, c.closest(".grid-stack-item")); return; }
+      const d = e.target.closest("[data-del]"); if (d) { const el = d.closest(".grid-stack-item"); const id = el.dataset.wid; if (charts[id]) { charts[id].destroy(); delete charts[id]; } grid.removeWidget(el); empty(); setDirty(); return; }
+      const tp = e.target.closest("[data-tpl]"); if (tp) { document.querySelectorAll("[data-tpl]").forEach(b => b.classList.toggle("is-active", b === tp)); load(TEMPLATES[tp.dataset.tpl]); setDirty(); return; }
+      const m = e.target.closest("[data-mode]"); if (m) setMode(m.dataset.mode);
     });
+    document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => UI.closeModal(b.dataset.close)));
+    document.getElementById("btnSave").addEventListener("click", save);
+    document.getElementById("btnReset").addEventListener("click", () => { try { localStorage.removeItem(KEY); } catch (e) { /* storage blocked */ } load(SAMPLE); savedAt = null; dirty = false; paintSave(); UI.toast(t("resetToast")); });
+    $("#gYear, #gMonth, #gBranch").on("change", drawAll);
+    document.addEventListener("themechange", drawAll);
+    document.addEventListener("langchange", () => { leftPanel(); setMode(mode); drawAll(); paintSave(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutScreen"); });
 
-    // ---------- Mode ----------
-    const modeEdit = document.getElementById("modeEdit"), modeView = document.getElementById("modeView");
-    function setMode(edit) {
-      editing = edit;
-      grid.setStatic(!edit);
-      document.body.classList.toggle("editing", edit);
-      modeEdit.setAttribute("aria-pressed", String(edit));
-      modeView.setAttribute("aria-pressed", String(!edit));
-      document.getElementById("paletteCard").hidden = !edit;
-    }
-    modeEdit.addEventListener("click", () => setMode(true));
-    modeView.addEventListener("click", () => setMode(false));
-
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      try { localStorage.removeItem(KEY); } catch (e) { /* nothing stored */ }
-      build(SAMPLE);
-      document.getElementById("saveState").textContent = "Sample dashboard restored";
-    });
-
-    document.addEventListener("themechange", () => {
-      grid.getGridItems().forEach(el => { const cfg = configs.get(el.getAttribute("gs-id")); if (cfg && (cfg.type === "line" || cfg.type === "bar")) renderWidget(el); });
-    });
-
-    build(load() || SAMPLE);
-    setMode(true);
-    // Animate only user moves, not the first layout.
-    requestAnimationFrame(() => grid.setAnimation(!window.matchMedia("(prefers-reduced-motion: reduce)").matches));
+    leftPanel();
+    setMode("edit");
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { stored = null; }
+    load(Array.isArray(stored) && stored.length ? stored : SAMPLE);
+    dirty = false; paintSave();
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutScreen");
   });
   </script>
 </body>

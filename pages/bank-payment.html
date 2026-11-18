@@ -3,445 +3,364 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bank Payment · Business UI Gallery</title>
+  <title>Bank payment · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); }
+    .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 12px; }
     .form-grid .span-2 { grid-column: span 2; }
-    .form-grid .span-3 { grid-column: 1 / -1; }
-    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-    .seg label { display: flex; align-items: center; padding: 0 12px; min-height: 36px; cursor: pointer; font-size: .88rem; color: var(--text); }
-    .seg input { position: absolute; opacity: 0; pointer-events: none; }
-    .seg input:checked + span { color: var(--on-primary); }
-    .seg label:has(input:checked) { background: var(--primary); color: var(--on-primary); }
-    .seg label:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: -2px; }
-    .balance { font-size: .82rem; margin-top: 2px; }
-    .words { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px dashed var(--border); font-size: .88rem; min-height: 40px; }
-    .two { display: grid; grid-template-columns: 3fr 2fr; gap: var(--space-4); align-items: start; }
-    .apply-input { width: 130px; min-height: 32px; }
-    .summary-row { display: flex; justify-content: space-between; gap: var(--space-3); padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: .9rem; }
-    .summary-row.total { font-weight: 600; border-bottom: 1px solid var(--border); }
-    .actions { display: flex; gap: var(--space-2); justify-content: flex-end; flex-wrap: wrap; }
-    td input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
-    @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
-    @media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } .form-grid .span-2 { grid-column: auto; } }
-    .two > * { min-width: 0; }
-    .card { min-width: 0; }
+    .form-grid .span-4 { grid-column: 1 / -1; }
+    .form-grid .mc-field { min-width: 0; }
+    .bal-box { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--mc-muted); margin-top: 3px; }
+    .bal-box b { color: var(--mc-text); font-variant-numeric: tabular-nums; }
+    .words { min-height: 34px; padding: 7px 9px; border: 1px dashed var(--mc-line); border-radius: 6px; font-size: 12px; font-weight: 600; background: rgba(148, 163, 184, .05); }
+    .apply-in { width: 120px; min-height: 28px; padding: 3px 7px; border: 1px solid var(--mc-line); border-radius: 5px; background: var(--mc-panel-2); color: var(--mc-text); text-align: right; font-size: 11.5px; }
+    .apply-in[aria-invalid="true"] { border-color: var(--mc-bad); }
+    .seg { display: inline-flex; border: 1px solid var(--mc-line); border-radius: 8px; padding: 2px; flex-wrap: wrap; }
+    .seg button { min-height: 30px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; color: var(--mc-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: rgba(20, 184, 166, .18); color: var(--mc-text); }
+    .sum-line { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: flex-end; font-size: 12px; margin-top: 8px; }
+    .sum-line b { font-variant-numeric: tabular-nums; }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    @media (max-width: 1000px) { .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .form-grid { grid-template-columns: minmax(0, 1fr); } .form-grid .span-2 { grid-column: auto; } }
   </style>
 </head>
 <body data-page="bank-payment" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Bank payment</h1>
-        <p class="muted">Pay a supplier or creditor by check or transfer and apply the payment to their open invoices.</p>
-      </div>
-    </div>
+  <main id="content">
+    <div class="mc-tabs" role="tablist" id="payerTabs" aria-label="Payer"></div>
 
-    <section class="card">
-      <div class="card-head"><h2>Payment</h2></div>
-      <form class="card-body" id="payForm" novalidate>
-        <div class="form-grid">
-          <div class="field span-2">
-            <label for="bank">Bank account</label>
-            <select id="bank" class="input"></select>
-            <div class="balance muted" id="bankBalance" aria-live="polite"></div>
-          </div>
-          <div class="field">
-            <label for="date">Date</label>
-            <input class="input" type="date" id="date">
-          </div>
-
-          <div class="field">
-            <span id="methodLabel" style="font-size:.8rem;color:var(--text-muted);font-weight:500">Method</span>
-            <div class="seg" role="radiogroup" aria-labelledby="methodLabel">
-              <label><input type="radio" name="method" value="Check" checked><span>Check</span></label>
-              <label><input type="radio" name="method" value="Transfer"><span>Transfer</span></label>
-            </div>
-          </div>
-          <div class="field" id="checkField">
-            <label for="checkNo">Check number</label>
-            <input class="input num" id="checkNo" inputmode="numeric" aria-describedby="checkErr">
-            <div class="field-error" id="checkErr"></div>
-          </div>
-          <div class="field">
-            <label for="rate">Exchange rate (LCY per USD)</label>
-            <input class="input num" id="rate" value="24.6512" inputmode="decimal" aria-describedby="rateHelp">
-            <div class="balance muted" id="rateHelp">Sample rate. Used when the bank account is in USD.</div>
-          </div>
-
-          <div class="field">
-            <span id="ptLabel" style="font-size:.8rem;color:var(--text-muted);font-weight:500">Payee type</span>
-            <div class="seg" role="radiogroup" aria-labelledby="ptLabel">
-              <label><input type="radio" name="ptype" value="Supplier" checked><span>Supplier</span></label>
-              <label><input type="radio" name="ptype" value="Creditor"><span>Creditor</span></label>
-            </div>
-          </div>
-          <div class="field span-2">
-            <label for="payee">Payee</label>
-            <select id="payee" class="input" aria-describedby="payeeErr"></select>
-            <div class="field-error" id="payeeErr"></div>
-          </div>
-
-          <div class="field span-3">
-            <label for="memo">Memo</label>
-            <input class="input" id="memo" maxlength="140" placeholder="Shown on the check stub and in the entry description">
-          </div>
-        </div>
-      </form>
-    </section>
-
-    <section class="two">
-      <div class="card">
-        <div class="card-head">
-          <h2>Apply to open invoices</h2>
-          <span class="muted" style="font-size:.82rem" id="openInfo"></span>
-        </div>
-        <div class="card-body">
-          <div class="table-wrap">
-            <table class="grid" id="invoices">
-              <thead><tr>
-                <th><span class="sr-only">Select</span></th>
-                <th>Invoice</th><th>Due</th><th class="r">Balance (LCY)</th><th class="r">Apply (LCY)</th>
-              </tr></thead>
-              <tbody></tbody>
-              <tfoot></tfoot>
-            </table>
-          </div>
-          <div class="field-error" id="applyErr" style="margin-top:6px"></div>
-          <div class="form-grid" style="margin-top:var(--space-3)">
-            <div class="field">
-              <label for="advance">Advance to payee (LCY)</label>
-              <input class="input num" id="advance" inputmode="decimal" placeholder="0.00" aria-describedby="advHelp">
-              <div class="balance muted" id="advHelp">Paid ahead of an invoice. Applied later.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-head"><h2>Summary</h2></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-3)">
-          <div id="summary"></div>
-          <div>
-            <div class="muted" style="font-size:.8rem;font-weight:500;margin-bottom:4px">Amount in words</div>
-            <div class="words" id="words" aria-live="polite">—</div>
-          </div>
-          <div class="field-error" id="totalErr"></div>
-          <div class="actions">
-            <button class="btn btn-primary" type="button" id="saveBtn">Save payment</button>
-            <button class="btn" type="button" id="clearBtn">Clear</button>
-          </div>
-        </div>
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">account_balance</span><span data-i18n="secHeader"></span></h3><span class="chip chip-info" id="docChip"></span></div>
+      <div class="form-grid">
+        <div class="mc-field"><label data-i18n="company"></label><div class="static">DEMO</div></div>
+        <div class="mc-field"><label for="fBranch" data-i18n="branch"></label><select id="fBranch"></select></div>
+        <div class="mc-field span-2"><label for="fAccount" data-i18n="fAccount"></label><select id="fAccount"></select>
+          <div class="bal-box"><span data-i18n="available"></span><b id="balNow"></b></div><div class="bal-box"><span data-i18n="afterPay"></span><b id="balAfter"></b></div></div>
+        <div class="mc-field"><label for="fDate" data-i18n="date"></label><input type="date" id="fDate"></div>
+        <div class="mc-field"><label data-i18n="fMethod"></label><div class="seg" id="method"><button type="button" data-v="check" aria-pressed="true"></button><button type="button" data-v="transfer" aria-pressed="false"></button></div></div>
+        <div class="mc-field"><label for="fNumber" data-i18n="fNumber"></label><input id="fNumber" inputmode="numeric" autocomplete="off"><span class="mc-field-error" id="eNumber"></span></div>
+        <div class="mc-field"><label for="fAmount" data-i18n="fAmount"></label><input id="fAmount" class="num" inputmode="decimal" autocomplete="off"><span class="mc-field-error" id="eAmount"></span></div>
+        <div class="mc-field"><label for="fRate" data-i18n="fRate"></label><input id="fRate" class="num" inputmode="decimal" readonly><span class="mc-hint" id="rateHint"></span></div>
+        <div class="mc-field"><label for="fPayeeType" data-i18n="fPayeeType"></label><select id="fPayeeType"></select></div>
+        <div class="mc-field span-2"><label for="fPayee" data-i18n="fPayee"></label><select id="fPayee"></select><span class="mc-field-error" id="ePayee"></span></div>
+        <div class="mc-field span-4"><label for="fConcept" data-i18n="fConcept"></label><input id="fConcept" maxlength="200"><span class="mc-field-error" id="eConcept"></span></div>
+        <div class="mc-field span-4"><label data-i18n="fWords"></label><div class="words" id="words" aria-live="polite"></div></div>
       </div>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2>Accounting entry preview</h2><span class="muted" style="font-size:.82rem">One line per account and side</span></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="entry">
-          <thead><tr><th>Account</th><th>Description</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead>
-          <tbody></tbody>
-          <tfoot></tfoot>
-        </table>
+    <section class="mc-panel">
+      <div class="mc-panel-title">
+        <h3><span class="material-icons" aria-hidden="true">playlist_add_check</span><span data-i18n="secApply"></span></h3>
+        <div class="seg" id="applyTo"></div>
+      </div>
+      <div class="table-wrap"><table class="grid" id="tApply"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <div class="sum-line" id="applySum"></div>
+    </section>
+
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">receipt_long</span><span data-i18n="secEntry"></span></h3><span id="entryChip"></span></div>
+      <div class="table-wrap"><table class="grid" id="tEntry"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <div class="actions" style="margin-top:12px">
+        <button type="button" class="btn btn-teal" id="btnSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button>
+        <button type="button" class="btn" id="btnClear"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
       </div>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2>Recent payments</h2></div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="recent">
-          <thead><tr><th>Date</th><th>Number</th><th>Method</th><th>Payee</th><th>Bank account</th><th class="r">Amount</th><th>Status</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">history</span><span data-i18n="secRecent"></span></h3></div>
+      <div class="table-wrap"><table class="grid" id="tRecent"><thead></thead><tbody></tbody></table></div>
     </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>The available balance updates as invoices are selected, and the payment cannot be saved if it leaves the account below zero.</li>
-        <li>Check numbers are suggested from the last one used in that account and must be unique.</li>
-        <li>When a USD account pays invoices in local currency, the amount is converted at the day's rate and the cents that do not convert exactly go to an exchange difference line, so the entry always balances.</li>
-        <li>The entry is shown before saving. Lines for the same account and side are added into one.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
+  UI.strings({
+    en: {
+      tabOwn: "Own accounts", tabInter: "Intercompany", tabPartner: "Partners / third parties",
+      secHeader: "Debit movement", secApply: "Apply to", secEntry: "Accounting entry", secRecent: "Recent movements",
+      fAccount: "Bank account", available: "Available balance", afterPay: "Balance after this payment", fMethod: "Type", check: "Check", transfer: "Transfer",
+      fNumber: "Number", fAmount: "Amount", fRate: "Exchange rate", rateLocal: "Local currency: rate 1", rateFx: "Rate of the day for USD",
+      fPayeeType: "Payee type", supplier: "Supplier", creditor: "Creditor", fPayee: "Payee", fConcept: "Concept", fWords: "Amount in words",
+      apSupplier: "Supplier invoices", apAdvance: "Advance", apRequest: "Payment requests", apCard: "Credit card",
+      colAcc: "Account", colEntity: "Entity", colDoc: "Document", colDue: "Due", colBal: "Balance", colPay: "Payment", colPayLocal: "Payment (local)", colAdj: "Exch. diff.", colPayFx: "Payment (USD)",
+      applied: "Applied", movement: "Movement", pendingApply: "Pending to apply", roundDiff: "Rounding / exchange difference",
+      colDebit: "Debit", colCredit: "Credit", balanced: "Balanced", unbalanced: "Unbalanced",
+      eNumberReq: "Enter the check number.", eNumberDup: "Check {n} was already used on this account.", eAmountReq: "Enter an amount greater than zero.", eAmountBal: "The amount is greater than the available balance.",
+      ePayeeReq: "Choose the payee.", eConceptReq: "Enter the concept.", eApply: "The applied total must equal the amount (difference {d}).", eLine: "Cannot exceed the balance.",
+      savedMsg: "Movement {n} saved and the entry generated.", fixErrors: "Check the fields marked in red.",
+      colDate: "Date", colType: "Type", colNumber: "Number", colPayee: "Payee", colAmount: "Amount", colStatus: "Status", stPosted: "Posted",
+      accBank: "Bank · {b}", accPayable: "Accounts payable · suppliers", accAdvance: "Advances to suppliers", accReqPay: "Payment requests payable", accCard: "Credit cards payable", accFx: "Exchange difference",
+      advanceDoc: "Advance on future invoices",
+      aboutText: "A <b>debit movement</b> takes money out of a bank account: a <b>check</b> (its number is suggested and cannot repeat on the same account) or a <b>transfer</b>. The payer can be one of the company's own accounts, another company of the group (<b>intercompany</b>) or a partner. The amount is applied to what is being paid: supplier invoices, an advance, approved payment requests or a credit card; the applied total must equal the amount before saving. With a USD account the payment is converted with the rate of the day and any <b>rounding or exchange difference</b> gets its own line. The <b>amount in words</b> is what prints on the check. The accounting entry is shown before saving, with one line per account and side. All the data on this page is generated."
+    },
+    es: {
+      tabOwn: "Cuentas propias", tabInter: "Intercompany", tabPartner: "Socios / terceros",
+      secHeader: "Movimiento débito", secApply: "Aplicar a", secEntry: "Partida contable", secRecent: "Movimientos recientes",
+      fAccount: "Cuenta bancaria", available: "Saldo disponible", afterPay: "Saldo después de este pago", fMethod: "Tipo", check: "Cheque", transfer: "Transferencia",
+      fNumber: "Número", fAmount: "Valor", fRate: "Tasa de cambio", rateLocal: "Moneda local: tasa 1", rateFx: "Tasa del día para USD",
+      fPayeeType: "Tipo de beneficiario", supplier: "Proveedor", creditor: "Acreedor", fPayee: "Beneficiario", fConcept: "Concepto", fWords: "Monto en letras",
+      apSupplier: "Facturas de proveedor", apAdvance: "Anticipo", apRequest: "Solicitudes de pago", apCard: "Tarjeta de crédito",
+      colAcc: "Cta. contable", colEntity: "Entidad", colDoc: "Documento", colDue: "Vence", colBal: "Saldo", colPay: "Valor pago", colPayLocal: "Valor pago local", colAdj: "Ajuste dif.", colPayFx: "Valor pago M.E.",
+      applied: "Aplicado", movement: "Movimiento", pendingApply: "Pendiente de aplicar", roundDiff: "Diferencia por redondeo / cambio",
+      colDebit: "Debe", colCredit: "Haber", balanced: "Cuadrada", unbalanced: "Descuadrada",
+      eNumberReq: "Escriba el número de cheque.", eNumberDup: "El cheque {n} ya se usó en esta cuenta.", eAmountReq: "Escriba un valor mayor a cero.", eAmountBal: "El valor es mayor que el saldo disponible.",
+      ePayeeReq: "Elija el beneficiario.", eConceptReq: "Escriba el concepto.", eApply: "El total aplicado debe ser igual al valor (diferencia {d}).", eLine: "No puede pasar del saldo.",
+      savedMsg: "Se guardó el movimiento {n} y se generó la partida.", fixErrors: "Revise los campos marcados en rojo.",
+      colDate: "Fecha", colType: "Tipo", colNumber: "Número", colPayee: "Beneficiario", colAmount: "Valor", colStatus: "Estado", stPosted: "Contabilizado",
+      accBank: "Banco · {b}", accPayable: "Cuentas por pagar · proveedores", accAdvance: "Anticipos a proveedores", accReqPay: "Solicitudes de pago por pagar", accCard: "Tarjetas de crédito por pagar", accFx: "Diferencial cambiario",
+      advanceDoc: "Anticipo a facturas futuras",
+      aboutText: "Un <b>movimiento débito</b> saca dinero de una cuenta bancaria: un <b>cheque</b> (el número se sugiere y no se puede repetir en la misma cuenta) o una <b>transferencia</b>. Quien paga puede ser una cuenta propia, otra empresa del grupo (<b>intercompany</b>) o un socio. El valor se aplica a lo que se está pagando: facturas de proveedor, un anticipo, solicitudes de pago aprobadas o una tarjeta de crédito; el total aplicado debe ser igual al valor antes de guardar. Con una cuenta en USD el pago se convierte con la tasa del día y la <b>diferencia por redondeo o cambio</b> lleva su propia línea. El <b>monto en letras</b> es el que se imprime en el cheque. La partida contable se muestra antes de guardar, con una línea por cuenta y lado. Todos los datos de esta página son generados."
+    }
+  });
+
+  $(function () {
+    const t = UI.t, M = UI.fmtMoney, mi = UI.mi, D = UI.DATA;
+    const RATE = 24.7312;
+    const accounts = D.banks.map((b, i) => ({ id: i, bank: b, number: "**** " + (3010 + i * 1173), cur: i === 3 ? "USD" : "LCY", bal: [1854220.5, 962410.25, 418300, 86240.9][i], used: new Set(["100231", "100232", "100240"].map(n => String(Number(n) + i * 1000))), next: 100241 + i * 1000 }));
     const r = UI.rng(4242);
-
-    const BANKS = [
-      { id: "B1", name: "Operating account · ****1022", ccy: "LCY", balance: 1842560.35, gl: "1-1-02-01 Bank · Operating", lastCheck: 10458 },
-      { id: "B2", name: "Payroll account · ****3310", ccy: "LCY", balance: 412300.00, gl: "1-1-02-02 Bank · Payroll", lastCheck: 2215 },
-      { id: "B3", name: "USD account · ****7741", ccy: "USD", balance: 58240.18, gl: "1-1-02-05 Bank · USD", lastCheck: 880 }
+    const payees = D.suppliers.map((s, i) => ({ id: "S" + i, name: s, type: "supplier" })).concat(["Office Supplies Co.", "City Utilities", "Fleet Services", "Legal Partners"].map((s, i) => ({ id: "C" + i, name: s, type: "creditor" })));
+    const docs = {};
+    payees.forEach((p, pi) => {
+      const n = 2 + Math.floor(r() * 4);
+      docs[p.id] = Array.from({ length: n }, (_, k) => ({ id: p.id + "-" + k, doc: (p.type === "supplier" ? "FAC-" : "DOC-") + (20000 + pi * 97 + k * 13), due: new Date(Date.UTC(2026, 10, 1 + Math.floor(r() * 40))), bal: Math.round(UI.between(r, 3500, 68000) * 100) / 100 }));
+    });
+    const requests = Array.from({ length: 4 }, (_, k) => ({ id: "R" + k, doc: "SP-" + (5100 + k), due: new Date(Date.UTC(2026, 10, 10 + k * 4)), bal: Math.round(UI.between(r, 2500, 22000) * 100) / 100 }));
+    const card = { id: "K0", doc: "**** 4417", due: new Date(Date.UTC(2026, 10, 25)), bal: 214350.6 };
+    const recent = [
+      { d: new Date(Date.UTC(2026, 10, 14)), type: "transfer", n: "TR-88412", payee: D.suppliers[1], amt: 48210.55 },
+      { d: new Date(Date.UTC(2026, 10, 13)), type: "check", n: "100240", payee: D.suppliers[3], amt: 12650 },
+      { d: new Date(Date.UTC(2026, 10, 12)), type: "check", n: "100232", payee: "City Utilities", amt: 3810.4 }
     ];
-    const usedChecks = { B1: [10456, 10457, 10458], B2: [2213, 2214, 2215], B3: [878, 879, 880] };
-    const CREDITORS = ["Metro Power & Light", "City Water Utility", "Prime Insurance Co.", "Rapid Courier", "Summit Office Rentals"];
 
-    // Open invoices per payee, generated once.
-    const invoicesByPayee = {};
-    function payees(type) { return type === "Supplier" ? D.suppliers : CREDITORS; }
-    D.suppliers.concat(CREDITORS).forEach((p, i) => {
-      const rp = UI.rng(900 + i);
-      const n = 3 + Math.floor(rp() * 4);
-      invoicesByPayee[p] = Array.from({ length: n }, (_, k) => {
-        const due = new Date(Date.UTC(2026, 10, 5 + Math.floor(rp() * 40) - 15));
-        return { no: "INV-" + (24000 + i * 37 + k * 5), due: UI.fmtDate(due), balance: Math.round(UI.between(rp, 3500, 95000) * 100) / 100 };
-      }).sort((a, b) => a.due < b.due ? -1 : 1);
-    });
+    // (Re)initialize select2 safely after options or language change
+    function s2($el, opts) { if ($el.hasClass("select2-hidden-accessible")) $el.select2("destroy"); $el.select2(Object.assign({ width: "100%" }, opts)); }
+    const S = { payer: "own", method: "check", applyTo: "supplier", applied: {}, touched: false };
+    const $acc = $("#fAccount"), $branch = $("#fBranch"), $ptype = $("#fPayeeType"), $payee = $("#fPayee");
 
-    const $bank = $("#bank"), $payee = $("#payee");
-    $bank.html(BANKS.map(b => '<option value="' + b.id + '">' + b.name + " (" + b.ccy + ")</option>").join(""));
-    $bank.select2({ width: "100%", minimumResultsForSearch: Infinity });
+    function fillStatic() {
+      const tabs = [["own", "tabOwn"], ["inter", "tabInter"], ["partner", "tabPartner"]];
+      document.getElementById("payerTabs").innerHTML = tabs.map(x => '<button type="button" class="mc-tab" role="tab" aria-selected="' + (S.payer === x[0]) + '" data-v="' + x[0] + '">' + t(x[1]) + "</button>").join("");
+      document.querySelector('#method [data-v="check"]').textContent = t("check");
+      document.querySelector('#method [data-v="transfer"]').textContent = t("transfer");
+      const ap = [["supplier", "apSupplier"], ["advance", "apAdvance"], ["request", "apRequest"], ["card", "apCard"]];
+      document.getElementById("applyTo").innerHTML = ap.map(x => '<button type="button" data-v="' + x[0] + '" aria-pressed="' + (S.applyTo === x[0]) + '">' + t(x[1]) + "</button>").join("");
+      const a = $acc.val(), b = $branch.val(), pt = $ptype.val() || "supplier";
+      $acc.empty(); accounts.forEach(x => $acc.append(new Option(x.bank + " · " + x.number + " · " + x.cur, String(x.id))));
+      $branch.empty(); D.branches.forEach((x, i) => $branch.append(new Option(x, String(i))));
+      $ptype.empty().append(new Option(t("supplier"), "supplier"), new Option(t("creditor"), "creditor"));
+      $acc.val(a || "0"); $branch.val(b || "2"); $ptype.val(pt);
+      s2($acc, {}); s2($branch, {}); s2($ptype, { minimumResultsForSearch: Infinity });
+      fillPayees();
+    }
     function fillPayees() {
-      const t = $("input[name=ptype]:checked").val();
-      $payee.html('<option value=""></option>' + payees(t).map(p => "<option>" + p + "</option>").join(""));
-      $payee.val("").trigger("change.select2");
-      renderInvoices();
-    }
-    $payee.select2({ width: "100%", placeholder: "Search a payee", allowClear: true });
-
-    const dateEl = document.getElementById("date");
-    dateEl.value = "2026-11-17";
-    const advEl = document.getElementById("advance");
-    UI.maskMoney(advEl);
-    const rateEl = document.getElementById("rate");
-    const checkEl = document.getElementById("checkNo");
-
-    let applied = {}; // invoice no -> amount
-
-    function bank() { return BANKS.find(b => b.id === $bank.val()); }
-    function method() { return $("input[name=method]:checked").val(); }
-    function rate() { const v = parseFloat(rateEl.value); return v > 0 ? v : 0; }
-
-    function suggestCheck() {
-      const b = bank();
-      checkEl.value = String(Math.max.apply(null, usedChecks[b.id]) + 1);
-      validateCheck();
-    }
-    function validateCheck() {
-      const err = document.getElementById("checkErr");
-      if (method() !== "Check") { err.textContent = ""; checkEl.removeAttribute("aria-invalid"); return true; }
-      const n = parseInt(checkEl.value, 10);
-      let msg = "";
-      if (!n) msg = "Enter a check number.";
-      else if (usedChecks[bank().id].includes(n)) msg = "Check " + n + " was already used in this account.";
-      err.textContent = msg;
-      if (msg) checkEl.setAttribute("aria-invalid", "true"); else checkEl.removeAttribute("aria-invalid");
-      return !msg;
+      const v = $payee.val();
+      $payee.empty().append(new Option("—", ""));
+      payees.filter(p => p.type === $ptype.val()).forEach(p => $payee.append(new Option(p.name, p.id)));
+      $payee.val(payees.find(p => p.id === v && p.type === $ptype.val()) ? v : "");
+      s2($payee, {});
     }
 
-    function renderInvoices() {
+    const acc = () => accounts[Number($acc.val())];
+    const isFx = () => acc().cur === "USD";
+    const amount = () => UI.parseMoney(document.getElementById("fAmount").value);
+
+    // Amount in words (check), Spanish or English.
+    function words(n) {
+      const int = Math.floor(n), cents = Math.round((n - int) * 100);
+      if (UI.lang === "es") {
+        const U = ["", "un", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve", "veinte", "veintiún", "veintidós", "veintitrés", "veinticuatro", "veinticinco", "veintiséis", "veintisiete", "veintiocho", "veintinueve"];
+        const T = ["", "", "", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
+        const H = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos"];
+        const c99 = x => x < 30 ? U[x] : T[Math.floor(x / 10)] + (x % 10 ? " y " + U[x % 10] : "");
+        const c999 = x => x === 100 ? "cien" : (x >= 100 ? H[Math.floor(x / 100)] + (x % 100 ? " " : "") : "") + (x % 100 ? c99(x % 100) : "");
+        const conv = x => {
+          if (x === 0) return "cero";
+          let out = "";
+          const mill = Math.floor(x / 1e6), th = Math.floor((x % 1e6) / 1000), rest = x % 1000;
+          if (mill) out += (mill === 1 ? "un millón" : c999(mill) + " millones") + " ";
+          if (th) out += (th === 1 ? "mil" : c999(th) + " mil") + " ";
+          if (rest) out += c999(rest);
+          return out.trim();
+        };
+        const s = conv(int);
+        return s.charAt(0).toUpperCase() + s.slice(1) + " con " + String(cents).padStart(2, "0") + "/100" + (isFx() ? " dólares" : "");
+      }
+      const U = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+      const T = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+      const c999 = x => (x >= 100 ? U[Math.floor(x / 100)] + " hundred" + (x % 100 ? " " : "") : "") + (x % 100 < 20 ? U[x % 100] : T[Math.floor((x % 100) / 10)] + (x % 10 ? "-" + U[x % 10] : ""));
+      const conv = x => {
+        if (x === 0) return "zero";
+        let out = "";
+        const mill = Math.floor(x / 1e6), th = Math.floor((x % 1e6) / 1000), rest = x % 1000;
+        if (mill) out += c999(mill) + " million ";
+        if (th) out += c999(th) + " thousand ";
+        if (rest) out += c999(rest);
+        return out.trim();
+      };
+      const s = conv(int);
+      return s.charAt(0).toUpperCase() + s.slice(1) + " and " + String(cents).padStart(2, "0") + "/100" + (isFx() ? " dollars" : "");
+    }
+
+    function lines() {
+      if (S.applyTo === "advance") return [{ id: "ADV", doc: t("advanceDoc"), due: null, bal: Infinity, acc: t("accAdvance") }];
+      if (S.applyTo === "request") return requests.map(x => Object.assign({ acc: t("accReqPay") }, x));
+      if (S.applyTo === "card") return [Object.assign({ acc: t("accCard") }, card)];
       const p = $payee.val();
-      const tbody = document.querySelector("#invoices tbody");
-      applied = {};
-      if (!p) {
-        tbody.innerHTML = '<tr><td colspan="5" class="muted">Choose a payee to see their open invoices.</td></tr>';
-        document.getElementById("openInfo").textContent = "";
-        recalc();
-        return;
-      }
-      const list = invoicesByPayee[p];
-      document.getElementById("openInfo").textContent = list.length + " open · " + UI.fmtMoney(list.reduce((a, x) => a + x.balance, 0)) + " LCY";
-      const today = dateEl.value;
-      tbody.innerHTML = list.map(x => {
-        const overdue = x.due < today;
-        return '<tr><td><input type="checkbox" data-no="' + x.no + '" aria-label="Apply to ' + x.no + '"></td><td>' + x.no + "</td><td>" + x.due +
-          (overdue ? ' <span class="chip chip-neg">Overdue</span>' : "") + '</td><td class="r num">' + UI.fmtMoney(x.balance) +
-          '</td><td class="r"><input class="input num apply-input" data-no="' + x.no + '" inputmode="decimal" disabled aria-label="Amount to apply to ' + x.no + '"></td></tr>';
-      }).join("");
-      tbody.querySelectorAll("input.apply-input").forEach(el => UI.maskMoney(el));
-      recalc();
+      return p ? docs[p].map(x => Object.assign({ acc: t("accPayable") }, x)) : [];
     }
 
-    document.querySelector("#invoices tbody").addEventListener("change", e => {
-      const no = e.target.dataset.no;
-      if (!no) return;
-      const inv = invoicesByPayee[$payee.val()].find(x => x.no === no);
-      const amtEl = document.querySelector('input.apply-input[data-no="' + no + '"]');
-      if (e.target.type === "checkbox") {
-        amtEl.disabled = !e.target.checked;
-        amtEl.value = e.target.checked ? UI.fmtMoney(inv.balance) : "";
-      }
-      recalc();
-    });
-    document.querySelector("#invoices tbody").addEventListener("input", recalc);
-    document.querySelector("#invoices tbody").addEventListener("focusout", recalc);
-
-    // ---------- Amount in words ----------
-    const ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
-    const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-    function under1000(n) {
-      let s = "";
-      if (n >= 100) { s += ONES[Math.floor(n / 100)] + " hundred"; n %= 100; if (n) s += " "; }
-      if (n >= 20) { s += TENS[Math.floor(n / 10)]; if (n % 10) s += "-" + ONES[n % 10]; }
-      else if (n > 0) s += ONES[n];
-      return s;
-    }
-    function words(amount, ccy) {
-      const whole = Math.floor(amount + 1e-9);
-      const cents = Math.round((amount - whole) * 100);
-      if (whole === 0 && cents === 0) return "—";
-      const scales = [[1e9, "billion"], [1e6, "million"], [1e3, "thousand"]];
-      let n = whole, parts = [];
-      scales.forEach(([v, name]) => { if (n >= v) { parts.push(under1000(Math.floor(n / v)) + " " + name); n %= v; } });
-      if (n > 0) parts.push(under1000(n));
-      const w = parts.length ? parts.join(" ") : "zero";
-      const unit = ccy === "USD" ? "US dollars" : "LCY";
-      return (w.charAt(0).toUpperCase() + w.slice(1)) + " " + unit + " and " + String(cents).padStart(2, "0") + "/100";
+    function renderApply() {
+      const fx = isFx();
+      const ls = lines();
+      const ent = ($payee.find("option:selected").text() || "—");
+      document.querySelector("#tApply thead").innerHTML = '<tr><th style="width:34px"></th><th>' + t("colAcc") + "</th><th>" + t("colEntity") + "</th><th>" + t("colDoc") + "</th><th>" + t("colDue") + '</th><th class="r">' + t("colBal") + '</th><th class="r">' + t("colPay") + "</th>" +
+        (fx ? '<th class="r">' + t("colPayFx") + '</th><th class="r">' + t("colAdj") + "</th>" : "") + '<th class="r">' + t("colPayLocal") + "</th></tr>";
+      document.querySelector("#tApply tbody").innerHTML = ls.length ? ls.map(l => {
+        const v = S.applied[l.id];
+        const on = v != null;
+        const local = on ? v * (fx ? RATE : 1) : 0;
+        return '<tr><td><input type="checkbox" class="ap-on" data-id="' + l.id + '" aria-label="' + l.doc + '"' + (on ? " checked" : "") + "></td><td>" + l.acc + "</td><td>" + (S.applyTo === "request" || S.applyTo === "card" ? "—" : ent) + "</td><td>" + l.doc + "</td><td>" + (l.due ? UI.fmtDay(l.due) : "—") +
+          '</td><td class="r">' + (l.bal === Infinity ? "—" : M(l.bal)) + '</td><td class="r"><input class="apply-in" data-id="' + l.id + '" aria-label="' + t("colPay") + " " + l.doc + '" value="' + (on ? M(v) : "") + '"' + (on ? "" : " disabled") + '><div class="mc-field-error" id="el-' + l.id + '"></div></td>' +
+          (fx ? '<td class="r">' + (on ? M(v) : "—") + '</td><td class="r">' + (on ? M(local - Math.round(local)) : "—") + "</td>" : "") + '<td class="r">' + (on ? M(local) : "—") + "</td></tr>";
+      }).join("") : '<tr><td colspan="' + (fx ? 10 : 8) + '" class="muted">' + t("ePayeeReq") + "</td></tr>";
+      document.querySelectorAll("#tApply .apply-in").forEach(inp => {
+        UI.maskMoney(inp);
+        inp.addEventListener("change", () => { S.applied[inp.dataset.id] = UI.parseMoney(inp.value); updateAll(); });
+      });
+      updateSums();
     }
 
-    // ---------- Totals and entry ----------
-    let state = {};
-    function recalc() {
-      const p = $payee.val();
-      const b = bank();
-      let appliedTotal = 0, applyMsg = "";
-      applied = {};
-      if (p) {
-        invoicesByPayee[p].forEach(inv => {
-          const cb = document.querySelector('input[type=checkbox][data-no="' + inv.no + '"]');
-          const el = document.querySelector('input.apply-input[data-no="' + inv.no + '"]');
-          if (!cb || !cb.checked) { if (el) el.removeAttribute("aria-invalid"); return; }
-          const v = UI.parseMoney(el.value);
-          if (v > inv.balance + 0.004) { el.setAttribute("aria-invalid", "true"); applyMsg = inv.no + ": the amount to apply cannot exceed its balance of " + UI.fmtMoney(inv.balance) + "."; }
-          else el.removeAttribute("aria-invalid");
-          if (v > 0) { applied[inv.no] = v; appliedTotal += v; }
-        });
-      }
-      document.getElementById("applyErr").textContent = applyMsg;
-      document.querySelector("#invoices tfoot").innerHTML = p ? '<tr><td></td><td colspan="2">Applied</td><td></td><td class="r num">' + UI.fmtMoney(appliedTotal) + "</td></tr>" : "";
+    function appliedTotal() { return Object.values(S.applied).reduce((a, v) => a + (v || 0), 0); }
 
-      const advance = UI.parseMoney(advEl.value);
-      const totalLcy = Math.round((appliedTotal + advance) * 100) / 100;
-      let payAmount = totalLcy, bankLcy = totalLcy, diff = 0;
-      if (b.ccy === "USD") {
-        const rt = rate();
-        payAmount = rt ? Math.round(totalLcy / rt * 100) / 100 : 0;
-        bankLcy = Math.round(payAmount * rt * 100) / 100;
-        diff = Math.round((totalLcy - bankLcy) * 100) / 100; // >0: bank paid less than owed in LCY
-      }
-      const after = b.balance - payAmount;
-      document.getElementById("bankBalance").innerHTML = "Available " + UI.fmtMoney(b.balance) + " " + b.ccy +
-        (payAmount ? ' · after this payment <span class="num ' + (after < 0 ? "neg" : "") + '">' + UI.fmtMoney(after) + "</span>" : "");
-
-      let rows = '<div class="summary-row"><span>Applied to invoices</span><span class="num">' + UI.fmtMoney(appliedTotal) + " LCY</span></div>" +
-        '<div class="summary-row"><span>Advance</span><span class="num">' + UI.fmtMoney(advance) + " LCY</span></div>";
-      if (b.ccy === "USD") {
-        rows += '<div class="summary-row"><span>Converted at ' + rate().toFixed(4) + '</span><span class="num">' + UI.fmtMoney(bankLcy) + " LCY</span></div>" +
-          '<div class="summary-row"><span>Rounding difference</span><span class="num ' + (diff ? (diff > 0 ? "pos" : "neg") : "") + '">' + UI.fmtMoney(diff) + " LCY</span></div>";
-      }
-      rows += '<div class="summary-row total"><span>Payment amount</span><span class="num">' + UI.fmtMoney(payAmount) + " " + b.ccy + "</span></div>";
-      document.getElementById("summary").innerHTML = rows;
-      document.getElementById("words").textContent = words(payAmount, b.ccy);
-
-      let totalMsg = "";
-      if (after < 0) totalMsg = "The payment is larger than the available balance of the account.";
-      document.getElementById("totalErr").textContent = totalMsg;
-
-      state = { appliedTotal, advance, totalLcy, payAmount, bankLcy, diff, ok: !applyMsg && !totalMsg };
-      renderEntry();
+    function updateSums() {
+      const amt = amount(), ap = appliedTotal();
+      const fx = isFx();
+      const diff = Math.round((amt - ap) * 100) / 100;
+      document.getElementById("applySum").innerHTML = "<span>" + t("movement") + ": <b>" + M(amt) + "</b></span><span>" + t("applied") + ": <b>" + M(ap) + "</b></span><span>" + t("pendingApply") + ': <b class="' + (Math.abs(diff) >= .005 ? "neg" : "pos") + '">' + M(diff) + "</b></span>" + (fx ? "<span>" + t("colPayLocal") + ": <b>" + M(ap * RATE) + "</b></span>" : "");
+      // per-line errors
+      lines().forEach(l => { const el = document.getElementById("el-" + l.id); if (!el) return; const v = S.applied[l.id]; const bad = v != null && l.bal !== Infinity && v > l.bal + .005; el.textContent = bad ? t("eLine") : ""; const inp = document.querySelector('.apply-in[data-id="' + l.id + '"]'); if (inp) inp.setAttribute("aria-invalid", String(bad)); });
     }
 
     function renderEntry() {
-      const b = bank(), p = $payee.val() || "payee";
-      const lines = new Map();
-      function add(acct, desc, side, amt) {
-        if (!amt) return;
-        const key = acct + "|" + side;
-        const cur = lines.get(key) || { acct, desc, debit: 0, credit: 0 };
-        cur[side] += amt;
-        lines.set(key, cur);
-      }
-      const isSup = $("input[name=ptype]:checked").val() === "Supplier";
-      add(isSup ? "2-1-01-01 Accounts payable · suppliers" : "2-1-03-01 Accounts payable · creditors", p, "debit", state.appliedTotal);
-      add("1-1-05-01 Advances to suppliers", p, "debit", state.advance);
-      add(b.gl, method() + (method() === "Check" ? " " + checkEl.value : ""), "credit", state.bankLcy);
-      if (state.diff > 0) add("4-9-01-01 Exchange rate gain", "Rounding on conversion", "credit", state.diff);
-      if (state.diff < 0) add("6-9-01-01 Exchange rate loss", "Rounding on conversion", "debit", -state.diff);
-      const arr = Array.from(lines.values());
-      const tb = document.querySelector("#entry tbody");
-      if (!arr.length) {
-        tb.innerHTML = '<tr><td colspan="4" class="muted">Select invoices or enter an advance to see the entry.</td></tr>';
-        document.querySelector("#entry tfoot").innerHTML = "";
-        return;
-      }
-      tb.innerHTML = arr.map(l => "<tr><td>" + l.acct + "</td><td>" + l.desc + '</td><td class="r num">' + (l.debit ? UI.fmtMoney(l.debit) : "") + '</td><td class="r num">' + (l.credit ? UI.fmtMoney(l.credit) : "") + "</td></tr>").join("");
-      const td = arr.reduce((a, l) => a + l.debit, 0), tc = arr.reduce((a, l) => a + l.credit, 0);
-      const ok = Math.abs(td - tc) < 0.005;
-      document.querySelector("#entry tfoot").innerHTML = '<tr><td colspan="2">Total ' + (ok ? '<span class="chip chip-pos">✓ Balanced</span>' : '<span class="chip chip-neg">✕ Off by ' + UI.fmtMoney(td - tc) + "</span>") +
-        '</td><td class="r num">' + UI.fmtMoney(td) + '</td><td class="r num">' + UI.fmtMoney(tc) + "</td></tr>";
+      const a = acc(), fx = isFx(), amt = amount();
+      const local = amt * (fx ? RATE : 1);
+      const byAcc = {};
+      const add = (k, side, v) => { byAcc[k] = byAcc[k] || { d: 0, c: 0 }; byAcc[k][side] += v; };
+      let appliedLocal = 0;
+      lines().forEach(l => { const v = S.applied[l.id]; if (v != null) { const lv = Math.round(v * (fx ? RATE : 1) * 100) / 100; appliedLocal += lv; add(l.acc, "d", lv); } });
+      add(t("accBank", { b: a.bank + " " + a.number }), "c", Math.round(local * 100) / 100);
+      const dif = Math.round((Math.round(local * 100) / 100 - appliedLocal) * 100) / 100;
+      if (Math.abs(dif) >= .005 && Math.abs(dif) < 5) add(t("accFx"), dif > 0 ? "d" : "c", Math.abs(dif));
+      const rows = Object.keys(byAcc).map(k => [k, byAcc[k].d, byAcc[k].c]);
+      const D1 = rows.reduce((s, x) => s + x[1], 0), C1 = rows.reduce((s, x) => s + x[2], 0);
+      document.querySelector("#tEntry thead").innerHTML = "<tr><th>" + t("colAcc") + '</th><th class="r">' + t("colDebit") + '</th><th class="r">' + t("colCredit") + "</th></tr>";
+      document.querySelector("#tEntry tbody").innerHTML = rows.map(x => "<tr><td>" + x[0] + (x[0] === t("accFx") ? ' <span class="chip chip-warn">' + mi("currency_exchange") + t("roundDiff") + "</span>" : "") + '</td><td class="r">' + (x[1] ? M(x[1]) : "") + '</td><td class="r">' + (x[2] ? M(x[2]) : "") + "</td></tr>").join("");
+      document.querySelector("#tEntry tfoot").innerHTML = "<tr><td>" + t("totals") + '</td><td class="r">' + M(D1) + '</td><td class="r">' + M(C1) + "</td></tr>";
+      const ok = Math.abs(D1 - C1) < .005 && D1 > 0;
+      document.getElementById("entryChip").innerHTML = ok ? '<span class="chip chip-pos">' + mi("check_circle") + t("balanced") + "</span>" : '<span class="chip chip-neg">' + mi("error_outline") + t("unbalanced") + "</span>";
     }
 
-    // ---------- Recent payments ----------
-    const recent = [];
-    for (let i = 0; i < 5; i++) {
-      const b = BANKS[i % 2];
-      recent.push({ date: "2026-11-" + String(16 - i * 2).padStart(2, "0"), no: i % 2 ? "TRF-" + (5120 - i) : "CHK-" + (b.lastCheck - i % 3), method: i % 2 ? "Transfer" : "Check", payee: UI.pick(r, D.suppliers.concat(CREDITORS)), bank: b.name, amount: UI.between(r, 8000, 160000), ccy: b.ccy, status: i === 0 ? "Pending print" : "Posted" });
+    function updateHeader() {
+      const a = acc(), amt = amount();
+      document.getElementById("balNow").textContent = M(a.bal) + " " + a.cur;
+      const after = a.bal - amt;
+      const ba = document.getElementById("balAfter"); ba.textContent = M(after) + " " + a.cur; ba.className = after < 0 ? "neg" : "";
+      const rate = document.getElementById("fRate");
+      rate.value = isFx() ? RATE.toFixed(4) : "1.0000";
+      document.getElementById("rateHint").textContent = isFx() ? t("rateFx") : t("rateLocal");
+      document.getElementById("words").textContent = amt > 0 ? words(amt) : "—";
+      const num = document.getElementById("fNumber");
+      num.disabled = S.method !== "check";
+      if (S.method !== "check") num.value = "TR-" + (88413 + recent.filter(x => x.type === "transfer").length);
+      else if (!num.value || num.value.startsWith("TR-")) num.value = String(a.next);
+      document.getElementById("docChip").innerHTML = mi(S.method === "check" ? "money" : "swap_horiz") + t(S.method);
     }
-    function renderRecent() {
-      document.querySelector("#recent tbody").innerHTML = recent.map(x => "<tr><td>" + x.date + '</td><td class="num">' + x.no + "</td><td>" + x.method + "</td><td>" + x.payee + "</td><td>" + x.bank +
-        '</td><td class="r num">' + UI.fmtMoney(x.amount) + " " + x.ccy + '</td><td><span class="chip ' + (x.status === "Posted" ? "chip-pos" : x.status === "Saved" ? "chip-info" : "chip-warn") + '">' + x.status + "</span></td></tr>").join("");
-    }
-    renderRecent();
 
-    // ---------- Events ----------
-    $bank.on("change", () => { suggestCheck(); recalc(); });
-    $payee.on("change", () => { document.getElementById("payeeErr").textContent = ""; renderInvoices(); });
-    $("input[name=ptype]").on("change", fillPayees);
-    $("input[name=method]").on("change", () => {
-      const isCheck = method() === "Check";
-      document.getElementById("checkField").style.visibility = isCheck ? "visible" : "hidden";
-      validateCheck(); recalc();
-    });
-    checkEl.addEventListener("input", () => { checkEl.value = checkEl.value.replace(/\D/g, ""); validateCheck(); renderEntry(); });
-    rateEl.addEventListener("input", recalc);
-    advEl.addEventListener("input", recalc);
-    advEl.addEventListener("blur", recalc);
-    dateEl.addEventListener("change", renderInvoices);
-
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      recalc();
-      let ok = state.ok && validateCheck();
-      if (!$payee.val()) { document.getElementById("payeeErr").textContent = "Choose who is being paid."; ok = false; }
-      if (!state.payAmount) { document.getElementById("totalErr").textContent = "Select at least one invoice or enter an advance."; ok = false; }
-      if (!ok) { UI.toast("Check the highlighted fields."); return; }
-      const b = bank();
-      const no = method() === "Check" ? "CHK-" + checkEl.value : "TRF-" + (5121 + recent.length);
-      if (method() === "Check") usedChecks[b.id].push(parseInt(checkEl.value, 10));
-      // Reduce the paid balances so the open invoices stay consistent.
-      Object.keys(applied).forEach(k => {
-        const inv = invoicesByPayee[$payee.val()].find(x => x.no === k);
-        inv.balance = Math.round((inv.balance - applied[k]) * 100) / 100;
+    function validate(show) {
+      const errs = {};
+      const a = acc(), amt = amount(), num = document.getElementById("fNumber").value.trim();
+      if (S.method === "check") { if (!num) errs.Number = t("eNumberReq"); else if (a.used.has(num)) errs.Number = t("eNumberDup", { n: num }); }
+      if (!(amt > 0)) errs.Amount = t("eAmountReq"); else if (amt > a.bal) errs.Amount = t("eAmountBal");
+      if (!$payee.val() && (S.applyTo === "supplier" || S.applyTo === "advance")) errs.Payee = t("ePayeeReq");
+      if (!document.getElementById("fConcept").value.trim()) errs.Concept = t("eConceptReq");
+      const diff = Math.round((amt - appliedTotal()) * 100) / 100;
+      const lineBad = lines().some(l => { const v = S.applied[l.id]; return v != null && l.bal !== Infinity && v > l.bal + .005; });
+      ["Number", "Amount", "Payee", "Concept"].forEach(k => {
+        const el = document.getElementById("e" + k); if (!el) return;
+        el.textContent = show || S.touched ? (errs[k] || "") : "";
+        const inp = document.getElementById("f" + k); if (inp) inp.setAttribute("aria-invalid", String(!!errs[k] && (show || S.touched)));
       });
-      invoicesByPayee[$payee.val()] = invoicesByPayee[$payee.val()].filter(x => x.balance > 0.004);
-      b.balance -= state.payAmount;
-      recent.unshift({ date: dateEl.value, no, method: method(), payee: $payee.val(), bank: b.name, amount: state.payAmount, ccy: b.ccy, status: "Saved" });
-      renderRecent();
-      UI.toast("Payment " + no + " saved for " + UI.fmtMoney(state.payAmount) + " " + b.ccy + ".");
-      advEl.value = "";
-      document.getElementById("memo").value = "";
-      suggestCheck();
-      renderInvoices();
-    });
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      advEl.value = ""; document.getElementById("memo").value = "";
-      $payee.val("").trigger("change");
-    });
+      if (Math.abs(diff) >= .005 && amt > 0) errs.Apply = t("eApply", { d: M(diff) });
+      if (lineBad) errs.Line = t("eLine");
+      return errs;
+    }
 
-    fillPayees();
-    suggestCheck();
-    recalc();
+    function updateAll() { updateHeader(); renderApply(); renderEntry(); validate(false); }
+
+    function renderRecent() {
+      document.querySelector("#tRecent thead").innerHTML = "<tr><th>" + t("colDate") + "</th><th>" + t("colType") + "</th><th>" + t("colNumber") + "</th><th>" + t("colPayee") + '</th><th class="r">' + t("colAmount") + "</th><th>" + t("colStatus") + "</th></tr>";
+      document.querySelector("#tRecent tbody").innerHTML = recent.map(x => "<tr><td>" + UI.fmtDay(x.d) + "</td><td>" + t(x.type) + "</td><td>" + x.n + "</td><td>" + x.payee + '</td><td class="r">' + M(x.amt) + '</td><td><span class="chip chip-pos">' + mi("task_alt") + t("stPosted") + "</span></td></tr>").join("");
+    }
+
+    function clearForm() {
+      document.getElementById("fAmount").value = ""; document.getElementById("fConcept").value = ""; $payee.val("").trigger("change.select2");
+      S.applied = {}; S.touched = false; document.getElementById("fNumber").value = "";
+      updateAll();
+    }
+
+    // Events
+    document.getElementById("fDate").value = "2026-11-16";
+    UI.maskMoney(document.getElementById("fAmount"));
+    document.getElementById("fAmount").addEventListener("input", () => { updateHeader(); updateSums(); renderEntry(); });
+    document.getElementById("fAmount").addEventListener("change", updateAll);
+    document.getElementById("fNumber").addEventListener("input", () => validate(false));
+    document.getElementById("fConcept").addEventListener("input", () => validate(false));
+    $acc.on("change", () => { document.getElementById("fNumber").value = ""; S.applied = {}; updateAll(); });
+    $ptype.on("change", () => { fillPayees(); S.applied = {}; updateAll(); });
+    $payee.on("change", () => { S.applied = {}; if (!document.getElementById("fConcept").value && $payee.val()) document.getElementById("fConcept").value = (UI.lang === "es" ? "Pago a " : "Payment to ") + $payee.find("option:selected").text(); updateAll(); });
+    document.getElementById("method").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.method = b.dataset.v; document.querySelectorAll("#method button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); document.getElementById("fNumber").value = ""; updateAll(); });
+    document.getElementById("applyTo").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.applyTo = b.dataset.v; S.applied = {}; fillStatic(); updateAll(); });
+    document.getElementById("payerTabs").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (!b) return; S.payer = b.dataset.v; fillStatic(); updateAll(); });
+    document.getElementById("tApply").addEventListener("change", e => {
+      const c = e.target.closest(".ap-on"); if (!c) return;
+      const l = lines().find(x => x.id === c.dataset.id);
+      if (c.checked) { const rest = Math.max(0, amount() - appliedTotal()); S.applied[l.id] = Math.round(Math.min(l.bal, rest || l.bal) * 100) / 100; } else delete S.applied[l.id];
+      updateAll();
+    });
+    document.getElementById("btnSave").addEventListener("click", () => {
+      S.touched = true;
+      const errs = validate(true);
+      if (Object.keys(errs).length) { UI.toast(errs.Apply || errs.Line || t("fixErrors")); return; }
+      const a = acc(), amt = amount(), n = S.method === "check" ? document.getElementById("fNumber").value.trim() : document.getElementById("fNumber").value;
+      a.bal -= amt; if (S.method === "check") { a.used.add(n); a.next = Number(n) + 1; }
+      Object.keys(docs).forEach(k => docs[k].forEach(d => { if (S.applied[d.id] != null) d.bal = Math.round((d.bal - S.applied[d.id]) * 100) / 100; }));
+      requests.forEach(d => { if (S.applied[d.id] != null) d.bal = Math.round((d.bal - S.applied[d.id]) * 100) / 100; });
+      if (S.applied.K0 != null) card.bal = Math.round((card.bal - S.applied.K0) * 100) / 100;
+      recent.unshift({ d: new Date(document.getElementById("fDate").value + "T00:00:00Z"), type: S.method, n, payee: $payee.find("option:selected").text() || t(S.applyTo === "card" ? "apCard" : "apRequest"), amt });
+      renderRecent();
+      UI.toast(t("savedMsg", { n }));
+      clearForm();
+    });
+    document.getElementById("btnClear").addEventListener("click", clearForm);
+    document.addEventListener("langchange", () => { fillStatic(); updateAll(); renderRecent(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); });
+
+    fillStatic();
+    // A ready example so the screen shows something on first visit
+    $payee.val("S1").trigger("change.select2");
+    document.getElementById("fAmount").value = M(docs.S1[0].bal + docs.S1[1].bal);
+    document.getElementById("fConcept").value = (UI.lang === "es" ? "Pago a " : "Payment to ") + D.suppliers[1];
+    S.applied[docs.S1[0].id] = docs.S1[0].bal; S.applied[docs.S1[1].id] = docs.S1[1].bal;
+    updateAll();
+    renderRecent();
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
   });
   </script>
 </body>

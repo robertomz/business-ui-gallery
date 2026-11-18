@@ -3,107 +3,90 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Order Fill Rate · Business UI Gallery</title>
+  <title>Order fill rate · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .kpis-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-    .chart-box { position: relative; height: 320px; }
-    #lines { font-size: .84rem; }
-    #lines td, #lines th { white-space: nowrap; padding: 6px 10px; }
-    #lines tbody tr { height: 34px; }
-    #lines tbody td { border-bottom: 1px solid var(--border); }
-    #lines tbody tr, #lines tbody td { background: var(--surface) !important; box-shadow: none !important; color: var(--text); }
-    #lines tbody tr:hover td { background: var(--surface-2) !important; }
-    #lines tfoot td { font-weight: 600; background: var(--surface-2); border-top: 1px solid var(--border); padding: 8px 10px; }
-    .dataTables_scrollHead thead th { font-family: var(--font-sans) !important; padding: 8px 10px !important; white-space: nowrap; background: var(--surface-2); color: var(--text-muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
-    .dataTables_scrollFoot, .dataTables_scrollHead { background: var(--surface-2); }
-    .select2-container--default .select2-selection--multiple .select2-search--inline .select2-search__field { margin-top: 8px; color: var(--text); font-family: inherit; }
-    .reason { display: inline-flex; align-items: center; gap: 4px; font-size: .76rem; font-weight: 500; padding: 1px 8px; border-radius: 999px; }
-    .reason svg { width: 12px; height: 12px; }
-    .r-ok { background: var(--positive-bg); color: var(--positive); }
-    .r-stock { background: var(--negative-bg); color: var(--negative); }
-    .r-cancel { background: var(--warning-bg); color: var(--warning); }
-    .r-price { background: var(--info-bg); color: var(--info); }
-    .group-scroll { max-height: 340px; overflow: auto; }
-    @media (max-width: 1100px) { .kpis-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .two { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) { .kpis-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .cx-cuadros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .cx-cuadro { background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+    :root[data-theme="light"] .cx-cuadro { box-shadow: var(--mc-shadow); }
+    .cx-cuadro h4 { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .4px; color: var(--mc-cyan); margin-bottom: 8px; }
+    .cx-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+    .cx-kpi span { display: block; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); }
+    .cx-kpi strong { font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .st { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 6px; white-space: nowrap; }
+    .st .material-icons { font-size: 14px; }
+    .st-ok { color: var(--mc-good); background: rgba(45, 212, 191, .1); } .st-mid { color: var(--mc-warn); background: rgba(245, 158, 11, .1); } .st-bad { color: var(--mc-bad); background: rgba(251, 113, 133, .1); }
+    table.dataTable, div.dts table.dataTable { background: transparent !important; }
+    .dataTables_wrapper .dataTables_filter { display: none; }
+    .chart-box { position: relative; height: 280px; }
+    .fr-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    @media (max-width: 1000px) { .cx-cuadros { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body data-page="fill-rate" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Order fill rate</h1>
-        <p class="muted">What customers ordered against what was invoiced in November 2026, and why the rest was lost.</p>
-      </div>
+  <main id="content">
+    <div class="mc-tabs" role="tablist" id="mainTabs">
+      <button type="button" class="mc-tab" role="tab" data-tab="fr" aria-selected="true"><span class="material-icons" aria-hidden="true">donut_large</span> <span data-i18n="tabFr"></span></button>
+      <button type="button" class="mc-tab" role="tab" data-tab="vp" aria-selected="false"><span class="material-icons" aria-hidden="true">remove_shopping_cart</span> <span data-i18n="tabVp"></span></button>
     </div>
 
-    <section class="card card-body" aria-label="Filters">
-      <div class="filters">
-        <div class="field"><label for="fBranch">Branch</label><select id="fBranch" multiple></select></div>
-        <div class="field"><label for="fSeller">Seller</label><select id="fSeller" multiple></select></div>
-        <div class="field"><label for="fCategory">Category</label><select id="fCategory" multiple></select></div>
-        <div class="field"><label for="fReason">Result</label><select id="fReason" multiple></select></div>
-        <div class="field"><label for="fSearch">Search</label><input class="input" type="search" id="fSearch" placeholder="Order, customer, product…"></div>
-        <div class="field"><label>&nbsp;</label><button class="btn" id="clearBtn" type="button">Clear filters</button></div>
-      </div>
+    <section class="mc-panel no-print">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field" style="max-width:160px"><label for="fFrom" data-i18n="from"></label><input type="date" id="fFrom"></div>
+        <div class="mc-field" style="max-width:160px"><label for="fTo" data-i18n="to"></label><input type="date" id="fTo"></div>
+        <div class="mc-field fr-only"><label for="fState" data-i18n="fState"></label><select id="fState"></select></div>
+        <div class="mc-field fr-only"><label for="fCrit" data-i18n="fCrit"></label><select id="fCrit"></select></div>
+        <div class="mc-field vp-only"><label for="fReason" data-i18n="fReason"></label><select id="fReason" multiple></select></div>
+        <div class="mc-field vp-only"><label for="fWh" data-i18n="fWh"></label><select id="fWh" multiple></select></div>
+        <div class="mc-field"><label for="fSup" data-i18n="fSup"></label><select id="fSup" multiple></select></div>
+        <div class="mc-field"><label for="fSeller" data-i18n="seller"></label><select id="fSeller" multiple></select></div>
+        <div class="mc-field"><label for="fChannel" data-i18n="fChannel"></label><select id="fChannel" multiple></select></div>
+        <div class="mc-field"><label for="fSupplier" data-i18n="supplier"></label><select id="fSupplier" multiple></select></div>
+        <div class="mc-field"><label for="fCat" data-i18n="category"></label><select id="fCat" multiple></select></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+          <button class="btn" type="button" id="btnClear"><span class="material-icons" aria-hidden="true">filter_alt_off</span><span data-i18n="clear"></span></button>
+        </div>
+      </form>
     </section>
 
-    <section class="kpis kpis-5" aria-label="Totals for the filtered lines" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Orders</div><div class="kpi-value" id="kOrders">–</div><div class="kpi-delta muted" id="kLines"></div></div>
-      <div class="card kpi"><div class="kpi-label">Fill rate by lines</div><div class="kpi-value" id="kFillL">–</div><div class="kpi-delta muted">Lines invoiced complete</div></div>
-      <div class="card kpi"><div class="kpi-label">Fill rate by value</div><div class="kpi-value" id="kFillV">–</div><div class="kpi-delta muted">Invoiced ÷ ordered</div></div>
-      <div class="card kpi"><div class="kpi-label">Ordered value</div><div class="kpi-value" id="kOrd">–</div></div>
-      <div class="card kpi"><div class="kpi-label">Lost sales</div><div class="kpi-value neg" id="kLost">–</div><div class="kpi-delta muted" id="kLostD"></div></div>
-    </section>
-
-    <section class="two">
-      <div class="card">
-        <div class="card-head">
-          <h2>Summary</h2>
-          <div class="field" style="width:170px"><label for="groupBy">Group by</label>
-            <select class="input" id="groupBy"><option value="product">Product</option><option value="seller">Seller</option><option value="branch" selected>Branch</option><option value="reason">Result</option></select>
+    <!-- Fill rate -->
+    <div id="pFr">
+      <div class="cx-cuadros" id="kFr"></div>
+      <section class="mc-panel" style="margin-top:12px">
+        <div class="mc-panel-title">
+          <div class="mc-tabs" role="tablist" id="frView" aria-label="View">
+            <button type="button" class="mc-tab" data-view="order" data-i18n="vOrder"></button>
+            <button type="button" class="mc-tab" data-view="line" data-i18n="vLine"></button>
           </div>
+          <div class="fr-tools"><span class="mc-hint" id="frCount"></span><input type="search" class="mc-input" style="width:220px" id="frSearch" data-i18n-ph="search"></div>
         </div>
-        <div class="card-body group-scroll">
-          <table class="grid" id="groups"><thead><tr><th id="gHead">Branch</th><th class="r">Lines</th><th class="r">Ordered</th><th class="r">Invoiced</th><th class="r">Fill (value)</th><th class="r">Lost</th></tr></thead><tbody></tbody><tfoot></tfoot></table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2>Top 10 products by lost value</h2></div>
-        <div class="card-body"><div class="chart-box"><canvas id="topChart" role="img" aria-label="Bar chart of the ten products with the most lost sales value"></canvas></div></div>
-      </div>
-    </section>
+        <table id="tFr" class="display nowrap compact" style="width:100%"></table>
+      </section>
+    </div>
 
-    <section class="card">
-      <div class="card-head"><h2>Order lines</h2><span class="muted" style="font-size:.82rem" id="loadNote"></span></div>
-      <div class="card-body">
-        <table id="lines" style="width:100%">
-          <thead><tr>
-            <th>Order</th><th>Date</th><th>Branch</th><th>Seller</th><th>Customer</th><th>Product</th>
-            <th class="r">Ordered</th><th class="r">Invoiced</th><th class="r">Ordered value</th><th class="r">Invoiced value</th><th class="r">Lost</th><th>Result</th>
-          </tr></thead>
-          <tfoot><tr><td colspan="6">Total (filtered)</td><td class="r num" id="fOq"></td><td class="r num" id="fIq"></td><td class="r num" id="fOv"></td><td class="r num" id="fIv"></td><td class="r num" id="fLost"></td><td></td></tr></tfoot>
-        </table>
+    <!-- Lost sales -->
+    <div id="pVp" hidden>
+      <div class="cx-cuadros" id="kVp"></div>
+      <div class="split" style="margin-top:12px">
+        <section class="mc-panel">
+          <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">list_alt</span><span data-i18n="vpList"></span></h3><div class="fr-tools"><span class="mc-hint" id="vpCount"></span><input type="search" class="mc-input" style="width:200px" id="vpSearch" data-i18n-ph="search"></div></div>
+          <table id="tVp" class="display nowrap compact" style="width:100%"></table>
+        </section>
+        <section class="mc-panel">
+          <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">bar_chart</span><span data-i18n="top10"></span></h3></div>
+          <div class="chart-box"><canvas id="cTop" role="img"></canvas></div>
+        </section>
       </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Each order line is matched with the invoice that came from that order, so the fill rate is measured line by line, not by comparing monthly totals.</li>
-        <li>Fill rate by lines counts lines invoiced complete; fill rate by value weighs each line by its amount. Both are needed: many small misses hurt service, a few big ones hurt revenue.</li>
-        <li>Every missing unit gets a reason: no stock, cancelled by the customer or a price change. Only "no stock" is a purchasing problem.</li>
-        <li>The cards, the summary, the chart and the table footer all follow the same filters.</li>
-      </ul>
-    </section>
+    </div>
+    <div id="about"></div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -113,139 +96,221 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const REASONS = {
-      ok: { text: "Complete", cls: "r-ok", icon: '<path d="M5 12l5 5 9-10"/>' },
-      stock: { text: "No stock", cls: "r-stock", icon: '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M4 4l16 16"/>' },
-      cancel: { text: "Cancelled", cls: "r-cancel", icon: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>' },
-      price: { text: "Price change", cls: "r-price", icon: '<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>' }
-    };
-    const reasonHtml = k => '<span class="reason ' + REASONS[k].cls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' + REASONS[k].icon + "</svg>" + REASONS[k].text + "</span>";
-    const PRICE = {}; D.products.forEach((p, i) => PRICE[p[0]] = [1.1, 2.4, 2.9, 1.3, 1.5, 6.8, 4.2, 3.6, 2.2, 2.7, 1.9, 2.5, 9.5, 2.8, 1.6, 3.1, 5.4, 2.6, 3.3, 1.8, 1.4, 1.2, 3.9, 1.7, 3.2][i] * 10);
+  UI.strings({
+    en: {
+      tabFr: "Order fill rate", tabVp: "Lost sales", fState: "Order status", fCrit: "Line criterion", fReason: "Reason", fWh: "Warehouse", fSup: "Supervisor", fChannel: "Channel",
+      stAll: "All", stFull: "Complete", stPart: "Incomplete", stNone: "Not invoiced", crQty: "By quantity", crVal: "By value",
+      chRetail: "Retail", chWholesale: "Wholesale", chSuper: "Supermarkets", chRoute: "Route sales",
+      kOrders: "Orders", kFull: "Complete", kPart: "Incomplete", kNone: "Not invoiced", kFr: "Fill rate", kFrOrders: "Complete orders", kFrLines: "Complete lines", kFrSale: "Sale served", kAdded: "Added lines",
+      kSale: "Sale", kAsked: "Ordered", kInv: "Invoiced", kMiss: "Missing", kNet: "Net (− returns and disc.)",
+      vOrder: "By order", vLine: "By line", count: "{n} rows",
+      cOrder: "Order", cDate: "Order date", cInvs: "Invoices", cCust: "Customer", cSup: "Supervisor", cSeller: "Seller", cRoute: "Route", cChan: "Channel", cState: "Status", cLines: "Lines",
+      cSaleO: "Ordered sale", cSaleI: "Invoiced sale", cSaleM: "Missing sale", cFr: "Fill rate sale", cMarO: "Order margin %", cMarI: "Invoiced margin %",
+      cItem: "Item", cQtyO: "Qty ordered", cQtyI: "Qty invoiced", cQtyM: "Qty missing", cResult: "Result", rFull: "Complete", rPart: "Partial", rNone: "Not invoiced", rAdded: "Added",
+      vpList: "Lost sales detail", top10: "Top 10 items by lost sale", kLost: "Lost sale", kAtSale: "At sale price", kAtMax: "At maximum price", kAtMin: "At minimum price", kAtComp: "At competitor price",
+      kCount: "Count", kLinesN: "Lines", kCustN: "Customers", kOrdersN: "Orders", kItemsN: "Items", kByOrigin: "By origin (at sale price)", oOrder: "Order without stock", oManual: "Manual record",
+      reNoStock: "No stock", reCancel: "Cancelled", rePrice: "Price", reComp: "Competition", cOrigin: "Origin", cReason: "Reason", cWh: "Warehouse", cQtyL: "Qty lost", cStock: "Stock", cPrice: "Sale price", cTotal: "Total lost sale",
+      aboutText: "<b>Fill rate</b> crosses each customer order with the invoices that came from it. An order is <b>complete</b> when every line was invoiced in full; the <b>line criterion</b> decides whether a line counts by quantity or by value. <b>Sale served</b> = invoiced ÷ ordered at order prices; <b>added lines</b> are items invoiced that were not in the order. <b>Lost sales</b> are the lines not invoiced because of missing stock (from orders) or recorded by hand by the seller, valued at sale, maximum, minimum and competitor price. Every box, the table and the chart follow the filters and the search. All the data on this page is generated."
+    },
+    es: {
+      tabFr: "Fill rate de pedidos", tabVp: "Ventas perdidas", fState: "Estado del pedido", fCrit: "Criterio de la línea", fReason: "Motivo", fWh: "Bodega", fSup: "Supervisor", fChannel: "Canal",
+      stAll: "Todos", stFull: "Completo", stPart: "Incompleto", stNone: "Sin factura", crQty: "Por cantidad", crVal: "Por valor",
+      chRetail: "Detalle", chWholesale: "Mayoreo", chSuper: "Supermercados", chRoute: "Ruta",
+      kOrders: "Pedidos", kFull: "Completos", kPart: "Incompletos", kNone: "Sin factura", kFr: "Fill rate", kFrOrders: "Pedidos completos", kFrLines: "Líneas completas", kFrSale: "Venta atendida", kAdded: "Líneas agregadas",
+      kSale: "Venta", kAsked: "Pedida", kInv: "Facturada", kMiss: "Faltante", kNet: "Neta (− devol. y desc.)",
+      vOrder: "Por pedido", vLine: "Por línea", count: "{n} filas",
+      cOrder: "Pedido", cDate: "Fecha pedido", cInvs: "Facturas", cCust: "Cliente", cSup: "Supervisor", cSeller: "Vendedor", cRoute: "Ruta", cChan: "Canal", cState: "Estado", cLines: "Líneas",
+      cSaleO: "Venta pedido", cSaleI: "Venta facturada", cSaleM: "Venta faltante", cFr: "Fill rate venta", cMarO: "Margen pedido %", cMarI: "Margen facturado %",
+      cItem: "Artículo", cQtyO: "Cant. pedida", cQtyI: "Cant. facturada", cQtyM: "Cant. faltante", cResult: "Resultado", rFull: "Completa", rPart: "Parcial", rNone: "Sin facturar", rAdded: "Agregada",
+      vpList: "Detalle de ventas perdidas", top10: "Top 10 artículos por venta perdida", kLost: "Venta perdida", kAtSale: "A precio de venta", kAtMax: "A precio máximo", kAtMin: "A precio mínimo", kAtComp: "A precio de competencia",
+      kCount: "Conteo", kLinesN: "Líneas", kCustN: "Clientes", kOrdersN: "Pedidos", kItemsN: "Artículos", kByOrigin: "Por origen (a precio de venta)", oOrder: "Pedido sin existencia", oManual: "Registro manual",
+      reNoStock: "Sin existencia", reCancel: "Anulado", rePrice: "Precio", reComp: "Competencia", cOrigin: "Origen", cReason: "Motivo", cWh: "Bodega", cQtyL: "Cant. perdida", cStock: "Existencia", cPrice: "Precio venta", cTotal: "Total venta perdida",
+      aboutText: "El <b>fill rate</b> cruza cada pedido del cliente con las facturas que salieron de él. Un pedido está <b>completo</b> cuando todas sus líneas se facturaron completas; el <b>criterio de la línea</b> decide si una línea cuenta por cantidad o por valor. <b>Venta atendida</b> = facturado ÷ pedido a precios del pedido; las <b>líneas agregadas</b> son artículos facturados que no estaban en el pedido. Las <b>ventas perdidas</b> son las líneas que no se facturaron por falta de existencia (desde los pedidos) o que el vendedor registró a mano, valoradas a precio de venta, máximo, mínimo y de competencia. Todos los cuadros, la tabla y el gráfico siguen los filtros y la búsqueda. Todos los datos de esta página son generados."
+    }
+  });
 
-    // ~3,000 order lines
-    const r = UI.rng(4242);
-    const lines = [];
-    let orderNo = 71000;
-    for (let o = 0; o < 720; o++) {
-      orderNo++;
-      const day = 1 + Math.floor(r() * 16);
-      const branch = UI.pick(r, D.branches), seller = UI.pick(r, D.sellers), cust = UI.pick(r, D.customers);
-      const n = 2 + Math.floor(r() * 6);
-      for (let l = 0; l < n; l++) {
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const SUPS = ["R. Castillo", "M. Paredes", "L. Fuentes", "S. Navarro"];
+    const CHANNELS = ["chRetail", "chWholesale", "chSuper", "chRoute"];
+    const WHS = ["Main", "North", "Coast"];
+    const REASONS = ["reNoStock", "reCancel", "rePrice", "reComp"];
+    const r = UI.rng(515);
+
+    // Orders with lines, and the invoiced quantities
+    const ORDERS = [], LINES = [];
+    for (let k = 0; k < 520; k++) {
+      const seller = Math.floor(r() * D.sellers.length);
+      const o = { id: "PE-" + (30100 + k), date: new Date(Date.UTC(2026, 9, 15 + Math.floor(r() * 33))), cust: Math.floor(r() * D.customers.length), seller, sup: Math.floor(seller / 3) % 4, route: "R-0" + (1 + seller % 8), chan: Math.floor(r() * 4), lines: [] };
+      const nl = 3 + Math.floor(r() * 7), mode = r();
+      for (let j = 0; j < nl; j++) {
         const p = D.products[Math.floor(r() * D.products.length)];
-        const oq = 6 + Math.floor(r() * 60);
-        const x = r();
-        let reason = "ok", iq = oq;
-        if (x < 0.13) { reason = "stock"; iq = Math.floor(oq * UI.between(r, 0, 0.7)); }
-        else if (x < 0.17) { reason = "cancel"; iq = 0; }
-        else if (x < 0.20) { reason = "price"; iq = Math.floor(oq * UI.between(r, 0.3, 0.8)); }
-        const price = PRICE[p[0]];
-        lines.push({ order: "SO-" + orderNo, date: "2026-11-" + String(day).padStart(2, "0"), branch, seller, cust, product: p[0], cat: p[1], oq, iq, ov: oq * price, iv: iq * price, lost: (oq - iq) * price, reason });
+        const qo = Math.ceil(UI.between(r, 2, 30)), price = Math.round(UI.between(r, 20, 220) * 100) / 100, cost = price * UI.between(r, .78, .93);
+        let qi = qo;
+        if (mode < .08) qi = 0; else if (mode < .5 && r() < .3) qi = Math.floor(qo * UI.between(r, 0, .9));
+        const l = { o, item: p[0], cat: p[1], sup: D.suppliers[p[1] % D.suppliers.length], qo, qi, price, cost, wh: Math.floor(r() * 3), added: false, reason: qi < qo ? (r() < .7 ? 0 : 1 + Math.floor(r() * 3)) : null };
+        o.lines.push(l); LINES.push(l);
       }
+      if (mode > .9) { const p = D.products[Math.floor(r() * D.products.length)]; const l = { o, item: p[0], cat: p[1], sup: D.suppliers[p[1] % D.suppliers.length], qo: 0, qi: Math.ceil(UI.between(r, 1, 6)), price: UI.between(r, 20, 120), cost: 0, wh: 0, added: true, reason: null }; l.cost = l.price * .85; o.lines.push(l); LINES.push(l); }
+      o.inv = mode < .08 ? [] : ["FA-" + (60000 + k * 2)].concat(r() < .2 ? ["FA-" + (60001 + k * 2)] : []);
+      ORDERS.push(o);
     }
+    const MANUAL = Array.from({ length: 70 }, (_, k) => { const p = D.products[Math.floor(r() * D.products.length)]; const seller = Math.floor(r() * D.sellers.length);
+      return { manual: true, o: { id: "—", date: new Date(Date.UTC(2026, 9, 15 + Math.floor(r() * 33))), cust: Math.floor(r() * D.customers.length), seller, sup: Math.floor(seller / 3) % 4, route: "R-0" + (1 + seller % 8), chan: Math.floor(r() * 4) },
+        item: p[0], cat: p[1], sup: D.suppliers[p[1] % D.suppliers.length], qo: Math.ceil(UI.between(r, 2, 20)), qi: 0, price: Math.round(UI.between(r, 20, 220) * 100) / 100, cost: 0, wh: Math.floor(r() * 3), reason: 2 + Math.floor(r() * 2) }; });
 
-    function fill(id, items, ph, labels) {
-      $("#" + id).html(items.map(v => '<option value="' + v + '">' + (labels ? labels[v].text : v) + "</option>").join("")).select2({ placeholder: ph, width: "100%" });
-    }
-    fill("fBranch", D.branches, "All branches");
-    fill("fSeller", D.sellers, "All sellers");
-    fill("fCategory", D.categories, "All categories");
-    fill("fReason", Object.keys(REASONS), "All results", REASONS);
+    let tab = "fr", view = "order";
 
-    // Custom filter using the select2 values
-    $.fn.dataTable.ext.search.push(function (settings, data, idx) {
-      if (settings.nTable.id !== "lines") return true;
-      const x = lines[idx];
-      const b = $("#fBranch").val(), s = $("#fSeller").val(), c = $("#fCategory").val(), rs = $("#fReason").val();
-      return (!b.length || b.includes(x.branch)) && (!s.length || s.includes(x.seller)) && (!c.length || c.includes(x.cat)) && (!rs.length || rs.includes(x.reason));
-    });
-
-    const table = $("#lines").DataTable({
-      data: lines.map(x => [x.order, x.date, x.branch, x.seller, x.cust, x.product, x.oq, x.iq, x.ov, x.iv, x.lost, x.reason]),
-      columns: [
-        {}, {}, {}, {}, {}, {},
-        { className: "r num" }, { className: "r num" },
-        { className: "r num", render: (v, t) => t === "display" ? UI.fmtMoney(v) : v },
-        { className: "r num", render: (v, t) => t === "display" ? UI.fmtMoney(v) : v },
-        { className: "r num", render: (v, t) => t === "display" ? (v ? '<span class="neg">' + UI.fmtMoney(v) + "</span>" : UI.fmtMoney(0)) : v },
-        { render: (v, t) => t === "display" ? reasonHtml(v) : REASONS[v].text }
-      ],
-      deferRender: true, scrollY: 420, scrollX: true, scroller: { rowHeight: 34, displayBuffer: 4 },
-      order: [[1, "desc"], [0, "desc"]], dom: "rti", autoWidth: false,
-      language: { info: "_TOTAL_ lines", infoFiltered: "(of _MAX_)", infoEmpty: "No lines match the filters", zeroRecords: "No lines match the filters" }
-    });
-    document.getElementById("loadNote").textContent = UI.fmtInt(lines.length) + " lines from " + UI.fmtInt(orderNo - 71000) + " orders";
-
-    let chart;
-    function filteredRows() { return table.rows({ search: "applied" }).indexes().toArray().map(i => lines[i]); }
-
-    function summarize() {
-      const rows = filteredRows();
-      const sum = k => rows.reduce((a, x) => a + x[k], 0);
-      const ov = sum("ov"), iv = sum("iv"), lost = sum("lost");
-      const orders = new Set(rows.map(x => x.order)).size;
-      const complete = rows.filter(x => x.iq === x.oq).length;
-      document.getElementById("kOrders").textContent = UI.fmtInt(orders);
-      document.getElementById("kLines").textContent = UI.fmtInt(rows.length) + " lines";
-      document.getElementById("kFillL").textContent = rows.length ? UI.fmtPct(complete / rows.length) : "–";
-      document.getElementById("kFillV").textContent = ov ? UI.fmtPct(iv / ov) : "–";
-      document.getElementById("kOrd").textContent = UI.fmtMoney(ov);
-      document.getElementById("kLost").textContent = UI.fmtMoney(lost);
-      const lostStock = rows.filter(x => x.reason === "stock").reduce((a, x) => a + x.lost, 0);
-      document.getElementById("kLostD").textContent = lost ? UI.fmtPct(lostStock / lost) + " of it from no stock" : "";
-      document.getElementById("fOq").textContent = UI.fmtInt(sum("oq"));
-      document.getElementById("fIq").textContent = UI.fmtInt(sum("iq"));
-      document.getElementById("fOv").textContent = UI.fmtMoney(ov);
-      document.getElementById("fIv").textContent = UI.fmtMoney(iv);
-      document.getElementById("fLost").textContent = UI.fmtMoney(lost);
-
-      // Group summary
-      const g = document.getElementById("groupBy").value;
-      const key = { product: "product", seller: "seller", branch: "branch", reason: "reason" }[g];
-      document.getElementById("gHead").textContent = { product: "Product", seller: "Seller", branch: "Branch", reason: "Result" }[g];
-      const map = new Map();
-      rows.forEach(x => { const k = x[key]; const m = map.get(k) || { n: 0, ov: 0, iv: 0, lost: 0 }; m.n++; m.ov += x.ov; m.iv += x.iv; m.lost += x.lost; map.set(k, m); });
-      const groups = [...map.entries()].sort((a, b) => b[1].lost - a[1].lost);
-      document.querySelector("#groups tbody").innerHTML = groups.length ? groups.map(([k, m]) =>
-        "<tr><td>" + (g === "reason" ? reasonHtml(k) : k) + '</td><td class="r num">' + UI.fmtInt(m.n) + '</td><td class="r num">' + UI.fmtMoney(m.ov) + '</td><td class="r num">' + UI.fmtMoney(m.iv) +
-        '</td><td class="r num">' + UI.fmtPct(m.ov ? m.iv / m.ov : 0) + '</td><td class="r num neg">' + UI.fmtMoney(m.lost) + "</td></tr>").join("") : '<tr><td colspan="6" class="muted">No lines match the filters.</td></tr>';
-      document.querySelector("#groups tfoot").innerHTML = '<tr><td>Total</td><td class="r num">' + UI.fmtInt(rows.length) + '</td><td class="r num">' + UI.fmtMoney(ov) + '</td><td class="r num">' + UI.fmtMoney(iv) + '</td><td class="r num">' + (ov ? UI.fmtPct(iv / ov) : "–") + '</td><td class="r num">' + UI.fmtMoney(lost) + "</td></tr>";
-
-      renderChart(rows);
-    }
-
-    function renderChart(rows) {
-      const map = new Map();
-      rows.forEach(x => { if (x.lost) map.set(x.product, (map.get(x.product) || 0) + x.lost); });
-      const top = [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
-      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
-      if (chart) chart.destroy();
-      chart = new Chart(document.getElementById("topChart"), {
-        type: "bar",
-        data: { labels: top.map(t => t[0]), datasets: [{ label: "Lost value", data: top.map(t => t[1]), backgroundColor: UI.cssVar("--chart-5"), borderRadius: 4 }] },
-        options: {
-          indexAxis: "y", maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => "Lost: " + UI.fmtMoney(c.parsed.x) } } },
-          scales: { x: { ticks: { color: text, callback: v => Math.round(v / 1000) + "k" }, grid: { color: grid } }, y: { ticks: { color: text, font: { size: 11 } }, grid: { display: false } } }
-        }
+    const SEL = {
+      fState: () => [["all", t("stAll")], ["full", t("stFull")], ["part", t("stPart")], ["none", t("stNone")]], fCrit: () => [["qty", t("crQty")], ["val", t("crVal")]],
+      fReason: () => REASONS.map((k, i) => [i, t(k)]), fWh: () => WHS.map((w, i) => [i, w]), fSup: () => SUPS.map((s, i) => [i, s]), fSeller: () => D.sellers.map((s, i) => [i, s]),
+      fChannel: () => CHANNELS.map((c, i) => [i, t(c)]), fSupplier: () => D.suppliers.map(s => [s, s]), fCat: () => D.categories.map((c, i) => [i, UI.L(c)])
+    };
+    function fill() {
+      Object.keys(SEL).forEach(id => {
+        const $s = $("#" + id), v = $s.val(), multi = $s.prop("multiple");
+        if ($s.hasClass("select2-hidden-accessible")) $s.select2("destroy");
+        $s.empty(); SEL[id]().forEach(o => $s.append(new Option(o[1], String(o[0]))));
+        $s.val(v != null && v.length !== 0 ? v : (multi ? [] : $s.find("option").first().val())).select2(multi ? { width: "100%", placeholder: t("all"), closeOnSelect: false } : { width: "100%", minimumResultsForSearch: Infinity });
       });
     }
+    fill();
+    const fFrom = document.getElementById("fFrom"), fTo = document.getElementById("fTo");
+    fFrom.value = "2026-11-01"; fTo.value = "2026-11-16";
 
-    table.on("draw", summarize);
-    $("#fBranch,#fSeller,#fCategory,#fReason").on("change", () => table.draw());
-    let t;
-    document.getElementById("fSearch").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => table.search(e.target.value).draw(), 200); });
-    document.getElementById("groupBy").addEventListener("change", summarize);
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      $("#fBranch,#fSeller,#fCategory,#fReason").val(null).trigger("change.select2");
-      document.getElementById("fSearch").value = "";
-      table.search("").draw();
-    });
-    document.addEventListener("themechange", () => renderChart(filteredRows()));
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => table.columns.adjust());
-    summarize();
+    const vals = id => ($("#" + id).val() || []);
+    function baseOk(o) {
+      const a = new Date(fFrom.value + "T00:00:00Z"), b = new Date(fTo.value + "T00:00:00Z");
+      const sp = vals("fSup").map(Number), se = vals("fSeller").map(Number), ch = vals("fChannel").map(Number);
+      return o.date >= a && o.date <= b && (!sp.length || sp.includes(o.sup)) && (!se.length || se.includes(o.seller)) && (!ch.length || ch.includes(o.chan));
+    }
+    const lineOk = l => { const su = vals("fSupplier"), ca = vals("fCat").map(Number); return (!su.length || su.includes(l.sup)) && (!ca.length || ca.includes(l.cat)); };
+    const crit = () => $("#fCrit").val();
+    const lineFull = l => l.added || (crit() === "val" ? l.qi * l.price >= l.qo * l.price * .98 : l.qi >= l.qo);
+    function orderState(o, ls) { const inv = ls.reduce((a, l) => a + l.qi, 0); if (!o.inv.length || inv === 0) return "none"; return ls.every(lineFull) ? "full" : "part"; }
+    const stChip = s => '<span class="st ' + ({ full: "st-ok", part: "st-mid", none: "st-bad" })[s] + '">' + mi({ full: "check_circle", part: "timelapse", none: "cancel" }[s]) + t({ full: "stFull", part: "stPart", none: "stNone" }[s]) + "</span>";
+
+    const pctTd = (d, ty) => ty === "display" ? '<span class="' + (d < .9 ? "neg" : "pos") + '">' + UI.fmtPct(d) + "</span>" : d;
+    const mon = (d, ty) => ty === "display" ? M(d) : d;
+    let frCols = null;
+    function frColumns() {
+      return view === "order" ? [
+        { data: "id", t: "cOrder" }, { data: "date", t: "cDate", render: (d, ty) => ty === "sort" ? d.getTime() : UI.fmtDay(d) }, { data: "invs", t: "cInvs" }, { data: "cust", t: "cCust" }, { data: "sup", t: "cSup" }, { data: "seller", t: "cSeller" },
+        { data: "route", t: "cRoute" }, { data: "chan", t: "cChan" }, { data: "state", t: "cState", render: (d, ty) => ty === "display" ? stChip(d) : d }, { data: "nl", t: "cLines", className: "r" },
+        { data: "so", t: "cSaleO", className: "r", render: mon }, { data: "si", t: "cSaleI", className: "r", render: mon }, { data: "sm", t: "cSaleM", className: "r", render: mon }, { data: "fr", t: "cFr", className: "r", render: pctTd },
+        { data: "mo", t: "cMarO", className: "r", render: (d, ty) => ty === "display" ? UI.fmtPct(d, 2) : d }, { data: "mi", t: "cMarI", className: "r", render: (d, ty) => ty === "display" ? UI.fmtPct(d, 2) : d }
+      ] : [
+        { data: "id", t: "cOrder" }, { data: "date", t: "cDate", render: (d, ty) => ty === "sort" ? d.getTime() : UI.fmtDay(d) }, { data: "cust", t: "cCust" }, { data: "seller", t: "cSeller" }, { data: "item", t: "cItem" }, { data: "cat", t: "category" },
+        { data: "supp", t: "supplier" }, { data: "qo", t: "cQtyO", className: "r" }, { data: "qi", t: "cQtyI", className: "r" }, { data: "qm", t: "cQtyM", className: "r" },
+        { data: "so", t: "cSaleO", className: "r", render: mon }, { data: "si", t: "cSaleI", className: "r", render: mon }, { data: "res", t: "cResult", render: (d, ty) => ty === "display" ? '<span class="st ' + ({ rFull: "st-ok", rPart: "st-mid", rNone: "st-bad", rAdded: "st-mid" })[d] + '">' + mi({ rFull: "check_circle", rPart: "timelapse", rNone: "cancel", rAdded: "add_circle" }[d]) + t(d) + "</span>" : d }
+      ];
+    }
+    function rebuildFr(data) {
+      const cols = frColumns();
+      const key = view + UI.lang;
+      if (frCols !== key) {
+        if (window._dtFr) { window._dtFr.destroy(); $("#tFr").empty(); }
+        frCols = key;
+        const inst = $("#tFr").DataTable({ data, columns: cols.map(c => Object.assign({ title: t(c.t) }, c)), deferRender: true, scrollY: "48vh", scrollX: true, scroller: { rowHeight: 30, displayBuffer: 4 }, dom: "rt", order: [[1, "desc"]] });
+        inst.on("draw", frTotals);
+        window._dtFr = inst;
+      } else { window._dtFr.clear().rows.add(data).draw(); }
+      window._dtFr.search(document.getElementById("frSearch").value).draw();
+      setTimeout(() => window._dtFr.columns.adjust(), 30);
+    }
+
+    function frData() {
+      const st = $("#fState").val();
+      const out = [];
+      ORDERS.filter(baseOk).forEach(o => {
+        const ls = o.lines.filter(lineOk); if (!ls.length) return;
+        const s = orderState(o, ls); if (st !== "all" && s !== st) return;
+        if (view === "order") {
+          const so = ls.reduce((a, l) => a + l.qo * l.price, 0), si = ls.reduce((a, l) => a + l.qi * l.price, 0), co = ls.reduce((a, l) => a + l.qo * l.cost, 0), ci = ls.reduce((a, l) => a + l.qi * l.cost, 0);
+          out.push({ _o: o, _ls: ls, id: o.id, date: o.date, invs: o.inv.join(", ") || "—", cust: D.customers[o.cust], sup: SUPS[o.sup], seller: D.sellers[o.seller], route: o.route, chan: t(CHANNELS[o.chan]), state: s, nl: ls.length,
+            so, si, sm: Math.max(0, so - ls.filter(l => !l.added).reduce((a, l) => a + l.qi * l.price, 0)), fr: so ? Math.min(1, ls.filter(l => !l.added).reduce((a, l) => a + l.qi * l.price, 0) / so) : 0, mo: so ? (so - co) / so : 0, mi: si ? (si - ci) / si : 0 });
+        } else ls.forEach(l => out.push({ _o: o, _ls: [l], id: o.id, date: o.date, cust: D.customers[o.cust], seller: D.sellers[o.seller], item: l.item, cat: UI.L(D.categories[l.cat]), supp: l.sup, qo: l.qo, qi: l.qi, qm: Math.max(0, l.qo - l.qi), so: l.qo * l.price, si: l.qi * l.price,
+          res: l.added ? "rAdded" : l.qi === 0 ? "rNone" : lineFull(l) ? "rFull" : "rPart" }));
+      });
+      return out;
+    }
+    function cuadro(title, items) { return '<div class="cx-cuadro"><h4>' + title + '</h4><div class="cx-kpis">' + items.map(x => '<div class="cx-kpi"><span>' + x[0] + "</span><strong>" + x[1] + "</strong></div>").join("") + "</div></div>"; }
+    function frTotals() {
+      const dt = window._dtFr; if (!dt) return;
+      const rows = dt.rows({ search: "applied" }).data().toArray();
+      const orders = new Map(); rows.forEach(x => { if (!orders.has(x._o.id)) orders.set(x._o.id, { o: x._o, ls: [] }); orders.get(x._o.id).ls.push(...x._ls); });
+      const os = [...orders.values()], states = os.map(x => orderState(x.o, x.ls));
+      const ls = os.flatMap(x => x.ls), base = ls.filter(l => !l.added);
+      const so = base.reduce((a, l) => a + l.qo * l.price, 0), si = ls.reduce((a, l) => a + l.qi * l.price, 0), served = base.reduce((a, l) => a + l.qi * l.price, 0);
+      const cnt = s => states.filter(x => x === s).length;
+      document.getElementById("kFr").innerHTML =
+        cuadro(t("kOrders"), [[t("kOrders"), UI.fmtInt(os.length)], [t("kFull"), UI.fmtInt(cnt("full"))], [t("kPart"), UI.fmtInt(cnt("part"))], [t("kNone"), UI.fmtInt(cnt("none"))]]) +
+        cuadro(t("kFr"), [[t("kFrOrders"), UI.fmtPct(os.length ? cnt("full") / os.length : 0, 2)], [t("kFrLines"), UI.fmtPct(base.length ? base.filter(lineFull).length / base.length : 0, 2)], [t("kFrSale"), UI.fmtPct(so ? served / so : 0, 2)], [t("kAdded"), UI.fmtInt(ls.filter(l => l.added).length)]]) +
+        cuadro(t("kSale"), [[t("kAsked"), M(so)], [t("kInv"), M(si)], [t("kMiss"), M(Math.max(0, so - served))], [t("kNet"), M(si * .975)]]);
+      document.getElementById("frCount").textContent = t("count", { n: UI.fmtInt(rows.length) });
+    }
+    function loadFr() { rebuildFr(frData()); }
+
+    // ----- Lost sales -----
+    let dtVp = null, chart = null;
+    function vpData() {
+      const rs = vals("fReason").map(Number), wh = vals("fWh").map(Number);
+      const fromOrders = LINES.filter(l => !l.added && l.qi < l.qo && l.reason != null && baseOk(l.o));
+      return fromOrders.concat(MANUAL.filter(m => baseOk(m.o))).filter(l => lineOk(l) && (!rs.length || rs.includes(l.reason)) && (!wh.length || wh.includes(l.wh))).map(l => {
+        const q = l.qo - l.qi, rr = UI.rng(l.qo * 31 + l.price * 7);
+        return { _l: l, date: l.o.date, cust: D.customers[l.o.cust], origin: l.manual ? "oManual" : "oOrder", order: l.o.id, item: l.item, wh: WHS[l.wh], qty: q, stock: l.reason === 0 ? Math.floor(q * UI.between(rr, 0, .5)) : Math.ceil(q * UI.between(rr, 1, 3)), price: l.price, total: q * l.price,
+          tmax: q * l.price * 1.08, tmin: q * l.price * .93, tcomp: q * l.price * UI.between(rr, .9, 1.05), reason: REASONS[l.reason], seller: D.sellers[l.o.seller] };
+      });
+    }
+    function loadVp() {
+      const data = vpData();
+      const cols = [{ data: "date", t: "date", render: (d, ty) => ty === "sort" ? d.getTime() : UI.fmtDay(d) }, { data: "cust", t: "cCust" }, { data: "origin", t: "cOrigin", render: d => t(d) }, { data: "order", t: "cOrder" }, { data: "item", t: "cItem" }, { data: "wh", t: "cWh" },
+        { data: "qty", t: "cQtyL", className: "r" }, { data: "stock", t: "cStock", className: "r" }, { data: "price", t: "cPrice", className: "r", render: mon }, { data: "total", t: "cTotal", className: "r", render: mon }, { data: "reason", t: "cReason", render: d => t(d) }, { data: "seller", t: "cSeller" }];
+      if (dtVp) { dtVp.destroy(); $("#tVp").empty(); }
+      dtVp = $("#tVp").DataTable({ data, columns: cols.map(c => Object.assign({ title: t(c.t) }, c)), deferRender: true, scrollY: "40vh", scrollX: true, scroller: { rowHeight: 30 }, dom: "rt", order: [[9, "desc"]] });
+      dtVp.on("draw", vpTotals);
+      dtVp.search(document.getElementById("vpSearch").value).draw();
+      setTimeout(() => dtVp.columns.adjust(), 30);
+    }
+    function vpTotals() {
+      const rows = dtVp.rows({ search: "applied" }).data().toArray();
+      const s = (a, k) => a.reduce((z, x) => z + x[k], 0);
+      document.getElementById("kVp").innerHTML =
+        cuadro(t("kLost"), [[t("kAtSale"), M(s(rows, "total"))], [t("kAtMax"), M(s(rows, "tmax"))], [t("kAtMin"), M(s(rows, "tmin"))], [t("kAtComp"), M(s(rows, "tcomp"))]]) +
+        cuadro(t("kCount"), [[t("kLinesN"), UI.fmtInt(rows.length)], [t("kCustN"), UI.fmtInt(new Set(rows.map(x => x.cust)).size)], [t("kOrdersN"), UI.fmtInt(new Set(rows.filter(x => x.order !== "—").map(x => x.order)).size)], [t("kItemsN"), UI.fmtInt(new Set(rows.map(x => x.item)).size)]]) +
+        cuadro(t("kByOrigin"), [[t("oOrder"), M(s(rows.filter(x => x.origin === "oOrder"), "total"))], [t("oManual"), M(s(rows.filter(x => x.origin === "oManual"), "total"))]]);
+      document.getElementById("vpCount").textContent = t("count", { n: UI.fmtInt(rows.length) });
+      const by = {}; rows.forEach(x => { by[x.item] = (by[x.item] || 0) + x.total; });
+      const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      const txt = UI.cssVar("--mc-muted"), grid = UI.cssVar("--mc-line");
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("cTop"), { type: "bar", data: { labels: top.map(x => x[0]), datasets: [{ label: t("cTotal"), data: top.map(x => x[1]), backgroundColor: "#fb7185", borderRadius: 4 }] },
+        options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => M(c.parsed.x) } } },
+          scales: { x: { ticks: { color: txt, callback: v => (v / 1000) + "k" }, grid: { color: grid } }, y: { ticks: { color: txt, font: { size: 10 } }, grid: { display: false } } } } });
+      document.getElementById("cTop").setAttribute("aria-label", t("top10"));
+    }
+
+    function showTab(x) {
+      tab = x;
+      document.querySelectorAll("#mainTabs [data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === x)));
+      document.getElementById("pFr").hidden = x !== "fr"; document.getElementById("pVp").hidden = x !== "vp";
+      document.querySelectorAll(".fr-only").forEach(e => { e.hidden = x !== "fr"; }); document.querySelectorAll(".vp-only").forEach(e => { e.hidden = x !== "vp"; });
+      if (x === "fr") loadFr(); else loadVp();
+    }
+    function viewTabs() { document.querySelectorAll("#frView [data-view]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === view))); }
+    document.getElementById("mainTabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) showTab(b.dataset.tab); });
+    document.getElementById("frView").addEventListener("click", e => { const b = e.target.closest("[data-view]"); if (b) { view = b.dataset.view; viewTabs(); loadFr(); } });
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); showTab(tab); });
+    document.getElementById("btnClear").addEventListener("click", () => { Object.keys(SEL).forEach(id => { const $s = $("#" + id); $s.val($s.prop("multiple") ? [] : $s.find("option").first().val()).trigger("change"); }); fFrom.value = "2026-11-01"; fTo.value = "2026-11-16"; showTab(tab); });
+    let st1; document.getElementById("frSearch").addEventListener("input", e => { clearTimeout(st1); st1 = setTimeout(() => window._dtFr.search(e.target.value).draw(), 200); });
+    let st2; document.getElementById("vpSearch").addEventListener("input", e => { clearTimeout(st2); st2 = setTimeout(() => dtVp.search(e.target.value).draw(), 200); });
+    document.addEventListener("langchange", () => { fill(); frCols = null; showTab(tab); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); });
+    document.addEventListener("themechange", () => { if (tab === "vp" && dtVp) vpTotals(); });
+    let rT; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => { if (window._dtFr) window._dtFr.columns.adjust(); if (dtVp) dtVp.columns.adjust(); }, 150); });
+    if (document.fonts) document.fonts.ready.then(() => { if (window._dtFr) window._dtFr.columns.adjust(); });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    viewTabs();
+    showTab("fr");
   });
   </script>
 </body>

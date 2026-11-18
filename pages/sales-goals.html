@@ -3,252 +3,270 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sales Goals · Business UI Gallery</title>
+  <title>Sales goals · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .kpis-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-    .chart-box { position: relative; height: 280px; }
-    .status { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
-    .status svg { width: 13px; height: 13px; }
-    .s-ahead { background: var(--positive-bg); color: var(--positive); }
-    .s-track { background: var(--info-bg); color: var(--info); }
-    .s-behind { background: var(--warning-bg); color: var(--warning); }
-    .s-risk { background: var(--negative-bg); color: var(--negative); }
-    tr.seller-row { cursor: pointer; }
-    tr.seller-row[aria-selected="true"] td { background: var(--info-bg); }
-    .pace { position: relative; height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); min-width: 110px; }
-    .pace > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; }
-    .pace > i { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text); }
-    .legend { display: flex; gap: var(--space-3); flex-wrap: wrap; font-size: .8rem; }
-    @media (max-width: 1100px) { .kpis-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .two { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) { .kpis-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .mv-cuadros { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .mv-cuadro { background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+    :root[data-theme="light"] .mv-cuadro { background: #fff; }
+    .mv-cuadro h4 { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .4px; color: var(--mc-cyan); margin-bottom: 8px; }
+    .mv-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
+    .mv-dias { grid-template-columns: repeat(3, minmax(0, 1fr)); text-align: center; }
+    .mv-kpi > span { display: block; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); }
+    .mv-kpi strong { display: inline-flex; align-items: center; gap: 3px; font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; border-radius: 4px; padding: 1px 6px; margin-left: -6px; }
+    .mv-kpi strong .material-icons { font-size: 15px; }
+    .mv-kpi strong.is-ok { background: rgba(34, 197, 94, .18); color: var(--mc-good); }
+    .mv-kpi strong.is-mal { background: rgba(239, 68, 68, .18); color: var(--mc-bad); }
+    .mv-aviso { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--mc-muted); margin-top: 10px; }
+    .mv-aviso .material-icons { color: var(--mc-amber); }
+    tr.band-r td { background: rgba(128, 0, 0, .55) !important; color: #fff; }
+    tr.band-y td { background: rgba(250, 204, 21, .85) !important; color: #111827; }
+    tr.band-g td { background: rgba(0, 128, 0, .6) !important; color: #fff; }
+    .band-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 6px; }
+    .band-chip.r { background: rgba(239, 68, 68, .16); color: var(--mc-bad); } .band-chip.y { background: rgba(245, 158, 11, .16); color: var(--mc-warn); } .band-chip.g { background: rgba(34, 197, 94, .16); color: var(--mc-good); }
+    .mv-extra { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 10px; font-size: 12px; color: var(--mc-muted); }
+    .mv-extra b { color: var(--mc-text); margin-left: 6px; font-variant-numeric: tabular-nums; }
+    .mv-criterio { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; min-height: 34px; align-items: center; }
+    .mv-criterio label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+    .ind-bands { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .ind-band { border-radius: 8px; padding: 14px; text-align: center; }
+    .ind-band b { display: block; font-size: 28px; font-weight: 900; }
+    .ind-band span { font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .ind-band.r { background: #800000; color: #fff; } .ind-band.y { background: #facc15; color: #111827; } .ind-band.g { background: #008000; color: #fff; }
+    .btn-ind { min-height: 28px; padding: 0 8px; }
+    #tGoals td, #tSups td { white-space: nowrap; }
+    @media (max-width: 1100px) { .mv-cuadros { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .mv-cuadros, .ind-bands { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
 <body data-page="sales-goals" data-root="../">
-  <main class="content" id="content">
-    <div class="page-head">
-      <div>
-        <h1>Sales goals</h1>
-        <p class="muted">November 2026, closed through Nov 16. The pace counts working days only, so a Sunday does not count against anyone.</p>
-      </div>
-    </div>
-
-    <section class="card card-body" aria-label="Filters">
-      <div class="filters">
-        <div class="field"><label for="fSeller">Seller</label><select id="fSeller" multiple></select></div>
-        <div class="field"><label for="fRegion">Region</label><select id="fRegion" multiple></select></div>
-        <div class="field"><label for="fStatus">Status</label><select id="fStatus" multiple></select></div>
-        <div class="field"><label>&nbsp;</label><button class="btn" id="clearBtn" type="button">Clear filters</button></div>
-      </div>
+  <main id="content">
+    <section class="mc-panel no-print">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field" style="max-width:170px"><label for="fDate" data-i18n="fDate"></label><input type="date" id="fDate"></div>
+        <div class="mc-field w-lg"><label for="fCenters" data-i18n="fCenters"></label><select id="fCenters" multiple></select></div>
+        <div class="mc-field"><label for="fSup" data-i18n="fSup"></label><select id="fSup"></select></div>
+        <div class="mc-field"><label for="fSeller" data-i18n="seller"></label><input type="search" id="fSeller" data-i18n-ph="phSeller" autocomplete="off"></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+        <button class="btn btn-violet" type="button" id="btnSups"><span class="material-icons" aria-hidden="true">groups</span><span data-i18n="supDetail"></span></button>
+      </form>
     </section>
 
-    <section class="kpis kpis-5" aria-label="Totals for the selected sellers" aria-live="polite">
-      <div class="card kpi"><div class="kpi-label">Month goal</div><div class="kpi-value" id="kGoal"></div></div>
-      <div class="card kpi"><div class="kpi-label">Sold to date</div><div class="kpi-value" id="kSold"></div></div>
-      <div class="card kpi"><div class="kpi-label">Expected to date</div><div class="kpi-value" id="kExp"></div><div class="kpi-delta muted" id="kDays"></div></div>
-      <div class="card kpi"><div class="kpi-label">Achieved vs pace</div><div class="kpi-value" id="kPace"></div></div>
-      <div class="card kpi"><div class="kpi-label">Projection to month end</div><div class="kpi-value" id="kProj"></div><div class="kpi-delta" id="kProjD"></div></div>
+    <section class="mc-panel">
+      <div class="mv-cuadros" id="cuadros"></div>
+      <div class="mv-aviso" id="aviso"><span class="material-icons" aria-hidden="true">info</span><span></span></div>
     </section>
 
-    <section class="card">
-      <div class="card-head">
-        <h2>By seller</h2>
-        <div class="legend muted" aria-label="Status legend">
-          <span>Ahead: 105% of pace or more</span><span>On track: 95–105%</span><span>Behind: 85–95%</span><span>At risk: below 85%</span>
-        </div>
-      </div>
-      <div class="card-body table-wrap">
-        <table class="grid" id="sellers">
-          <thead><tr>
-            <th>Seller</th><th>Region</th><th class="r">Goal</th><th class="r">Sold</th><th class="r">Expected</th><th>Pace</th><th class="r">vs pace</th><th class="r">Projection</th><th>Status</th>
-          </tr></thead>
-          <tbody></tbody>
-          <tfoot></tfoot>
-        </table>
-        <p class="muted" style="font-size:.8rem;margin-top:8px">The black mark on each bar is where the seller should be today. Select a seller to see their customers and chart.</p>
-      </div>
+    <section class="mc-panel">
+      <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">flag</span><span data-i18n="tTitle"></span></h3><span class="mc-hint" id="count"></span></div>
+      <div class="table-wrap"><table class="grid" id="tGoals"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <div class="mv-extra" id="extra"></div>
     </section>
-
-    <section class="two">
-      <div class="card">
-        <div class="card-head"><h2 id="chartTitle">Cumulative sales vs goal</h2></div>
-        <div class="card-body"><div class="chart-box"><canvas id="cum" role="img" aria-label="Cumulative sales compared with the goal line"></canvas></div></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h2 id="custTitle">Customers</h2><span class="muted" style="font-size:.82rem" id="custNote"></span></div>
-        <div class="card-body table-wrap" style="max-height:330px;overflow:auto">
-          <table class="grid" id="customers"><thead><tr><th>Customer</th><th class="r">Goal</th><th class="r">Sold</th><th class="r">vs pace</th><th>Status</th></tr></thead><tbody></tbody></table>
-        </div>
-      </div>
-    </section>
-
-    <section class="card card-body about">
-      <h2>About this screen</h2>
-      <ul class="muted">
-        <li>Each seller's goal is the sum of their customers' monthly goals, so the drill-down always adds up to the seller row.</li>
-        <li>Expected to date = goal × working days elapsed ÷ working days in the month. Sundays and holidays are excluded on both sides.</li>
-        <li>Projection extends the current daily average over the working days left; it is a reference, not a forecast model.</li>
-        <li>Status always shows an icon and a word, not only a color, and the totals follow the filters.</li>
-      </ul>
-    </section>
+    <div id="about"></div>
   </main>
+
+  <div class="modal-backdrop" id="mSups">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mSupsT">
+      <div class="modal-head"><h3 id="mSupsT"><span class="material-icons" aria-hidden="true">groups</span><span data-i18n="supTitle"></span></h3></div>
+      <div class="modal-body">
+        <div class="mc-filters" style="margin-bottom:10px">
+          <div class="mc-field" style="max-width:260px"><label for="fSupSearch" data-i18n="fSup"></label><input type="search" id="fSupSearch" data-i18n-ph="phSup"></div>
+          <div class="mc-field w-lg"><span class="mc-label" data-i18n="colorBy"></span>
+            <div class="mv-criterio" id="criterio">
+              <label><input type="radio" name="crit" value="proj" checked> <span data-i18n="cProj"></span></label>
+              <label><input type="radio" name="crit" value="uproj"> <span data-i18n="cUProj"></span></label>
+              <label><input type="radio" name="crit" value="ureal"> <span data-i18n="cUReal"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap"><table class="grid" id="tSups"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="modal-foot"><button type="button" class="btn" data-close="mSups"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="mInd">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mIndT">
+      <div class="modal-head"><h3 id="mIndT"><span class="material-icons" aria-hidden="true">speed</span><span></span></h3></div>
+      <div class="modal-body" id="indBody"></div>
+      <div class="modal-foot"><button type="button" class="btn" data-close="mInd"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
+    </div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="../assets/js/common.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const D = UI.DATA;
-    const HOLIDAYS = ["2026-11-02"];
-    const YEAR = 2026, MONTH = 10, CUTOFF = 16; // November, closed through the 16th
-    const daysInMonth = new Date(Date.UTC(YEAR, MONTH + 1, 0)).getUTCDate();
-    const isWorking = d => { const dt = new Date(Date.UTC(YEAR, MONTH, d)); return dt.getUTCDay() !== 0 && !HOLIDAYS.includes(UI.fmtDate(dt)); };
-    const workDays = []; for (let d = 1; d <= daysInMonth; d++) if (isWorking(d)) workDays.push(d);
-    const elapsed = workDays.filter(d => d <= CUTOFF).length, totalWD = workDays.length;
-    const paceFactor = elapsed / totalWD;
-
-    const SELLER_REGION = {};
-    D.sellers.forEach((s, i) => SELLER_REGION[s] = ["North", "Center", "Coast", "West"][i % 4]);
-
-    // Customers per seller with goals and daily sales to the cut-off.
-    const sellers = D.sellers.map((s, si) => {
-      const r = UI.rng(500 + si * 13);
-      const strength = UI.between(r, 0.72, 1.18);
-      const customers = [];
-      const n = 6 + Math.floor(r() * 5);
-      for (let c = 0; c < n; c++) {
-        const name = D.customers[(si * 3 + c * 7) % D.customers.length] + (c >= 4 ? " #" + (c + 1) : "");
-        const goal = Math.round(UI.between(r, 8000, 42000) / 100) * 100;
-        const cs = strength * UI.between(r, 0.7, 1.3);
-        const daily = {};
-        workDays.filter(d => d <= CUTOFF).forEach(d => { daily[d] = goal / totalWD * cs * UI.between(r, 0.4, 1.6); });
-        customers.push({ name, goal, daily });
-      }
-      return { seller: s, region: SELLER_REGION[s], customers };
-    });
-
-    function calc(goal, daily) {
-      const sold = Object.values(daily).reduce((a, v) => a + v, 0);
-      const expected = goal * paceFactor;
-      const vsPace = expected ? sold / expected : 0;
-      const projection = elapsed ? sold / elapsed * totalWD : 0;
-      return { goal, sold, expected, vsPace, projection, status: statusOf(vsPace) };
+  UI.strings({
+    en: {
+      fDate: "Close date", fCenters: "Centers", fSup: "Supervisor", phSeller: "Search seller…", phSup: "Search supervisor…", supDetail: "Supervisor detail", tTitle: "Sales goals by seller",
+      cVol: "Volume", cCost: "Cost and profit", cSup: "Supervisor goal", cDays: "Days",
+      kDailyGoal: "Daily goal", kGoalDiff: "Goal difference", kAccGoal: "Accumulated goal", kPctGoal: "% of goal achieved", kProjProfit: "Projected profit", kProfitDiff: "Profit difference", kPctProfit: "% of profit achieved",
+      kDailyCost: "Daily cost goal", kAccCost: "Accumulated cost goal", kRealProfit: "Real profit",
+      kSupVol: "Volume goal", kSupPct: "Goal %", kSupReached: "Volume reached", kSupReachedPct: "% reached", kSupMissing: "Volume missing", kSupDone: "Achieved",
+      kWork: "Working days", kElapsed: "Days elapsed", kLeft: "Days left",
+      aviso: "{w} working days in {m}: {h} non-working days are excluded (Sundays and the holiday of the sample).",
+      count: "{n} sellers", ok: "Met", bad: "Not met",
+      colSeller: "Seller", colCenter: "Center", colSup: "Supervisor", colGoalM: "Month sales goal", colSalesM: "Month sales", colMissM: "Sales missing", colGoalPct: "Month goal %", colPctM: "Month sales %", colMissPct: "% missing",
+      colGoalD: "Day sales goal", colSalesD: "Day sales", colMissD: "Day missing", colPctD: "Day sales %", colInd: "Indicator", colProj: "% projected volume", colUProj: "% projected profit", colUReal: "% profit reached",
+      bR: "Low", bY: "Medium", bG: "High", invMonth: "Invoices of the month", invDay: "Invoices of the day", profitMissing: "Profit missing",
+      supTitle: "Sales goals by supervisor", colorBy: "Color rows by", cProj: "Projected volume", cUProj: "Projected profit", cUReal: "Profit reached",
+      indTitle: "Goal indicator · {s}", indMonth: "Month", indDay: "Day", indSold: "Sold {v} of {g}", indNeed: "Needs {v} per working day to reach the goal.", indDone: "Goal of the month already reached.",
+      aboutText: "Compares each seller's monthly sales goal with what they sold from day 1 to the <b>close date</b>; the <b>day</b> columns are those of the close date. Only sellers with a goal appear. <b>Sales</b> = invoiced − returns − discounts, and the <b>%</b> is profit over sale. The <b>working days</b> are the days of the month minus the saved non-working days; with them come the daily and accumulated goals, and the <b>day sales goal</b> splits what is missing among the remaining working days. The totals row is painted by the % of the month goal achieved: red up to 33%, yellow up to 66% and green above; the boxes are green when met and red when not. All the data on this page is generated."
+    },
+    es: {
+      fDate: "Fecha de cierre", fCenters: "Centros", fSup: "Supervisor", phSeller: "Buscar vendedor…", phSup: "Buscar supervisor…", supDetail: "Detalle de supervisores", tTitle: "Metas de ventas por vendedor",
+      cVol: "Volumen", cCost: "Costo y utilidad", cSup: "Meta del supervisor", cDays: "Días",
+      kDailyGoal: "Meta diaria", kGoalDiff: "Diferencia de meta", kAccGoal: "Meta acumulada", kPctGoal: "% logrado de la meta", kProjProfit: "Utilidad proyectada", kProfitDiff: "Diferencia de utilidad", kPctProfit: "% de utilidad lograda",
+      kDailyCost: "Meta diaria de costo", kAccCost: "Meta acumulada de costo", kRealProfit: "Utilidad real",
+      kSupVol: "Meta de volumen", kSupPct: "Meta %", kSupReached: "Volumen alcanzado", kSupReachedPct: "% alcanzado", kSupMissing: "Falta de volumen", kSupDone: "Porcentaje logrado",
+      kWork: "Días hábiles", kElapsed: "Días transcurridos", kLeft: "Días restantes",
+      aviso: "{w} días hábiles en {m}: se excluyen {h} días no hábiles (domingos y el feriado del ejemplo).",
+      count: "{n} vendedores", ok: "Cumple", bad: "No cumple",
+      colSeller: "Vendedor", colCenter: "Centro", colSup: "Supervisor", colGoalM: "Meta venta mes", colSalesM: "Venta mes", colMissM: "Falta venta", colGoalPct: "Meta % mes", colPctM: "% venta mes", colMissPct: "Falta %",
+      colGoalD: "Meta venta día", colSalesD: "Venta día", colMissD: "Falta día", colPctD: "% venta día", colInd: "Indicador", colProj: "% volumen proyectado", colUProj: "% utilidad proyectada", colUReal: "% utilidad alcanzada",
+      bR: "Bajo", bY: "Medio", bG: "Alto", invMonth: "Facturas del mes", invDay: "Facturas del día", profitMissing: "Falta de rentabilidad",
+      supTitle: "Metas de ventas por supervisor", colorBy: "Color de las filas según", cProj: "Volumen proyectado", cUProj: "Rentabilidad proyectada", cUReal: "Rentabilidad alcanzada",
+      indTitle: "Indicador de metas · {s}", indMonth: "Mes", indDay: "Día", indSold: "Vendió {v} de {g}", indNeed: "Necesita {v} por día hábil para llegar a la meta.", indDone: "La meta del mes ya se alcanzó.",
+      aboutText: "Compara la meta de venta del mes de cada vendedor con lo vendido del día 1 a la <b>fecha de cierre</b>; las columnas del <b>día</b> son las de la fecha de cierre. Solo salen los vendedores con meta. <b>Venta</b> = facturado − devoluciones − descuentos, y el <b>%</b> es utilidad sobre venta. Los <b>días hábiles</b> son los días del mes menos los días no hábiles guardados; con ellos salen la meta diaria y la acumulada, y la <b>meta venta día</b> reparte lo que falta del mes entre los días hábiles restantes. La fila de totales se pinta según el % logrado de la meta del mes: rojo hasta 33 %, amarillo hasta 66 % y verde arriba; los cuadros se ven en verde si se cumple y en rojo si no. Todos los datos de esta página son generados."
     }
-    function statusOf(p) { return p >= 1.05 ? "ahead" : p >= 0.95 ? "track" : p >= 0.85 ? "behind" : "risk"; }
-    const STATUS = {
-      ahead: { text: "Ahead", cls: "s-ahead", icon: '<path d="M5 12l5 5 9-10"/>' },
-      track: { text: "On track", cls: "s-track", icon: '<path d="M5 12h14M13 6l6 6-6 6"/>' },
-      behind: { text: "Behind", cls: "s-behind", icon: '<path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/>' },
-      risk: { text: "At risk", cls: "s-risk", icon: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>' }
-    };
-    const statusHtml = s => '<span class="status ' + STATUS[s].cls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">' + STATUS[s].icon + "</svg>" + STATUS[s].text + "</span>";
-    function sellerCalc(x) {
-      const daily = {};
-      x.customers.forEach(c => Object.entries(c.daily).forEach(([d, v]) => daily[d] = (daily[d] || 0) + v));
-      return Object.assign({ seller: x.seller, region: x.region, customers: x.customers, daily }, calc(x.customers.reduce((a, c) => a + c.goal, 0), daily));
-    }
-    const rows = sellers.map(sellerCalc);
+  });
+
+  $(function () {
+    const D = UI.DATA, t = UI.t, M = UI.fmtMoney, mi = UI.mi;
+    const TODAY = new Date(Date.UTC(2026, 10, 16));
+    const HOLIDAYS = [{ m: 9, d: 21 }, { m: 10, d: 5 }];
+    const SUPS = ["R. Castillo", "M. Paredes", "L. Fuentes", "S. Navarro"];
+    const CENTERS = [0, 1, 2]; // cost centers that sell
+    const SELLERS = D.sellers.map((name, i) => ({ i, name, sup: [0, 0, 0, 1, 1, 1, 2, 2, 3, 3][i], center: [0, 0, 1, 1, 1, 2, 2, 0, 2, 1][i] }));
+    const isWork = d => d.getUTCDay() !== 0 && !HOLIDAYS.some(h => h.m === d.getUTCMonth() && h.d === d.getUTCDate());
+
+    let st = null, sort = { k: "pctM", dir: -1 };
 
     // Filters
-    function fill(id, items, ph) {
-      $("#" + id).html(items.map(v => '<option value="' + v + '">' + (STATUS[v] ? STATUS[v].text : v) + "</option>").join("")).select2({ placeholder: ph, width: "100%" }).on("change", render);
+    const $c = $("#fCenters"), $s = $("#fSup");
+    function fill() {
+      const cv = $c.val(), sv = $s.val();
+      [$c, $s].forEach($x => { if ($x.hasClass("select2-hidden-accessible")) $x.select2("destroy"); $x.empty(); });
+      CENTERS.forEach(i => $c.append(new Option(UI.L(D.costCenters[i]), String(i))));
+      $s.append(new Option(t("all"), "all")); SUPS.forEach((n, i) => $s.append(new Option(n, String(i))));
+      $c.val(cv || []).select2({ width: "100%", placeholder: t("all"), closeOnSelect: false });
+      $s.val(sv || "all").select2({ width: "100%" });
     }
-    fill("fSeller", D.sellers, "All sellers");
-    fill("fRegion", ["North", "Center", "Coast", "West"], "All regions");
-    fill("fStatus", Object.keys(STATUS), "All statuses");
-    document.getElementById("clearBtn").addEventListener("click", () => { $("#fSeller,#fRegion,#fStatus").val(null).trigger("change.select2"); render(); });
+    fill();
+    const dIn = document.getElementById("fDate"); dIn.value = UI.fmtDate(TODAY); dIn.max = UI.fmtDate(TODAY);
 
-    let selected = null, chart;
-
-    function filtered() {
-      const s = $("#fSeller").val() || [], r = $("#fRegion").val() || [], st = $("#fStatus").val() || [];
-      return rows.filter(x => (!s.length || s.includes(x.seller)) && (!r.length || r.includes(x.region)) && (!st.length || st.includes(x.status)));
+    function compute(d) {
+      const y = d.getUTCFullYear(), m = d.getUTCMonth(), cut = d.getUTCDate();
+      const days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      let wt = 0, we = 0, hol = 0;
+      for (let k = 1; k <= days; k++) { const dd = new Date(Date.UTC(y, m, k)); if (isWork(dd)) { wt++; if (k <= cut) we++; } else hol++; }
+      const left = wt - we + (isWork(d) ? 1 : 0);
+      const rows = SELLERS.map(s => {
+        const r = UI.rng(y * 37 + m * 11 + s.i * 101);
+        const goal = Math.round(UI.between(r, 280000, 520000) / 1000) * 1000;
+        const goalPct = UI.between(r, .11, .15);
+        let sold = 0, cost = 0, day = 0, dayCost = 0, invM = 0, invD = 0;
+        for (let k = 1; k <= cut; k++) {
+          const dd = new Date(Date.UTC(y, m, k)); if (!isWork(dd)) continue;
+          const v = goal / wt * UI.between(r, .55, 1.35) * (s.i === 6 ? .6 : 1), c = v * (1 - UI.between(r, .08, .16)), n = Math.round(UI.between(r, 6, 18));
+          sold += v; cost += c; invM += n; if (k === cut) { day = v; dayCost = c; invD = n; }
+        }
+        const prevSold = sold - day;
+        const goalDay = Math.max(0, (goal - prevSold) / Math.max(1, left));
+        const costGoal = goal * (1 - goalPct);
+        return { s, goal, sold, cost, day, dayCost, goalPct, pctM: sold ? (sold - cost) / sold : 0, pctD: day ? (day - dayCost) / day : 0, goalDay, invM, invD, costGoal, profitGoal: goal - costGoal };
+      });
+      return { d, y, m, cut, wt, we, hol, left, rows };
     }
 
-    function paceBar(x) {
-      const max = Math.max(x.goal, x.sold) || 1;
-      const color = { ahead: "var(--positive)", track: "var(--info)", behind: "var(--warning)", risk: "var(--negative)" }[x.status];
-      return '<div class="pace" aria-hidden="true"><span style="width:' + (x.sold / max * 100) + "%;background:" + color + '"></span><i style="left:' + (x.expected / max * 100) + '%"></i></div>';
+    const band = p => p <= 1 / 3 ? "r" : p <= 2 / 3 ? "y" : "g";
+    const bandChip = p => '<span class="band-chip ' + band(p) + '">' + mi(band(p) === "g" ? "check_circle" : band(p) === "y" ? "remove_circle" : "cancel") + t({ r: "bR", y: "bY", g: "bG" }[band(p)]) + "</span>";
+    function kpi(label, val, sem) { return '<div class="mv-kpi"><span>' + label + "</span><strong" + (sem != null ? ' class="' + (sem ? "is-ok" : "is-mal") + '" title="' + t(sem ? "ok" : "bad") + '">' + mi(sem ? "check" : "close") : ">") + val + "</strong></div>"; }
+
+    function visible() {
+      const cs = ($c.val() || []).map(Number), sv = $s.val(), q = document.getElementById("fSeller").value.trim().toLowerCase();
+      return st.rows.filter(r => (!cs.length || cs.includes(r.s.center)) && (sv === "all" || Number(sv) === r.s.sup) && (!q || r.s.name.toLowerCase().includes(q)));
     }
+    function sum(rows, k) { return rows.reduce((a, r) => a + r[k], 0); }
 
     function render() {
-      const data = filtered().sort((a, b) => b.vsPace - a.vsPace);
-      if (selected && !data.some(x => x.seller === selected)) selected = null;
-      const sum = k => data.reduce((a, x) => a + x[k], 0);
-      const goal = sum("goal"), sold = sum("sold"), exp = sum("expected"), proj = sum("projection");
-      document.getElementById("kGoal").textContent = UI.fmtMoney(goal);
-      document.getElementById("kSold").textContent = UI.fmtMoney(sold);
-      document.getElementById("kExp").textContent = UI.fmtMoney(exp);
-      document.getElementById("kDays").textContent = elapsed + " of " + totalWD + " working days";
-      document.getElementById("kPace").textContent = exp ? UI.fmtPct(sold / exp) : "–";
-      document.getElementById("kProj").textContent = UI.fmtMoney(proj);
-      document.getElementById("kProjD").innerHTML = goal ? '<span class="' + (proj >= goal ? "pos" : "neg") + '">' + (proj >= goal ? "▲ " : "▼ ") + UI.fmtPct(proj / goal) + "</span> <span class='muted'>of goal</span>" : "";
+      if (!st) return;
+      const rows = visible();
+      const goal = sum(rows, "goal"), sold = sum(rows, "sold"), cost = sum(rows, "cost"), day = sum(rows, "day"), dayCost = sum(rows, "dayCost");
+      const accGoal = goal * st.we / st.wt, dailyGoal = goal / st.wt, pctGoal = accGoal ? sold / accGoal : 0;
+      const projSold = st.we ? sold / st.we * st.wt : 0, profit = sold - cost, profitGoal = sum(rows, "profitGoal");
+      const projProfit = st.we ? profit / st.we * st.wt : 0, accProfitGoal = profitGoal * st.we / st.wt;
+      const costGoal = sum(rows, "costGoal");
+      const supGoalPct = goal ? profitGoal / goal : 0;
+      document.getElementById("cuadros").innerHTML =
+        '<div class="mv-cuadro"><h4>' + t("cCost") + '</h4><div class="mv-kpis">' + kpi(t("kDailyCost"), M(costGoal / st.wt)) + kpi(t("kProjProfit"), M(projProfit)) + kpi(t("kAccCost"), M(costGoal * st.we / st.wt)) + kpi(t("kRealProfit"), M(profit)) +
+          kpi(t("kProfitDiff"), M(profit - accProfitGoal), profit - accProfitGoal >= 0) + kpi(t("kPctProfit"), UI.fmtPct(accProfitGoal ? profit / accProfitGoal : 0), profit >= accProfitGoal) + "</div></div>" +
+        '<div class="mv-cuadro"><h4>' + t("cVol") + '</h4><div class="mv-kpis">' + kpi(t("kDailyGoal"), M(dailyGoal)) + kpi(t("kGoalDiff"), M(sold - accGoal), sold - accGoal >= 0) + kpi(t("kAccGoal"), M(accGoal)) +
+          kpi(t("kPctGoal"), UI.fmtPct(pctGoal), pctGoal >= 1) + kpi(t("kProjProfit"), M(projSold)) + kpi(t("kPctProfit"), UI.fmtPct(goal ? projSold / goal : 0), projSold >= goal) + "</div></div>" +
+        '<div class="mv-cuadro"><h4>' + t("cSup") + '</h4><div class="mv-kpis">' + kpi(t("kSupVol"), M(goal)) + kpi(t("kSupPct"), UI.fmtPct(supGoalPct)) + kpi(t("kSupReached"), M(sold)) + kpi(t("kSupReachedPct"), UI.fmtPct(sold ? profit / sold : 0)) +
+          kpi(t("kSupMissing"), M(Math.max(0, goal - sold)), sold >= goal) + kpi(t("kSupDone"), UI.fmtPct(goal ? sold / goal : 0), sold >= goal) + "</div></div>" +
+        '<div class="mv-cuadro"><h4>' + t("cDays") + '</h4><div class="mv-kpis mv-dias">' + kpi(t("kWork"), st.wt) + kpi(t("kElapsed"), st.we) + kpi(t("kLeft"), Math.max(0, st.wt - st.we)) + "</div></div>";
+      document.querySelector("#aviso span:last-child").textContent = t("aviso", { w: st.wt, m: UI.monthName(st.m) + " " + st.y, h: st.hol });
 
-      document.querySelector("#sellers tbody").innerHTML = data.length ? data.map(x =>
-        '<tr class="seller-row" tabindex="0" data-s="' + x.seller + '" aria-selected="' + (x.seller === selected) + '"><td>' + x.seller + "</td><td>" + x.region + '</td><td class="r num">' + UI.fmtMoney(x.goal) +
-        '</td><td class="r num">' + UI.fmtMoney(x.sold) + '</td><td class="r num">' + UI.fmtMoney(x.expected) + "</td><td>" + paceBar(x) +
-        '</td><td class="r num">' + UI.fmtPct(x.vsPace) + '</td><td class="r num">' + UI.fmtMoney(x.projection) + "</td><td>" + statusHtml(x.status) + "</td></tr>").join("")
-        : '<tr><td colspan="9" class="muted">No sellers match the filters.</td></tr>';
-      document.querySelector("#sellers tfoot").innerHTML = '<tr><td>Total (' + data.length + ')</td><td></td><td class="r num">' + UI.fmtMoney(goal) + '</td><td class="r num">' + UI.fmtMoney(sold) +
-        '</td><td class="r num">' + UI.fmtMoney(exp) + '</td><td></td><td class="r num">' + (exp ? UI.fmtPct(sold / exp) : "–") + '</td><td class="r num">' + UI.fmtMoney(proj) + "</td><td></td></tr>";
-      renderDetail(data);
+      const cols = [["name", "colSeller", 0], ["center", "colCenter", 0], ["sup", "colSup", 0], ["goal", "colGoalM", 1], ["sold", "colSalesM", 1], ["miss", "colMissM", 1], ["goalPct", "colGoalPct", 2], ["pctM", "colPctM", 2], ["missPct", "colMissPct", 2],
+        ["goalDay", "colGoalD", 1], ["day", "colSalesD", 1], ["missD", "colMissD", 1], ["pctD", "colPctD", 2], ["band", "colInd", 3]];
+      const data = rows.map(r => ({ r, name: r.s.name, center: UI.L(D.costCenters[r.s.center]), sup: SUPS[r.s.sup], goal: r.goal, sold: r.sold, miss: r.goal - r.sold, goalPct: r.goalPct, pctM: r.pctM, missPct: r.goalPct - r.pctM, goalDay: r.goalDay, day: r.day, missD: r.goalDay - r.day, pctD: r.pctD, band: r.sold / r.goal }));
+      data.sort((a, b) => (a[sort.k] > b[sort.k] ? 1 : -1) * sort.dir);
+      document.querySelector("#tGoals thead").innerHTML = "<tr>" + cols.map(c => '<th class="sortable' + (c[2] ? " r" : "") + '" tabindex="0" data-k="' + c[0] + '" aria-sort="' + (sort.k === c[0] ? (sort.dir > 0 ? "ascending" : "descending") : "none") + '">' + t(c[1]) + "</th>").join("") + "</tr>";
+      const cell = (c, x) => c[2] === 1 ? '<td class="r' + (c[0].startsWith("miss") && x[c[0]] > 0 ? " neg" : "") + '">' + M(x[c[0]]) + "</td>" : c[2] === 2 ? '<td class="r' + (c[0] === "missPct" && x[c[0]] > 0 ? " neg" : "") + '">' + UI.fmtPct(x[c[0]], 2) + "</td>" :
+        c[2] === 3 ? '<td class="r">' + bandChip(x.band) + ' <button type="button" class="btn btn-sm btn-ind" data-ind="' + x.r.s.i + '" aria-label="' + t("indTitle", { s: x.name }) + '">' + mi("speed") + "</button></td>" : "<td>" + x[c[0]] + "</td>";
+      document.querySelector("#tGoals tbody").innerHTML = data.map(x => "<tr>" + cols.map(c => cell(c, x)).join("") + "</tr>").join("");
+      const missDay = sum(rows, "goalDay") - day, pM = sold ? profit / sold : 0, pD = day ? (day - dayCost) / day : 0;
+      document.querySelector("#tGoals tfoot").innerHTML = '<tr class="band-' + band(goal ? sold / goal : 0) + '"><td colspan="3">' + t("totals") + " · " + bandChip(goal ? sold / goal : 0) + '</td><td class="r">' + M(goal) + '</td><td class="r">' + M(sold) + '</td><td class="r">' + M(goal - sold) +
+        '</td><td class="r">' + UI.fmtPct(supGoalPct, 2) + '</td><td class="r">' + UI.fmtPct(pM, 2) + '</td><td class="r">' + UI.fmtPct(supGoalPct - pM, 2) + '</td><td class="r">' + M(sum(rows, "goalDay")) + '</td><td class="r">' + M(day) + '</td><td class="r">' + M(missDay) +
+        '</td><td class="r">' + UI.fmtPct(pD, 2) + '</td><td class="r">' + UI.fmtPct(goal ? sold / goal : 0) + "</td></tr>";
+      document.getElementById("count").textContent = t("count", { n: rows.length });
+      document.getElementById("extra").innerHTML = "<div>" + t("invMonth") + ":<b>" + UI.fmtInt(sum(rows, "invM")) + "</b></div><div>" + t("invDay") + ":<b>" + UI.fmtInt(sum(rows, "invD")) + "</b></div><div>" + t("profitMissing") + ":<b>" + M(Math.max(0, profitGoal - profit)) + "</b></div>";
     }
 
-    function renderDetail(data) {
-      const sel = selected ? rows.find(x => x.seller === selected) : null;
-      const scope = sel ? [sel] : data;
-      document.getElementById("chartTitle").textContent = sel ? "Cumulative sales vs goal · " + sel.seller : "Cumulative sales vs goal · selection";
-      // Chart: cumulative actual (to cutoff) vs cumulative goal across working days.
-      const goal = scope.reduce((a, x) => a + x.goal, 0);
-      const labels = [], actual = [], goalLine = [];
-      let acc = 0, wd = 0;
-      for (let d = 1; d <= daysInMonth; d++) {
-        if (!isWorking(d)) continue;
-        wd++;
-        labels.push("Nov " + d);
-        goalLine.push(goal * wd / totalWD);
-        if (d <= CUTOFF) { acc += scope.reduce((a, x) => a + (x.daily[d] || 0), 0); actual.push(acc); } else actual.push(null);
-      }
-      const text = UI.cssVar("--text-muted"), grid = UI.cssVar("--border");
-      if (chart) chart.destroy();
-      chart = new Chart(document.getElementById("cum"), {
-        type: "line",
-        data: { labels, datasets: [
-          { label: "Sold (cumulative)", data: actual, borderColor: UI.cssVar("--chart-1"), backgroundColor: UI.cssVar("--chart-1"), tension: .2, pointRadius: 0, borderWidth: 2.2, spanGaps: false },
-          { label: "Goal pace", data: goalLine, borderColor: text, borderDash: [5, 4], pointRadius: 0, borderWidth: 1.5 }
-        ] },
-        options: {
-          maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
-          plugins: { legend: { labels: { color: text, boxWidth: 14 } }, tooltip: { callbacks: { label: c => c.dataset.label + ": " + UI.fmtMoney(c.parsed.y) } } },
-          scales: { x: { ticks: { color: text, maxTicksLimit: 8 }, grid: { display: false } }, y: { ticks: { color: text, callback: v => Math.round(v / 1000) + "k" }, grid: { color: grid } } }
-        }
-      });
-
-      // Customers of the selected seller
-      const tb = document.querySelector("#customers tbody");
-      if (!sel) {
-        document.getElementById("custTitle").textContent = "Customers";
-        document.getElementById("custNote").textContent = "";
-        tb.innerHTML = '<tr><td colspan="5" class="muted">Select a seller in the table above to see their customers.</td></tr>';
-        return;
-      }
-      const cust = sel.customers.map(c => Object.assign({ name: c.name }, calc(c.goal, c.daily))).sort((a, b) => a.vsPace - b.vsPace);
-      document.getElementById("custTitle").textContent = "Customers · " + sel.seller;
-      document.getElementById("custNote").textContent = cust.length + " customers, goals add up to " + UI.fmtMoney(sel.goal);
-      tb.innerHTML = cust.map(c => "<tr><td>" + c.name + '</td><td class="r num">' + UI.fmtMoney(c.goal) + '</td><td class="r num">' + UI.fmtMoney(c.sold) + '</td><td class="r num">' + UI.fmtPct(c.vsPace) + "</td><td>" + statusHtml(c.status) + "</td></tr>").join("");
+    function renderSups() {
+      const crit = (document.querySelector("#criterio input:checked") || {}).value || "proj";
+      const q = document.getElementById("fSupSearch").value.trim().toLowerCase();
+      const list = SUPS.map((n, i) => { const rs = st.rows.filter(r => r.s.sup === i); const goal = sum(rs, "goal"), sold = sum(rs, "sold"), cost = sum(rs, "cost"), pg = sum(rs, "profitGoal");
+        const proj = st.we ? sold / st.we * st.wt : 0, profit = sold - cost, projProfit = st.we ? profit / st.we * st.wt : 0;
+        return { n, goal, sold, miss: goal - sold, gp: goal ? pg / goal : 0, pm: sold ? profit / sold : 0, proj: goal ? proj / goal : 0, uproj: pg ? projProfit / pg : 0, ureal: pg ? profit / pg : 0 }; }).filter(x => !q || x.n.toLowerCase().includes(q));
+      document.querySelector("#tSups thead").innerHTML = "<tr><th>" + t("colSup") + '</th><th class="r">' + t("colGoalM") + '</th><th class="r">' + t("colSalesM") + '</th><th class="r">' + t("colMissM") + '</th><th class="r">' + t("colGoalPct") + '</th><th class="r">' + t("colPctM") + '</th><th class="r">' + t("colProj") + '</th><th class="r">' + t("colUProj") + '</th><th class="r">' + t("colUReal") + "</th></tr>";
+      document.querySelector("#tSups tbody").innerHTML = list.map(x => '<tr class="band-' + band(x[crit]) + '"><td>' + x.n + " " + bandChip(x[crit]) + '</td><td class="r">' + M(x.goal) + '</td><td class="r">' + M(x.sold) + '</td><td class="r">' + M(x.miss) + '</td><td class="r">' + UI.fmtPct(x.gp, 2) + '</td><td class="r">' + UI.fmtPct(x.pm, 2) + '</td><td class="r">' + UI.fmtPct(x.proj) + '</td><td class="r">' + UI.fmtPct(x.uproj) + '</td><td class="r">' + UI.fmtPct(x.ureal) + "</td></tr>").join("");
     }
 
-    const tbody = document.querySelector("#sellers tbody");
-    tbody.addEventListener("click", e => { const tr = e.target.closest("tr.seller-row"); if (!tr) return; selected = selected === tr.dataset.s ? null : tr.dataset.s; render(); const t = tbody.querySelector('tr[data-s="' + tr.dataset.s + '"]'); if (t) t.focus(); });
-    tbody.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr.seller-row")) { e.preventDefault(); e.target.click(); } });
-    document.addEventListener("themechange", () => renderDetail(filtered()));
-    render();
+    function indicator(i) {
+      const r = st.rows.find(x => x.s.i === i);
+      const pm = r.sold / r.goal, pd = r.goalDay ? r.day / r.goalDay : 0;
+      document.querySelector("#mIndT span:last-child").textContent = t("indTitle", { s: r.s.name });
+      const need = Math.max(0, (r.goal - r.sold) / Math.max(1, st.wt - st.we));
+      document.getElementById("indBody").innerHTML = '<div class="ind-bands"><div class="ind-band ' + band(pm) + '"><span>' + t("indMonth") + "</span><b>" + UI.fmtPct(pm) + "</b><span>" + t({ r: "bR", y: "bY", g: "bG" }[band(pm)]) + '</span></div><div class="ind-band ' + band(pd) + '"><span>' + t("indDay") + "</span><b>" + UI.fmtPct(pd) + "</b><span>" + t({ r: "bR", y: "bY", g: "bG" }[band(pd)]) + "</span></div></div>" +
+        '<ul class="ig-filas" style="margin-top:12px"><li><span>' + t("indMonth") + "</span><b>" + t("indSold", { v: M(r.sold), g: M(r.goal) }) + "</b></li><li><span>" + t("indDay") + "</span><b>" + t("indSold", { v: M(r.day), g: M(r.goalDay) }) + "</b></li></ul>" +
+        '<p class="mc-hint" style="margin-top:10px">' + (r.sold >= r.goal ? t("indDone") : t("indNeed", { v: M(need) })) + "</p>";
+      UI.openModal("mInd");
+    }
+
+    function load() { st = compute(new Date(dIn.value + "T00:00:00Z")); render(); }
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); load(); });
+    $c.on("change", render); $s.on("change", render);
+    document.getElementById("fSeller").addEventListener("input", render);
+    document.getElementById("tGoals").addEventListener("click", e => {
+      const b = e.target.closest("[data-ind]"); if (b) { indicator(Number(b.dataset.ind)); return; }
+      const th = e.target.closest("th.sortable"); if (th) { if (sort.k === th.dataset.k) sort.dir *= -1; else { sort.k = th.dataset.k; sort.dir = -1; } render(); }
+    });
+    document.getElementById("tGoals").addEventListener("keydown", e => { const th = e.target.closest("th.sortable"); if (th && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); th.click(); } });
+    document.getElementById("btnSups").addEventListener("click", () => { renderSups(); UI.openModal("mSups"); });
+    document.getElementById("fSupSearch").addEventListener("input", renderSups);
+    document.getElementById("criterio").addEventListener("change", renderSups);
+    document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => UI.closeModal(b.dataset.close)));
+    document.addEventListener("langchange", () => { fill(); render(); if (document.getElementById("mSups").classList.contains("open")) renderSups(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    load();
   });
   </script>
 </body>
