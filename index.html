@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Business UI Gallery</title>
-  <meta name="description" content="33 business software screens rebuilt with sample data: sales, inventory, accounting, treasury, budgets, payroll and IT. Spanish and English.">
+  <meta name="description" content="Business software screens rebuilt with sample data, organized by area: sales, inventory, accounting, treasury, budgets, payroll, health and IT. Spanish and English.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Business UI Gallery: 33 ERP screens with sample data">
-  <meta property="og:description" content="Accounting, treasury, budgets, payroll, sales, inventory and IT screens rebuilt with generated data so anyone can try them. Spanish and English.">
+  <meta property="og:title" content="Business UI Gallery: ERP and clinic screens with sample data">
+  <meta property="og:description" content="Accounting, treasury, budgets, payroll, sales, inventory, health and IT screens rebuilt with generated data so anyone can try them. Spanish and English.">
   <meta property="og:url" content="https://robertomz.github.io/business-ui-gallery/">
   <meta property="og:image" content="https://robertomz.github.io/business-ui-gallery/assets/img/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -21,23 +21,12 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/base.css">
   <style>
-    .hero { display: grid; gap: 10px; padding: 22px; }
+    .hero { display: grid; gap: 10px; padding: 22px; margin-bottom: 16px; }
     .hero h2 { font-size: clamp(22px, 2.6vw, 30px); font-weight: 900; letter-spacing: -.5px; }
     .hero p { color: var(--mc-muted); font-size: 13px; max-width: 820px; line-height: 1.6; }
     .stack { display: flex; flex-wrap: wrap; gap: 6px; }
-    .group-title { display: flex; align-items: center; gap: 8px; margin: 10px 0 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--mc-muted); }
-    .group-title::after { content: ""; flex: 1; height: 1px; background: var(--mc-line); }
-    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-    .tile { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 16px; text-decoration: none; color: var(--mc-text);
-      background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 10px; overflow: hidden; transition: transform .15s var(--ease), border-color .15s; min-width: 0; }
-    .tile::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--t1), var(--t2)); }
-    .tile:hover { transform: translateY(-2px); border-color: var(--t1); }
-    .tile-icon { width: 44px; height: 44px; border-radius: 8px; display: grid; place-items: center; background: color-mix(in srgb, var(--t1) 14%, transparent); color: var(--t1); }
-    .tile-icon .material-icons { font-size: 24px; }
-    .tile h3 { font-size: 15px; font-weight: 800; }
-    .tile p { font-size: 12px; color: var(--mc-muted); line-height: 1.5; }
-    .tile .arrow { position: absolute; right: 14px; bottom: 14px; color: var(--mc-muted); }
-    :root[data-theme="light"] .tile { box-shadow: var(--mc-shadow); }
+    .home-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .home-bar h2 { font-size: 15px; font-weight: 800; }
   </style>
 </head>
 <body data-page="home" data-root="">
@@ -54,35 +43,72 @@
       </div>
       <p style="font-size:12px" data-i18n="heroProd"></p>
     </section>
-    <div id="groups"></div>
+
+    <div class="home-bar">
+      <h2 id="homeHeading"></h2>
+      <div class="view-switch" role="group" id="viewSwitch">
+        <button type="button" data-view="areas"><span class="material-icons" aria-hidden="true">grid_view</span><span data-i18n="byArea"></span></button>
+        <button type="button" data-view="all"><span class="material-icons" aria-hidden="true">view_list</span><span data-i18n="allScreens"></span></button>
+      </div>
+    </div>
+    <div id="homeBody"></div>
   </main>
   <script src="assets/js/common.js"></script>
   <script>
     UI.strings({
       en: {
         heroTitle: "Business UI Gallery",
-        heroText: "33 screens like the ones I build every day for a distribution company's ERP, rebuilt with sample data so anyone can open and try them: sales and operations, inventory, accounting, treasury, budgets, payroll and IT. Each one keeps the layout and the business rules of the original.",
-        heroProd: "In production these screens run on Python/Django with MySQL and SQL Server stored procedures. Here they run in the browser, without a server.",
-        chipLang: "Spanish / English", chipData: "All data is generated"
+        heroText: "Screens like the ones I build every day for a distribution company's ERP, rebuilt with sample data so anyone can open and try them. Pick an area to see its screens. The Health area holds concept screens for clinics and doctors.",
+        heroProd: "In production the ERP screens run on Python/Django with MySQL and SQL Server stored procedures. Here everything runs in the browser, without a server.",
+        chipLang: "Spanish / English", chipData: "All data is generated",
+        byArea: "By area", allScreens: "All screens", pickArea: "Choose an area", everyScreen: "Every screen, by area ({n})"
       },
       es: {
         heroTitle: "Business UI Gallery",
-        heroText: "33 pantallas como las que construyo cada día para el ERP de una empresa distribuidora, rehechas con datos de ejemplo para que cualquiera pueda abrirlas y probarlas: ventas y operación, inventario, contabilidad, tesorería, presupuesto, planilla y TI. Cada una conserva la forma y las reglas de negocio de la original.",
-        heroProd: "En producción estas pantallas corren en Python/Django con MySQL y procedimientos almacenados de SQL Server. Aquí corren en el navegador, sin servidor.",
-        chipLang: "Español / Inglés", chipData: "Todos los datos son generados"
+        heroText: "Pantallas como las que construyo cada día para el ERP de una empresa distribuidora, rehechas con datos de ejemplo para que cualquiera pueda abrirlas y probarlas. Elija un área para ver sus pantallas. El área de Salud tiene pantallas de concepto para clínicas y médicos.",
+        heroProd: "En producción las pantallas del ERP corren en Python/Django con MySQL y procedimientos almacenados de SQL Server. Aquí todo corre en el navegador, sin servidor.",
+        chipLang: "Español / Inglés", chipData: "Todos los datos son generados",
+        byArea: "Por área", allScreens: "Todas las pantallas", pickArea: "Elija un área", everyScreen: "Todas las pantallas por área ({n})"
       }
     });
-    const COLORS = { sales: ["#14b8a6", "#06b6d4"], inventory: ["#f59e0b", "#fb923c"], accounting: ["#8b5cf6", "#6366f1"], treasury: ["#38bdf8", "#06b6d4"], budget: ["#f43f5e", "#fb7185"], people: ["#22c55e", "#14b8a6"], it: ["#a78bfa", "#38bdf8"] };
-    function render() {
-      document.getElementById("groups").innerHTML = Object.keys(UI.GROUPS).filter(g => g !== "overview").map(g => {
-        const c = COLORS[g];
-        const tiles = UI.PAGES.filter(p => p.group === g).map(p =>
-          '<a class="tile" style="--t1:' + c[0] + ";--t2:" + c[1] + '" href="' + p.href + '">' +
-            '<span class="tile-icon">' + UI.mi(p.icon) + "</span><h3>" + UI.L(p.title) + "</h3><p>" + UI.L(p.blurb) + '</p><span class="arrow">' + UI.mi("arrow_forward") + "</span></a>").join("");
-        return '<div class="group-title">' + UI.L(UI.GROUPS[g]) + '</div><div class="tiles">' + tiles + "</div>";
-      }).join("");
+    const VIEW_KEY = "bug-home-view";
+    function getView() { if (location.hash === "#all") return "all"; try { return localStorage.getItem(VIEW_KEY) === "all" ? "all" : "areas"; } catch (e) { return "areas"; } }
+    function areaVars(a) { return "--a1:" + a.c[0] + ";--a2:" + a.c[1]; }
+    function screens(g) { return UI.PAGES.filter(p => p.group === g); }
+    function tile(p, a) {
+      return '<a class="tile" style="' + areaVars(a) + '" href="' + p.href + '"><span class="tile-icon">' + UI.mi(p.icon) + "</span><h3>" + UI.L(p.title) + "</h3><p>" + UI.L(p.blurb) + '</p><span class="arrow">' + UI.mi("arrow_forward") + "</span></a>";
     }
-    document.addEventListener("DOMContentLoaded", render);
+    function render() {
+      const view = getView();
+      document.querySelectorAll("#viewSwitch button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+      const keys = Object.keys(UI.AREAS);
+      if (view === "areas") {
+        document.getElementById("homeHeading").textContent = UI.t("pickArea");
+        document.getElementById("homeBody").innerHTML = '<div class="area-grid">' + keys.map(g => {
+          const a = UI.AREAS[g];
+          return '<a class="area-card" style="' + areaVars(a) + '" href="area.html?a=' + g + '">' +
+            '<div class="area-art" aria-hidden="true"><span class="area-main">' + UI.mi(a.icon) + '</span><span class="area-deco">' + a.deco.map(i => "<span>" + UI.mi(i) + "</span>").join("") + "</span></div>" +
+            '<div class="area-body"><h3>' + UI.L(UI.GROUPS[g]) + (a.concept ? '<span class="chip-concept">' + UI.t("concept") + "</span>" : "") + "</h3><p>" + UI.L(a.d) + "</p>" +
+            '<div class="area-meta"><span>' + UI.t("screensN", { n: screens(g).length }) + "</span>" + UI.mi("arrow_forward") + "</div></div></a>";
+        }).join("") + "</div>";
+      } else {
+        const total = UI.PAGES.filter(p => UI.AREAS[p.group]).length;
+        document.getElementById("homeHeading").textContent = UI.t("everyScreen", { n: total });
+        document.getElementById("homeBody").innerHTML = keys.map(g => {
+          const a = UI.AREAS[g];
+          return '<a class="group-title" style="' + areaVars(a) + '" href="area.html?a=' + g + '">' + UI.mi(a.icon) + UI.L(UI.GROUPS[g]) + (a.concept ? ' <span class="chip-concept">' + UI.t("concept") + "</span>" : "") + "</a>" +
+            '<div class="tiles">' + screens(g).map(p => tile(p, a)).join("") + "</div>";
+        }).join("");
+      }
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll("#viewSwitch button").forEach(b => b.addEventListener("click", () => {
+        try { localStorage.setItem(VIEW_KEY, b.dataset.view); } catch (e) { /* storage blocked */ }
+        if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+        render();
+      }));
+      render();
+    });
     document.addEventListener("langchange", render);
   </script>
 </body>

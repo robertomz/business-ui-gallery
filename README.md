@@ -1,6 +1,6 @@
 # Business UI Gallery
 
-Business software screens rebuilt with sample data: sales, inventory, accounting, treasury, budgets, payroll and IT. **Spanish and English** (switch in the top bar).
+Business software screens rebuilt with sample data, organized by area: sales, inventory, accounting, treasury, budgets, payroll, health and IT. **Spanish and English** (switch in the top bar).
 
 **Live demo:** https://robertomz.github.io/business-ui-gallery/
 
@@ -10,7 +10,7 @@ I build and maintain an internal ERP for a distribution company: a Django platfo
 
 ## Screens
 
-33 screens in 8 areas.
+37 screens in 9 areas. The home page shows one card per area; each area has its own page, and the sidebar shows only that area's screens until you press **Show all screens**.
 
 | Area | Screen | What it shows |
 | --- | --- | --- |
@@ -43,10 +43,16 @@ I build and maintain an internal ERP for a distribution company: a Django platfo
 | People | Payroll run | Earnings, deductions, employer contributions, bank file and accounting entry |
 | People | Employee file | Contract, position, vacations, documents and history in one record |
 | People | Attendance | Clock-in import, late arrivals and overtime, and the cut-off for payroll |
+| Health & clinics (concept) | Clinic dashboard | The day at a glance: appointments by status, waiting time, no-shows, doctors' occupancy and income by service |
+| Health & clinics (concept) | Appointments | Weekly schedule per doctor: book, confirm, check in and reschedule without double booking |
+| Health & clinics (concept) | Patients | Registry with search, allergies and alerts, insurance and a validated new-patient form |
+| Health & clinics (concept) | Medical record | Vitals, consultation timeline, diagnoses, prescriptions and attachments |
 | IT & services | Network map | Topology of branches and devices with status and a simulated scan |
 | IT & services | Maintenance planner | Preventive maintenance calendar with overdue alerts and checklists |
 | IT & services | Service desk | Ticket board with SLA timers and drag and drop |
 | IT & services | Dashboard builder | Drag-and-drop canvas to build dashboards from widgets |
+
+The **Health & clinics** screens are concept screens: designed as samples of what I can build for clinics and doctors, not taken from a system in production. Every other screen is rebuilt from software in daily use.
 
 ## Rules these screens follow
 

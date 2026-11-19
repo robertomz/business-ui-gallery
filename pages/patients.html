@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Patients · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .rv-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .rv-title { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; }
+    .rv-title .material-icons { color: var(--mc-cyan); font-size: 19px; }
+    .rv-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .dataTables_wrapper .dataTables_filter { display: none; }
+    table.dataTable, div.dts table.dataTable { background: transparent !important; }
+    #tPat_wrapper { width: 100%; }
+    #tPat tbody tr { cursor: pointer; }
+    #tPat td .chip { margin-right: 4px; }
+    .rec-link { color: var(--mc-cyan); font-weight: 800; text-decoration: none; }
+    .rec-link:hover { text-decoration: underline; }
+    .kpi-click { cursor: default; }
+    .mc-kpis.p4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    @media (max-width: 900px) { .mc-kpis.p4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .form-sec { grid-column: 1 / -1; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; color: var(--mc-cyan); margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--mc-line); }
+    .form-sec:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+    .req::after { content: " *"; color: var(--mc-bad); }
+    @media (max-width: 620px) { #mNew .grid-2 { grid-template-columns: minmax(0, 1fr); } }
+  </style>
+</head>
+<body data-page="patients" data-root="../">
+  <main id="content">
+    <section class="mc-panel">
+      <div class="mc-filters">
+        <div class="mc-field w-lg"><label for="fSearch" data-i18n="search"></label><input id="fSearch" data-i18n-ph="searchPh" autocomplete="off"></div>
+        <div class="mc-field"><label for="fDoc" data-i18n="doctor"></label><select id="fDoc"></select></div>
+        <div class="mc-field"><label for="fIns" data-i18n="insurer"></label><select id="fIns"></select></div>
+        <label class="mc-check"><input type="checkbox" id="fAlerts"><span data-i18n="withAlerts"></span></label>
+        <button class="btn btn-teal" type="button" id="btnNew"><span class="material-icons" aria-hidden="true">person_add</span><span data-i18n="newPatient"></span></button>
+      </div>
+    </section>
+
+    <section class="mc-panel">
+      <div class="rv-head">
+        <span class="rv-title"><span class="material-icons" aria-hidden="true">functions</span><span data-i18n="summary"></span></span>
+        <span id="kHelp"></span>
+      </div>
+      <div class="mc-kpis p4" id="kpis"></div>
+    </section>
+
+    <section class="mc-panel">
+      <div class="rv-head">
+        <span class="rv-title"><span class="material-icons" aria-hidden="true">personal_injury</span><span data-i18n="patientsT"></span></span>
+        <div class="rv-tools">
+          <span class="mc-hint" id="count" role="status" aria-live="polite"></span>
+          <button class="btn btn-sm" type="button" id="btnCsv"><span class="material-icons" aria-hidden="true">download</span><span data-i18n="export"></span></button>
+        </div>
+      </div>
+      <p class="mc-hint" data-i18n="rowHint" style="margin-bottom:8px"></p>
+      <table id="tPat" class="display nowrap compact" style="width:100%"></table>
+    </section>
+
+    <div id="about"></div>
+  </main>
+
+  <div class="modal-backdrop" id="mNew">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mNewT" style="width:min(820px,100%)">
+      <div class="modal-head"><h3 id="mNewT"><span class="material-icons" aria-hidden="true">person_add</span><span data-i18n="newPatient"></span></h3></div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <div class="form-sec" data-i18n="secPerson"></div>
+          <div class="mc-field"><label class="req" for="nFirst" data-i18n="firstName"></label><input id="nFirst" autocomplete="off"><span class="mc-field-error" id="nFirstErr"></span></div>
+          <div class="mc-field"><label class="req" for="nLast" data-i18n="lastName"></label><input id="nLast" autocomplete="off"><span class="mc-field-error" id="nLastErr"></span></div>
+          <div class="mc-field"><label class="req" for="nBirth" data-i18n="birth"></label><input id="nBirth" type="date"><span class="mc-field-error" id="nBirthErr"></span></div>
+          <div class="mc-field"><label class="req" for="nSex" data-i18n="sex"></label><select id="nSex"></select><span class="mc-field-error" id="nSexErr"></span></div>
+          <div class="mc-field"><label class="req" for="nPhone" data-i18n="phone"></label><input id="nPhone" inputmode="numeric" placeholder="0000-0000" autocomplete="off"><span class="mc-field-error" id="nPhoneErr"></span></div>
+          <div class="mc-field"><label for="nEmail" data-i18n="email"></label><input id="nEmail" type="email" autocomplete="off"><span class="mc-field-error" id="nEmailErr"></span></div>
+          <div class="form-sec" data-i18n="secMedical"></div>
+          <div class="mc-field"><label class="req" for="nIns" data-i18n="insurer"></label><select id="nIns"></select><span class="mc-field-error" id="nInsErr"></span></div>
+          <div class="mc-field"><label for="nPolicy" id="nPolicyLbl" data-i18n="policy"></label><input id="nPolicy" autocomplete="off"><span class="mc-field-error" id="nPolicyErr"></span></div>
+          <div class="mc-field"><label for="nBlood" data-i18n="blood"></label><select id="nBlood"></select></div>
+          <div class="mc-field"><label for="nAll" data-i18n="allergies"></label><select id="nAll" multiple></select></div>
+          <div class="form-sec" data-i18n="secEmergency"></div>
+          <div class="mc-field"><label class="req" for="nEcName" data-i18n="ecName"></label><input id="nEcName" autocomplete="off"><span class="mc-field-error" id="nEcNameErr"></span></div>
+          <div class="mc-field"><label class="req" for="nEcPhone" data-i18n="ecPhone"></label><input id="nEcPhone" inputmode="numeric" placeholder="0000-0000" autocomplete="off"><span class="mc-field-error" id="nEcPhoneErr"></span></div>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="nSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button><button class="btn" type="button" id="nClose" data-i18n="close"></button></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/scroller/2.3.0/js/dataTables.scroller.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  UI.strings({
+    en: {
+      searchPh: "Name, record no. or phone…", doctor: "Primary doctor", insurer: "Insurer", withAlerts: "Only with alerts", newPatient: "New patient",
+      summary: "Summary", patientsT: "Patients", rowHint: "Click a row to open the patient's medical record.", countTxt: "{n} patients shown",
+      allDoctors: "All doctors", allInsurers: "All insurers", privatePay: "Private pay",
+      cRec: "Record", cName: "Patient", cAge: "Age", cSex: "Sex", cPhone: "Phone", cIns: "Insurer", cDoc: "Primary doctor", cLast: "Last visit", cNext: "Next appointment", cAlerts: "Alerts",
+      kPatients: "Patients", kNew: "New this month", kAllergy: "With allergies", kFollow: "Follow-up pending",
+      kPatientsSub: "match the filters", kNewSub: "registered since the 1st", kAllergySub: "{p} of the list", kFollowSub: "chronic, no appointment, last visit > 90 days",
+      hKpi: "All four figures are counted from the rows the table shows after the search and filters. <b>Follow-up pending</b> = a patient with a chronic condition, no upcoming appointment and no visit in the last 90 days.",
+      yrs: "{n} y", months: "{n} mo", F: "F", M: "M", female: "Female", male: "Male", none: "—",
+      aAllergy: "Allergy", aFollow: "Follow-up", chronicT: "Chronic",
+      secPerson: "Personal data", secMedical: "Coverage and medical data", secEmergency: "Emergency contact",
+      firstName: "First name", lastName: "Last name", birth: "Birth date", sex: "Sex", phone: "Phone", email: "Email", policy: "Policy no.", blood: "Blood type", allergies: "Allergies",
+      ecName: "Contact name", ecPhone: "Contact phone", choose: "Choose…", unknown: "Unknown",
+      eReq: "Required.", ePhone: "Enter 8 digits (0000-0000).", eEmail: "Enter a valid email.", eBirth: "The date can't be in the future.", eBirthOld: "Check the year.", ePolicy: "Required when the patient has an insurer.",
+      savedNew: "Patient {id} saved.", fixErrors: "Check the fields marked in red.",
+      aboutText: "Concept screen: designed as a sample of what I can build for a clinic, not taken from a system in production. All names are invented.<ul><li>The four totals are recalculated from the rows left after every search or filter.</li><li>The table holds 1,500 patients with virtual scrolling and no pagination.</li><li>The new-patient form opens empty, validates next to each field and only asks for the policy number when the patient has an insurer.</li><li>Each row opens that patient's medical record.</li></ul>"
+    },
+    es: {
+      searchPh: "Nombre, no. de expediente o teléfono…", doctor: "Médico de cabecera", insurer: "Aseguradora", withAlerts: "Solo con alertas", newPatient: "Nuevo paciente",
+      summary: "Resumen", patientsT: "Pacientes", rowHint: "Haga clic en una fila para abrir el expediente clínico del paciente.", countTxt: "{n} pacientes en pantalla",
+      allDoctors: "Todos los médicos", allInsurers: "Todas las aseguradoras", privatePay: "Particular",
+      cRec: "Expediente", cName: "Paciente", cAge: "Edad", cSex: "Sexo", cPhone: "Teléfono", cIns: "Aseguradora", cDoc: "Médico de cabecera", cLast: "Última visita", cNext: "Próxima cita", cAlerts: "Alertas",
+      kPatients: "Pacientes", kNew: "Nuevos este mes", kAllergy: "Con alergias", kFollow: "Control pendiente",
+      kPatientsSub: "según los filtros", kNewSub: "registrados desde el día 1", kAllergySub: "{p} de la lista", kFollowSub: "crónicos, sin cita, última visita > 90 días",
+      hKpi: "Las cuatro cifras se cuentan de las filas que muestra la tabla después de la búsqueda y los filtros. <b>Control pendiente</b> = paciente con una enfermedad crónica, sin cita próxima y sin visita en los últimos 90 días.",
+      yrs: "{n} a", months: "{n} m", F: "F", M: "M", female: "Femenino", male: "Masculino", none: "—",
+      aAllergy: "Alergia", aFollow: "Control", chronicT: "Crónico",
+      secPerson: "Datos personales", secMedical: "Cobertura y datos médicos", secEmergency: "Contacto de emergencia",
+      firstName: "Nombres", lastName: "Apellidos", birth: "Fecha de nacimiento", sex: "Sexo", phone: "Teléfono", email: "Correo", policy: "No. de póliza", blood: "Tipo de sangre", allergies: "Alergias",
+      ecName: "Nombre del contacto", ecPhone: "Teléfono del contacto", choose: "Elija…", unknown: "Desconocido",
+      eReq: "Obligatorio.", ePhone: "Escriba 8 dígitos (0000-0000).", eEmail: "Escriba un correo válido.", eBirth: "La fecha no puede ser futura.", eBirthOld: "Revise el año.", ePolicy: "Obligatorio cuando el paciente tiene aseguradora.",
+      savedNew: "Paciente {id} guardado.", fixErrors: "Revise los campos marcados en rojo.",
+      aboutText: "Pantalla de concepto: diseñada como muestra de lo que puedo construir para una clínica, no tomada de un sistema en producción. Todos los nombres son inventados.<ul><li>Los cuatro totales se recalculan con las filas que quedan después de cada búsqueda o filtro.</li><li>La tabla tiene 1,500 pacientes con desplazamiento virtual y sin paginación.</li><li>El formulario de paciente nuevo abre vacío, valida junto a cada campo y solo pide la póliza cuando el paciente tiene aseguradora.</li><li>Cada fila abre el expediente clínico de ese paciente.</li></ul>"
+    }
+  });
+
+  // ---- Shared patient generator (same in medical-record.html): patient i is always the same person ----
+  const TODAY = new Date(Date.UTC(2026, 10, 18));
+  const DAY = 86400000;
+  const CHRONIC = [{ en: "Hypertension", es: "Hipertensión" }, { en: "Type 2 diabetes", es: "Diabetes tipo 2" }, { en: "Asthma", es: "Asma" }];
+  function patient(i) {
+    const D = UI.DATA, r = UI.rng(7000 + i * 13);
+    const sex = r() < 0.53 ? "F" : "M";
+    const first = D.firstNames[Math.floor(r() * 10) * 2 + (sex === "M" ? 1 : 0)];
+    const last = D.lastNames[Math.floor(r() * D.lastNames.length)] + " " + D.lastNames[Math.floor(r() * D.lastNames.length)];
+    const child = r() < 0.2;
+    const ageDays = child ? Math.floor(r() * 14 * 365) + 60 : Math.floor((18 + r() * 66) * 365);
+    const birth = new Date(TODAY.getTime() - ageDays * DAY);
+    const phone = String(2000 + Math.floor(r() * 7999)) + "-" + String(Math.floor(r() * 10000)).padStart(4, "0");
+    const ins = r() < 0.45 ? 0 : 1 + Math.floor(r() * (D.insurers.length - 1));
+    const policy = ins ? "POL-" + String(Math.floor(r() * 900000) + 100000) : "";
+    const blood = D.bloodTypes[Math.floor(r() * D.bloodTypes.length)];
+    const allergies = [];
+    if (r() < 0.22) { allergies.push(Math.floor(r() * D.allergies.length)); if (r() < 0.3) { const b = Math.floor(r() * D.allergies.length); if (!allergies.includes(b)) allergies.push(b); } }
+    const years = ageDays / 365;
+    const chronic = [];
+    if (years > 35 && r() < 0.38) chronic.push(r() < 0.6 ? 0 : 1);
+    if (years > 50 && r() < 0.2 && !chronic.includes(1)) chronic.push(1);
+    if (r() < 0.07) chronic.push(2);
+    let doc = child ? 1 : [0, 0, 2, 2, 0, 0][Math.floor(r() * 6)];
+    if (!child && sex === "F" && r() < 0.25) doc = 3;
+    const createdAgo = r() < 0.04 ? Math.floor(r() * 17) : 18 + Math.floor(r() * 1800);
+    const created = new Date(TODAY.getTime() - createdAgo * DAY);
+    const lastVisit = new Date(TODAY.getTime() - Math.floor(r() * Math.min(createdAgo + 1, 420)) * DAY);
+    const nextAppt = r() < 0.34 ? new Date(TODAY.getTime() + (1 + Math.floor(r() * 45)) * DAY) : null;
+    const ec = D.firstNames[Math.floor(r() * D.firstNames.length)] + " " + last.split(" ")[0];
+    const ecPhone = String(2000 + Math.floor(r() * 7999)) + "-" + String(Math.floor(r() * 10000)).padStart(4, "0");
+    const email = years >= 18 ? (first + "." + last.split(" ")[0]).toLowerCase() + (i % 97) + "@mail.test" : "";
+    return { i, id: "P-" + String(i).padStart(6, "0"), first, last, name: first + " " + last, sex, birth, phone, email, ins, policy, blood, allergies, chronic, doc, created, lastVisit, nextAppt, ec, ecPhone };
+  }
+  function followUp(p) { return p.chronic.length > 0 && !p.nextAppt && (TODAY - p.lastVisit) / DAY > 90; }
+  function ageTxt(birth) {
+    const d = (TODAY - birth) / DAY;
+    return d < 365 * 2 ? UI.t("months", { n: Math.floor(d / 30.4) }) : UI.t("yrs", { n: Math.floor(d / 365.25) });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const t = UI.t, D = UI.DATA, mi = UI.mi;
+    const N = 1500;
+    const rows = [];
+    for (let i = 1; i <= N; i++) rows.push(patient(i));
+    const insName = i => i === 0 ? t("privatePay") : D.insurers[i];
+
+    // ---- Filters ----
+    let fDoc = "all", fIns = "all";
+    function fillFilters() {
+      const $d = $("#fDoc"); if ($d.hasClass("select2-hidden-accessible")) $d.select2("destroy");
+      $d.empty().append(new Option(t("allDoctors"), "all"));
+      D.doctors.forEach((d, i) => $d.append(new Option(d.name + " · " + UI.L(d.spec), String(i))));
+      $d.val(fDoc).select2({ width: "100%" });
+      const $s = $("#fIns"); if ($s.hasClass("select2-hidden-accessible")) $s.select2("destroy");
+      $s.empty().append(new Option(t("allInsurers"), "all"));
+      D.insurers.forEach((x, i) => $s.append(new Option(insName(i), String(i))));
+      $s.val(fIns).select2({ width: "100%", minimumResultsForSearch: Infinity });
+    }
+    fillFilters();
+    $("#fDoc").on("change", () => { fDoc = $("#fDoc").val(); dt.draw(); });
+    $("#fIns").on("change", () => { fIns = $("#fIns").val(); dt.draw(); });
+    document.getElementById("fAlerts").addEventListener("change", () => dt.draw());
+    let tmr;
+    document.getElementById("fSearch").addEventListener("input", e => { clearTimeout(tmr); tmr = setTimeout(() => dt.search(e.target.value).draw(), 180); });
+
+    // ---- Table ----
+    function alerts(p) {
+      let h = "";
+      p.allergies.forEach(a => { h += '<span class="chip chip-neg">' + mi("warning") + t("aAllergy") + ": " + UI.L(D.allergies[a]) + "</span>"; });
+      p.chronic.forEach(c => { h += '<span class="chip chip-warn">' + mi("monitor_heart") + UI.L(CHRONIC[c]) + "</span>"; });
+      if (followUp(p)) h += '<span class="chip chip-info">' + mi("event_repeat") + t("aFollow") + "</span>";
+      return h || '<span class="muted">' + t("none") + "</span>";
+    }
+    const dateCol = key => ({ data: key, render: (d, ty) => !d ? (ty === "sort" ? 0 : (ty === "display" ? '<span class="muted">' + t("none") + "</span>" : "")) : (ty === "sort" || ty === "type" ? d.getTime() : UI.fmtDay(d)) });
+    const dt = $("#tPat").DataTable({
+      data: rows, deferRender: true, scrollY: "56vh", scrollX: true, scroller: { rowHeight: 31, displayBuffer: 4 }, paging: true, info: false, order: [[0, "desc"]], dom: "rt",
+      columns: [
+        { data: "i", title: "", render: (d, ty, p) => ty === "display" ? '<a class="rec-link" href="medical-record.html?p=' + p.i + '">' + p.id + "</a>" : (ty === "filter" ? p.id : d) },
+        { data: "name", title: "" },
+        { data: "birth", title: "", className: "r", render: (d, ty) => ty === "sort" || ty === "type" ? -d.getTime() : ageTxt(d) },
+        { data: "sex", title: "", render: d => t(d) },
+        { data: "phone", title: "" },
+        { data: "ins", title: "", render: d => insName(d) },
+        { data: "doc", title: "", render: d => D.doctors[d].name },
+        dateCol("lastVisit"), dateCol("nextAppt"),
+        { data: null, title: "", orderable: false, render: (d, ty, p) => ty === "display" ? alerts(p) : p.allergies.map(a => UI.L(D.allergies[a])).concat(p.chronic.map(c => UI.L(CHRONIC[c]))).join(" ") }
+      ]
+    });
+    $.fn.dataTable.ext.search.push((settings, data, idx) => {
+      if (settings.nTable.id !== "tPat") return true;
+      const p = dt.row(idx).data(); if (!p) return true;
+      if (fDoc !== "all" && p.doc !== +fDoc) return false;
+      if (fIns !== "all" && p.ins !== +fIns) return false;
+      if (document.getElementById("fAlerts").checked && !p.allergies.length && !p.chronic.length && !followUp(p)) return false;
+      return true;
+    });
+    $("#tPat tbody").on("click", "tr", function (e) {
+      if (e.target.closest("a")) return;
+      const p = dt.row(this).data(); if (p) location.href = "medical-record.html?p=" + p.i;
+    });
+    const HEADS = ["cRec", "cName", "cAge", "cSex", "cPhone", "cIns", "cDoc", "cLast", "cNext", "cAlerts"];
+    function heads() {
+      $(dt.table().container()).find(".dataTables_scrollHead th").each((i, th) => { th.textContent = t(HEADS[i]); });
+      $(dt.table().header()).find("th").each((i, th) => { th.textContent = t(HEADS[i]); });
+    }
+    heads();
+
+    // ---- KPIs follow the table ----
+    function kpi(label, value, sub, color) { return '<div class="mc-kpi is-accent" style="--k-color:' + color + '"><div class="k-label">' + label + '</div><div class="k-value">' + value + '</div><div class="k-sub">' + sub + "</div></div>"; }
+    function totals() {
+      const vis = dt.rows({ search: "applied" }).data().toArray();
+      const monthStart = new Date(Date.UTC(TODAY.getUTCFullYear(), TODAY.getUTCMonth(), 1));
+      const nNew = vis.filter(p => p.created >= monthStart).length;
+      const nAll = vis.filter(p => p.allergies.length).length;
+      const nFol = vis.filter(followUp).length;
+      document.getElementById("kpis").innerHTML =
+        kpi(t("kPatients"), UI.fmtInt(vis.length), t("kPatientsSub"), "var(--mc-teal)") +
+        kpi(t("kNew"), UI.fmtInt(nNew), t("kNewSub"), "var(--mc-cyan)") +
+        kpi(t("kAllergy"), UI.fmtInt(nAll), t("kAllergySub", { p: vis.length ? UI.fmtPct(nAll / vis.length) : "0%" }), "var(--mc-rose)") +
+        kpi(t("kFollow"), UI.fmtInt(nFol), t("kFollowSub"), "var(--mc-amber)");
+      document.getElementById("count").textContent = t("countTxt", { n: UI.fmtInt(vis.length) });
+    }
+    dt.on("draw.dt", totals);
+    totals();
+    const kHelp = () => { document.getElementById("kHelp").innerHTML = UI.helpBtn("hKpi"); };
+    kHelp();
+
+    document.getElementById("btnCsv").addEventListener("click", () => {
+      const vis = dt.rows({ search: "applied" }).data().toArray();
+      UI.csvDownload("patients.csv", [HEADS.map(h => t(h))].concat(vis.map(p => [p.id, p.name, ageTxt(p.birth), t(p.sex), p.phone, insName(p.ins), D.doctors[p.doc].name, UI.fmtDay(p.lastVisit), p.nextAppt ? UI.fmtDay(p.nextAppt) : "", p.allergies.map(a => UI.L(D.allergies[a])).concat(p.chronic.map(c => UI.L(CHRONIC[c]))).join("; ")])));
+    });
+
+    // ---- New patient modal: opens empty, closes only with its buttons ----
+    const $m = $("#mNew");
+    function fillModalSelects() {
+      const sel = (id, opts, multi, search) => {
+        const $s = $(id); if ($s.hasClass("select2-hidden-accessible")) $s.select2("destroy");
+        const v = $s.val(); $s.empty();
+        if (!multi) $s.append(new Option(t("choose"), ""));
+        opts.forEach(o => $s.append(new Option(o[1], o[0])));
+        $s.val(v).select2({ width: "100%", dropdownParent: $m, placeholder: multi ? t("none") : undefined, minimumResultsForSearch: search ? 0 : Infinity, closeOnSelect: !multi });
+      };
+      sel("#nSex", [["F", t("female")], ["M", t("male")]]);
+      sel("#nIns", D.insurers.map((x, i) => [String(i), insName(i)]));
+      sel("#nBlood", D.bloodTypes.map(b => [b, b]).concat([["?", t("unknown")]]));
+      sel("#nAll", D.allergies.map((a, i) => [String(i), UI.L(a)]), true, true);
+    }
+    fillModalSelects();
+    function phoneMask(el) {
+      el.addEventListener("input", () => { const d = el.value.replace(/\D/g, "").slice(0, 8); el.value = d.length > 4 ? d.slice(0, 4) + "-" + d.slice(4) : d; });
+    }
+    phoneMask(document.getElementById("nPhone")); phoneMask(document.getElementById("nEcPhone"));
+    const FIELDS = ["nFirst", "nLast", "nBirth", "nSex", "nPhone", "nEmail", "nIns", "nPolicy", "nEcName", "nEcPhone"];
+    function setErr(id, msg) {
+      const el = document.getElementById(id), err = document.getElementById(id + "Err");
+      if (err) err.textContent = msg || "";
+      el.setAttribute("aria-invalid", msg ? "true" : "false");
+      const s2 = $(el).next(".select2"); if (s2.length) s2.find(".select2-selection").css("border-color", msg ? "var(--mc-bad)" : "");
+    }
+    function policyLabel() { document.getElementById("nPolicyLbl").classList.toggle("req", !!$("#nIns").val() && $("#nIns").val() !== "0"); }
+    $("#nIns").on("change", () => { policyLabel(); if (document.getElementById("nPolicyErr").textContent) validate(); });
+    function validate() {
+      const v = id => (document.getElementById(id).value || "").trim();
+      const e = {};
+      ["nFirst", "nLast", "nEcName"].forEach(id => { if (!v(id)) e[id] = t("eReq"); });
+      if (!v("nBirth")) e.nBirth = t("eReq");
+      else { const b = new Date(v("nBirth") + "T00:00:00Z"); if (b > TODAY) e.nBirth = t("eBirth"); else if (b.getUTCFullYear() < 1900) e.nBirth = t("eBirthOld"); }
+      if (!$("#nSex").val()) e.nSex = t("eReq");
+      ["nPhone", "nEcPhone"].forEach(id => { if (!v(id)) e[id] = t("eReq"); else if (!/^\d{4}-\d{4}$/.test(v(id))) e[id] = t("ePhone"); });
+      if (v("nEmail") && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("nEmail"))) e.nEmail = t("eEmail");
+      const ins = $("#nIns").val();
+      if (!ins) e.nIns = t("eReq");
+      else if (ins !== "0" && !v("nPolicy")) e.nPolicy = t("ePolicy");
+      FIELDS.forEach(id => setErr(id, e[id]));
+      return e;
+    }
+    FIELDS.forEach(id => { const el = document.getElementById(id); el.addEventListener("blur", () => { if (document.getElementById(id + "Err") && document.getElementById(id + "Err").textContent) validate(); }); });
+    $("#nSex").on("change", () => { if (document.getElementById("nSexErr").textContent) validate(); });
+    document.getElementById("btnNew").addEventListener("click", () => {
+      FIELDS.concat(["nBlood"]).forEach(id => { const el = document.getElementById(id); if (el.tagName === "SELECT") $(el).val("").trigger("change.select2"); else el.value = ""; });
+      $("#nAll").val([]).trigger("change.select2");
+      FIELDS.forEach(id => setErr(id, ""));
+      policyLabel();
+      document.getElementById("nBirth").max = UI.fmtDate(TODAY);
+      UI.openModal("mNew");
+    });
+    document.getElementById("nClose").addEventListener("click", () => UI.closeModal("mNew"));
+    document.getElementById("nSave").addEventListener("click", () => {
+      const e = validate();
+      const firstBad = FIELDS.find(id => e[id]);
+      if (firstBad) { UI.toast(t("fixErrors")); const el = document.getElementById(firstBad); if (el.tagName === "SELECT") $(el).select2("open"); else el.focus(); return; }
+      const i = rows.length + 1;
+      const v = id => document.getElementById(id).value.trim();
+      const ins = +$("#nIns").val();
+      const p = { i, id: "P-" + String(i).padStart(6, "0"), first: v("nFirst"), last: v("nLast"), name: v("nFirst") + " " + v("nLast"), sex: $("#nSex").val(),
+        birth: new Date(v("nBirth") + "T00:00:00Z"), phone: v("nPhone"), email: v("nEmail"), ins, policy: v("nPolicy"), blood: $("#nBlood").val() || "?",
+        allergies: ($("#nAll").val() || []).map(Number), chronic: [], doc: 0, created: TODAY, lastVisit: null, nextAppt: null, ec: v("nEcName"), ecPhone: v("nEcPhone"), isNew: true };
+      rows.push(p);
+      dt.row.add(p).draw(false);
+      UI.closeModal("mNew");
+      UI.toast(t("savedNew", { id: p.id }));
+    });
+
+    // ---- About + language/theme ----
+    const about = () => { document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); };
+    about();
+    document.addEventListener("langchange", () => { fillFilters(); fillModalSelects(); policyLabel(); heads(); dt.rows().invalidate("data").draw(false); kHelp(); about(); });
+  });
+  </script>
+</body>
+</html>

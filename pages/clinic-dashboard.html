@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clinic dashboard · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .ig-card[data-area="citas"] { --ig-color: #ec4899; }
+    .ig-card[data-area="espera"] { --ig-color: #38bdf8; }
+    .ig-card[data-area="inasistencia"] { --ig-color: #f59e0b; }
+    .ig-card[data-area="ingresos"] { --ig-color: #14b8a6; }
+    .ig-card[data-area="ocupacion"] { --ig-color: #8b5cf6; }
+    .ig-card[data-area="porhora"] { --ig-color: #06b6d4; }
+    .st { display: inline-flex; align-items: center; gap: 4px; font-weight: 750; white-space: nowrap; }
+    .st .material-icons { font-size: 15px; }
+    .st-scheduled { color: #94a3b8; } .st-confirmed { color: #38bdf8; } .st-arrived { color: #f59e0b; }
+    .st-inconsult { color: #a78bfa; } .st-done { color: var(--mc-good); } .st-noshow { color: var(--mc-bad); }
+    .doc-bar header { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin: 10px 0 5px; }
+    .doc-bar header span { font-weight: 750; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .doc-bar header small { color: var(--mc-muted); font-weight: 500; margin-left: 4px; }
+    .doc-bar .ig-barra { height: 10px; }
+    .doc-bar.is-high .ig-barra span { background: repeating-linear-gradient(45deg, #f43f5e 0 6px, #e11d48 6px 12px); }
+    .doc-bar p { font-size: 10px; color: var(--mc-muted); margin-top: 4px; }
+    .chart-box { position: relative; height: 260px; margin-top: 8px; }
+    .dash-lower { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; margin-top: 12px; }
+    .dash-lower .mc-panel { margin: 0; min-width: 0; }
+    @media (max-width: 1000px) { .dash-lower { grid-template-columns: minmax(0, 1fr); } }
+  </style>
+</head>
+<body data-page="clinic-dashboard" data-root="../">
+  <main id="content">
+    <section class="mc-panel no-print">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field w-sm"><label data-i18n="fClinic"></label><div class="static">DEMO</div></div>
+        <div class="mc-field" style="max-width:170px"><label for="fDate" data-i18n="date"></label><input type="date" id="fDate"></div>
+        <div class="mc-field" style="max-width:280px"><label for="fDoctor" data-i18n="fDoctor"></label><select id="fDoctor"></select></div>
+        <button class="btn btn-teal" type="submit"><span class="material-icons" aria-hidden="true">search</span><span data-i18n="load"></span></button>
+      </form>
+    </section>
+    <p class="mc-hint" id="hint" role="status"></p>
+
+    <div id="dash" hidden>
+      <div class="mc-head">
+        <div><h2 id="dTitle"></h2><p id="dSub"></p></div>
+        <span class="mc-chip-time" id="dTime"></span>
+      </div>
+      <div class="ig-areas" id="areas" style="margin-top:12px"></div>
+
+      <div class="dash-lower">
+        <section class="mc-panel">
+          <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">schedule</span><span data-i18n="nextTitle"></span></h3><span class="mc-hint" id="nextHint"></span></div>
+          <div class="table-wrap"><table class="grid" id="tNext"><thead></thead><tbody></tbody></table></div>
+        </section>
+        <section class="mc-panel">
+          <div class="mc-panel-title"><h3><span class="material-icons" aria-hidden="true">bar_chart</span><span data-i18n="chartTitle"></span></h3></div>
+          <div class="chart-box"><canvas id="cHours" role="img"></canvas></div>
+        </section>
+      </div>
+    </div>
+    <div id="about"></div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  UI.strings({
+    en: {
+      fClinic: "Clinic", fDoctor: "Doctor", allDoctors: "All doctors",
+      title: "Clinic dashboard for {d}", sub: "Each figure is compared with {p} (previous working day) and {m} (same day last month). The clinic opens Monday to Saturday; Saturday until noon.",
+      subLive: "Today is still running, so the other days are counted up to the same hour ({h}).", consulted: "Consulted {d}", loaded: "Loaded the day {d}.", sundayMoved: "The clinic is closed on Sundays: showing {d}.",
+      citas: "Appointments", espera: "Waiting time", inasistencia: "No-shows", ingresos: "Income by service", ocupacion: "Doctors' occupancy",
+      citasMain: "Appointments of the day", citasPct: "Already attended", esperaMain: "Average wait from arrival to consultation", esperaPct: "Seen within 15 minutes",
+      inaMain: "Patients who did not come", inaPct: "No-show rate", ingMain: "Income from attended appointments", ocuMain: "Booked time over available time",
+      s_scheduled: "Scheduled", s_confirmed: "Confirmed", s_arrived: "In the waiting room", s_inconsult: "In consultation", s_done: "Attended", s_noshow: "Did not come",
+      maxWait: "Longest wait", waitingNow: "Waiting right now", seenPatients: "Patients already seen", passed: "Appointments whose time already passed",
+      toCall: "Patients to call and reschedule", pendingValue: "Value of appointments still to come", services: "Services", minutes: "{n} min",
+      slotsOf: "{b} of {s} slots", perDayOf: "{x}, per day", vsDays: "vs",
+      nextTitle: "Next appointments", nextHint: "From now until the clinic closes", nextNone: "No appointments left for this day.",
+      colTime: "Time", colPatient: "Patient", colDoctor: "Doctor", colService: "Service", colStatus: "Status",
+      chartTitle: "Patients per hour", cDone: "Attended", cNoshow: "Did not come", cPending: "Still to come",
+      h_citas: "Every appointment booked for the day. Cancelled ones are not counted. <b>Already attended</b> = attended ÷ appointments of the day.",
+      h_espera: "Minutes between the moment the patient checks in at reception and the moment the doctor calls them. Only patients already seen count.",
+      h_ina: "Appointments whose time already passed and the patient never checked in. <b>Rate</b> = did not come ÷ (attended + in consultation + did not come). Lower is better.",
+      h_ing: "Price of the service of every attended appointment. Appointments still to come are shown apart, they are not income yet.",
+      h_ocu: "Each doctor has 30-minute slots from 7:00 to 17:00 (Saturday until 12:00). Occupancy = booked slots ÷ available slots. Above 90% the bar turns striped: there is no room for urgent patients.",
+      aboutText: "<b>Concept screen.</b> I designed it as a sample of what a clinic system can show every morning; it was not taken from a system in production. Everything follows the filters: choose a doctor and every card, the table and the chart recalculate for that doctor only. Each figure is compared with the <b>previous working day</b> (Sundays are skipped) and with the <b>same day of the previous month</b>; the color says if the change is good or bad (more no-shows is red even though the arrow points up). Status is always shown with an icon and a word, never only with a color. All patients, doctors and amounts are generated."
+    },
+    es: {
+      fClinic: "Clínica", fDoctor: "Médico", allDoctors: "Todos los médicos",
+      title: "Tablero de la clínica del {d}", sub: "Cada cifra se compara con el {p} (día hábil anterior) y con el {m} (mismo día del mes anterior). La clínica atiende de lunes a sábado; el sábado hasta mediodía.",
+      subLive: "El día de hoy sigue en curso: los otros días se cuentan hasta la misma hora ({h}).", consulted: "Consultado {d}", loaded: "Se cargó el día {d}.", sundayMoved: "La clínica no atiende los domingos: se muestra el {d}.",
+      citas: "Citas", espera: "Tiempo de espera", inasistencia: "Inasistencias", ingresos: "Ingresos por servicio", ocupacion: "Ocupación de médicos",
+      citasMain: "Citas del día", citasPct: "Ya atendidas", esperaMain: "Espera promedio desde la llegada hasta la consulta", esperaPct: "Atendidos en menos de 15 minutos",
+      inaMain: "Pacientes que no llegaron", inaPct: "Tasa de inasistencia", ingMain: "Ingresos de las citas atendidas", ocuMain: "Tiempo agendado sobre tiempo disponible",
+      s_scheduled: "Agendada", s_confirmed: "Confirmada", s_arrived: "En sala de espera", s_inconsult: "En consulta", s_done: "Atendida", s_noshow: "No se presentó",
+      maxWait: "Espera más larga", waitingNow: "Esperando en este momento", seenPatients: "Pacientes ya atendidos", passed: "Citas cuya hora ya pasó",
+      toCall: "Pacientes para llamar y reagendar", pendingValue: "Valor de las citas que faltan", services: "Servicios", minutes: "{n} min",
+      slotsOf: "{b} de {s} espacios", perDayOf: "{x}, por día", vsDays: "vs",
+      nextTitle: "Próximas citas", nextHint: "Desde ahora hasta el cierre de la clínica", nextNone: "No quedan citas para este día.",
+      colTime: "Hora", colPatient: "Paciente", colDoctor: "Médico", colService: "Servicio", colStatus: "Estado",
+      chartTitle: "Pacientes por hora", cDone: "Atendidas", cNoshow: "No se presentaron", cPending: "Por atender",
+      h_citas: "Todas las citas agendadas para el día. Las canceladas no se cuentan. <b>Ya atendidas</b> = atendidas ÷ citas del día.",
+      h_espera: "Minutos entre la llegada del paciente a recepción y el momento en que el médico lo llama. Solo cuentan los pacientes ya atendidos.",
+      h_ina: "Citas cuya hora ya pasó y el paciente nunca registró su llegada. <b>Tasa</b> = no se presentaron ÷ (atendidas + en consulta + no se presentaron). Entre más baja, mejor.",
+      h_ing: "Precio del servicio de cada cita atendida. Las citas que faltan se muestran aparte: todavía no son ingreso.",
+      h_ocu: "Cada médico tiene espacios de 30 minutos de 7:00 a 17:00 (sábado hasta las 12:00). Ocupación = espacios agendados ÷ espacios disponibles. Arriba de 90 % la barra se ve rayada: no queda espacio para urgencias.",
+      aboutText: "<b>Pantalla de concepto.</b> La diseñé como muestra de lo que un sistema de clínica puede mostrar cada mañana; no se tomó de un sistema en producción. Todo sigue a los filtros: elija un médico y cada tarjeta, la tabla y la gráfica se recalculan solo para ese médico. Cada cifra se compara con el <b>día hábil anterior</b> (se saltan los domingos) y con el <b>mismo día del mes anterior</b>; el color indica si el cambio es bueno o malo (más inasistencias sale en rojo aunque la flecha apunte hacia arriba). El estado siempre se muestra con ícono y palabra, nunca solo con color. Todos los pacientes, médicos y montos son generados."
+    }
+  });
+
+  $(function () {
+    const D = UI.DATA, t = UI.t, mi = UI.mi, M = UI.fmtMoney, I = UI.fmtInt;
+    const TODAY = new Date(Date.UTC(2026, 10, 16));     // Monday
+    const NOW_MIN = 10 * 60 + 40;                         // 10:40 a.m.
+    const DAY = 86400000;
+    const isWorking = d => d.getUTCDay() !== 0;
+    const dn = d => Math.floor(d.getTime() / DAY);
+    function prevWorking(d) { let x = new Date(d.getTime() - DAY); while (!isWorking(x)) x = new Date(x.getTime() - DAY); return x; }
+    function sameDayLastMonth(d) { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, d.getUTCDate())); return isWorking(x) ? x : prevWorking(x); }
+    const STATUS = { scheduled: "event", confirmed: "event_available", arrived: "how_to_reg", inconsult: "medical_services", done: "task_alt", noshow: "event_busy" };
+    const stHtml = s => '<span class="st st-' + s + '">' + mi(STATUS[s]) + t("s_" + s) + "</span>";
+    const hhmm = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+    const PATIENTS = []; { const r = UI.rng(4242); for (let i = 0; i < 80; i++) PATIENTS.push(UI.pick(r, D.firstNames) + " " + UI.pick(r, D.lastNames) + " " + UI.pick(r, D.lastNames)); }
+
+    // Same generator as the Appointments screen: one deterministic agenda per doctor and day.
+    function slotsFor(d) { return d.getUTCDay() === 6 ? 10 : 20; }
+    function agenda(doc, d, ref) {
+      if (!isWorking(d)) return [];
+      const dn = Math.floor(d.getTime() / DAY);
+      const r = UI.rng(dn * 977 + doc * 31 + 11);
+      const occ = UI.between(r, .55, .92), ns = UI.between(r, .05, .15);
+      const today = ref == null ? Math.floor(TODAY.getTime() / DAY) : ref;
+      const isToday = dn === today, isPast = dn < today;
+      const out = [], n = slotsFor(d);
+      for (let s = 0; s < n; s++) {
+        const roll = r(), durRoll = r(), pi = Math.floor(r() * PATIENTS.length), sr = r(), stR = r(), wait = Math.round(UI.between(r, 4, 38));
+        if (roll > occ) continue;
+        const dur = durRoll < .18 && s < n - 1 ? 2 : 1;
+        const svc = doc === 0 ? [0, 0, 2, 3][Math.floor(sr * 4)] : [1, 1, 2, 3, 4, 5][Math.floor(sr * 6)];
+        const start = 7 * 60 + s * 30, end = start + dur * 30;
+        let st;
+        if (isPast || (isToday && end <= NOW_MIN)) st = stR < ns ? "noshow" : "done";
+        else if (isToday && start <= NOW_MIN) st = stR < ns * .5 ? "noshow" : "inconsult";
+        else if (isToday && start - NOW_MIN <= 60) st = stR < .55 ? "arrived" : "confirmed";
+        else if (isToday || dn - today <= 2) st = stR < .6 ? "confirmed" : "scheduled";
+        else st = stR < .25 ? "confirmed" : "scheduled";
+        out.push({ doc, slot: s, dur, start, patient: PATIENTS[pi], svc, st, wait: st === "done" || st === "inconsult" ? wait : null });
+        s += dur - 1;
+      }
+      return out;
+    }
+    function day(d, docSel, ref) {
+      const docs = docSel == null ? D.doctors.map((_, i) => i) : [docSel];
+      const appts = [].concat.apply([], docs.map(i => agenda(i, d, ref)));
+      const z = { appts, total: appts.length, by: {}, docs: [] };
+      Object.keys(STATUS).forEach(k => { z.by[k] = appts.filter(a => a.st === k).length; });
+      const seen = appts.filter(a => a.wait != null);
+      z.seen = seen.length;
+      z.avgWait = seen.length ? seen.reduce((a, x) => a + x.wait, 0) / seen.length : 0;
+      z.maxWait = seen.length ? Math.max.apply(null, seen.map(x => x.wait)) : 0;
+      z.fast = seen.length ? seen.filter(x => x.wait <= 15).length / seen.length : 0;
+      z.passed = z.by.done + z.by.inconsult + z.by.noshow;
+      z.noshowRate = z.passed ? z.by.noshow / z.passed : 0;
+      z.attendedPct = z.total ? z.by.done / z.total : 0;
+      z.svc = D.clinicServices.map((s, i) => { const done = appts.filter(a => a.svc === i && a.st === "done"); return { i, n: done.length, v: done.length * s.price }; });
+      z.income = z.svc.reduce((a, s) => a + s.v, 0);
+      z.pending = appts.filter(a => ["scheduled", "confirmed", "arrived", "inconsult"].includes(a.st)).reduce((a, x) => a + D.clinicServices[x.svc].price, 0);
+      const n = slotsFor(d);
+      z.docs = docs.map(i => { const b = agenda(i, d, ref).reduce((a, x) => a + x.dur, 0); return { i, booked: b, slots: n, occ: n ? b / n : 0 }; });
+      z.booked = z.docs.reduce((a, x) => a + x.booked, 0); z.slots = z.docs.reduce((a, x) => a + x.slots, 0);
+      z.occ = z.slots ? z.booked / z.slots : 0;
+      return z;
+    }
+
+    // Filters
+    const $doc = $("#fDoctor");
+    function fillDoctors() {
+      const v = $doc.val();
+      $doc.empty().append(new Option(t("allDoctors"), "all"));
+      D.doctors.forEach((x, i) => $doc.append(new Option(x.name + " · " + UI.L(x.spec), String(i))));
+      $doc.val(v || "all").select2({ width: "100%", minimumResultsForSearch: 0 });
+    }
+    fillDoctors();
+    const dateIn = document.getElementById("fDate");
+    dateIn.value = UI.fmtDate(TODAY);
+    dateIn.max = UI.fmtDate(new Date(TODAY.getTime() + 14 * DAY));
+
+    let state = null, chart = null;
+    const row = (label, value, opt) => '<li class="' + ((opt && opt.cls) || "") + '"><span>' + label + (opt && opt.sub ? "<small>" + opt.sub + "</small>" : "") + "</span><b>" + value + (opt && opt.bsub ? "<small>" + opt.bsub + "</small>" : "") + "</b></li>";
+    const sec = label => '<li class="ig-seccion">' + label + "</li>";
+    function card(area, icon, dateTxt, main, pct, body, spark) {
+      return '<article class="ig-card" data-area="' + area + '">' +
+        '<div class="ig-card-head"><h3>' + mi(icon) + t(area) + '</h3><span class="ig-card-fecha">' + dateTxt + "</span></div>" +
+        '<div class="ig-principal-label">' + main.label + UI.helpBtn(main.help) + "</div>" +
+        '<div class="ig-principal num">' + (main.fmt || M)(main.value) + "</div>" +
+        '<div class="ig-deltas">' + main.deltas + "</div>" +
+        (pct ? '<div class="ig-medidor"><div class="ig-medidor-texto"><span>' + pct.label + "</span><b>" + UI.fmtPct(pct.value) + '</b></div><div class="ig-barra"><span style="width:' + Math.max(0, Math.min(100, pct.value * 100)) + '%"></span></div>' +
+          '<div class="ig-deltas">' + pct.deltas + "</div></div>" : "") + body + (spark || "") + "</article>";
+    }
+    function trend(d, b, f, live) {
+      const vals = [], labels = []; let x = d;
+      for (let i = 0; i < 12; i++) { vals.unshift(f(day(x, b, live ? dn(x) : null))); labels.unshift(UI.fmtDayShort(x)); x = prevWorking(x); }
+      return [vals, labels];
+    }
+
+    function render() {
+      if (!state) return;
+      const { d, b } = state;
+      const p = prevWorking(d), m = sameDayLastMonth(d);
+      const isToday = d.getTime() === TODAY.getTime();
+      // Viewing today: past days are cut at the same hour, so the comparison is fair.
+      const z = day(d, b), zp = day(p, b, isToday ? dn(p) : null), zm = day(m, b, isToday ? dn(m) : null);
+      const vp = t("vsDays") + " " + UI.fmtDayShort(p), vm = t("vsDays") + " " + UI.fmtDayShort(m);
+      const dd = (f, o) => UI.delta(f(z), f(zp), Object.assign({ label: vp }, o)) + UI.delta(f(z), f(zm), Object.assign({ label: vm }, o));
+      const short = UI.fmtDayShort(d);
+
+      document.getElementById("dTitle").textContent = t("title", { d: UI.fmtDay(d) });
+      document.getElementById("dSub").textContent = t("sub", { p: UI.fmtDay(p), m: UI.fmtDay(m) }) + (isToday ? " " + t("subLive", { h: hhmm(NOW_MIN) }) : "");
+      document.getElementById("dTime").textContent = t("consulted", { d: UI.fmtDay(TODAY) + " " + hhmm(NOW_MIN) });
+
+      const cards = [];
+      cards.push(card("citas", "event_note", short,
+        { label: t("citasMain"), help: "h_citas", value: z.total, fmt: I, deltas: dd(x => x.total, { int: true }) },
+        { label: t("citasPct"), value: z.attendedPct, deltas: dd(x => x.attendedPct, { points: true }) },
+        '<ul class="ig-filas">' + Object.keys(STATUS).map(k => row(stHtml(k), I(z.by[k]), { bsub: z.total ? UI.fmtPct(z.by[k] / z.total) : "—" })).join("") +
+        row(t("total"), I(z.total), { cls: "is-total" }) + "</ul>"));
+      cards.push(card("espera", "hourglass_bottom", short,
+        { label: t("esperaMain"), help: "h_espera", value: z.avgWait, fmt: v => t("minutes", { n: Math.round(v) }), deltas: dd(x => Math.round(x.avgWait), { int: true, goodWhenUp: false }) },
+        { label: t("esperaPct"), value: z.fast, deltas: dd(x => x.fast, { points: true }) },
+        '<ul class="ig-filas">' + row(t("maxWait"), t("minutes", { n: z.maxWait })) + row(t("seenPatients"), I(z.seen)) + row(stHtml("arrived"), I(z.by.arrived), { sub: t("waitingNow") }) + "</ul>",
+        (() => { const tr = trend(d, b, x => x.avgWait, isToday); return UI.sparkline(tr[0], tr[1], t("perDayOf", { x: t("espera") })); })()));
+      cards.push(card("inasistencia", "event_busy", short,
+        { label: t("inaMain"), help: "h_ina", value: z.by.noshow, fmt: I, deltas: dd(x => x.by.noshow, { int: true, goodWhenUp: false }) },
+        { label: t("inaPct"), value: z.noshowRate, deltas: dd(x => x.noshowRate, { points: true, goodWhenUp: false }) },
+        '<ul class="ig-filas">' + row(t("passed"), I(z.passed)) + row(stHtml("done"), I(z.by.done), { cls: "is-sub" }) + row(stHtml("inconsult"), I(z.by.inconsult), { cls: "is-sub" }) +
+        row(stHtml("noshow"), I(z.by.noshow), { cls: "is-sub" }) + row(t("toCall"), I(z.by.noshow), { cls: "is-total" }) + "</ul>",
+        (() => { const tr = trend(d, b, x => x.noshowRate, isToday); return UI.sparkline(tr[0], tr[1], t("perDayOf", { x: t("inaPct") })); })()));
+      cards.push(card("ingresos", "payments", short,
+        { label: t("ingMain"), help: "h_ing", value: z.income, deltas: dd(x => x.income) },
+        null,
+        '<ul class="ig-filas">' + sec(t("services")) + z.svc.filter(s => s.n).sort((a, c) => c.v - a.v).map(s => row(UI.L(D.clinicServices[s.i].name), M(s.v), { bsub: I(s.n) + " × " + M(D.clinicServices[s.i].price) })).join("") +
+        row(t("total"), M(z.income), { cls: "is-total" }) + row(t("pendingValue"), M(z.pending)) + "</ul>",
+        (() => { const tr = trend(d, b, x => x.income, isToday); return UI.sparkline(tr[0], tr[1], t("perDayOf", { x: t("ingMain") })); })()));
+      cards.push('<article class="ig-card" data-area="ocupacion"><div class="ig-card-head"><h3>' + mi("groups") + t("ocupacion") + '</h3><span class="ig-card-fecha">' + short + "</span></div>" +
+        '<div class="ig-principal-label">' + t("ocuMain") + UI.helpBtn("h_ocu") + '</div><div class="ig-principal num">' + UI.fmtPct(z.occ) + "</div>" +
+        '<div class="ig-deltas">' + dd(x => x.occ, { points: true }) + "</div>" +
+        z.docs.slice().sort((a, c) => c.occ - a.occ).map(x => '<div class="doc-bar' + (x.occ > .9 ? " is-high" : "") + '"><header><span>' + D.doctors[x.i].name + "<small>" + UI.L(D.doctors[x.i].spec) + '</small></span><b class="num">' + UI.fmtPct(x.occ, 0) + '</b></header><div class="ig-barra"><span style="width:' + Math.min(100, x.occ * 100) + '%"></span></div><p>' + t("slotsOf", { b: x.booked, s: x.slots }) + "</p></div>").join("") +
+        "</article>");
+      document.getElementById("areas").innerHTML = cards.join("");
+      renderNext(z, isToday);
+      renderChart(z);
+    }
+
+    function renderNext(z, isToday) {
+      document.getElementById("nextHint").textContent = isToday ? t("nextHint") : "";
+      const list = z.appts.filter(a => ["scheduled", "confirmed", "arrived", "inconsult"].includes(a.st)).sort((a, c) => a.start - c.start || a.doc - c.doc).slice(0, 12);
+      document.querySelector("#tNext thead").innerHTML = "<tr><th>" + t("colTime") + "</th><th>" + t("colPatient") + "</th><th>" + t("colDoctor") + "</th><th>" + t("colService") + "</th><th>" + t("colStatus") + "</th></tr>";
+      document.querySelector("#tNext tbody").innerHTML = list.length ? list.map(a => "<tr><td class=\"num\">" + hhmm(a.start) + "</td><td>" + a.patient + "</td><td>" + D.doctors[a.doc].name + "</td><td>" + UI.L(D.clinicServices[a.svc].name) + "</td><td>" + stHtml(a.st) + "</td></tr>").join("")
+        : '<tr><td colspan="5" class="mc-hint">' + t("nextNone") + "</td></tr>";
+    }
+
+    function renderChart(z) {
+      const hours = []; for (let h = 7; h < 17; h++) hours.push(h);
+      const cnt = f => hours.map(h => z.appts.filter(a => Math.floor(a.start / 60) === h && f(a)).length);
+      const tx = UI.cssVar("--mc-muted"), grid = UI.cssVar("--mc-line");
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("cHours"), {
+        type: "bar",
+        data: { labels: hours.map(h => hhmm(h * 60)), datasets: [
+          { label: t("cDone"), data: cnt(a => a.st === "done"), backgroundColor: "rgba(20,184,166,.8)", stack: "s" },
+          { label: t("cNoshow"), data: cnt(a => a.st === "noshow"), backgroundColor: "rgba(244,63,94,.75)", stack: "s" },
+          { label: t("cPending"), data: cnt(a => !["done", "noshow"].includes(a.st)), backgroundColor: "rgba(56,189,248,.5)", borderColor: "#38bdf8", borderWidth: 1, stack: "s" }
+        ] },
+        options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: tx, boxWidth: 12 } } },
+          scales: { x: { stacked: true, ticks: { color: tx }, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { color: tx, precision: 0 }, grid: { color: grid } } } }
+      });
+      document.getElementById("cHours").setAttribute("aria-label", t("chartTitle"));
+    }
+
+    function load() {
+      let d = new Date(dateIn.value + "T00:00:00Z");
+      if (isNaN(d)) d = TODAY;
+      const moved = !isWorking(d);
+      if (moved) d = prevWorking(d);
+      const bv = $doc.val();
+      state = { d, b: bv === "all" ? null : Number(bv) };
+      document.getElementById("dash").hidden = false;
+      document.getElementById("hint").textContent = moved ? t("sundayMoved", { d: UI.fmtDay(d) }) : t("loaded", { d: UI.fmtDay(d) });
+      render();
+    }
+
+    document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); load(); });
+    document.addEventListener("langchange", () => { fillDoctors(); if (state) load(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); });
+    document.addEventListener("themechange", () => { if (state) renderChart(day(state.d, state.b)); });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText");
+    document.getElementById("hint").textContent = t("loadHint");
+    load();
+  });
+  </script>
+</body>
+</html>

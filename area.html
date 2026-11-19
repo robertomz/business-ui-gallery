@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business UI Gallery</title>
+  <meta name="description" content="Screens of one area of the Business UI Gallery.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <style>
+    .area-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .area-foot a { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--mc-teal); text-decoration: none; min-height: 40px; }
+    .concept-note { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin-bottom: 14px; border-radius: 10px; font-size: 12.5px; line-height: 1.5;
+      border: 1px solid rgba(236,72,153,.35); background: rgba(236,72,153,.08); }
+    .concept-note .material-icons { color: #ec4899; font-size: 20px; }
+  </style>
+</head>
+<body data-page="area" data-root="">
+  <main id="content">
+    <section class="area-hero" id="areaHero"></section>
+    <div id="areaNote"></div>
+    <div class="tiles" id="areaTiles"></div>
+    <div class="area-foot" id="areaFoot"></div>
+  </main>
+  <script src="assets/js/common.js"></script>
+  <script>
+    UI.strings({
+      en: { areaConcept: "Concept screens: designed as samples of what I can build for clinics and doctors, not taken from a system in production.", notFound: "That area does not exist. Choose one from the gallery home.", backHome: "All areas", prevArea: "Previous area", nextArea: "Next area" },
+      es: { areaConcept: "Pantallas de concepto: diseñadas como muestra de lo que puedo construir para clínicas y médicos, no tomadas de un sistema en producción.", notFound: "Esa área no existe. Elija una en el inicio de la galería.", backHome: "Todas las áreas", prevArea: "Área anterior", nextArea: "Área siguiente" }
+    });
+    const keys = Object.keys(UI.AREAS);
+    const g = new URLSearchParams(location.search).get("a");
+    function render() {
+      const a = UI.AREAS[g];
+      if (!a) {
+        document.getElementById("areaHero").outerHTML = '<p class="mc-panel" style="padding:18px">' + UI.t("notFound") + ' <a href="index.html">' + UI.t("backHome") + "</a></p>";
+        return;
+      }
+      const vars = "--a1:" + a.c[0] + ";--a2:" + a.c[1];
+      const pages = UI.PAGES.filter(p => p.group === g);
+      const hero = document.getElementById("areaHero");
+      hero.setAttribute("style", vars);
+      hero.innerHTML = '<span class="area-main" aria-hidden="true">' + UI.mi(a.icon) + "</span><div><h2>" + UI.L(UI.GROUPS[g]) +
+        (a.concept ? ' <span class="chip-concept">' + UI.t("concept") + "</span>" : "") + "</h2><p>" + UI.L(a.d) + "</p><p><b>" + UI.t("screensN", { n: pages.length }) + "</b></p></div>";
+      document.getElementById("areaNote").innerHTML = a.concept ? '<div class="concept-note">' + UI.mi("lightbulb") + "<span>" + UI.t("areaConcept") + "</span></div>" : "";
+      document.getElementById("areaTiles").innerHTML = pages.map(p =>
+        '<a class="tile" style="' + vars + '" href="' + p.href + '"><span class="tile-icon">' + UI.mi(p.icon) + "</span><h3>" + UI.L(p.title) + "</h3><p>" + UI.L(p.blurb) + '</p><span class="arrow">' + UI.mi("arrow_forward") + "</span></a>").join("");
+      const i = keys.indexOf(g), prev = keys[(i - 1 + keys.length) % keys.length], next = keys[(i + 1) % keys.length];
+      document.getElementById("areaFoot").innerHTML =
+        '<a href="area.html?a=' + prev + '">' + UI.mi("arrow_back") + UI.t("prevArea") + ": " + UI.L(UI.GROUPS[prev]) + "</a>" +
+        '<a href="index.html">' + UI.mi("apps") + UI.t("backHome") + "</a>" +
+        '<a href="area.html?a=' + next + '">' + UI.t("nextArea") + ": " + UI.L(UI.GROUPS[next]) + UI.mi("arrow_forward") + "</a>";
+    }
+    document.addEventListener("DOMContentLoaded", render);
+    document.addEventListener("langchange", render);
+  </script>
+</body>
+</html>

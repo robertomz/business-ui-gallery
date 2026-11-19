@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Medical record · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .pt-head { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+    .avatar { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; font-size: 23px; font-weight: 900; color: #fff; background: linear-gradient(135deg, #ec4899, var(--mc-violet)); flex: none; }
+    .pt-main { flex: 1; min-width: 0; }
+    .pt-main h2 { font-size: 18px; font-weight: 900; overflow-wrap: anywhere; }
+    .pt-main .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .fact { border: 1px solid var(--mc-line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+    .fact b { display: block; margin-top: 4px; font-size: 13px; overflow-wrap: anywhere; }
+    .alert-banner { display: flex; gap: 10px; align-items: center; margin-top: 12px; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(251, 113, 133, .45); background: rgba(244, 63, 94, .1); color: var(--mc-bad); font-size: 12.5px; font-weight: 700; }
+    .alert-banner.ok { border-color: var(--mc-line); background: transparent; color: var(--mc-muted); font-weight: 600; }
+    .alert-banner .material-icons { font-size: 22px; }
+    .vitals { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+    .vital { border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px; min-width: 0; border-top: 3px solid var(--v-c, var(--mc-teal)); }
+    .vital .lbl { display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); }
+    .vital .lbl .material-icons { font-size: 15px; color: var(--v-c, var(--mc-teal)); }
+    .vital .val { font-size: 18px; font-weight: 900; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .vital .val small { font-size: 11px; color: var(--mc-muted); font-weight: 700; }
+    .vital .sub { font-size: 10.5px; color: var(--mc-muted); margin-top: 2px; }
+    .vital .sub.up { color: var(--mc-warn); } .vital .sub.bad { color: var(--mc-bad); }
+    .sum-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+    .box { border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+    .box h4 { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .box .ig-sparkline { padding-top: 0; } .box .ig-sparkline-area { height: 70px; }
+    .box ul { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.7; }
+    .timeline { list-style: none; margin: 0; padding: 0 0 0 16px; border-left: 2px solid var(--mc-line); display: flex; flex-direction: column; gap: 14px; }
+    .timeline li { position: relative; font-size: 12.5px; }
+    .timeline li::before { content: ""; position: absolute; left: -23px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--mc-teal); border: 2px solid var(--mc-panel); }
+    .timeline li.is-new::before { background: #ec4899; }
+    .tl-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .tl-head b { font-size: 13px; }
+    .tl-head small { color: var(--mc-muted); }
+    .tl-body { margin-top: 4px; color: var(--mc-text); line-height: 1.55; }
+    .tl-body .muted { font-size: 11.5px; }
+    .tl-rx { margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap; }
+    .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+    .file { display: flex; gap: 10px; align-items: center; border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px; min-width: 0; }
+    .file .material-icons { font-size: 28px; color: var(--f-c, var(--mc-cyan)); }
+    .file div { min-width: 0; } .file b { display: block; font-size: 12.5px; overflow-wrap: anywhere; } .file small { color: var(--mc-muted); font-size: 11px; }
+    .rx-lines td { vertical-align: top; }
+    .rx-lines input, .rx-lines select { width: 100%; min-width: 0; }
+    .rx-lines .mc-field-error { display: block; }
+    .bmi-box { font-size: 13px; font-weight: 800; min-height: 31px; display: flex; align-items: center; gap: 6px; }
+    .form-sec { grid-column: 1 / -1; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; color: var(--mc-cyan); margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--mc-line); }
+    .form-sec:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+    .req::after { content: " *"; color: var(--mc-bad); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .span-2 { grid-column: span 2; } .span-all { grid-column: 1 / -1; }
+    #rxPrint { display: none; }
+    @media (max-width: 1100px) { .vitals { grid-template-columns: repeat(3, minmax(0, 1fr)); } .sum-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+    @media (max-width: 760px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .vitals { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sum-grid { grid-template-columns: minmax(0, 1fr); } .span-2 { grid-column: 1 / -1; } }
+    @media print {
+      body > *:not(#rxPrint) { display: none !important; }
+      body { background: #fff !important; color: #000 !important; }
+      #rxPrint { display: block !important; color: #000; font-family: Inter, sans-serif; padding: 24px; }
+      #rxPrint h1 { font-size: 20px; } #rxPrint table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+      #rxPrint th, #rxPrint td { border: 1px solid #999; padding: 6px; text-align: left; }
+      #rxPrint .sign { margin-top: 60px; border-top: 1px solid #000; width: 260px; padding-top: 4px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body data-page="medical-record" data-root="../">
+  <main id="content">
+    <section class="mc-panel no-print">
+      <div class="mc-filters">
+        <div class="mc-field w-lg"><label for="fPat" data-i18n="patient"></label><select id="fPat"></select></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-teal" type="button" id="btnNew"><span class="material-icons" aria-hidden="true">note_add</span><span data-i18n="newConsult"></span></button>
+          <button class="btn" type="button" id="btnPrint"><span class="material-icons" aria-hidden="true">print</span><span data-i18n="printRx"></span></button>
+          <a class="btn" href="patients.html"><span class="material-icons" aria-hidden="true">arrow_back</span><span data-i18n="backList"></span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="mc-panel">
+      <div class="pt-head">
+        <div class="avatar" id="pAv" aria-hidden="true"></div>
+        <div class="pt-main"><h2 id="pName"></h2><div class="meta" id="pMeta"></div></div>
+      </div>
+      <div class="facts" id="pFacts"></div>
+      <div id="pAlert"></div>
+    </section>
+
+    <section class="mc-panel">
+      <div class="mc-tabs" role="tablist" id="tabs"></div>
+      <div id="panel" role="tabpanel" style="margin-top:12px"></div>
+    </section>
+
+    <div id="about"></div>
+  </main>
+
+  <div class="modal-backdrop" id="mNew">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mNewT" style="width:min(980px,100%)">
+      <div class="modal-head"><h3 id="mNewT"><span class="material-icons" aria-hidden="true">note_add</span><span data-i18n="newConsult"></span></h3><span class="mc-hint" id="mPat"></span></div>
+      <div class="modal-body">
+        <div class="grid-4">
+          <div class="form-sec" data-i18n="secVisit"></div>
+          <div class="mc-field span-2"><label class="req" for="cDoc" data-i18n="doctor"></label><select id="cDoc"></select><span class="mc-field-error" id="cDocErr"></span></div>
+          <div class="mc-field span-2"><label class="req" for="cReason" data-i18n="reason"></label><input id="cReason" autocomplete="off"><span class="mc-field-error" id="cReasonErr"></span></div>
+          <div class="form-sec" data-i18n="secVitals"></div>
+          <div class="mc-field"><label class="req" for="cSys" data-i18n="bpSys"></label><input id="cSys" class="num" inputmode="numeric" placeholder="120"><span class="mc-field-error" id="cSysErr"></span></div>
+          <div class="mc-field"><label class="req" for="cDia" data-i18n="bpDia"></label><input id="cDia" class="num" inputmode="numeric" placeholder="80"><span class="mc-field-error" id="cDiaErr"></span></div>
+          <div class="mc-field"><label for="cHr" data-i18n="hrL"></label><input id="cHr" class="num" inputmode="numeric" placeholder="72"><span class="mc-field-error" id="cHrErr"></span></div>
+          <div class="mc-field"><label for="cTemp" data-i18n="tempL"></label><input id="cTemp" class="num" inputmode="decimal" placeholder="36.6"><span class="mc-field-error" id="cTempErr"></span></div>
+          <div class="mc-field"><label class="req" for="cW" data-i18n="weightL"></label><input id="cW" class="num" inputmode="decimal" placeholder="70.0"><span class="mc-field-error" id="cWErr"></span></div>
+          <div class="mc-field"><label class="req" for="cH" data-i18n="heightL"></label><input id="cH" class="num" inputmode="decimal" placeholder="165"><span class="mc-field-error" id="cHErr"></span></div>
+          <div class="mc-field span-2"><span class="mc-label" data-i18n="bmiL"></span><div class="bmi-box" id="cBmi" aria-live="polite"></div></div>
+          <div class="form-sec" data-i18n="secDx"></div>
+          <div class="mc-field span-2"><label class="req" for="cDx" data-i18n="dx"></label><select id="cDx"></select><span class="mc-field-error" id="cDxErr"></span></div>
+          <div class="mc-field span-2"><label for="cNotes" data-i18n="notes"></label><textarea id="cNotes" rows="2"></textarea></div>
+          <div class="form-sec"><span data-i18n="secRx"></span></div>
+          <div class="span-all">
+            <div class="table-wrap"><table class="grid rx-lines"><thead><tr><th data-i18n="med"></th><th data-i18n="dose"></th><th data-i18n="freq"></th><th class="r" data-i18n="daysL"></th><th></th></tr></thead><tbody id="rxBody"></tbody></table></div>
+            <button class="btn btn-sm" type="button" id="rxAdd" style="margin-top:8px"><span class="material-icons" aria-hidden="true">add</span><span data-i18n="addLine"></span></button>
+            <span class="mc-hint" id="rxHint" style="margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-teal" type="button" id="cSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button><button class="btn" type="button" id="cClose" data-i18n="close"></button></div>
+    </div>
+  </div>
+
+  <div id="rxPrint"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  UI.strings({
+    en: {
+      patient: "Patient", newConsult: "New consultation", printRx: "Print prescription", backList: "Patient list",
+      tSummary: "Summary", tVisits: "Consultations", tRx: "Prescriptions", tFiles: "Exams & attachments",
+      age: "Age", sexL: "Sex", female: "Female", male: "Male", blood: "Blood type", insurer: "Insurer", privatePay: "Private pay", policy: "Policy",
+      doctor: "Doctor", primaryDoc: "Primary doctor", phone: "Phone", emergency: "Emergency contact", lastVisit: "Last visit", nextAppt: "Next appointment", none: "—", since: "Patient since",
+      yrs: "{n} years", months: "{n} months",
+      allergyAlert: "Allergies: {a}. Check before prescribing.", noAllergy: "No known allergies.",
+      bp: "Blood pressure", hr: "Heart rate", temp: "Temperature", weight: "Weight", height: "Height", bmi: "BMI",
+      vsPrevVisit: "{d} vs previous visit", firstVisit: "First record", bmiCat0: "Underweight", bmiCat1: "Normal", bmiCat2: "Overweight", bmiCat3: "Obesity", high: "High", feverT: "Fever",
+      spWeight: "Weight (kg) by visit", spSys: "Systolic pressure (mmHg) by visit",
+      problems: "Active problems", activeRx: "Active prescriptions", upcoming: "Upcoming", noProblems: "No chronic conditions recorded.", noActiveRx: "No active prescriptions.", noUpcoming: "No appointment scheduled.",
+      hVitals: "Last values recorded in a consultation. The small line compares with the previous visit. BMI = weight (kg) ÷ height (m)².",
+      dxL: "Diagnosis", notesL: "Notes", rxL: "Prescribed",
+      cDate: "Date", med: "Medicine", dose: "Dose", freq: "Frequency", daysL: "Days", byDoc: "Prescribed by", statusL: "Status", active: "Active", finished: "Finished", until: "until {d}",
+      fileL: "File", noFiles: "No files.", kb: "{n} KB",
+      secVisit: "Visit", secVitals: "Vital signs", secDx: "Diagnosis and notes", secRx: "Prescription",
+      reason: "Reason for visit", bpSys: "Systolic (mmHg)", bpDia: "Diastolic (mmHg)", hrL: "Heart rate (bpm)", tempL: "Temperature (°C)", weightL: "Weight (kg)", heightL: "Height (cm)", bmiL: "BMI (calculated)", dx: "Diagnosis", notes: "Notes",
+      addLine: "Add medicine", remove: "Remove line", choose: "Choose…", rxEmpty: "No medicine added. The consultation can be saved without a prescription.",
+      eReq: "Required.", eRange: "Between {a} and {b}.", eDia: "Must be lower than the systolic.", eAllergy: "The patient is allergic to {a}.", eDays: "1 to 365.",
+      fixErrors: "Check the fields marked in red.", savedC: "Consultation saved in {name}'s record.", noRxPrint: "This patient has no active prescriptions to print.",
+      clinic: "Demo Clinic", rxTitle: "Medical prescription", rxPatient: "Patient", rxDate: "Date", rxSign: "Signature and stamp",
+      aboutText: "Concept screen: designed as a sample of what I can build for a clinic or a doctor's office, not taken from a system in production. Patients, doctors and diagnoses are invented; codes follow the ICD-10 style.<ul><li>The allergy banner stays on top of the record, and a prescription is refused if it includes a medicine the patient is allergic to.</li><li>The new consultation opens empty, calculates the BMI while you type and validates every vital sign next to its field.</li><li>Prescriptions are active until their last day; the print button prints only the active ones.</li></ul>"
+    },
+    es: {
+      patient: "Paciente", newConsult: "Nueva consulta", printRx: "Imprimir receta", backList: "Lista de pacientes",
+      tSummary: "Resumen", tVisits: "Consultas", tRx: "Recetas", tFiles: "Exámenes y adjuntos",
+      age: "Edad", sexL: "Sexo", female: "Femenino", male: "Masculino", blood: "Tipo de sangre", insurer: "Aseguradora", privatePay: "Particular", policy: "Póliza",
+      doctor: "Médico", primaryDoc: "Médico de cabecera", phone: "Teléfono", emergency: "Contacto de emergencia", lastVisit: "Última visita", nextAppt: "Próxima cita", none: "—", since: "Paciente desde",
+      yrs: "{n} años", months: "{n} meses",
+      allergyAlert: "Alergias: {a}. Revise antes de recetar.", noAllergy: "Sin alergias conocidas.",
+      bp: "Presión arterial", hr: "Frecuencia cardiaca", temp: "Temperatura", weight: "Peso", height: "Talla", bmi: "IMC",
+      vsPrevVisit: "{d} vs visita anterior", firstVisit: "Primer registro", bmiCat0: "Bajo peso", bmiCat1: "Normal", bmiCat2: "Sobrepeso", bmiCat3: "Obesidad", high: "Alta", feverT: "Fiebre",
+      spWeight: "Peso (kg) por visita", spSys: "Presión sistólica (mmHg) por visita",
+      problems: "Problemas activos", activeRx: "Recetas activas", upcoming: "Próximo", noProblems: "Sin enfermedades crónicas registradas.", noActiveRx: "Sin recetas activas.", noUpcoming: "Sin cita programada.",
+      hVitals: "Últimos valores registrados en una consulta. La línea pequeña compara con la visita anterior. IMC = peso (kg) ÷ talla (m)².",
+      dxL: "Diagnóstico", notesL: "Notas", rxL: "Recetado",
+      cDate: "Fecha", med: "Medicamento", dose: "Dosis", freq: "Frecuencia", daysL: "Días", byDoc: "Recetó", statusL: "Estado", active: "Activa", finished: "Terminada", until: "hasta {d}",
+      fileL: "Archivo", noFiles: "Sin archivos.", kb: "{n} KB",
+      secVisit: "Visita", secVitals: "Signos vitales", secDx: "Diagnóstico y notas", secRx: "Receta",
+      reason: "Motivo de consulta", bpSys: "Sistólica (mmHg)", bpDia: "Diastólica (mmHg)", hrL: "Frecuencia cardiaca (lpm)", tempL: "Temperatura (°C)", weightL: "Peso (kg)", heightL: "Talla (cm)", bmiL: "IMC (calculado)", dx: "Diagnóstico", notes: "Notas",
+      addLine: "Agregar medicamento", remove: "Quitar línea", choose: "Elija…", rxEmpty: "Sin medicamentos. La consulta se puede guardar sin receta.",
+      eReq: "Obligatorio.", eRange: "Entre {a} y {b}.", eDia: "Debe ser menor que la sistólica.", eAllergy: "El paciente es alérgico a {a}.", eDays: "De 1 a 365.",
+      fixErrors: "Revise los campos marcados en rojo.", savedC: "Consulta guardada en el expediente de {name}.", noRxPrint: "Este paciente no tiene recetas activas para imprimir.",
+      clinic: "Clínica Demo", rxTitle: "Receta médica", rxPatient: "Paciente", rxDate: "Fecha", rxSign: "Firma y sello",
+      aboutText: "Pantalla de concepto: diseñada como muestra de lo que puedo construir para una clínica o un consultorio, no tomada de un sistema en producción. Pacientes, médicos y diagnósticos son inventados; los códigos siguen el estilo CIE-10.<ul><li>La alerta de alergias queda arriba del expediente, y una receta no se guarda si incluye un medicamento al que el paciente es alérgico.</li><li>La nueva consulta abre vacía, calcula el IMC mientras usted escribe y valida cada signo vital junto a su campo.</li><li>Las recetas están activas hasta su último día; el botón de imprimir solo imprime las activas.</li></ul>"
+    }
+  });
+
+  // ---- Shared patient generator (same as patients.html): patient i is always the same person ----
+  const TODAY = new Date(Date.UTC(2026, 10, 18));
+  const DAY = 86400000;
+  const CHRONIC = [{ en: "Hypertension", es: "Hipertensión" }, { en: "Type 2 diabetes", es: "Diabetes tipo 2" }, { en: "Asthma", es: "Asma" }];
+  function patient(i) {
+    const D = UI.DATA, r = UI.rng(7000 + i * 13);
+    const sex = r() < 0.53 ? "F" : "M";
+    const first = D.firstNames[Math.floor(r() * 10) * 2 + (sex === "M" ? 1 : 0)];
+    const last = D.lastNames[Math.floor(r() * D.lastNames.length)] + " " + D.lastNames[Math.floor(r() * D.lastNames.length)];
+    const child = r() < 0.2;
+    const ageDays = child ? Math.floor(r() * 14 * 365) + 60 : Math.floor((18 + r() * 66) * 365);
+    const birth = new Date(TODAY.getTime() - ageDays * DAY);
+    const phone = String(2000 + Math.floor(r() * 7999)) + "-" + String(Math.floor(r() * 10000)).padStart(4, "0");
+    const ins = r() < 0.45 ? 0 : 1 + Math.floor(r() * (D.insurers.length - 1));
+    const policy = ins ? "POL-" + String(Math.floor(r() * 900000) + 100000) : "";
+    const blood = D.bloodTypes[Math.floor(r() * D.bloodTypes.length)];
+    const allergies = [];
+    if (r() < 0.22) { allergies.push(Math.floor(r() * D.allergies.length)); if (r() < 0.3) { const b = Math.floor(r() * D.allergies.length); if (!allergies.includes(b)) allergies.push(b); } }
+    const years = ageDays / 365;
+    const chronic = [];
+    if (years > 35 && r() < 0.38) chronic.push(r() < 0.6 ? 0 : 1);
+    if (years > 50 && r() < 0.2 && !chronic.includes(1)) chronic.push(1);
+    if (r() < 0.07) chronic.push(2);
+    let doc = child ? 1 : [0, 0, 2, 2, 0, 0][Math.floor(r() * 6)];
+    if (!child && sex === "F" && r() < 0.25) doc = 3;
+    const createdAgo = r() < 0.04 ? Math.floor(r() * 17) : 18 + Math.floor(r() * 1800);
+    const created = new Date(TODAY.getTime() - createdAgo * DAY);
+    const lastVisit = new Date(TODAY.getTime() - Math.floor(r() * Math.min(createdAgo + 1, 420)) * DAY);
+    const nextAppt = r() < 0.34 ? new Date(TODAY.getTime() + (1 + Math.floor(r() * 45)) * DAY) : null;
+    const ec = D.firstNames[Math.floor(r() * D.firstNames.length)] + " " + last.split(" ")[0];
+    const ecPhone = String(2000 + Math.floor(r() * 7999)) + "-" + String(Math.floor(r() * 10000)).padStart(4, "0");
+    const email = years >= 18 ? (first + "." + last.split(" ")[0]).toLowerCase() + (i % 97) + "@mail.test" : "";
+    return { i, id: "P-" + String(i).padStart(6, "0"), first, last, name: first + " " + last, sex, birth, phone, email, ins, policy, blood, allergies, chronic, doc, created, lastVisit, nextAppt, ec, ecPhone };
+  }
+
+  // ---- Clinical catalogs (invented, ICD-10 style codes) ----
+  const DX = [
+    { code: "J06.9", n: { en: "Acute upper respiratory infection", es: "Infección respiratoria alta aguda" }, why: { en: "Sore throat, cough and fever", es: "Dolor de garganta, tos y fiebre" }, rx: [0, 4, 5], fever: true },
+    { code: "I10", n: { en: "Essential hypertension", es: "Hipertensión esencial" }, why: { en: "Blood pressure control", es: "Control de presión arterial" }, rx: [1] },
+    { code: "E11.9", n: { en: "Type 2 diabetes without complications", es: "Diabetes tipo 2 sin complicaciones" }, why: { en: "Glucose control", es: "Control de glucosa" }, rx: [2] },
+    { code: "K29.7", n: { en: "Gastritis", es: "Gastritis" }, why: { en: "Stomach pain after meals", es: "Dolor de estómago después de comer" }, rx: [3] },
+    { code: "M54.5", n: { en: "Low back pain", es: "Lumbalgia" }, why: { en: "Lower back pain for a week", es: "Dolor lumbar desde hace una semana" }, rx: [7, 4] },
+    { code: "L20.9", n: { en: "Atopic dermatitis", es: "Dermatitis atópica" }, why: { en: "Itchy skin rash", es: "Erupción en la piel con picazón" }, rx: [8, 5] },
+    { code: "N39.0", n: { en: "Urinary tract infection", es: "Infección de vías urinarias" }, why: { en: "Burning when urinating", es: "Ardor al orinar" }, rx: [9] },
+    { code: "J45.9", n: { en: "Asthma", es: "Asma" }, why: { en: "Shortness of breath at night", es: "Falta de aire por las noches" }, rx: [6] },
+    { code: "Z00.0", n: { en: "General check-up", es: "Chequeo general" }, why: { en: "Annual check-up", es: "Chequeo anual" }, rx: [] },
+    { code: "R51", n: { en: "Headache", es: "Cefalea" }, why: { en: "Recurrent headache", es: "Dolor de cabeza frecuente" }, rx: [4] }
+  ];
+  // allergy = index in UI.DATA.allergies that forbids the medicine
+  const MEDS = [
+    { n: "Amoxicillin 500 mg", dose: { en: "1 capsule", es: "1 cápsula" }, freq: { en: "Every 8 h", es: "Cada 8 h" }, days: 7, allergy: 0 },
+    { n: "Losartan 50 mg", dose: { en: "1 tablet", es: "1 tableta" }, freq: { en: "Once a day", es: "Una vez al día" }, days: 90 },
+    { n: "Metformin 850 mg", dose: { en: "1 tablet", es: "1 tableta" }, freq: { en: "Twice a day, with meals", es: "Dos veces al día, con comida" }, days: 90 },
+    { n: "Omeprazole 20 mg", dose: { en: "1 capsule", es: "1 cápsula" }, freq: { en: "Before breakfast", es: "Antes del desayuno" }, days: 30 },
+    { n: "Paracetamol 500 mg", dose: { en: "1 tablet", es: "1 tableta" }, freq: { en: "Every 6 h if pain or fever", es: "Cada 6 h si hay dolor o fiebre" }, days: 5 },
+    { n: "Loratadine 10 mg", dose: { en: "1 tablet", es: "1 tableta" }, freq: { en: "Once a day", es: "Una vez al día" }, days: 10 },
+    { n: "Salbutamol inhaler 100 mcg", dose: { en: "2 puffs", es: "2 inhalaciones" }, freq: { en: "If short of breath", es: "Si hay falta de aire" }, days: 30 },
+    { n: "Ibuprofen 400 mg", dose: { en: "1 tablet", es: "1 tableta" }, freq: { en: "Every 8 h with food", es: "Cada 8 h con comida" }, days: 5, allergy: 2 },
+    { n: "Hydrocortisone cream 1%", dose: { en: "Thin layer", es: "Capa delgada" }, freq: { en: "Twice a day", es: "Dos veces al día" }, days: 10 },
+    { n: "Nitrofurantoin 100 mg", dose: { en: "1 capsule", es: "1 cápsula" }, freq: { en: "Every 12 h", es: "Cada 12 h" }, days: 7 }
+  ];
+  const FILES = [
+    { n: { en: "Complete blood count", es: "Hemograma completo" }, ext: "pdf" }, { n: { en: "Fasting glucose", es: "Glucosa en ayunas" }, ext: "pdf" },
+    { n: { en: "Chest X-ray", es: "Rayos X de tórax" }, ext: "jpg" }, { n: { en: "Abdominal ultrasound", es: "Ultrasonido abdominal" }, ext: "pdf" },
+    { n: { en: "Electrocardiogram", es: "Electrocardiograma" }, ext: "pdf" }, { n: { en: "Urinalysis", es: "Examen general de orina" }, ext: "pdf" },
+    { n: { en: "Lipid profile", es: "Perfil lipídico" }, ext: "pdf" }, { n: { en: "Skin photo", es: "Foto de la lesión" }, ext: "jpg" }
+  ];
+
+  // Visits of a patient: from the last visit backwards, with vitals that drift a little between visits.
+  function visitHistory(p) {
+    const r = UI.rng(9100 + p.i * 7);
+    const years = (TODAY - p.birth) / DAY / 365.25;
+    const child = years < 14;
+    const h = child ? Math.round(52 + years * 6.4) : Math.round((p.sex === "F" ? 158 : 171) + (r() - 0.5) * 14);
+    let w = child ? 3.5 + years * 2.9 : (21 + r() * 10) * Math.pow(h / 100, 2);
+    const baseSys = 108 + r() * 16 + (p.chronic.includes(0) ? 24 : 0);
+    const visits = [];
+    let d = p.lastVisit.getTime();
+    const n = 3 + Math.floor(r() * 8) + (p.chronic.length ? 3 : 0);
+    for (let k = 0; k < n && d >= p.created.getTime() - 1; k++) {
+      let dxi;
+      if (p.chronic.length && r() < 0.55) dxi = [1, 2, 7][p.chronic[Math.floor(r() * p.chronic.length)]];
+      else dxi = child ? [0, 0, 5, 9, 8][Math.floor(r() * 5)] : [0, 3, 4, 5, 6, 8, 9, 0][Math.floor(r() * 8)];
+      const dx = DX[dxi];
+      const sys = Math.round(baseSys + (r() - 0.5) * 14), dia = Math.round(sys * (0.62 + r() * 0.06));
+      const temp = dx.fever ? +(37.8 + r() * 1.2).toFixed(1) : +(36.3 + r() * 0.6).toFixed(1);
+      const hr = Math.round((child ? 92 : 66) + r() * 20 + (dx.fever ? 12 : 0));
+      const doc = dxi === 1 && r() < 0.4 ? 4 : (dxi === 5 && r() < 0.6 ? 5 : p.doc);
+      const rx = dx.rx.filter(m => MEDS[m].allergy == null || !p.allergies.includes(MEDS[m].allergy)).slice(0, 1 + Math.floor(r() * 2));
+      const files = [];
+      if (r() < 0.45) files.push({ f: [0, 1, 2, 3, 4, 5, 6, 7][dxi === 2 ? 1 : dxi === 1 ? 4 : dxi === 6 ? 5 : dxi === 5 ? 7 : Math.floor(r() * 4)], kb: 80 + Math.floor(r() * 900) });
+      visits.push({ date: new Date(d), dx: dxi, reason: UI.L(dx.why), doc, sys, dia, hr, temp, w: +w.toFixed(1), h, rx, files, notes: null });
+      w = Math.max(3, w - (r() - 0.45) * (child ? 1.2 : 1.6));
+      d -= (20 + Math.floor(r() * 110)) * DAY;
+    }
+    // Chronic patients leave the latest visit with their long-term medicine.
+    if (visits.length) p.chronic.forEach(c => { const m = [1, 2, 6][c]; if (!visits[0].rx.includes(m)) visits[0].rx.push(m); });
+    return visits; // newest first
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const t = UI.t, D = UI.DATA, mi = UI.mi;
+    const N = 1500;
+    const q = parseInt(new URLSearchParams(location.search).get("p"), 10);
+    let cur = q >= 1 && q <= N ? q : 42;
+    const added = {}; // consultations saved in this session, per patient
+    let p, visits, tab = "sum";
+
+    const insName = i => i === 0 ? t("privatePay") : D.insurers[i];
+    const ageTxt = b => { const dd = (TODAY - b) / DAY; return dd < 730 ? t("months", { n: Math.floor(dd / 30.4) }) : t("yrs", { n: Math.floor(dd / 365.25) }); };
+    const bmi = v => v.w / Math.pow(v.h / 100, 2);
+    const bmiCat = b => b < 18.5 ? 0 : b < 25 ? 1 : b < 30 ? 2 : 3;
+    function load() {
+      p = patient(cur);
+      visits = (added[cur] || []).concat(visitHistory(p));
+    }
+    function rxList() {
+      const out = [];
+      visits.forEach(v => v.rx.forEach(m => {
+        const line = typeof m === "object" ? m : { m, dose: UI.L(MEDS[m].dose), freq: UI.L(MEDS[m].freq), days: MEDS[m].days };
+        const end = new Date(v.date.getTime() + (line.days - 1) * DAY);
+        out.push({ date: v.date, doc: v.doc, name: MEDS[line.m].n, dose: line.dose, freq: line.freq, days: line.days, end, active: end >= TODAY });
+      }));
+      return out.sort((a, b) => (b.active - a.active) || (b.date - a.date));
+    }
+
+    // ---- Patient picker ----
+    function fillPicker() {
+      const $s = $("#fPat"); if ($s.hasClass("select2-hidden-accessible")) $s.select2("destroy");
+      if (!$s.children().length) { const frag = document.createDocumentFragment(); for (let i = 1; i <= N; i++) { const x = patient(i); frag.appendChild(new Option(x.id + " · " + x.name, String(i))); } $s[0].appendChild(frag); }
+      $s.val(String(cur)).select2({ width: "100%" });
+    }
+    fillPicker();
+    $("#fPat").on("change", () => { cur = +$("#fPat").val(); window.history.replaceState(null, "", "?p=" + cur); load(); render(); });
+
+    // ---- Header ----
+    function renderHead() {
+      document.getElementById("pAv").textContent = (p.first[0] + p.last[0]).toUpperCase();
+      document.getElementById("pName").textContent = p.name;
+      const chips = ['<span class="chip chip-info">' + mi("badge") + p.id + "</span>", '<span class="chip">' + mi(p.sex === "F" ? "female" : "male") + t(p.sex === "F" ? "female" : "male") + " · " + ageTxt(p.birth) + "</span>",
+        '<span class="chip chip-neg">' + mi("bloodtype") + p.blood + "</span>"];
+      p.chronic.forEach(c => chips.push('<span class="chip chip-warn">' + mi("monitor_heart") + UI.L(CHRONIC[c]) + "</span>"));
+      document.getElementById("pMeta").innerHTML = chips.join("");
+      const fact = (l, v) => '<div class="fact"><span class="mc-label">' + l + "</span><b>" + v + "</b></div>";
+      document.getElementById("pFacts").innerHTML =
+        fact(t("insurer"), insName(p.ins) + (p.policy ? " · " + p.policy : "")) + fact(t("primaryDoc"), D.doctors[p.doc].name + " · " + UI.L(D.doctors[p.doc].spec)) +
+        fact(t("phone"), p.phone) + fact(t("emergency"), p.ec + " · " + p.ecPhone) +
+        fact(t("since"), UI.fmtDay(p.created)) + fact(t("lastVisit"), visits.length ? UI.fmtDay(visits[0].date) : t("none")) +
+        fact(t("nextAppt"), p.nextAppt ? UI.fmtDay(p.nextAppt) : t("none")) + fact(t("age"), UI.fmtDay(p.birth) + " · " + ageTxt(p.birth));
+      document.getElementById("pAlert").innerHTML = p.allergies.length
+        ? '<div class="alert-banner" role="alert">' + mi("warning") + "<span>" + t("allergyAlert", { a: p.allergies.map(a => UI.L(D.allergies[a])).join(", ") }) + "</span></div>"
+        : '<div class="alert-banner ok">' + mi("check_circle") + "<span>" + t("noAllergy") + "</span></div>";
+    }
+
+    // ---- Tabs ----
+    const TABS = [["sum", "tSummary", "dashboard"], ["vis", "tVisits", "history"], ["rx", "tRx", "medication"], ["files", "tFiles", "folder_open"]];
+    function renderTabs() {
+      document.getElementById("tabs").innerHTML = TABS.map(x => '<button type="button" class="mc-tab" role="tab" data-tab="' + x[0] + '" aria-selected="' + (tab === x[0]) + '">' + mi(x[2]) + " " + t(x[1]) + "</button>").join("");
+    }
+    document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (!b) return; tab = b.dataset.tab; renderTabs(); renderPanel(); });
+
+    function vital(icon, color, label, val, unit, sub, subCls) {
+      return '<div class="vital" style="--v-c:' + color + '"><div class="lbl">' + mi(icon) + label + '</div><div class="val">' + val + (unit ? " <small>" + unit + "</small>" : "") + '</div><div class="sub ' + (subCls || "") + '">' + sub + "</div></div>";
+    }
+    const diff = (a, b, dec) => { if (b == null) return t("firstVisit"); const d = a - b; return t("vsPrevVisit", { d: (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(dec) }); };
+    function renderSummary() {
+      if (!visits.length) return '<p class="muted">' + t("none") + "</p>";
+      const v = visits[0], pv = visits[1];
+      const b = bmi(v), cat = bmiCat(b);
+      let h = '<div class="mc-panel-title" style="margin-bottom:8px"><h3>' + mi("monitor_heart") + "<span>" + t("secVitals") + " · " + UI.fmtDay(v.date) + "</span></h3>" + UI.helpBtn("hVitals") + "</div>";
+      h += '<div class="vitals">' +
+        vital("favorite", "var(--mc-rose)", t("bp"), v.sys + "/" + v.dia, "mmHg", v.sys >= 140 || v.dia >= 90 ? mi("arrow_upward") + t("high") : diff(v.sys, pv && pv.sys, 0), v.sys >= 140 || v.dia >= 90 ? "bad" : "") +
+        vital("monitor_heart", "var(--mc-violet)", t("hr"), v.hr == null ? t("none") : v.hr, v.hr == null ? "" : "bpm", v.hr == null || !pv || pv.hr == null ? t("firstVisit") : diff(v.hr, pv.hr, 0)) +
+        vital("device_thermostat", "var(--mc-amber)", t("temp"), v.temp == null ? t("none") : v.temp.toFixed(1), v.temp == null ? "" : "°C", v.temp >= 37.8 ? mi("warning") + t("feverT") : (v.temp == null || !pv || pv.temp == null ? t("firstVisit") : diff(v.temp, pv.temp, 1)), v.temp >= 37.8 ? "bad" : "") +
+        vital("monitor_weight", "var(--mc-teal)", t("weight"), v.w.toFixed(1), "kg", diff(v.w, pv && pv.w, 1)) +
+        vital("height", "var(--mc-cyan)", t("height"), v.h, "cm", diff(v.h, pv && pv.h, 0)) +
+        vital("speed", "#ec4899", t("bmi"), b.toFixed(1), "", t("bmiCat" + cat), cat >= 2 ? "up" : "") + "</div>";
+      const chron = visits.slice().reverse().slice(-10);
+      h += '<div class="grid-2" style="margin-top:12px">' +
+        '<div class="box" style="--ig-color:var(--mc-teal)">' + UI.sparkline(chron.map(x => x.w), chron.map(x => UI.fmtDayShort(x.date)), t("spWeight")) + "</div>" +
+        '<div class="box" style="--ig-color:var(--mc-rose)">' + UI.sparkline(chron.map(x => x.sys), chron.map(x => UI.fmtDayShort(x.date)), t("spSys")) + "</div></div>";
+      const act = rxList().filter(x => x.active);
+      h += '<div class="sum-grid">' +
+        '<div class="box"><h4>' + mi("assignment_late") + t("problems") + "</h4>" + (p.chronic.length || p.allergies.length ? "<ul>" + p.chronic.map(c => "<li>" + UI.L(CHRONIC[c]) + "</li>").join("") + p.allergies.map(a => '<li class="neg">' + mi("warning", "") + " " + UI.L(D.allergies[a]) + "</li>").join("") + "</ul>" : '<p class="muted">' + t("noProblems") + "</p>") + "</div>" +
+        '<div class="box"><h4>' + mi("medication") + t("activeRx") + "</h4>" + (act.length ? "<ul>" + act.map(x => "<li><b>" + x.name + "</b> · " + x.freq + ' <span class="muted">(' + t("until", { d: UI.fmtDay(x.end) }) + ")</span></li>").join("") + "</ul>" : '<p class="muted">' + t("noActiveRx") + "</p>") + "</div>" +
+        '<div class="box"><h4>' + mi("event") + t("upcoming") + "</h4>" + (p.nextAppt ? '<p style="font-size:13px"><b>' + UI.fmtDay(p.nextAppt) + "</b><br>" + D.doctors[p.doc].name + "</p>" : '<p class="muted">' + t("noUpcoming") + "</p>") + "</div></div>";
+      return h;
+    }
+    function renderVisits() {
+      return '<ol class="timeline">' + visits.map(v => {
+        const dx = DX[v.dx];
+        const rx = v.rx.map(m => { const id = typeof m === "object" ? m.m : m; return '<span class="chip chip-violet">' + mi("medication") + MEDS[id].n + "</span>"; }).join("");
+        return '<li class="' + (v.isNew ? "is-new" : "") + '"><div class="tl-head"><b>' + UI.fmtDay(v.date) + "</b><small>" + D.doctors[v.doc].name + " · " + UI.L(D.doctors[v.doc].spec) + "</small>" +
+          '<span class="chip chip-info">' + dx.code + " · " + UI.L(dx.n) + "</span></div>" +
+          '<div class="tl-body"><div>' + v.reason + "</div>" +
+          '<div class="muted">' + t("bp") + " " + v.sys + "/" + v.dia + " · " + t("hr") + " " + (v.hr == null ? t("none") : v.hr) + " · " + t("temp") + " " + (v.temp == null ? t("none") : v.temp.toFixed(1) + " °C") + " · " + t("weight") + " " + v.w.toFixed(1) + " kg · " + t("bmi") + " " + bmi(v).toFixed(1) + "</div>" +
+          (v.notes ? "<div>" + $("<div>").text(v.notes).html() + "</div>" : "") +
+          (rx ? '<div class="tl-rx">' + rx + "</div>" : "") + "</div></li>";
+      }).join("") + "</ol>";
+    }
+    function renderRx() {
+      const list = rxList();
+      if (!list.length) return '<p class="muted">' + t("noActiveRx") + "</p>";
+      return '<div class="table-wrap"><table class="grid"><thead><tr><th>' + t("cDate") + "</th><th>" + t("med") + "</th><th>" + t("dose") + "</th><th>" + t("freq") + '</th><th class="r">' + t("daysL") + "</th><th>" + t("byDoc") + "</th><th>" + t("statusL") + "</th></tr></thead><tbody>" +
+        list.map(x => "<tr><td>" + UI.fmtDay(x.date) + "</td><td><b>" + x.name + "</b></td><td>" + x.dose + "</td><td>" + x.freq + '</td><td class="r">' + x.days + "</td><td>" + D.doctors[x.doc].name + "</td><td>" +
+          (x.active ? '<span class="chip chip-pos">' + mi("check_circle") + t("active") + " · " + t("until", { d: UI.fmtDay(x.end) }) + "</span>" : '<span class="chip">' + mi("task_alt") + t("finished") + "</span>") + "</td></tr>").join("") + "</tbody></table></div>";
+    }
+    function renderFiles() {
+      const fl = [];
+      visits.forEach(v => v.files.forEach(f => fl.push({ v, f })));
+      if (!fl.length) return '<p class="muted">' + t("noFiles") + "</p>";
+      return '<div class="files">' + fl.map(x => { const F = FILES[x.f.f]; const pdf = F.ext === "pdf";
+        return '<div class="file" style="--f-c:' + (pdf ? "var(--mc-rose)" : "var(--mc-cyan)") + '">' + mi(pdf ? "picture_as_pdf" : "image") + "<div><b>" + UI.L(F.n) + "." + F.ext + "</b><small>" + UI.fmtDay(x.v.date) + " · " + D.doctors[x.v.doc].name + " · " + t("kb", { n: x.f.kb }) + "</small></div></div>"; }).join("") + "</div>";
+    }
+    function renderPanel() {
+      document.getElementById("panel").innerHTML = tab === "sum" ? renderSummary() : tab === "vis" ? renderVisits() : tab === "rx" ? renderRx() : renderFiles();
+    }
+    function render() { renderHead(); renderTabs(); renderPanel(); }
+
+    // ---- New consultation modal: opens empty, closes only with its buttons ----
+    const $m = $("#mNew");
+    function fillModalSelects() {
+      const $d = $("#cDoc"); if ($d.hasClass("select2-hidden-accessible")) $d.select2("destroy");
+      const dv = $d.val(); $d.empty().append(new Option(t("choose"), ""));
+      D.doctors.forEach((d, i) => $d.append(new Option(d.name + " · " + UI.L(d.spec), String(i))));
+      $d.val(dv).select2({ width: "100%", dropdownParent: $m, minimumResultsForSearch: Infinity });
+      const $x = $("#cDx"); if ($x.hasClass("select2-hidden-accessible")) $x.select2("destroy");
+      const xv = $x.val(); $x.empty().append(new Option(t("choose"), ""));
+      DX.forEach((d, i) => $x.append(new Option(d.code + " · " + UI.L(d.n), String(i))));
+      $x.val(xv).select2({ width: "100%", dropdownParent: $m });
+      document.querySelectorAll("#rxBody select").forEach(s => { const v = s.value; s.innerHTML = medOptions(); s.value = v; });
+    }
+    const medOptions = () => '<option value="">' + t("choose") + "</option>" + MEDS.map((x, i) => '<option value="' + i + '">' + x.n + "</option>").join("");
+    let lineSeq = 0;
+    function addLine() {
+      const k = ++lineSeq;
+      const tr = document.createElement("tr");
+      tr.dataset.k = k;
+      tr.innerHTML = '<td><select class="mc-input" id="rxM' + k + '" aria-label="' + t("med") + '">' + medOptions() + '</select><span class="mc-field-error" id="rxM' + k + 'Err"></span></td>' +
+        '<td><input class="mc-input" id="rxD' + k + '" aria-label="' + t("dose") + '"></td><td><input class="mc-input" id="rxF' + k + '" aria-label="' + t("freq") + '"></td>' +
+        '<td><input class="mc-input num" id="rxN' + k + '" inputmode="numeric" aria-label="' + t("daysL") + '" style="max-width:80px"><span class="mc-field-error" id="rxN' + k + 'Err"></span></td>' +
+        '<td><button type="button" class="mc-icon-btn" data-rm="' + k + '" title="' + t("remove") + '" aria-label="' + t("remove") + '">' + mi("delete") + "</button></td>";
+      document.getElementById("rxBody").appendChild(tr);
+      // Choosing a medicine fills its usual dose, frequency and days (editable).
+      tr.querySelector("select").addEventListener("change", e => {
+        const m = MEDS[e.target.value]; if (!m) return;
+        document.getElementById("rxD" + k).value = UI.L(m.dose); document.getElementById("rxF" + k).value = UI.L(m.freq); document.getElementById("rxN" + k).value = m.days;
+        validateLines();
+      });
+      rxHint();
+    }
+    function rxHint() { document.getElementById("rxHint").textContent = document.querySelectorAll("#rxBody tr").length ? "" : t("rxEmpty"); }
+    document.getElementById("rxAdd").addEventListener("click", addLine);
+    document.getElementById("rxBody").addEventListener("click", e => { const b = e.target.closest("[data-rm]"); if (!b) return; b.closest("tr").remove(); rxHint(); });
+
+    const num = id => { const s = document.getElementById(id).value.trim(); return s === "" ? null : parseFloat(s.replace(",", ".")); };
+    function setErr(id, msg) {
+      const el = document.getElementById(id), err = document.getElementById(id + "Err");
+      if (err) err.textContent = msg || "";
+      el.setAttribute("aria-invalid", msg ? "true" : "false");
+      const s2 = $(el).next(".select2"); if (s2.length) s2.find(".select2-selection").css("border-color", msg ? "var(--mc-bad)" : "");
+    }
+    function updateBmi() {
+      const w = num("cW"), h = num("cH"), el = document.getElementById("cBmi");
+      if (w > 0 && h >= 40) { const b = w / Math.pow(h / 100, 2); el.innerHTML = b.toFixed(1) + ' <span class="chip ' + (bmiCat(b) >= 2 ? "chip-warn" : bmiCat(b) === 1 ? "chip-pos" : "chip-info") + '">' + t("bmiCat" + bmiCat(b)) + "</span>"; }
+      else el.innerHTML = '<span class="muted">' + t("none") + "</span>";
+    }
+    ["cW", "cH"].forEach(id => document.getElementById(id).addEventListener("input", updateBmi));
+    const RANGES = { cSys: [60, 260, true], cDia: [30, 160, true], cHr: [30, 220, false], cTemp: [34, 42, false], cW: [1, 300, true], cH: [40, 230, true] };
+    const MAIN = ["cDoc", "cReason", "cSys", "cDia", "cHr", "cTemp", "cW", "cH", "cDx"];
+    function validateLines() {
+      const e = {};
+      document.querySelectorAll("#rxBody tr").forEach(tr => {
+        const k = tr.dataset.k, m = document.getElementById("rxM" + k).value;
+        if (m === "") e["rxM" + k] = t("eReq");
+        else if (MEDS[m].allergy != null && p.allergies.includes(MEDS[m].allergy)) e["rxM" + k] = t("eAllergy", { a: UI.L(D.allergies[MEDS[m].allergy]) });
+        const n = num("rxN" + k);
+        if (n == null || !Number.isInteger(n) || n < 1 || n > 365) e["rxN" + k] = t("eDays");
+        ["rxM" + k, "rxN" + k].forEach(id => setErr(id, e[id]));
+      });
+      return e;
+    }
+    function validate() {
+      const e = {};
+      if (!$("#cDoc").val()) e.cDoc = t("eReq");
+      if (!document.getElementById("cReason").value.trim()) e.cReason = t("eReq");
+      if (!$("#cDx").val()) e.cDx = t("eReq");
+      Object.keys(RANGES).forEach(id => { const [a, b, req] = RANGES[id]; const v = num(id); if (v == null) { if (req) e[id] = t("eReq"); } else if (isNaN(v) || v < a || v > b) e[id] = t("eRange", { a, b }); });
+      if (!e.cSys && !e.cDia && num("cDia") >= num("cSys")) e.cDia = t("eDia");
+      MAIN.forEach(id => setErr(id, e[id]));
+      return Object.assign(e, validateLines());
+    }
+    MAIN.forEach(id => document.getElementById(id).addEventListener("blur", () => { if (document.getElementById(id + "Err").textContent) validate(); }));
+    $("#cDoc, #cDx").on("change", function () { if (document.getElementById(this.id + "Err").textContent) validate(); });
+
+    document.getElementById("btnNew").addEventListener("click", () => {
+      MAIN.concat(["cNotes"]).forEach(id => { const el = document.getElementById(id); if (el.tagName === "SELECT") $(el).val("").trigger("change.select2"); else el.value = ""; });
+      MAIN.forEach(id => setErr(id, ""));
+      document.getElementById("rxBody").innerHTML = ""; rxHint(); updateBmi();
+      document.getElementById("mPat").textContent = p.id + " · " + p.name;
+      UI.openModal("mNew");
+    });
+    document.getElementById("cClose").addEventListener("click", () => UI.closeModal("mNew"));
+    document.getElementById("cSave").addEventListener("click", () => {
+      const e = validate();
+      const bad = Object.keys(e)[0];
+      if (bad) { UI.toast(t("fixErrors")); const el = document.getElementById(bad); if (el.tagName === "SELECT" && $(el).hasClass("select2-hidden-accessible")) $(el).select2("open"); else el.focus(); return; }
+      const rx = [...document.querySelectorAll("#rxBody tr")].map(tr => { const k = tr.dataset.k; const m = +document.getElementById("rxM" + k).value;
+        return { m, dose: document.getElementById("rxD" + k).value.trim() || UI.L(MEDS[m].dose), freq: document.getElementById("rxF" + k).value.trim() || UI.L(MEDS[m].freq), days: num("rxN" + k) }; });
+      const v = { date: TODAY, dx: +$("#cDx").val(), reason: document.getElementById("cReason").value.trim(), doc: +$("#cDoc").val(),
+        sys: Math.round(num("cSys")), dia: Math.round(num("cDia")), hr: num("cHr") == null ? null : Math.round(num("cHr")), temp: num("cTemp"),
+        w: num("cW"), h: num("cH"), rx, files: [], notes: document.getElementById("cNotes").value.trim(), isNew: true };
+      (added[cur] = added[cur] || []).unshift(v);
+      load(); tab = "vis"; render();
+      UI.closeModal("mNew");
+      UI.toast(t("savedC", { name: p.name }));
+    });
+
+    // ---- Print the active prescriptions ----
+    document.getElementById("btnPrint").addEventListener("click", () => {
+      const act = rxList().filter(x => x.active);
+      if (!act.length) { UI.toast(t("noRxPrint")); return; }
+      const doc = D.doctors[act[0].doc];
+      document.getElementById("rxPrint").innerHTML = "<h1>" + t("clinic") + "</h1><h2 style='font-size:15px;margin-top:4px'>" + t("rxTitle") + "</h2>" +
+        "<p style='margin-top:10px;font-size:13px'><b>" + t("rxPatient") + ":</b> " + p.name + " (" + p.id + ") · " + ageTxt(p.birth) + "<br><b>" + t("rxDate") + ":</b> " + UI.fmtDay(TODAY) +
+        (p.allergies.length ? "<br><b>" + t("allergyAlert", { a: p.allergies.map(a => UI.L(D.allergies[a])).join(", ") }) + "</b>" : "") + "</p>" +
+        "<table><thead><tr><th>" + t("med") + "</th><th>" + t("dose") + "</th><th>" + t("freq") + "</th><th>" + t("daysL") + "</th></tr></thead><tbody>" +
+        act.map(x => "<tr><td>" + x.name + "</td><td>" + x.dose + "</td><td>" + x.freq + "</td><td>" + x.days + "</td></tr>").join("") + "</tbody></table>" +
+        "<div class='sign'>" + doc.name + " · " + UI.L(doc.spec) + "<br>" + t("rxSign") + "</div>";
+      window.print();
+    });
+
+    // ---- About + language/theme ----
+    const about = () => { document.getElementById("about").innerHTML = UI.aboutBox("aboutText"); };
+    load(); render(); about();
+    document.addEventListener("langchange", () => { load(); render(); fillModalSelects(); rxHint(); updateBmi(); about(); });
+    document.addEventListener("themechange", renderPanel);
+    fillModalSelects(); rxHint();
+  });
+  </script>
+</body>
+</html>

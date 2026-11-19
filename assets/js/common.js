@@ -12,7 +12,27 @@
     treasury: { en: "Treasury", es: "Tesorería" },
     budget: { en: "Budget & control", es: "Presupuesto y control" },
     people: { en: "People", es: "Talento humano" },
+    health: { en: "Health & clinics", es: "Salud y clínicas" },
     it: { en: "IT & services", es: "TI y servicios" }
+  };
+  // Look of each area: icon, gradient and a one-line description (home cards, area pages).
+  const AREAS = {
+    sales: { icon: "storefront", c: ["#14b8a6", "#06b6d4"], deco: ["insights", "route", "flag"],
+      d: { en: "Daily close, sales goals, routes, fill rate, commissions and collections.", es: "Cierre diario, metas, rutas, fill rate, comisiones y cobros." } },
+    inventory: { icon: "inventory_2", c: ["#f59e0b", "#fb923c"], deco: ["shopping_cart", "sell", "qr_code_scanner"],
+      d: { en: "Automatic purchasing, orders, prices, stock per warehouse and data migration.", es: "Compras automáticas, pedidos, precios, existencias por bodega y migración de datos." } },
+    accounting: { icon: "menu_book", c: ["#8b5cf6", "#6366f1"], deco: ["edit_note", "auto_mode", "balance"],
+      d: { en: "Journal entries, automatic generation, journal book, reconciliation and balance sheet.", es: "Partidas, generación automática, libro diario, conciliación y balance." } },
+    treasury: { icon: "account_balance", c: ["#38bdf8", "#06b6d4"], deco: ["payments", "event_note", "credit_card"],
+      d: { en: "Bank payments, payment schedule, payment requests and credit cards.", es: "Pagos bancarios, proyección de pagos, solicitudes de pago y tarjetas." } },
+    budget: { icon: "donut_small", c: ["#f43f5e", "#fb7185"], deco: ["hub", "stacked_bar_chart", "speed"],
+      d: { en: "Cost centers, budget vs actual, expense verification and scorecard.", es: "Centros de gestión, presupuesto vs real, verificación de gastos y scorecard." } },
+    people: { icon: "groups", c: ["#22c55e", "#14b8a6"], deco: ["payments", "badge", "schedule"],
+      d: { en: "Payroll run, employee file and attendance.", es: "Planilla, expediente del empleado y asistencia." } },
+    health: { icon: "local_hospital", c: ["#ec4899", "#8b5cf6"], deco: ["event_available", "personal_injury", "medication"], concept: true,
+      d: { en: "Concept screens for clinics and doctors: appointments, patients, medical records and the day's dashboard.", es: "Pantallas de concepto para clínicas y médicos: citas, pacientes, expediente clínico y el tablero del día." } },
+    it: { icon: "lan", c: ["#a78bfa", "#38bdf8"], deco: ["support_agent", "build", "dashboard_customize"],
+      d: { en: "Network map, maintenance planner, service desk and dashboard builder.", es: "Mapa de red, mantenimiento, mesa de ayuda y constructor de dashboards." } }
   };
   const P = (group, id, icon, en, es, ben, bes) => ({ group, id, icon, href: id === "home" ? "index.html" : "pages/" + id + ".html", title: { en, es }, blurb: { en: ben || "", es: bes || "" } });
   const PAGES = [
@@ -104,6 +124,18 @@
     P("people", "attendance", "schedule", "Attendance", "Asistencia",
       "Clock-in import, late arrivals and overtime, and the cut-off for payroll.",
       "Importación de marcas, tardanzas y horas extra, y el cierre de corte para planilla."),
+    P("health", "clinic-dashboard", "monitor_heart", "Clinic dashboard", "Tablero de la clínica",
+      "The day at a glance: appointments by status, waiting time, no-shows, doctors' occupancy and income by service.",
+      "El día de un vistazo: citas por estado, tiempo de espera, inasistencias, ocupación de médicos e ingresos por servicio."),
+    P("health", "appointments", "event_available", "Appointments", "Agenda de citas",
+      "Weekly schedule per doctor: book, confirm, check in and reschedule without double booking.",
+      "Agenda semanal por médico: agendar, confirmar, registrar llegada y reprogramar sin choques de horario."),
+    P("health", "patients", "personal_injury", "Patients", "Pacientes",
+      "Patient registry with search, allergies and alerts, insurance and a validated new-patient form.",
+      "Registro de pacientes con búsqueda, alergias y alertas, seguro y formulario de paciente nuevo validado."),
+    P("health", "medical-record", "assignment_ind", "Medical record", "Expediente clínico",
+      "One patient's chart: vitals, consultation timeline, diagnoses, prescriptions and attachments.",
+      "El expediente de un paciente: signos vitales, historial de consultas, diagnósticos, recetas y adjuntos."),
     P("it", "network-map", "lan", "Network map", "Mapa de red",
       "Topology of branches and devices with live status and a simulated scan.",
       "Topología de sucursales y equipos con estado en vivo y escaneo simulado."),
@@ -130,7 +162,10 @@
       yes: "Yes", no: "No", status: "Status", date: "Date", from: "From", to: "To", branch: "Branch", seller: "Seller", customer: "Customer",
       supplier: "Supplier", category: "Category", product: "Product", amount: "Amount", balance: "Balance", description: "Description",
       approve: "Approve", reject: "Reject", reason: "Reason", pending: "Pending", approved: "Approved", rejected: "Rejected",
-      perDay: "per day", loading: "Loading…", saved: "Saved", wholeCompany: "Whole company"
+      perDay: "per day", loading: "Loading…", saved: "Saved", wholeCompany: "Whole company",
+      allAreas: "All areas", viewAll: "Show all screens", viewArea: "Show this area only", areas: "Areas",
+      concept: "Concept", conceptNote: "Concept screen: designed as a sample of what I can build, not taken from a system in production.",
+      screensN: "{n} screens", openArea: "Open"
     },
     es: {
       sample: "Datos de ejemplo", company: "Empresa activa", companyName: "Demo Company S.A.",
@@ -141,7 +176,10 @@
       yes: "Sí", no: "No", status: "Estado", date: "Fecha", from: "Desde", to: "Hasta", branch: "Sucursal", seller: "Vendedor", customer: "Cliente",
       supplier: "Proveedor", category: "Categoría", product: "Producto", amount: "Monto", balance: "Saldo", description: "Descripción",
       approve: "Aprobar", reject: "Rechazar", reason: "Motivo", pending: "Pendiente", approved: "Aprobado", rejected: "Rechazado",
-      perDay: "por día", loading: "Cargando…", saved: "Guardado", wholeCompany: "Toda la empresa"
+      perDay: "por día", loading: "Cargando…", saved: "Guardado", wholeCompany: "Toda la empresa",
+      allAreas: "Todas las áreas", viewAll: "Ver todas las pantallas", viewArea: "Ver solo esta área", areas: "Áreas",
+      concept: "Concepto", conceptNote: "Pantalla de concepto: diseñada como muestra de lo que puedo construir, no tomada de un sistema en producción.",
+      screensN: "{n} pantallas", openArea: "Abrir"
     }
   };
   const STR = { en: Object.assign({}, COMMON.en), es: Object.assign({}, COMMON.es) };
@@ -196,6 +234,16 @@
 
   // ---------------- Shell ----------------
   let shellBuilt = false;
+  // Sidebar shows only the current area unless the visitor asks for every screen (remembered).
+  const NAV_KEY = "bug-nav-all";
+  function navAll() { try { return localStorage.getItem(NAV_KEY) === "1"; } catch (e) { return false; } }
+  function setNavAll(v) { try { localStorage.setItem(NAV_KEY, v ? "1" : "0"); } catch (e) { /* storage blocked */ } paintShell(); }
+  function currentArea() {
+    const id = document.body.dataset.page;
+    if (id === "area") { const a = new URLSearchParams(location.search).get("a"); return AREAS[a] ? a : null; }
+    const p = PAGES.find(x => x.id === id);
+    return p && AREAS[p.group] ? p.group : null;
+  }
   function mi(name, cls) { return '<span class="material-icons' + (cls ? " " + cls : "") + '" aria-hidden="true">' + name + "</span>"; }
 
   function paintShell() {
@@ -203,17 +251,39 @@
     const body = document.body;
     const root = body.dataset.root || "";
     const pageId = body.dataset.page;
-    const page = PAGES.find(p => p.id === pageId) || PAGES[0];
-    const groups = Object.keys(GROUPS);
-    document.getElementById("mcNav").innerHTML = groups.map(g => {
-      const links = PAGES.filter(p => p.group === g).map(p =>
-        '<a href="' + root + p.href + '"' + (p.id === pageId ? ' aria-current="page"' : "") + ' title="' + L(p.title) + '">' + mi(p.icon) + '<span class="txt">' + L(p.title) + "</span></a>").join("");
-      return '<div class="mc-nav-group"><div class="mc-nav-label">' + L(GROUPS[g]) + '</div><nav aria-label="' + L(GROUPS[g]) + '">' + links + "</nav></div>";
-    }).join("");
+    const area = currentArea();
+    const page = pageId === "area" && area
+      ? { id: "area", icon: AREAS[area].icon, title: GROUPS[area] }
+      : (PAGES.find(p => p.id === pageId) || PAGES[0]);
+    const all = navAll();
+    const link = (href, icon, text, current) => '<a href="' + href + '"' + (current ? ' aria-current="page"' : "") + ' title="' + text + '">' + mi(icon) + '<span class="txt">' + text + "</span></a>";
+    const pageLinks = g => PAGES.filter(p => p.group === g).map(p => link(root + p.href, p.icon, L(p.title), p.id === pageId)).join("");
+    const areaHref = g => root + "area.html?a=" + g;
+    const groups = Object.keys(AREAS);
+    let html = '<div class="mc-nav-group"><nav aria-label="' + t("home") + '">' + link(root + "index.html", "apps", t("allAreas"), pageId === "home") + "</nav></div>";
+    if (all) {
+      // Every area with its screens, segmented; the area label opens the area page.
+      html += groups.map(g => '<div class="mc-nav-group"><a class="mc-nav-label mc-nav-label-link" href="' + areaHref(g) + '">' + L(GROUPS[g]) + '</a><nav aria-label="' + L(GROUPS[g]) + '">' + pageLinks(g) + "</nav></div>").join("");
+    } else if (area) {
+      // Only the current area: its page and its screens.
+      html += '<div class="mc-nav-group"><div class="mc-nav-label">' + L(GROUPS[area]) + '</div><nav aria-label="' + L(GROUPS[area]) + '">' +
+        link(areaHref(area), AREAS[area].icon, L(GROUPS[area]), pageId === "area") + pageLinks(area) + "</nav></div>";
+    } else {
+      // Home: one entry per area.
+      html += '<div class="mc-nav-group"><div class="mc-nav-label">' + t("areas") + '</div><nav aria-label="' + t("areas") + '">' +
+        groups.map(g => link(areaHref(g), AREAS[g].icon, L(GROUPS[g]), false)).join("") + "</nav></div>";
+    }
+    document.getElementById("mcNav").innerHTML = html;
+    const toggle = document.getElementById("mcNavAll");
+    toggle.querySelector(".material-icons").textContent = all ? "filter_list" : "view_list";
+    toggle.querySelector(".txt").textContent = all ? (area ? t("viewArea") : t("areas")) : t("viewAll");
+    toggle.title = toggle.querySelector(".txt").textContent;
+    toggle.setAttribute("aria-pressed", String(all));
     document.getElementById("mcTitleIcon").textContent = page.icon;
     document.getElementById("mcTitle").textContent = L(page.title);
     document.title = L(page.title) + " · Business UI Gallery";
-    document.getElementById("mcSample").textContent = t("sample");
+    const concept = area && AREAS[area].concept;
+    document.getElementById("mcSample").innerHTML = t("sample") + (concept ? ' · <b title="' + t("conceptNote") + '">' + t("concept") + "</b>" : "");
     document.getElementById("mcFooter").innerHTML = mi("apartment") + t("company") + ": <b>" + t("companyName") + "</b>";
     document.querySelectorAll(".mc-lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
     const lightBtn = document.getElementById("mcLight"), darkBtn = document.getElementById("mcDark");
@@ -242,6 +312,7 @@
         '<span class="mc-brand-mark">' + mi("hub") + '</span><span class="mc-brand-text" id="mcHomeTxt"></span></a>' +
       '<div class="mc-nav" id="mcNav"></div>' +
       '<div class="mc-side-foot">' +
+        '<button class="mc-side-btn" type="button" id="mcNavAll">' + mi("view_list") + '<span class="txt"></span></button>' +
         '<button class="mc-side-btn" type="button" id="mcLight">' + mi("light_mode") + '<span class="txt"></span></button>' +
         '<button class="mc-side-btn" type="button" id="mcDark">' + mi("dark_mode") + '<span class="txt"></span></button>' +
       "</div>";
@@ -280,6 +351,7 @@
     document.querySelectorAll(".mc-lang button").forEach(b => b.addEventListener("click", () => setLang(b.dataset.lang)));
     document.getElementById("mcLight").addEventListener("click", () => setTheme("light"));
     document.getElementById("mcDark").addEventListener("click", () => setTheme("dark"));
+    document.getElementById("mcNavAll").addEventListener("click", () => setNavAll(!navAll()));
     paintShell();
     applyI18n();
   }
@@ -351,7 +423,27 @@
     banks: ["First Harbor Bank", "Metro Savings", "Union Trust", "Pacific Credit"],
     costCenters: [{ en: "Sales North", es: "Ventas Norte" }, { en: "Sales Center", es: "Ventas Centro" }, { en: "Sales Coast", es: "Ventas Costa" }, { en: "Warehouse", es: "Bodega" }, { en: "Logistics", es: "Logística" }, { en: "Administration", es: "Administración" }, { en: "IT", es: "TI" }],
     firstNames: ["Ana", "Luis", "Maria", "Carlos", "Sofia", "Jorge", "Elena", "Pedro", "Lucia", "Diego", "Valeria", "Miguel", "Camila", "Andres", "Paula", "Ricardo", "Daniela", "Hector", "Gabriela", "Oscar"],
-    lastNames: ["Torres", "Lopez", "Ramos", "Medina", "Castro", "Ortiz", "Reyes", "Flores", "Vargas", "Molina", "Rivera", "Cruz", "Mendoza", "Herrera", "Aguilar"]
+    lastNames: ["Torres", "Lopez", "Ramos", "Medina", "Castro", "Ortiz", "Reyes", "Flores", "Vargas", "Molina", "Rivera", "Cruz", "Mendoza", "Herrera", "Aguilar"],
+    // Health area (concept screens). Doctors and patients are invented.
+    doctors: [
+      { name: "Dr. A. Rivera", spec: { en: "General medicine", es: "Medicina general" } },
+      { name: "Dra. L. Mendoza", spec: { en: "Pediatrics", es: "Pediatría" } },
+      { name: "Dr. M. Herrera", spec: { en: "Internal medicine", es: "Medicina interna" } },
+      { name: "Dra. S. Aguilar", spec: { en: "Gynecology", es: "Ginecología" } },
+      { name: "Dr. J. Cruz", spec: { en: "Cardiology", es: "Cardiología" } },
+      { name: "Dra. P. Flores", spec: { en: "Dermatology", es: "Dermatología" } }
+    ],
+    clinicServices: [
+      { name: { en: "General consultation", es: "Consulta general" }, price: 35 },
+      { name: { en: "Specialist consultation", es: "Consulta de especialidad" }, price: 60 },
+      { name: { en: "Follow-up visit", es: "Control" }, price: 25 },
+      { name: { en: "Lab tests", es: "Laboratorio" }, price: 40 },
+      { name: { en: "Ultrasound", es: "Ultrasonido" }, price: 75 },
+      { name: { en: "Minor procedure", es: "Procedimiento menor" }, price: 120 }
+    ],
+    insurers: ["Private pay", "Andes Health", "BlueCross Demo", "Meridian Care", "Pacific Life"],
+    allergies: [{ en: "Penicillin", es: "Penicilina" }, { en: "Sulfa drugs", es: "Sulfas" }, { en: "Ibuprofen", es: "Ibuprofeno" }, { en: "Latex", es: "Látex" }, { en: "Peanuts", es: "Maní" }],
+    bloodTypes: ["O+", "O-", "A+", "A-", "B+", "B-", "AB+"]
   };
 
   function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
@@ -441,7 +533,7 @@
   }
 
   window.UI = {
-    PAGES, GROUPS, mi, t, L, strings, applyI18n, get lang() { return lang; }, setLang, currentTheme, setTheme,
+    PAGES, GROUPS, AREAS, mi, t, L, strings, applyI18n, get lang() { return lang; }, setLang, currentTheme, setTheme,
     fmtMoney, fmtInt, fmtPct, fmtDate, fmtDay, fmtDayShort, monthName, parseMoney, maskMoney,
     rng, pick, between, DATA, cssVar, toast, openModal, closeModal, helpBtn, delta, sparkline, aboutBox, csvDownload
   };

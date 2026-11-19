@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appointments · Business UI Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    .wk-nav { display: flex; gap: 6px; align-items: flex-end; flex-wrap: wrap; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11px; }
+    .st { display: inline-flex; align-items: center; gap: 4px; font-weight: 750; white-space: nowrap; }
+    .st .material-icons { font-size: 15px; }
+    .st-scheduled { --s: #94a3b8; } .st-confirmed { --s: #38bdf8; } .st-arrived { --s: #f59e0b; }
+    .st-inconsult { --s: #a78bfa; } .st-done { --s: #2dd4bf; } .st-noshow { --s: #fb7185; } .st-cancelled { --s: #64748b; }
+    :root[data-theme="light"] .st-scheduled { --s: #64748b; } :root[data-theme="light"] .st-confirmed { --s: #0284c7; }
+    :root[data-theme="light"] .st-arrived { --s: #b45309; } :root[data-theme="light"] .st-inconsult { --s: #7c3aed; }
+    :root[data-theme="light"] .st-done { --s: #0f766e; } :root[data-theme="light"] .st-noshow { --s: #e11d48; }
+    .st { color: var(--s); }
+
+    .agenda-wrap { overflow: auto; border: 1px solid var(--mc-line); border-radius: 8px; max-height: 720px; }
+    table.agenda { width: 100%; min-width: 860px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 11px; }
+    table.agenda th, table.agenda td { border-bottom: 1px solid var(--mc-line); border-right: 1px solid var(--mc-line); padding: 2px; vertical-align: top; }
+    table.agenda thead th { position: sticky; top: 0; z-index: 2; background: var(--mc-th-bg); color: #fff; padding: 7px 6px; text-align: left; font-weight: 800; }
+    table.agenda thead th small { display: block; font-weight: 500; opacity: .85; font-size: 10px; margin-top: 2px; }
+    table.agenda thead th.is-today { background: #0d9488; box-shadow: inset 0 -3px 0 #5eead4; }
+    table.agenda th.time, table.agenda td.time { width: 58px; position: sticky; left: 0; z-index: 1; background: var(--mc-panel); color: var(--mc-muted); font-weight: 750; text-align: right; padding: 6px; }
+    table.agenda thead th.time { z-index: 3; background: var(--mc-th-bg); color: #fff; }
+    table.agenda td { height: 40px; }
+    .slot-free { width: 100%; height: 100%; min-height: 36px; border: 1px dashed transparent; border-radius: 6px; background: transparent; color: var(--mc-muted); cursor: pointer; font: inherit; display: flex; align-items: center; justify-content: center; gap: 3px; opacity: .55; }
+    .slot-free:hover, .slot-free:focus-visible { border-color: var(--mc-teal); color: var(--mc-teal); opacity: 1; outline: none; }
+    .slot-free .material-icons { font-size: 15px; }
+    .slot-off { display: block; min-height: 36px; border-radius: 6px; background: repeating-linear-gradient(45deg, rgba(148,163,184,.07) 0 6px, transparent 6px 12px); }
+    .appt { width: 100%; height: 100%; min-height: 36px; text-align: left; border: 1px solid color-mix(in srgb, var(--s) 45%, transparent); border-left: 4px solid var(--s);
+      background: color-mix(in srgb, var(--s) 13%, var(--mc-panel)); color: var(--mc-text); border-radius: 6px; padding: 4px 6px; cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 1px; overflow: hidden; }
+    .appt:hover, .appt:focus-visible { outline: 2px solid var(--s); outline-offset: 1px; }
+    .appt .who { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt .what { color: var(--mc-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+    .appt .st { font-size: 10px; }
+    .appt .st .material-icons { font-size: 13px; }
+    .det-list { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 6px 12px; font-size: 13px; }
+    .det-list dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+    .det-list dt { color: var(--mc-muted); font-size: 11px; font-weight: 800; text-transform: uppercase; padding-top: 2px; }
+    .det-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--mc-line); }
+    .subform { margin-top: 12px; padding: 12px; border: 1px solid var(--mc-line); border-radius: 8px; background: var(--mc-panel-2); display: grid; gap: 10px; }
+    .subform h4 { font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    @media (max-width: 760px) { .form-grid { grid-template-columns: minmax(0, 1fr); } .det-list { grid-template-columns: minmax(0, 1fr); } }
+  </style>
+</head>
+<body data-page="appointments" data-root="../">
+  <main id="content">
+    <section class="mc-panel no-print">
+      <form class="mc-filters" id="filters">
+        <div class="mc-field" style="max-width:300px"><label for="fDoctor" data-i18n="fDoctor"></label><select id="fDoctor"></select></div>
+        <div class="mc-field" style="max-width:170px"><label for="fWeek" data-i18n="fWeek"></label><input type="date" id="fWeek"></div>
+        <div class="wk-nav">
+          <button class="btn" type="button" id="bPrev" data-i18n-title="prevWeek"><span class="material-icons" aria-hidden="true">chevron_left</span></button>
+          <button class="btn" type="button" id="bToday"><span class="material-icons" aria-hidden="true">today</span><span data-i18n="thisWeek"></span></button>
+          <button class="btn" type="button" id="bNext" data-i18n-title="nextWeek"><span class="material-icons" aria-hidden="true">chevron_right</span></button>
+        </div>
+      </form>
+    </section>
+    <p class="mc-hint" id="hint" role="status"></p>
+
+    <div class="mc-head">
+      <div><h2 id="wTitle"></h2><p id="wSub"></p></div>
+      <span class="mc-chip-time" id="wTime"></span>
+    </div>
+    <div class="mc-kpis" id="kpis" style="margin-top:12px"></div>
+
+    <section class="mc-panel" style="margin-top:12px">
+      <div class="mc-panel-title">
+        <h3><span class="material-icons" aria-hidden="true">calendar_view_week</span><span data-i18n="agenda"></span></h3>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="agenda-wrap"><table class="agenda" id="tAgenda"><thead></thead><tbody></tbody></table></div>
+    </section>
+    <div id="about"></div>
+  </main>
+
+  <!-- New appointment -->
+  <div class="modal-backdrop" id="mNew">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mNewTitle">
+      <div class="modal-head"><h3 id="mNewTitle"><span class="material-icons" aria-hidden="true">event_available</span><span data-i18n="newTitle"></span></h3></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="mc-field"><label data-i18n="fDoctor"></label><div class="static" id="nDoctor"></div></div>
+          <div class="mc-field"><label data-i18n="dateTime"></label><div class="static" id="nWhen"></div></div>
+          <div class="mc-field full"><label for="nPatient" data-i18n="patient"></label>
+            <input id="nPatient" list="dlPatients" autocomplete="off" data-i18n-ph="patientPh" aria-describedby="ePatient">
+            <datalist id="dlPatients"></datalist><div class="mc-field-error" id="ePatient"></div></div>
+          <div class="mc-field"><label for="nService" data-i18n="service"></label><select id="nService" aria-describedby="eService"></select><div class="mc-field-error" id="eService"></div></div>
+          <div class="mc-field"><label for="nDur" data-i18n="duration"></label><select id="nDur" aria-describedby="eDur"></select><div class="mc-field-error" id="eDur"></div></div>
+          <div class="mc-field full"><label for="nNotes" data-i18n="notes"></label><textarea id="nNotes" maxlength="300" data-i18n-ph="notesPh"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-teal" type="button" id="nSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button>
+        <button class="btn" type="button" id="nClose"><span data-i18n="close"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Appointment detail -->
+  <div class="modal-backdrop" id="mDet">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="mDetTitle">
+      <div class="modal-head"><h3 id="mDetTitle"><span class="material-icons" aria-hidden="true">event_note</span><span data-i18n="detTitle"></span></h3><span id="dStatus"></span></div>
+      <div class="modal-body">
+        <dl class="det-list" id="dList"></dl>
+        <p class="ig-nota" id="dLocked" hidden></p>
+        <div class="det-actions" id="dActions"></div>
+        <div class="subform" id="sResched" hidden>
+          <h4><span class="material-icons" aria-hidden="true">update</span><span data-i18n="reschedule"></span></h4>
+          <div class="form-grid">
+            <div class="mc-field"><label for="rDate" data-i18n="newDate"></label><input type="date" id="rDate" aria-describedby="eRDate"><div class="mc-field-error" id="eRDate"></div></div>
+            <div class="mc-field"><label for="rTime" data-i18n="newTime"></label><select id="rTime" aria-describedby="eRTime"></select><div class="mc-field-error" id="eRTime"></div></div>
+          </div>
+        </div>
+        <div class="subform" id="sCancel" hidden>
+          <h4><span class="material-icons" aria-hidden="true">event_busy</span><span data-i18n="cancelAppt"></span></h4>
+          <div class="mc-field"><label for="cReason" data-i18n="reason"></label><textarea id="cReason" maxlength="200" data-i18n-ph="reasonPh" aria-describedby="eReason"></textarea><div class="mc-field-error" id="eReason"></div></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-teal" type="button" id="dSave" hidden><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button>
+        <button class="btn" type="button" id="dClose"><span data-i18n="close"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="../assets/js/common.js"></script>
+  <script>
+  UI.strings({
+    en: {
+      fDoctor: "Doctor", fWeek: "Week of", prevWeek: "Previous week", nextWeek: "Next week", thisWeek: "This week",
+      title: "Agenda of {doc}", sub: "Week from {a} to {b}. 30-minute slots from 7:00 to 17:00; Saturday until 12:00. Press a free slot to book, or an appointment to manage it.",
+      consulted: "Today {d}, {h}", agenda: "Weekly agenda", time: "Time", free: "Free", closed: "Closed",
+      dayCount: "{n} appts · {f} free", bookAt: "Book {d} at {h}",
+      k_total: "Appointments of the week", k_confirmed: "Confirmed", k_attended: "Attended", k_noshow: "Did not come", k_cancelled: "Cancelled", k_free: "Free slots", k_occ: "Occupancy",
+      k_sub_total: "Not counting cancelled", k_sub_free: "Bookable from now on", k_sub_occ: "Booked ÷ available slots",
+      s_scheduled: "Scheduled", s_confirmed: "Confirmed", s_arrived: "In the waiting room", s_inconsult: "In consultation", s_done: "Attended", s_noshow: "Did not come", s_cancelled: "Cancelled",
+      newTitle: "New appointment", dateTime: "Date and time", patient: "Patient", patientPh: "Type the patient's name", service: "Service", chooseService: "Choose a service",
+      duration: "Duration", min30: "30 minutes", min60: "1 hour", notes: "Notes", notesPh: "Reason for the visit, optional",
+      e_patient: "Type the patient's name.", e_patientList: "Choose a patient from the list.", e_service: "Choose the service.",
+      e_overlap: "This time overlaps the appointment at {h}. Choose 30 minutes or another slot.", e_close: "The appointment would end after the clinic closes.",
+      e_patientBusy: "The patient already has an appointment at {h} with {doc}.", e_past: "That time already passed.",
+      booked: "Appointment booked for {p} on {d} at {h}.",
+      detTitle: "Appointment", price: "Price", status: "Status", locked: "This appointment already passed or was cancelled: it can only be viewed.",
+      confirm: "Confirm", checkin: "Check in", reschedule: "Reschedule", cancelAppt: "Cancel appointment",
+      newDate: "New date", newTime: "New time", noSlots: "No free slots that day", chooseTime: "Choose a time",
+      e_date: "Choose a working day from today on.", e_time: "Choose a free time.", reason: "Reason", reasonPh: "Why is it cancelled?", e_reason: "Write the reason (at least 5 characters).",
+      confirmed: "Appointment confirmed.", checkedIn: "{p} is in the waiting room.", rescheduled: "Appointment moved to {d} at {h}.", cancelled: "Appointment cancelled.",
+      cancelReason: "Cancellation reason",
+      aboutText: "<b>Concept screen.</b> I designed it as a sample of an agenda for clinics and doctors; it was not taken from a system in production. The agenda never allows two appointments in the same slot for a doctor, nor the same patient at the same time with two doctors, and it does not book in the past or after closing time. Each appointment goes <b>Scheduled → Confirmed → In the waiting room → In consultation → Attended</b>, or ends as <b>Did not come</b> or <b>Cancelled</b> (always with a reason). The status is shown with an icon and a word, not only a color. The summary at the top follows the chosen doctor and week, and changes as soon as you book, move or cancel. Windows close only with their buttons. All patients and appointments are generated; changes live only in this page."
+    },
+    es: {
+      fDoctor: "Médico", fWeek: "Semana del", prevWeek: "Semana anterior", nextWeek: "Semana siguiente", thisWeek: "Esta semana",
+      title: "Agenda de {doc}", sub: "Semana del {a} al {b}. Espacios de 30 minutos de 7:00 a 17:00; el sábado hasta las 12:00. Pulse un espacio libre para agendar o una cita para gestionarla.",
+      consulted: "Hoy {d}, {h}", agenda: "Agenda semanal", time: "Hora", free: "Libre", closed: "Cerrado",
+      dayCount: "{n} citas · {f} libres", bookAt: "Agendar el {d} a las {h}",
+      k_total: "Citas de la semana", k_confirmed: "Confirmadas", k_attended: "Atendidas", k_noshow: "No se presentaron", k_cancelled: "Canceladas", k_free: "Espacios libres", k_occ: "Ocupación",
+      k_sub_total: "Sin contar canceladas", k_sub_free: "Se pueden agendar desde ahora", k_sub_occ: "Agendados ÷ disponibles",
+      s_scheduled: "Agendada", s_confirmed: "Confirmada", s_arrived: "En sala de espera", s_inconsult: "En consulta", s_done: "Atendida", s_noshow: "No se presentó", s_cancelled: "Cancelada",
+      newTitle: "Nueva cita", dateTime: "Fecha y hora", patient: "Paciente", patientPh: "Escriba el nombre del paciente", service: "Servicio", chooseService: "Elija un servicio",
+      duration: "Duración", min30: "30 minutos", min60: "1 hora", notes: "Notas", notesPh: "Motivo de la visita, opcional",
+      e_patient: "Escriba el nombre del paciente.", e_patientList: "Elija un paciente de la lista.", e_service: "Elija el servicio.",
+      e_overlap: "Este horario choca con la cita de las {h}. Elija 30 minutos u otro espacio.", e_close: "La cita terminaría después de la hora de cierre.",
+      e_patientBusy: "El paciente ya tiene una cita a las {h} con {doc}.", e_past: "Esa hora ya pasó.",
+      booked: "Cita agendada para {p} el {d} a las {h}.",
+      detTitle: "Cita", price: "Precio", status: "Estado", locked: "Esta cita ya pasó o fue cancelada: solo se puede consultar.",
+      confirm: "Confirmar", checkin: "Registrar llegada", reschedule: "Reprogramar", cancelAppt: "Cancelar cita",
+      newDate: "Nueva fecha", newTime: "Nueva hora", noSlots: "No hay espacios libres ese día", chooseTime: "Elija una hora",
+      e_date: "Elija un día hábil de hoy en adelante.", e_time: "Elija una hora libre.", reason: "Motivo", reasonPh: "¿Por qué se cancela?", e_reason: "Escriba el motivo (al menos 5 caracteres).",
+      confirmed: "Cita confirmada.", checkedIn: "{p} está en sala de espera.", rescheduled: "Cita movida al {d} a las {h}.", cancelled: "Cita cancelada.",
+      cancelReason: "Motivo de cancelación",
+      aboutText: "<b>Pantalla de concepto.</b> La diseñé como muestra de una agenda para clínicas y médicos; no se tomó de un sistema en producción. La agenda nunca permite dos citas en el mismo espacio de un médico, ni al mismo paciente a la misma hora con dos médicos, y no agenda en el pasado ni después del cierre. Cada cita pasa por <b>Agendada → Confirmada → En sala de espera → En consulta → Atendida</b>, o termina como <b>No se presentó</b> o <b>Cancelada</b> (siempre con motivo). El estado se muestra con ícono y palabra, no solo con color. El resumen de arriba sigue al médico y la semana elegidos, y cambia en cuanto usted agenda, mueve o cancela. Las ventanas se cierran solo con sus botones. Todos los pacientes y citas son generados; los cambios viven solo en esta página."
+    }
+  });
+
+  $(function () {
+    const D = UI.DATA, t = UI.t, mi = UI.mi, M = UI.fmtMoney, I = UI.fmtInt;
+    const TODAY = new Date(Date.UTC(2026, 10, 16));     // Monday
+    const NOW_MIN = 10 * 60 + 40;
+    const DAY = 86400000;
+    const dnum = d => Math.floor(d.getTime() / DAY);
+    const isWorking = d => d.getUTCDay() !== 0;
+    const STATUS = { scheduled: "event", confirmed: "event_available", arrived: "how_to_reg", inconsult: "medical_services", done: "task_alt", noshow: "event_busy", cancelled: "event_busy" };
+    const stHtml = s => '<span class="st st-' + s + '">' + mi(STATUS[s]) + t("s_" + s) + "</span>";
+    const hhmm = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+    const slotMin = s => 7 * 60 + s * 30;
+    const slotsFor = d => d.getUTCDay() === 6 ? 10 : 20;
+    const PATIENTS = []; { const r = UI.rng(4242); for (let i = 0; i < 80; i++) PATIENTS.push(UI.pick(r, D.firstNames) + " " + UI.pick(r, D.lastNames) + " " + UI.pick(r, D.lastNames)); }
+    const PSET = new Set(PATIENTS);
+    const dayLabel = (d, long) => { const n = d.toLocaleString(UI.lang === "es" ? "es" : "en", { weekday: long ? "long" : "short", timeZone: "UTC" }); return n.charAt(0).toUpperCase() + n.slice(1).replace(".", ""); };
+    const isPastSlot = (d, s) => dnum(d) < dnum(TODAY) || (dnum(d) === dnum(TODAY) && slotMin(s) < NOW_MIN);
+
+    // Same generator as the Clinic dashboard; generated once per doctor and day, then edited in memory.
+    const cache = {};
+    let nextId = 1;
+    function agenda(doc, d) {
+      const key = doc + "|" + dnum(d);
+      if (cache[key]) return cache[key];
+      const out = [];
+      if (isWorking(d)) {
+        const dn = dnum(d), r = UI.rng(dn * 977 + doc * 31 + 11);
+        const occ = UI.between(r, .55, .92), ns = UI.between(r, .05, .15);
+        const isToday = dn === dnum(TODAY), isPast = dn < dnum(TODAY), n = slotsFor(d);
+        for (let s = 0; s < n; s++) {
+          const roll = r(), durRoll = r(), pi = Math.floor(r() * PATIENTS.length), sr = r(), stR = r(); r();
+          if (roll > occ) continue;
+          const dur = durRoll < .18 && s < n - 1 ? 2 : 1;
+          const svc = doc === 0 ? [0, 0, 2, 3][Math.floor(sr * 4)] : [1, 1, 2, 3, 4, 5][Math.floor(sr * 6)];
+          const start = slotMin(s), end = start + dur * 30;
+          let st;
+          if (isPast || (isToday && end <= NOW_MIN)) st = stR < ns ? "noshow" : "done";
+          else if (isToday && start <= NOW_MIN) st = stR < ns * .5 ? "noshow" : "inconsult";
+          else if (isToday && start - NOW_MIN <= 60) st = stR < .55 ? "arrived" : "confirmed";
+          else if (isToday || (dn - dnum(TODAY)) <= 2) st = stR < .6 ? "confirmed" : "scheduled";
+          else st = stR < .25 ? "confirmed" : "scheduled";
+          out.push({ id: nextId++, doc, day: dn, slot: s, dur, patient: PATIENTS[pi], svc, st, notes: "", reason: "" });
+          s += dur - 1;
+        }
+      }
+      cache[key] = out;
+      return out;
+    }
+    const live = list => list.filter(a => a.st !== "cancelled");
+    const fromNum = n => new Date(n * DAY);
+    function occupant(doc, d, s) { return live(agenda(doc, d)).find(a => s >= a.slot && s < a.slot + a.dur); }
+
+    // Filters
+    const $doc = $("#fDoctor");
+    function fillDoctors() {
+      const v = $doc.val();
+      $doc.empty();
+      D.doctors.forEach((x, i) => $doc.append(new Option(x.name + " · " + UI.L(x.spec), String(i))));
+      $doc.val(v || "0").select2({ width: "100%", minimumResultsForSearch: 0 });
+    }
+    fillDoctors();
+    const weekIn = document.getElementById("fWeek");
+    const monday = d => { const w = (d.getUTCDay() + 6) % 7; return new Date(d.getTime() - w * DAY); };
+    let state = { doc: 0, week: monday(TODAY) };
+    weekIn.value = UI.fmtDate(state.week);
+
+    function days() { return Array.from({ length: 6 }, (_, i) => new Date(state.week.getTime() + i * DAY)); }
+
+    function render() {
+      const doc = state.doc, ds = days();
+      const dr = D.doctors[doc];
+      document.getElementById("wTitle").textContent = t("title", { doc: dr.name + " · " + UI.L(dr.spec) });
+      document.getElementById("wSub").textContent = t("sub", { a: UI.fmtDay(ds[0]), b: UI.fmtDay(ds[5]) });
+      document.getElementById("wTime").textContent = t("consulted", { d: UI.fmtDay(TODAY), h: hhmm(NOW_MIN) });
+      document.getElementById("legend").innerHTML = ["scheduled", "confirmed", "arrived", "inconsult", "done", "noshow"].map(stHtml).join("");
+
+      // Summary follows doctor + week.
+      let all = [], slots = 0, booked = 0, freeAhead = 0;
+      ds.forEach(d => {
+        const list = agenda(doc, d), n = slotsFor(d);
+        all = all.concat(list); slots += n;
+        booked += live(list).reduce((a, x) => a + x.dur, 0);
+        for (let s = 0; s < n; s++) if (!occupant(doc, d, s) && !isPastSlot(d, s)) freeAhead++;
+      });
+      const L = live(all), cnt = s => all.filter(a => a.st === s).length;
+      const k = (label, value, sub, color) => '<div class="mc-kpi is-accent" style="--k-color:' + color + '"><div class="k-label">' + label + '</div><div class="k-value">' + value + "</div>" + (sub ? '<div class="k-sub">' + sub + "</div>" : "") + "</div>";
+      document.getElementById("kpis").innerHTML =
+        k(t("k_total"), I(L.length), t("k_sub_total"), "#ec4899") + k(t("k_confirmed"), I(cnt("confirmed")), stHtml("confirmed"), "#38bdf8") +
+        k(t("k_attended"), I(cnt("done")), stHtml("done"), "#14b8a6") + k(t("k_noshow"), I(cnt("noshow")), stHtml("noshow"), "#f43f5e") +
+        k(t("k_cancelled"), I(cnt("cancelled")), stHtml("cancelled"), "#64748b") + k(t("k_free"), I(freeAhead), t("k_sub_free"), "#f59e0b") +
+        k(t("k_occ"), UI.fmtPct(slots ? booked / slots : 0), t("k_sub_occ"), "#8b5cf6");
+
+      // Grid
+      const isT = d => dnum(d) === dnum(TODAY);
+      document.querySelector("#tAgenda thead").innerHTML = '<tr><th class="time">' + t("time") + "</th>" + ds.map(d => {
+        const list = live(agenda(doc, d)); let f = 0; for (let s = 0; s < slotsFor(d); s++) if (!occupant(doc, d, s) && !isPastSlot(d, s)) f++;
+        return '<th class="' + (isT(d) ? "is-today" : "") + '">' + dayLabel(d) + " " + UI.fmtDayShort(d) + "<small>" + t("dayCount", { n: list.length, f }) + "</small></th>";
+      }).join("") + "</tr>";
+      let html = "";
+      for (let s = 0; s < 20; s++) {
+        html += '<tr><td class="time">' + hhmm(slotMin(s)) + "</td>";
+        ds.forEach((d, di) => {
+          if (s >= slotsFor(d)) { html += '<td><span class="slot-off" title="' + t("closed") + '"></span></td>'; return; }
+          const a = occupant(doc, d, s);
+          if (a && a.slot !== s) return;                                  // covered by a 1-hour appointment
+          if (a) {
+            html += '<td rowspan="' + a.dur + '"><button type="button" class="appt st-' + a.st + '" data-id="' + a.id + '">' +
+              '<span class="who">' + a.patient + '</span><span class="what">' + hhmm(slotMin(a.slot)) + "–" + hhmm(slotMin(a.slot + a.dur)) + " · " + UI.L(D.clinicServices[a.svc].name) + "</span>" + stHtml(a.st) + "</button></td>";
+          } else if (isPastSlot(d, s)) {
+            html += '<td><span class="slot-off" aria-hidden="true"></span></td>';
+          } else {
+            html += '<td><button type="button" class="slot-free" data-d="' + di + '" data-s="' + s + '" aria-label="' + t("bookAt", { d: dayLabel(d, true) + " " + UI.fmtDayShort(d), h: hhmm(slotMin(s)) }) + '">' + mi("add") + "<span>" + t("free") + "</span></button></td>";
+          }
+        });
+        html += "</tr>";
+      }
+      document.querySelector("#tAgenda tbody").innerHTML = html;
+    }
+
+    function setWeek(d) { state.week = monday(d); weekIn.value = UI.fmtDate(state.week); render(); }
+    $doc.on("change", () => { state.doc = Number($doc.val()); render(); });
+    weekIn.addEventListener("change", () => { const d = new Date(weekIn.value + "T00:00:00Z"); if (!isNaN(d)) setWeek(d); });
+    document.getElementById("bPrev").addEventListener("click", () => setWeek(new Date(state.week.getTime() - 7 * DAY)));
+    document.getElementById("bNext").addEventListener("click", () => setWeek(new Date(state.week.getTime() + 7 * DAY)));
+    document.getElementById("bToday").addEventListener("click", () => setWeek(TODAY));
+    document.getElementById("filters").addEventListener("submit", e => e.preventDefault());
+
+    // ---------- New appointment ----------
+    const err = (id, msg, input) => { document.getElementById(id).textContent = msg || ""; if (input) input.setAttribute("aria-invalid", msg ? "true" : "false"); };
+    let pending = null;
+    function fillServiceSelect() {
+      const sel = document.getElementById("nService");
+      sel.innerHTML = '<option value="">' + t("chooseService") + "</option>" + D.clinicServices.map((s, i) => '<option value="' + i + '">' + UI.L(s.name) + " · " + M(s.price) + "</option>").join("");
+      document.getElementById("nDur").innerHTML = '<option value="1">' + t("min30") + '</option><option value="2">' + t("min60") + "</option>";
+    }
+    document.getElementById("dlPatients").innerHTML = PATIENTS.slice().sort().map(p => '<option value="' + p + '"></option>').join("");
+    function openNew(d, s) {
+      pending = { d, s };
+      fillServiceSelect();
+      const dr = D.doctors[state.doc];
+      document.getElementById("nDoctor").textContent = dr.name;
+      document.getElementById("nWhen").textContent = dayLabel(d) + " " + UI.fmtDay(d) + " · " + hhmm(slotMin(s));
+      ["nPatient", "nNotes"].forEach(id => { document.getElementById(id).value = ""; });
+      document.getElementById("nService").value = ""; document.getElementById("nDur").value = "1";
+      ["ePatient", "eService", "eDur"].forEach(id => err(id, ""));
+      ["nPatient", "nService", "nDur"].forEach(id => document.getElementById(id).setAttribute("aria-invalid", "false"));
+      UI.openModal("mNew");
+    }
+    function saveNew() {
+      const { d, s } = pending;
+      const pIn = document.getElementById("nPatient"), sIn = document.getElementById("nService"), dIn = document.getElementById("nDur");
+      const p = pIn.value.trim(), svc = sIn.value, dur = Number(dIn.value);
+      let ok = true;
+      if (!p) { err("ePatient", t("e_patient"), pIn); ok = false; }
+      else if (!PSET.has(p)) { err("ePatient", t("e_patientList"), pIn); ok = false; }
+      else {
+        // Same patient, same time, another doctor
+        const clash = D.doctors.map((_, i) => i).filter(i => i !== state.doc).map(i => live(agenda(i, d)).find(a => a.patient === p && a.slot < s + dur && s < a.slot + a.dur)).find(Boolean);
+        if (clash) { err("ePatient", t("e_patientBusy", { h: hhmm(slotMin(clash.slot)), doc: D.doctors[clash.doc].name }), pIn); ok = false; }
+        else err("ePatient", "", pIn);
+      }
+      if (svc === "") { err("eService", t("e_service"), sIn); ok = false; } else err("eService", "", sIn);
+      if (isPastSlot(d, s)) { err("eDur", t("e_past"), dIn); ok = false; }
+      else if (s + dur > slotsFor(d)) { err("eDur", t("e_close"), dIn); ok = false; }
+      else { const o = occupant(state.doc, d, s + dur - 1) || occupant(state.doc, d, s); if (o) { err("eDur", t("e_overlap", { h: hhmm(slotMin(o.slot)) }), dIn); ok = false; } else err("eDur", "", dIn); }
+      if (!ok) return;
+      const notes = document.getElementById("nNotes").value.trim();
+      agenda(state.doc, d).push({ id: nextId++, doc: state.doc, day: dnum(d), slot: s, dur, patient: p, svc: Number(svc), st: dnum(d) - dnum(TODAY) <= 0 ? "confirmed" : "scheduled", notes, reason: "" });
+      agenda(state.doc, d).sort((a, b) => a.slot - b.slot);
+      UI.closeModal("mNew");
+      render();
+      UI.toast(t("booked", { p, d: UI.fmtDay(d), h: hhmm(slotMin(s)) }));
+    }
+    document.getElementById("nSave").addEventListener("click", saveNew);
+    document.getElementById("nClose").addEventListener("click", () => UI.closeModal("mNew"));
+
+    // ---------- Detail ----------
+    let cur = null, mode = null;
+    function findAppt(id) { for (const k in cache) { const a = cache[k].find(x => x.id === id); if (a) return a; } return null; }
+    function openDet(id) {
+      cur = findAppt(id); mode = null;
+      paintDet();
+      UI.openModal("mDet");
+    }
+    function paintDet() {
+      const a = cur, d = fromNum(a.day), dr = D.doctors[a.doc], s = D.clinicServices[a.svc];
+      document.getElementById("dStatus").innerHTML = stHtml(a.st);
+      document.getElementById("dList").innerHTML =
+        "<dt>" + t("patient") + "</dt><dd><b>" + a.patient + "</b></dd>" +
+        "<dt>" + t("fDoctor") + "</dt><dd>" + dr.name + " · " + UI.L(dr.spec) + "</dd>" +
+        "<dt>" + t("dateTime") + "</dt><dd>" + dayLabel(d) + " " + UI.fmtDay(d) + " · " + hhmm(slotMin(a.slot)) + "–" + hhmm(slotMin(a.slot + a.dur)) + "</dd>" +
+        "<dt>" + t("service") + "</dt><dd>" + UI.L(s.name) + "</dd>" +
+        "<dt>" + t("price") + '</dt><dd class="num">' + M(s.price) + "</dd>" +
+        (a.notes ? "<dt>" + t("notes") + "</dt><dd>" + $("<i>").text(a.notes).html() + "</dd>" : "") +
+        (a.reason ? "<dt>" + t("cancelReason") + "</dt><dd>" + $("<i>").text(a.reason).html() + "</dd>" : "");
+      const locked = ["done", "noshow", "cancelled", "inconsult"].includes(a.st) || dnum(d) < dnum(TODAY);
+      const lk = document.getElementById("dLocked");
+      lk.hidden = !locked; lk.textContent = t("locked");
+      const isToday = dnum(d) === dnum(TODAY);
+      const btn = (act, icon, key, cls) => '<button type="button" class="btn ' + (cls || "") + '" data-act="' + act + '"' + (mode === act ? ' aria-pressed="true"' : "") + ">" + mi(icon) + t(key) + "</button>";
+      document.getElementById("dActions").innerHTML = locked ? "" :
+        (a.st === "scheduled" ? btn("confirm", "event_available", "confirm", "btn-cyan") : "") +
+        (isToday && ["scheduled", "confirmed"].includes(a.st) ? btn("checkin", "how_to_reg", "checkin", "btn-amber") : "") +
+        btn("resched", "update", "reschedule", "btn-violet") + btn("cancel", "event_busy", "cancelAppt", "btn-danger");
+      document.getElementById("dActions").hidden = locked;
+      document.getElementById("sResched").hidden = mode !== "resched";
+      document.getElementById("sCancel").hidden = mode !== "cancel";
+      document.getElementById("dSave").hidden = !mode;
+    }
+    function fillTimes() {
+      const sel = document.getElementById("rTime"), d = new Date(document.getElementById("rDate").value + "T00:00:00Z");
+      const opts = [];
+      if (!isNaN(d) && isWorking(d) && dnum(d) >= dnum(TODAY)) {
+        for (let s = 0; s + cur.dur <= slotsFor(d); s++) {
+          if (isPastSlot(d, s)) continue;
+          let free = true;
+          for (let k = 0; k < cur.dur; k++) { const o = occupant(cur.doc, d, s + k); if (o && o.id !== cur.id) free = false; }
+          if (free) opts.push(s);
+        }
+      }
+      sel.innerHTML = '<option value="">' + (opts.length ? t("chooseTime") : t("noSlots")) + "</option>" + opts.map(s => '<option value="' + s + '">' + hhmm(slotMin(s)) + "</option>").join("");
+    }
+    document.getElementById("rDate").addEventListener("change", () => { err("eRDate", ""); fillTimes(); });
+    document.getElementById("dActions").addEventListener("click", e => {
+      const b = e.target.closest("[data-act]"); if (!b) return;
+      const act = b.dataset.act;
+      if (act === "confirm") { cur.st = "confirmed"; paintDet(); render(); UI.toast(t("confirmed")); return; }
+      if (act === "checkin") { cur.st = "arrived"; paintDet(); render(); UI.toast(t("checkedIn", { p: cur.patient })); return; }
+      mode = mode === act ? null : act;
+      if (mode === "resched") {
+        const rd = document.getElementById("rDate"); rd.value = ""; rd.min = UI.fmtDate(TODAY);
+        err("eRDate", "", rd); err("eRTime", "", document.getElementById("rTime")); fillTimes();
+      }
+      if (mode === "cancel") { const c = document.getElementById("cReason"); c.value = ""; err("eReason", "", c); }
+      paintDet();
+    });
+    document.getElementById("dSave").addEventListener("click", () => {
+      if (mode === "resched") {
+        const rd = document.getElementById("rDate"), rt = document.getElementById("rTime");
+        const d = new Date(rd.value + "T00:00:00Z");
+        let ok = true;
+        if (isNaN(d) || !isWorking(d) || dnum(d) < dnum(TODAY)) { err("eRDate", t("e_date"), rd); ok = false; } else err("eRDate", "", rd);
+        if (rt.value === "") { err("eRTime", t("e_time"), rt); ok = false; } else err("eRTime", "", rt);
+        if (!ok) return;
+        const s = Number(rt.value);
+        const old = agenda(cur.doc, fromNum(cur.day));
+        old.splice(old.indexOf(cur), 1);
+        cur.day = dnum(d); cur.slot = s;
+        if (cur.st === "arrived") cur.st = "confirmed";
+        agenda(cur.doc, d).push(cur); agenda(cur.doc, d).sort((a, b) => a.slot - b.slot);
+        UI.closeModal("mDet"); render(); UI.toast(t("rescheduled", { d: UI.fmtDay(d), h: hhmm(slotMin(s)) }));
+      } else if (mode === "cancel") {
+        const c = document.getElementById("cReason"), v = c.value.trim();
+        if (v.length < 5) { err("eReason", t("e_reason"), c); return; }
+        cur.st = "cancelled"; cur.reason = v;
+        UI.closeModal("mDet"); render(); UI.toast(t("cancelled"));
+      }
+    });
+    document.getElementById("dClose").addEventListener("click", () => UI.closeModal("mDet"));
+
+    document.getElementById("tAgenda").addEventListener("click", e => {
+      const f = e.target.closest(".slot-free");
+      if (f) { openNew(days()[Number(f.dataset.d)], Number(f.dataset.s)); return; }
+      const a = e.target.closest(".appt");
+      if (a) openDet(Number(a.dataset.id));
+    });
+
+    document.addEventListener("langchange", () => {
+      fillDoctors(); render();
+      document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutScreen");
+      if (document.getElementById("mNew").classList.contains("open")) { const sv = document.getElementById("nService").value, dv = document.getElementById("nDur").value; fillServiceSelect(); document.getElementById("nService").value = sv; document.getElementById("nDur").value = dv; }
+      if (document.getElementById("mDet").classList.contains("open")) paintDet();
+    });
+    document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutScreen");
+    render();
+  });
+  </script>
+</body>
+</html>
