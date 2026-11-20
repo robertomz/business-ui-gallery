@@ -29,8 +29,8 @@
       d: { en: "Cost centers, budget vs actual, expense verification and scorecard.", es: "Centros de gestión, presupuesto vs real, verificación de gastos y scorecard." } },
     people: { icon: "groups", c: ["#2FB5E8", "#2FB5E8"], deco: ["payments", "badge", "schedule"],
       d: { en: "Payroll run, employee file and attendance.", es: "Planilla, expediente del empleado y asistencia." } },
-    health: { icon: "local_hospital", c: ["#EC6F8E", "#EC6F8E"], deco: ["event_available", "personal_injury", "medication"], concept: true,
-      d: { en: "Concept screens for clinics and doctors: appointments, patients, medical records and the day's dashboard.", es: "Pantallas de concepto para clínicas y médicos: citas, pacientes, expediente clínico y el tablero del día." } },
+    health: { icon: "local_hospital", c: ["#EC6F8E", "#EC6F8E"], deco: ["event_available", "personal_injury", "medication"],
+      d: { en: "Clinics and doctors: appointments, patients, medical records and the day's dashboard.", es: "Clínicas y médicos: citas, pacientes, expediente clínico y el tablero del día." } },
     it: { icon: "lan", c: ["#8B6CF0", "#8B6CF0"], deco: ["support_agent", "build", "dashboard_customize"],
       d: { en: "Network map, maintenance planner, service desk and dashboard builder.", es: "Mapa de red, mantenimiento, mesa de ayuda y constructor de dashboards." } }
   };
@@ -494,7 +494,7 @@
     costCenters: [{ en: "Sales North", es: "Ventas Norte" }, { en: "Sales Center", es: "Ventas Centro" }, { en: "Sales Coast", es: "Ventas Costa" }, { en: "Warehouse", es: "Bodega" }, { en: "Logistics", es: "Logística" }, { en: "Administration", es: "Administración" }, { en: "IT", es: "TI" }],
     firstNames: ["Ana", "Luis", "Maria", "Carlos", "Sofia", "Jorge", "Elena", "Pedro", "Lucia", "Diego", "Valeria", "Miguel", "Camila", "Andres", "Paula", "Ricardo", "Daniela", "Hector", "Gabriela", "Oscar"],
     lastNames: ["Torres", "Lopez", "Ramos", "Medina", "Castro", "Ortiz", "Reyes", "Flores", "Vargas", "Molina", "Rivera", "Cruz", "Mendoza", "Herrera", "Aguilar"],
-    // Health area (concept screens). Doctors and patients are invented.
+    // Health area. Doctors and patients are invented.
     doctors: [
       { name: "Dr. A. Rivera", spec: { en: "General medicine", es: "Medicina general" } },
       { name: "Dra. L. Mendoza", spec: { en: "Pediatrics", es: "Pediatría" } },
