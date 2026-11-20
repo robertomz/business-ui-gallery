@@ -6,63 +6,61 @@
   <title>Sales dashboard · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .dv-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-    .dv-kpi { background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
-    :root[data-theme="light"] .dv-kpi { box-shadow: var(--mc-shadow); }
-    .dv-kpi h3 { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--mc-muted); }
-    .dv-kpi h3 .material-icons { color: var(--mc-teal); font-size: 19px; }
-    .dv-kpi strong { display: block; font-size: clamp(20px, 2vw, 28px); font-weight: 900; letter-spacing: -.5px; margin: 8px 0 4px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-    .dv-kpi p { font-size: 11.5px; color: var(--mc-muted); display: flex; justify-content: space-between; gap: 8px; }
-    .dv-kpi p b { color: var(--mc-text); font-variant-numeric: tabular-nums; }
-    .dv-ritmo { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; margin-bottom: 4px; }
-    .dv-ritmo.ok { color: var(--mc-good); background: rgba(45, 212, 191, .1); }
-    .dv-ritmo.bad { color: var(--mc-bad); background: rgba(251, 113, 133, .1); }
-    .dv-ruta { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 11.5px; color: var(--mc-muted); margin-bottom: 4px; }
-    .dv-ruta button { border: 0; background: none; color: var(--mc-cyan); cursor: pointer; padding: 2px 0; font: inherit; font-weight: 700; }
-    .dv-orden { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--mc-line); border-radius: 8px; }
-    .dv-orden button { min-height: 30px; padding: 4px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--mc-muted); font-size: 11.5px; font-weight: 700; cursor: pointer; }
-    .dv-orden button[aria-pressed="true"] { background: rgba(20, 184, 166, .16); color: var(--mc-text); }
-    .dv-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--mc-muted); margin: 4px 0 10px; }
+    .dv-kpi { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--r-lg); padding: 18px 20px; min-width: 0; box-shadow: var(--shadow-card); }
+    .dv-kpi h3 { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; color: var(--text-secondary); font-family: var(--font); }
+    .dv-kpi h3 .material-icons { color: var(--icon-active); font-size: 19px; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--brand-soft); }
+    .dv-kpi strong { display: block; font-family: var(--font-display); color: var(--text-heading); font-size: clamp(20px, 2vw, 28px); font-weight: 600; letter-spacing: -.03em; margin: 8px 0 4px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .dv-kpi p { font-size: 12.5px; color: var(--text-secondary); display: flex; justify-content: space-between; gap: 8px; }
+    .dv-kpi p b { color: var(--text-heading); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .dv-ritmo { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: var(--r-pill); margin-bottom: 4px; }
+    .dv-ritmo.ok { color: var(--success); background: var(--success-soft); }
+    .dv-ritmo.bad { color: var(--danger); background: var(--danger-soft); }
+    .dv-ruta { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 4px; }
+    .dv-ruta button { border: 0; background: none; color: var(--brand-text); cursor: pointer; padding: 2px 0; font: inherit; font-weight: 500; }
+    .dv-orden { display: inline-flex; gap: 4px; padding: 3px; background: var(--bg-input); border-radius: 12px; }
+    .dv-orden button { min-height: 30px; padding: 4px 10px; border: 0; border-radius: 9px; background: transparent; color: var(--text-secondary); font-size: 12.5px; font-weight: 500; cursor: pointer; }
+    .dv-orden button[aria-pressed="true"] { background: var(--surface); color: var(--brand-text); box-shadow: var(--shadow-card); }
+    .dv-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-secondary); margin: 4px 0 10px; }
     .dv-key { display: inline-flex; align-items: center; gap: 6px; }
     .dv-key::before { content: ""; width: 14px; height: 8px; border-radius: 3px; background: var(--k); }
     .dv-key.line::before { height: 2px; }
     .dv-key.dash::before { height: 0; border-top: 2px dashed var(--k); background: none; }
     .dv-ranking { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
-    .dv-group { text-align: left; background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-radius: 10px; padding: 12px; cursor: pointer; color: var(--mc-text); font: inherit; min-width: 0; }
-    :root[data-theme="light"] .dv-group { background: #fff; }
-    .dv-group:hover { border-color: var(--mc-teal); }
+    .dv-group { text-align: left; background: var(--surface-alt); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 14px; cursor: pointer; color: var(--text); font: inherit; min-width: 0; }
+    .dv-group:hover { border-color: var(--brand); background: var(--bg-hover); }
     .dv-group[disabled] { cursor: default; }
-    .dv-group[disabled]:hover { border-color: var(--mc-line); }
+    .dv-group[disabled]:hover { border-color: var(--border-subtle); background: var(--surface-alt); }
     .dv-group header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-    .dv-group header b { font-size: 13px; }
-    .dv-group header span { font-size: 11px; color: var(--mc-muted); }
-    .dv-bullet { position: relative; height: 14px; border-radius: 4px; background: rgba(148, 163, 184, .14); margin: 10px 0 6px; overflow: hidden; }
-    .dv-bullet .net { position: absolute; left: 0; top: 3px; bottom: 3px; border-radius: 3px; background: var(--mc-teal); }
-    .dv-bullet .net.low { background: var(--mc-bad); }
-    .dv-bullet .exp { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--mc-amber); }
-    .dv-group .nums { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; color: var(--mc-muted); }
-    .dv-group .nums b { color: var(--mc-text); font-variant-numeric: tabular-nums; }
+    .dv-group header b { font-size: 13.5px; font-weight: 600; color: var(--text-heading); }
+    .dv-group header span { font-size: 12px; color: var(--text-secondary); }
+    .dv-bullet { position: relative; height: 14px; border-radius: var(--r-pill); background: var(--chart-track); margin: 10px 0 6px; overflow: hidden; }
+    .dv-bullet .net { position: absolute; left: 0; top: 3px; bottom: 3px; border-radius: var(--r-pill); background: var(--chart-2); }
+    .dv-bullet .net.low { background: var(--danger-solid); }
+    .dv-bullet .exp { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--chart-4); }
+    .dv-group .nums { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+    .dv-group .nums b { color: var(--text-heading); font-weight: 600; font-variant-numeric: tabular-nums; }
     .dv-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .dv-chart-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
-    .dv-chart-head h3 { font-size: 13px; font-weight: 800; }
-    .dv-chart-head p { font-size: 11.5px; color: var(--mc-muted); margin-top: 2px; }
+    .dv-chart-head h3 { font-size: 15px; font-weight: 600; }
+    .dv-chart-head p { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
     .dv-svg { width: 100%; height: 240px; display: block; }
-    .dv-svg text { fill: var(--mc-muted); font-size: 10px; font-family: var(--font); }
-    .dv-svg .grid line { stroke: var(--mc-line); }
-    details.dv-extras > summary, details.dv-numeric > summary { cursor: pointer; font-size: 12px; font-weight: 800; list-style: none; display: flex; align-items: center; gap: 6px; min-height: 32px; }
+    .dv-svg text { fill: var(--chart-axis); font-size: 11px; font-family: var(--font); }
+    .dv-svg .grid line { stroke: var(--chart-grid); }
+    details.dv-extras > summary, details.dv-numeric > summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--text-heading); list-style: none; display: flex; align-items: center; gap: 6px; min-height: 32px; }
     details.dv-extras > summary::-webkit-details-marker, details.dv-numeric > summary::-webkit-details-marker { display: none; }
-    details > summary .material-icons { transition: transform .15s; color: var(--mc-cyan); }
+    details > summary .material-icons { transition: transform .15s; color: var(--icon-active); }
     details[open] > summary .material-icons.chev { transform: rotate(90deg); }
     details.dv-extras .dv-charts { margin-top: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .dv-heat { display: grid; gap: 2px; font-size: 10px; overflow-x: auto; }
+    .dv-heat { display: grid; gap: 2px; font-size: 11px; overflow-x: auto; }
     .dv-heat .cell { height: 18px; border-radius: 3px; }
-    .dv-heat .lbl { color: var(--mc-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 4px; line-height: 18px; }
-    .dv-tip { position: fixed; z-index: 80; pointer-events: none; background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 6px; padding: 6px 8px; font-size: 11.5px; box-shadow: var(--mc-shadow); }
+    .dv-heat .lbl { color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 4px; line-height: 18px; }
+    .dv-tip { position: fixed; z-index: 80; pointer-events: none; background: var(--chart-tooltip-bg); color: var(--chart-tooltip-text); border-radius: 8px; padding: 8px 12px; font-size: 12px; box-shadow: var(--shadow-floating); }
     @media (max-width: 1100px) { .dv-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } details.dv-extras .dv-charts { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 900px) { .dv-charts { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 520px) { .dv-kpis { grid-template-columns: minmax(0, 1fr); } }
@@ -99,16 +97,16 @@
             <div class="dv-orden" role="group" id="order"></div>
           </div>
         </div>
-        <div class="dv-legend"><span class="dv-key" style="--k:var(--mc-teal)" data-i18n="kNet"></span><span class="dv-key" style="--k:var(--mc-amber)" data-i18n="kExpected"></span><span data-i18n="kScale"></span></div>
+        <div class="dv-legend"><span class="dv-key" style="--k:var(--chart-2)" data-i18n="kNet"></span><span class="dv-key" style="--k:var(--chart-4)" data-i18n="kExpected"></span><span data-i18n="kScale"></span></div>
         <div class="dv-ranking" id="ranking"></div>
       </section>
 
       <div class="dv-charts" style="margin-top:12px">
         <section class="mc-panel"><div class="dv-chart-head"><div><h3 data-i18n="cCum"></h3><p data-i18n="cCumSub"></p></div></div>
-          <div class="dv-legend"><span class="dv-key line" style="--k:var(--mc-teal)" data-i18n="kCumNet"></span><span class="dv-key dash" style="--k:var(--mc-amber)" data-i18n="kCumGoal"></span></div>
+          <div class="dv-legend"><span class="dv-key line" style="--k:var(--chart-2)" data-i18n="kCumNet"></span><span class="dv-key dash" style="--k:var(--chart-4)" data-i18n="kCumGoal"></span></div>
           <svg class="dv-svg" id="svgCum" role="img"></svg></section>
         <section class="mc-panel"><div class="dv-chart-head"><div><h3 data-i18n="cDaily"></h3><p data-i18n="cDailySub"></p></div></div>
-          <div class="dv-legend"><span class="dv-key" style="--k:var(--mc-teal)" data-i18n="kDayNet"></span><span class="dv-key" style="--k:var(--mc-cyan)" data-i18n="kLive"></span><span class="dv-key dash" style="--k:var(--mc-amber)" data-i18n="kDayGoal"></span></div>
+          <div class="dv-legend"><span class="dv-key" style="--k:var(--chart-2)" data-i18n="kDayNet"></span><span class="dv-key" style="--k:var(--chart-1)" data-i18n="kLive"></span><span class="dv-key dash" style="--k:var(--chart-4)" data-i18n="kDayGoal"></span></div>
           <svg class="dv-svg" id="svgDaily" role="img"></svg></section>
       </div>
 
@@ -148,7 +146,7 @@
       count: "{n} shown", oNet: "Highest sales", oPct: "Highest achievement", oGap: "Largest gap",
       kNet: "Net sold", kExpected: "Should have at cut-off", kScale: "Same scale on all cards",
       cCum: "Cumulative sales against the goal", cCumSub: "Cumulative net sales against the expected pace", kCumNet: "Cumulative net", kCumGoal: "Expected pace",
-      cDaily: "Sales of each day against its goal", cDailySub: "Daily net sales; blue marks the live day", kDayNet: "Net of the day", kLive: "Live day", kDayGoal: "Goal of the day",
+      cDaily: "Sales of each day against its goal", cDailySub: "Daily net sales; purple marks the live day", kDayNet: "Net of the day", kLive: "Live day", kDayGoal: "Goal of the day",
       moreCharts: "More charts: path to goal, how the net is built and activity per day",
       cPath: "Path to goal", cPathSub: "Month progress and the expected point at this date", cWater: "How the net is built", cWaterSub: "Invoiced minus returns and discounts", cHeat: "Activity map", cHeatSub: "Net sales intensity by group and day",
       invoiced: "Invoiced", returns: "Returns", discounts: "Discounts", net: "Net", goal: "Goal", expected: "Expected", achieved: "Achieved",
@@ -170,7 +168,7 @@
       count: "{n} visibles", oNet: "Mayor venta", oPct: "Mayor cumplimiento", oGap: "Mayor brecha",
       kNet: "Vendido neto", kExpected: "Debería llevar al corte", kScale: "Misma escala en todas las tarjetas",
       cCum: "Ventas acumuladas frente a la meta", cCumSub: "Venta neta acumulada frente al ritmo esperado", kCumNet: "Neto acumulado", kCumGoal: "Ritmo esperado",
-      cDaily: "Ventas de cada día frente a su meta", cDailySub: "Venta neta diaria; el azul marca el día en vivo", kDayNet: "Neto del día", kLive: "Día en vivo", kDayGoal: "Meta del día",
+      cDaily: "Ventas de cada día frente a su meta", cDailySub: "Venta neta diaria; el morado marca el día en vivo", kDayNet: "Neto del día", kLive: "Día en vivo", kDayGoal: "Meta del día",
       moreCharts: "Más gráficos: camino a la meta, cómo se forma el neto y actividad por día",
       cPath: "Camino a la meta", cPathSub: "Avance del mes y el punto esperado a esta fecha", cWater: "Cómo se forma el neto", cWaterSub: "Facturado menos devoluciones y descuentos", cHeat: "Mapa de actividad", cHeatSub: "Intensidad de venta neta por grupo y día",
       invoiced: "Facturado", returns: "Devoluciones", discounts: "Descuentos", net: "Neto", goal: "Meta", expected: "Esperado", achieved: "Logrado",
@@ -260,11 +258,11 @@
       const max = Math.max(accG, acc) * 1.05 || 1, n = A.series.length;
       const X = d => pad.l + (w - pad.l - pad.r) * (d - 1) / (n - 1), Y = v => pad.t + (h - pad.t - pad.b) * (1 - v / max);
       let out = axes(w, h, pad, max);
-      out += '<polyline fill="none" stroke="var(--mc-amber)" stroke-width="2" stroke-dasharray="5 4" points="' + gpts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + '"/>';
-      out += '<polygon fill="var(--mc-teal)" opacity=".12" points="' + X(1) + "," + Y(0) + " " + pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + " " + X(pts[pts.length - 1][0]) + "," + Y(0) + '"/>';
-      out += '<polyline fill="none" stroke="var(--mc-teal)" stroke-width="2.5" points="' + pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + '"/>';
+      out += '<polyline fill="none" stroke="var(--chart-4)" stroke-width="2" stroke-dasharray="5 4" points="' + gpts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + '"/>';
+      out += '<polygon fill="var(--chart-2)" opacity=".12" points="' + X(1) + "," + Y(0) + " " + pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + " " + X(pts[pts.length - 1][0]) + "," + Y(0) + '"/>';
+      out += '<polyline fill="none" stroke="var(--chart-2)" stroke-width="2.5" points="' + pts.map(p => X(p[0]) + "," + Y(p[1])).join(" ") + '"/>';
       const last = pts[pts.length - 1];
-      out += '<circle cx="' + X(last[0]) + '" cy="' + Y(last[1]) + '" r="5" fill="var(--mc-cyan)" data-tip="' + UI.fmtDayShort(dayUTC(state.mo.y, state.mo.m, last[0])) + ": " + M(last[1]) + '"/>';
+      out += '<circle cx="' + X(last[0]) + '" cy="' + Y(last[1]) + '" r="5" fill="var(--chart-1)" data-tip="' + UI.fmtDayShort(dayUTC(state.mo.y, state.mo.m, last[0])) + ": " + M(last[1]) + '"/>';
       [1, 8, 15, 22, n].forEach(d => { out += '<text x="' + X(d) + '" y="' + (h - 6) + '" text-anchor="middle">' + d + "</text>"; });
       s.innerHTML = out; s.setAttribute("aria-label", t("cCum"));
     }
@@ -277,9 +275,9 @@
       A.series.forEach(x => {
         if (x.d > cut || !x.work) return;
         const live = x.d === cut;
-        out += '<rect x="' + (X(x.d) + 1) + '" y="' + Y(x.net) + '" width="' + Math.max(2, bw - 2) + '" height="' + (Y(0) - Y(x.net)) + '" rx="2" fill="' + (live ? "var(--mc-cyan)" : x.net >= x.goalDay ? "var(--mc-teal)" : "var(--mc-bad)") + '" data-tip="' + UI.fmtDayShort(dayUTC(state.mo.y, state.mo.m, x.d)) + ": " + M(x.net) + " / " + t("goal") + " " + M(x.goalDay) + '"/>';
+        out += '<rect x="' + (X(x.d) + 1) + '" y="' + Y(x.net) + '" width="' + Math.max(2, bw - 2) + '" height="' + (Y(0) - Y(x.net)) + '" rx="2" fill="' + (live ? "var(--chart-1)" : x.net >= x.goalDay ? "var(--chart-2)" : "var(--danger-solid)") + '" data-tip="' + UI.fmtDayShort(dayUTC(state.mo.y, state.mo.m, x.d)) + ": " + M(x.net) + " / " + t("goal") + " " + M(x.goalDay) + '"/>';
       });
-      out += '<polyline fill="none" stroke="var(--mc-amber)" stroke-width="2" stroke-dasharray="5 4" points="' + A.series.filter(x => x.work).map(x => (X(x.d) + bw / 2) + "," + Y(x.goalDay)).join(" ") + '"/>';
+      out += '<polyline fill="none" stroke="var(--chart-4)" stroke-width="2" stroke-dasharray="5 4" points="' + A.series.filter(x => x.work).map(x => (X(x.d) + bw / 2) + "," + Y(x.goalDay)).join(" ") + '"/>';
       [1, 8, 15, 22, n].forEach(d => { out += '<text x="' + (X(d) + bw / 2) + '" y="' + (h - 6) + '" text-anchor="middle">' + d + "</text>"; });
       s.innerHTML = out; s.setAttribute("aria-label", t("cDaily"));
     }
@@ -289,17 +287,17 @@
       const arc = p => { const a = Math.PI * (1 - Math.min(p, 1)); return [cx + r * Math.cos(a), cy - r * Math.sin(a)]; };
       const pNet = T.goal ? T.net / T.goal : 0, pExp = T.goal ? T.exp / T.goal : 0;
       const e = arc(pNet), x = arc(pExp);
-      let out = '<path d="M' + (cx - r) + "," + cy + " A" + r + "," + r + " 0 0 1 " + (cx + r) + "," + cy + '" fill="none" stroke="rgba(148,163,184,.18)" stroke-width="16" stroke-linecap="round"/>';
-      out += '<path d="M' + (cx - r) + "," + cy + " A" + r + "," + r + " 0 0 1 " + e[0] + "," + e[1] + '" fill="none" stroke="' + (pNet >= pExp ? "var(--mc-teal)" : "var(--mc-bad)") + '" stroke-width="16" stroke-linecap="round"/>';
-      out += '<line x1="' + (cx + (r - 14) * (x[0] - cx) / r) + '" y1="' + (cy + (r - 14) * (x[1] - cy) / r) + '" x2="' + (cx + (r + 14) * (x[0] - cx) / r) + '" y2="' + (cy + (r + 14) * (x[1] - cy) / r) + '" stroke="var(--mc-amber)" stroke-width="3"/>';
-      out += '<text x="' + cx + '" y="' + (cy - 8) + '" text-anchor="middle" style="font-size:24px;font-weight:900;fill:var(--mc-text)">' + UI.fmtPct(pNet) + "</text>";
+      let out = '<path d="M' + (cx - r) + "," + cy + " A" + r + "," + r + " 0 0 1 " + (cx + r) + "," + cy + '" fill="none" stroke="var(--chart-track)" stroke-width="16" stroke-linecap="round"/>';
+      out += '<path d="M' + (cx - r) + "," + cy + " A" + r + "," + r + " 0 0 1 " + e[0] + "," + e[1] + '" fill="none" stroke="' + (pNet >= pExp ? "var(--chart-2)" : "var(--danger-solid)") + '" stroke-width="16" stroke-linecap="round"/>';
+      out += '<line x1="' + (cx + (r - 14) * (x[0] - cx) / r) + '" y1="' + (cy + (r - 14) * (x[1] - cy) / r) + '" x2="' + (cx + (r + 14) * (x[0] - cx) / r) + '" y2="' + (cy + (r + 14) * (x[1] - cy) / r) + '" stroke="var(--chart-4)" stroke-width="3"/>';
+      out += '<text x="' + cx + '" y="' + (cy - 8) + '" text-anchor="middle" style="font-size:24px;font-weight:600;font-family:var(--font-display);fill:var(--text-heading)">' + UI.fmtPct(pNet) + "</text>";
       out += '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle">' + t("achieved") + " · " + t("expected") + " " + UI.fmtPct(pExp) + "</text>";
       out += '<text x="' + cx + '" y="' + (cy + 30) + '" text-anchor="middle">' + M(T.net) + " / " + M(T.goal) + "</text>";
       s.innerHTML = out; s.setAttribute("aria-label", t("cPath") + ": " + UI.fmtPct(pNet));
     }
     function drawWater(T) {
       const { s, w, h } = svgEl("svgWater"); const pad = { l: 44, r: 10, t: 14, b: 26 };
-      const steps = [[t("invoiced"), T.inv, 0, "var(--mc-cyan)"], [t("returns"), -T.ret, T.inv, "var(--mc-bad)"], [t("discounts"), -T.disc, T.inv - T.ret, "var(--mc-bad)"], [t("net"), T.net, 0, "var(--mc-teal)"]];
+      const steps = [[t("invoiced"), T.inv, 0, "var(--chart-1)"], [t("returns"), -T.ret, T.inv, "var(--danger-solid)"], [t("discounts"), -T.disc, T.inv - T.ret, "var(--danger-solid)"], [t("net"), T.net, 0, "var(--chart-2)"]];
       const max = T.inv * 1.05 || 1, bw = (w - pad.l - pad.r) / steps.length;
       const Y = v => pad.t + (h - pad.t - pad.b) * (1 - v / max);
       let out = axes(w, h, pad, max);
@@ -318,7 +316,7 @@
       el.style.gridTemplateColumns = "minmax(70px, 110px) repeat(" + n + ", minmax(6px, 1fr))";
       el.innerHTML = groups.map(g => '<span class="lbl" title="' + g.name + '">' + g.name + "</span>" + g.days.map((v, k) => {
         const work = A.series[k].work && k + 1 <= cut;
-        return '<span class="cell" style="background:' + (work ? "rgba(20,184,166," + (.12 + .88 * v / max).toFixed(2) + ")" : "rgba(148,163,184,.08)") + '" data-tip="' + g.name + " · " + (k + 1) + ": " + (work ? M(v) : "—") + '"></span>';
+        return '<span class="cell" style="background:' + (work ? "color-mix(in srgb, var(--chart-2) " + Math.round(12 + 88 * v / max) + "%, transparent)" : "var(--surface-alt)") + '" data-tip="' + g.name + " · " + (k + 1) + ": " + (work ? M(v) : "—") + '"></span>';
       }).join("")).join("");
     }
 

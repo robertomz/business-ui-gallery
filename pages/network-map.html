@@ -6,27 +6,27 @@
   <title>Network map · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .nm-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; }
     .nm-map-wrap { position: relative; }
-    #net { height: 560px; border: 1px solid var(--mc-line); border-radius: 8px; background:
-      radial-gradient(circle at 1px 1px, rgba(148,163,184,.14) 1px, transparent 0) 0 0 / 22px 22px, var(--mc-panel-2); }
+    #net { height: 560px; border: 1px solid var(--border-subtle); border-radius: var(--r-md); background:
+      radial-gradient(circle at 1px 1px, var(--border-strong) 1px, transparent 0) 0 0 / 22px 22px, var(--surface-alt); }
     .nm-zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
-    .nm-zoom .mc-icon-btn { background: var(--mc-panel); }
+    .nm-zoom .mc-icon-btn { background: var(--surface); }
     .nm-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .nm-side h4 { font-size: 15px; font-weight: 800; margin: 6px 0 2px; overflow-wrap: anywhere; }
-    .nm-side dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; margin: 12px 0 0; font-size: 12px; }
-    .nm-side dt { color: var(--mc-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; align-self: center; }
+    .nm-side h4 { font-size: 15px; font-weight: 600; margin: 6px 0 2px; overflow-wrap: anywhere; }
+    .nm-side dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; margin: 12px 0 0; font-size: 13px; }
+    .nm-side dt { color: var(--text-secondary); font-size: 12.5px; font-weight: 500; align-self: center; }
     .nm-side dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-    .nm-empty { color: var(--mc-muted); font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 10px; text-align: center; }
-    .nm-empty .material-icons { font-size: 36px; }
-    .nm-conn { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--mc-muted); }
-    .nm-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mc-good); box-shadow: 0 0 0 3px rgba(45,212,191,.2); }
-    tr.is-new td { background: rgba(6,182,212,.08); }
-    tr.selrow td { background: var(--mc-row-hover); }
+    .nm-empty { color: var(--text-secondary); font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 10px; text-align: center; }
+    .nm-empty .material-icons { font-size: 36px; color: var(--icon); }
+    .nm-conn { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
+    .nm-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success-solid); box-shadow: 0 0 0 3px var(--success-soft); }
+    tr.is-new td { background: var(--info-soft); }
+    tr.selrow td { background: var(--bg-selected); }
     @media (max-width: 1100px) { .nm-layout { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 760px) { #net { height: 420px; } }
   </style>
@@ -169,16 +169,18 @@
   $(function () {
     const t = UI.t, mi = UI.mi, D = UI.DATA;
     const TYPES = {
-      router: { k: "tRouter", shape: "hexagon", icon: "router", color: "#8b5cf6" },
-      firewall: { k: "tFirewall", shape: "diamond", icon: "security", color: "#f43f5e" },
-      switch: { k: "tSwitch", shape: "box", icon: "device_hub", color: "#06b6d4" },
-      ap: { k: "tAp", shape: "triangle", icon: "wifi", color: "#14b8a6" },
-      printer: { k: "tPrinter", shape: "square", icon: "print", color: "#f59e0b" },
-      pos: { k: "tPos", shape: "dot", icon: "point_of_sale", color: "#38bdf8" },
-      camera: { k: "tCamera", shape: "triangleDown", icon: "videocam", color: "#a78bfa" },
-      server: { k: "tServer", shape: "database", icon: "dns", color: "#22c55e" }
+      router: { k: "tRouter", shape: "hexagon", icon: "router", tok: "--chart-1" },
+      firewall: { k: "tFirewall", shape: "diamond", icon: "security", tok: "--chart-7" },
+      switch: { k: "tSwitch", shape: "box", icon: "device_hub", tok: "--chart-6" },
+      ap: { k: "tAp", shape: "triangle", icon: "wifi", tok: "--chart-2" },
+      printer: { k: "tPrinter", shape: "square", icon: "print", tok: "--chart-4" },
+      pos: { k: "tPos", shape: "dot", icon: "point_of_sale", tok: "--chart-5" },
+      camera: { k: "tCamera", shape: "triangleDown", icon: "videocam", tok: "--chart-3" },
+      server: { k: "tServer", shape: "database", icon: "dns", tok: "--chart-8" }
     };
-    const STATUS = { up: { icon: "check_circle", cls: "chip-pos", color: "#2dd4bf" }, warn: { icon: "warning", cls: "chip-warn", color: "#f59e0b" }, down: { icon: "cancel", cls: "chip-neg", color: "#fb7185" } };
+    const STATUS = { up: { icon: "check_circle", cls: "chip-pos", tok: "--success-solid" }, warn: { icon: "warning", cls: "chip-warn", tok: "--warning-solid" }, down: { icon: "cancel", cls: "chip-neg", tok: "--danger-solid" } };
+    const cv = UI.cssVar;
+    const edgeColor = () => cv("--border-strong");
     const r = UI.rng(424242);
     const hex = () => Array.from({ length: 6 }, () => Math.floor(r() * 256).toString(16).padStart(2, "0")).join(":").toUpperCase();
     const devices = [];
@@ -204,11 +206,13 @@
     const nodes = new vis.DataSet(), edges = new vis.DataSet();
     function nodeOf(d) {
       const ty = TYPES[d.type], st = STATUS[d.status];
-      const dark = UI.currentTheme() === "dark";
+      const inside = ty.shape === "box" || ty.shape === "database";   // vis draws these labels inside the shape
+      const bg = cv(ty.tok);
       return { id: d.id, label: d.name + "\n" + t(d.status) + (d.isNew ? " · " + t("newChip") : ""), shape: ty.shape, size: d.type === "router" ? 26 : d.type === "switch" || d.type === "firewall" ? 18 : 12,
-        color: { background: ty.color, border: d.isNew ? "#ffffff" : st.color, highlight: { background: ty.color, border: "#ffffff" } }, borderWidth: d.isNew ? 4 : d.status === "up" ? 2 : 4,
+        color: { background: bg, border: d.isNew ? cv("--brand") : cv(st.tok), highlight: { background: bg, border: cv("--text-heading") }, hover: { background: bg, border: cv("--brand") } }, borderWidth: d.isNew ? 4 : d.status === "up" ? 2 : 4,
         shapeProperties: d.status === "down" ? { borderDashes: [4, 3] } : {}, opacity: d.status === "down" ? .55 : 1,
-        font: { color: dark ? "#e2e8f0" : "#0f172a", size: 11, face: "Inter", multi: false, strokeWidth: 3, strokeColor: dark ? "#0d1b2f" : "#ffffff" } };
+        font: inside ? { color: cv(UI.currentTheme() === "dark" ? "--text-inverse" : "--text-heading"), size: 11, face: "Inter", multi: false, strokeWidth: 0 }
+          : { color: cv("--text-heading"), size: 11, face: "Inter", multi: false, strokeWidth: 3, strokeColor: cv("--surface-alt") } };
     }
     function visible(d) {
       const b = $("#fBranch").val(), ty = $("#fType").val(), st = $("#fStatus").val(), q = $("#fText").val().trim().toLowerCase();
@@ -224,7 +228,7 @@
       const ids = new Set(vis_.map(d => d.id));
       nodes.clear(); edges.clear();
       nodes.add(vis_.map(nodeOf));
-      edges.add(vis_.filter(d => d.parent && ids.has(d.parent)).map(d => ({ id: "e" + d.id, from: d.parent, to: d.id, dashes: d.type === "ap" || d.link === "wifi", color: { color: UI.currentTheme() === "dark" ? "rgba(148,163,184,.45)" : "rgba(71,85,105,.45)" }, width: d.type === "switch" || d.type === "firewall" ? 2.5 : 1.2 })));
+      edges.add(vis_.filter(d => d.parent && ids.has(d.parent)).map(d => ({ id: "e" + d.id, from: d.parent, to: d.id, dashes: d.type === "ap" || d.link === "wifi", color: { color: edgeColor() }, width: d.type === "switch" || d.type === "firewall" ? 2.5 : 1.2 })));
       if (!net) {
         net = new vis.Network(document.getElementById("net"), { nodes, edges }, {
           layout: { improvedLayout: true }, physics: { solver: "forceAtlas2Based", forceAtlas2Based: { gravitationalConstant: -60, springLength: 90 }, stabilization: { iterations: 250 } },
@@ -248,7 +252,7 @@
         "<dl><dt>" + t("ip") + '</dt><dd class="num">' + d.ip + "</dd><dt>" + t("mac") + '</dt><dd class="num">' + d.mac + "</dd><dt>" + t("brand") + "</dt><dd>" + (d.brand || "—") + "</dd><dt>" + t("model") + "</dt><dd>" + (d.model || "—") + "</dd>" +
         "<dt>" + t("branch") + "</dt><dd>" + (d.branch === -1 ? (UI.lang === "es" ? "Centro de datos" : "Data center") : D.branches[d.branch]) + "</dd><dt>" + t("parent") + "</dt><dd>" + (p ? p.name : "—") + "</dd>" +
         "<dt>" + t("uptime") + "</dt><dd>" + (d.status === "down" ? "—" : d.uptime + (UI.lang === "es" ? " días" : " days")) + "</dd>" +
-        (d.ports ? "<dt>" + t("ports") + "</dt><dd>" + d.ports[0] + " / " + d.ports[1] + '<div class="ig-barra" style="margin-top:4px;--ig-color:' + ty.color + '"><span style="width:' + (d.ports[0] / d.ports[1] * 100) + '%"></span></div></dd>' : "") +
+        (d.ports ? "<dt>" + t("ports") + "</dt><dd>" + d.ports[0] + " / " + d.ports[1] + '<div class="ig-barra" style="margin-top:4px;--ig-color:var(' + ty.tok + ')"><span style="width:' + (d.ports[0] / d.ports[1] * 100) + '%"></span></div></dd>' : "") +
         "<dt>" + t("lastSeen") + "</dt><dd>" + since(d.seen) + "</dd></dl>";
       document.querySelectorAll("#tDev tbody tr").forEach(tr => tr.classList.toggle("selrow", Number(tr.dataset.id) === id));
       if (net && nodes.get(id)) { net.selectNodes([id]); net.focus(id, { scale: 1.3, animation: true }); }
@@ -264,10 +268,10 @@
     function renderKpis() {
       const c = s => devices.filter(d => d.status === s).length;
       const k = (lbl, v, col) => '<div class="mc-kpi is-accent" style="--k-color:' + col + '"><div class="k-label">' + t(lbl) + '</div><div class="k-value">' + v + "</div></div>";
-      document.getElementById("kpis").innerHTML = k("kTotal", devices.length, "#06b6d4") + k("kUp", c("up"), "#2dd4bf") + k("kWarn", c("warn"), "#f59e0b") + k("kDown", c("down"), "#fb7185") + k("kNew", devices.filter(d => d.isNew).length, "#a78bfa");
+      document.getElementById("kpis").innerHTML = k("kTotal", devices.length, "var(--chart-6)") + k("kUp", c("up"), "var(--success-solid)") + k("kWarn", c("warn"), "var(--warning-solid)") + k("kDown", c("down"), "var(--danger-solid)") + k("kNew", devices.filter(d => d.isNew).length, "var(--info-solid)");
     }
     function legend() {
-      document.getElementById("legend").innerHTML = Object.values(TYPES).map(ty => '<span class="chip" style="border-color:' + ty.color + '66">' + '<span class="material-icons" aria-hidden="true" style="color:' + ty.color + '">' + ty.icon + "</span>" + t(ty.k) + "</span>").join("") +
+      document.getElementById("legend").innerHTML = Object.values(TYPES).map(ty => '<span class="chip">' + '<span class="material-icons" aria-hidden="true" style="color:var(' + ty.tok + ')">' + ty.icon + "</span>" + t(ty.k) + "</span>").join("") +
         Object.keys(STATUS).map(s => chip(s)).join("");
     }
     function fillSelects() {
@@ -373,7 +377,7 @@
 
     function all() { fillSelects(); legend(); draw(); if (selected) select(selected); else sideEmpty(); document.getElementById("about").innerHTML = UI.aboutBox("aboutText", "aboutScreen"); }
     document.addEventListener("langchange", all);
-    document.addEventListener("themechange", () => { nodes.update(devices.filter(visible).map(nodeOf)); edges.update(edges.get().map(e => ({ id: e.id, color: { color: UI.currentTheme() === "dark" ? "rgba(148,163,184,.45)" : "rgba(71,85,105,.45)" } }))); });
+    document.addEventListener("themechange", () => { nodes.update(devices.filter(visible).map(nodeOf)); edges.update(edges.get().map(e => ({ id: e.id, color: { color: edgeColor() } }))); });
     all();
   });
   </script>

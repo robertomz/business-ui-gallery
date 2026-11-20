@@ -6,31 +6,34 @@
   <title>Operations dashboard · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .ig-card[data-area="caja"] { --ig-color: #38bdf8; }
-    .ig-card[data-area="ventas"] { --ig-color: #14b8a6; }
-    .ig-card[data-area="cxc"] { --ig-color: #f59e0b; }
-    .ig-card[data-area="especial"] { --ig-color: #fb923c; }
-    .ig-card[data-area="cxp"] { --ig-color: #a78bfa; }
-    .ig-card[data-area="tarjetas"] { --ig-color: #38bdf8; }
-    .ig-card[data-area="cxp_tipos"] { --ig-color: #a78bfa; }
-    .ig-card[data-area="inventario"] { --ig-color: #f87171; }
-    .ig-card[data-area="resultado"] { --ig-color: #34d399; }
+    .ig-card[data-area="caja"] { --ig-color: var(--chart-6); }
+    .ig-card[data-area="ventas"] { --ig-color: var(--chart-2); }
+    .ig-card[data-area="cxc"] { --ig-color: var(--chart-4); }
+    .ig-card[data-area="especial"] { --ig-color: var(--chart-3); }
+    .ig-card[data-area="cxp"] { --ig-color: var(--chart-1); }
+    .ig-card[data-area="tarjetas"] { --ig-color: var(--chart-5); }
+    .ig-card[data-area="cxp_tipos"] { --ig-color: var(--chart-1); }
+    .ig-card[data-area="inventario"] { --ig-color: var(--chart-7); }
+    .ig-card[data-area="resultado"] { --ig-color: var(--success-solid); }
+    /* section labels: readable text, the area color goes on a dot (pastel text fails contrast on white) */
+    .ig-filas li.ig-seccion { display: flex; justify-content: flex-start; align-items: center; gap: 8px; color: var(--text-secondary); }
+    .ig-filas li.ig-seccion::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ig-color); flex: none; }
     .tipo-bar header { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin: 10px 0 5px; }
-    .tipo-bar header span { font-weight: 750; }
+    .tipo-bar header span { font-weight: 500; color: var(--text-heading); }
     .tipo-bar .ig-barra { height: 10px; }
-    .tipo-bar .ig-barra span { background: #a78bfa; }
-    .tipo-bar.is-sin .ig-barra span { background: repeating-linear-gradient(45deg, #94a3b8 0 6px, #64748b 6px 12px); }
-    .tipo-bar p { font-size: 10px; color: var(--mc-muted); margin-top: 4px; }
+    .tipo-bar .ig-barra span { background: var(--ig-color); }
+    .tipo-bar.is-sin .ig-barra span { background: repeating-linear-gradient(45deg, var(--text-tertiary) 0 6px, var(--border-strong) 6px 12px); }
+    .tipo-bar p { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
     .card-list li b small { text-align: right; }
     tr.drill { cursor: pointer; }
-    tr.drill:focus-visible { outline: 2px solid var(--mc-cyan); outline-offset: -2px; }
-    tr.detail td { background: var(--mc-panel-2); }
-    .pct-bad { color: var(--mc-bad); font-weight: 800; }
+    tr.drill:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+    tr.detail td { background: var(--surface-alt); }
+    .pct-bad { color: var(--danger); font-weight: 600; }
   </style>
 </head>
 <body data-page="operations-dashboard" data-root="../">

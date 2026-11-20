@@ -6,17 +6,17 @@
   <title>Entry reconciliation · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     tr.pick { cursor: pointer; }
-    tr.pick.is-sel td { background: rgba(20, 184, 166, .14); }
-    tr.pick:focus-visible { outline: 2px solid var(--mc-cyan); outline-offset: -2px; }
+    tr.pick.is-sel td { background: var(--bg-selected); }
+    tr.pick:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
     .legend { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 4px 14px; margin-top: 8px; }
-    .legend b { font-weight: 800; }
-    .legend span { color: var(--mc-muted); }
+    .legend b { font-weight: 600; color: var(--text-heading); }
+    .legend span { color: var(--text-secondary); }
     @media (max-width: 600px) { .legend { grid-template-columns: 1fr; } .legend span { margin-bottom: 6px; } }
   </style>
 </head>

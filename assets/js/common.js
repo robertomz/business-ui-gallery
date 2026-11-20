@@ -17,21 +17,21 @@
   };
   // Look of each area: icon, gradient and a one-line description (home cards, area pages).
   const AREAS = {
-    sales: { icon: "storefront", c: ["#14b8a6", "#06b6d4"], deco: ["insights", "route", "flag"],
+    sales: { icon: "storefront", c: ["#00AC98", "#00AC98"], deco: ["insights", "route", "flag"],
       d: { en: "Daily close, sales goals, routes, fill rate, commissions and collections.", es: "Cierre diario, metas, rutas, fill rate, comisiones y cobros." } },
-    inventory: { icon: "inventory_2", c: ["#f59e0b", "#fb923c"], deco: ["shopping_cart", "sell", "qr_code_scanner"],
+    inventory: { icon: "inventory_2", c: ["#F59E2E", "#F59E2E"], deco: ["shopping_cart", "sell", "qr_code_scanner"],
       d: { en: "Automatic purchasing, orders, prices, stock per warehouse and data migration.", es: "Compras automáticas, pedidos, precios, existencias por bodega y migración de datos." } },
-    accounting: { icon: "menu_book", c: ["#8b5cf6", "#6366f1"], deco: ["edit_note", "auto_mode", "balance"],
+    accounting: { icon: "menu_book", c: ["#AE50DD", "#AE50DD"], deco: ["edit_note", "auto_mode", "balance"],
       d: { en: "Journal entries, automatic generation, journal book, reconciliation and balance sheet.", es: "Partidas, generación automática, libro diario, conciliación y balance." } },
-    treasury: { icon: "account_balance", c: ["#38bdf8", "#06b6d4"], deco: ["payments", "event_note", "credit_card"],
+    treasury: { icon: "account_balance", c: ["#3185E9", "#3185E9"], deco: ["payments", "event_note", "credit_card"],
       d: { en: "Bank payments, payment schedule, payment requests and credit cards.", es: "Pagos bancarios, proyección de pagos, solicitudes de pago y tarjetas." } },
-    budget: { icon: "donut_small", c: ["#f43f5e", "#fb7185"], deco: ["hub", "stacked_bar_chart", "speed"],
+    budget: { icon: "donut_small", c: ["#FF5B63", "#FF5B63"], deco: ["hub", "stacked_bar_chart", "speed"],
       d: { en: "Cost centers, budget vs actual, expense verification and scorecard.", es: "Centros de gestión, presupuesto vs real, verificación de gastos y scorecard." } },
-    people: { icon: "groups", c: ["#22c55e", "#14b8a6"], deco: ["payments", "badge", "schedule"],
+    people: { icon: "groups", c: ["#2FB5E8", "#2FB5E8"], deco: ["payments", "badge", "schedule"],
       d: { en: "Payroll run, employee file and attendance.", es: "Planilla, expediente del empleado y asistencia." } },
-    health: { icon: "local_hospital", c: ["#ec4899", "#8b5cf6"], deco: ["event_available", "personal_injury", "medication"], concept: true,
+    health: { icon: "local_hospital", c: ["#EC6F8E", "#EC6F8E"], deco: ["event_available", "personal_injury", "medication"], concept: true,
       d: { en: "Concept screens for clinics and doctors: appointments, patients, medical records and the day's dashboard.", es: "Pantallas de concepto para clínicas y médicos: citas, pacientes, expediente clínico y el tablero del día." } },
-    it: { icon: "lan", c: ["#a78bfa", "#38bdf8"], deco: ["support_agent", "build", "dashboard_customize"],
+    it: { icon: "lan", c: ["#8B6CF0", "#8B6CF0"], deco: ["support_agent", "build", "dashboard_customize"],
       d: { en: "Network map, maintenance planner, service desk and dashboard builder.", es: "Mapa de red, mantenimiento, mesa de ayuda y constructor de dashboards." } }
   };
   const P = (group, id, icon, en, es, ben, bes) => ({ group, id, icon, href: id === "home" ? "index.html" : "pages/" + id + ".html", title: { en, es }, blurb: { en: ben || "", es: bes || "" } });
@@ -165,7 +165,7 @@
       perDay: "per day", loading: "Loading…", saved: "Saved", wholeCompany: "Whole company",
       allAreas: "All areas", viewAll: "Show all screens", viewArea: "Show this area only", areas: "Areas",
       concept: "Concept", conceptNote: "Concept screen: designed as a sample of what I can build, not taken from a system in production.",
-      screensN: "{n} screens", openArea: "Open"
+      screensN: "{n} screens", openArea: "Open", overview: "Overview", tagline: "Business screens with sample data", homeSub: "Business screens", authorSub: "Custom software", searchScreens: "Search screens…  /", noResults: "No screen matches that search."
     },
     es: {
       sample: "Datos de ejemplo", company: "Empresa activa", companyName: "Demo Company S.A.",
@@ -179,7 +179,7 @@
       perDay: "por día", loading: "Cargando…", saved: "Guardado", wholeCompany: "Toda la empresa",
       allAreas: "Todas las áreas", viewAll: "Ver todas las pantallas", viewArea: "Ver solo esta área", areas: "Áreas",
       concept: "Concepto", conceptNote: "Pantalla de concepto: diseñada como muestra de lo que puedo construir, no tomada de un sistema en producción.",
-      screensN: "{n} pantallas", openArea: "Abrir"
+      screensN: "{n} pantallas", openArea: "Abrir", overview: "Resumen del área", tagline: "Pantallas de negocio con datos de ejemplo", homeSub: "Pantallas de negocio", authorSub: "Software a la medida", searchScreens: "Buscar pantallas…  /", noResults: "Ninguna pantalla coincide con esa búsqueda."
     }
   };
   const STR = { en: Object.assign({}, COMMON.en), es: Object.assign({}, COMMON.es) };
@@ -219,17 +219,50 @@
     document.dispatchEvent(new CustomEvent("langchange", { detail: l }));
   }
 
-  // ---------------- Theme (dark by default, like the original) ----------------
-  const THEME_KEY = "bug-theme-v2";
-  function storedTheme() { try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; } }
-  function applyTheme(th) { document.documentElement.setAttribute("data-theme", th === "light" ? "light" : "dark"); }
-  function currentTheme() { return document.documentElement.getAttribute("data-theme") || "dark"; }
-  applyTheme(storedTheme() || "dark");
+  // ---------------- Theme: explicit choice > system preference > light ----------------
+  const THEME_KEY = "bug-theme-v3";
+  const mql = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+  function storedTheme() { try { const v = localStorage.getItem(THEME_KEY); return v === "dark" || v === "light" ? v : null; } catch (e) { return null; } }
+  function systemTheme() { return mql && mql.matches ? "dark" : "light"; }
+  function applyTheme(th) { document.documentElement.setAttribute("data-theme", th === "dark" ? "dark" : "light"); }
+  function currentTheme() { return document.documentElement.getAttribute("data-theme") || "light"; }
+  applyTheme(storedTheme() || systemTheme());
   function setTheme(th) {
     applyTheme(th);
     try { localStorage.setItem(THEME_KEY, th); } catch (e) { /* storage blocked */ }
+    themeChanged();
+  }
+  function themeChanged() {
     paintShell();
+    chartDefaults();
     document.dispatchEvent(new CustomEvent("themechange"));
+  }
+  if (mql && mql.addEventListener) mql.addEventListener("change", () => { if (!storedTheme()) { applyTheme(systemTheme()); themeChanged(); } });
+
+  // ---------------- Charts: colors from the design tokens ----------------
+  function palette() { return [1, 2, 3, 4, 5, 6, 7, 8].map(i => cssVar("--chart-" + i)); }
+  function chartDefaults() {
+    const C = window.Chart;
+    if (!C || !C.defaults) return;
+    const d = C.defaults;
+    d.font.family = cssVar("--font") || "Inter, sans-serif";
+    d.font.size = 12;
+    d.color = cssVar("--chart-axis");
+    d.borderColor = cssVar("--chart-grid");
+    if (d.scale && d.scale.grid) d.scale.grid.color = cssVar("--chart-grid");
+    const tt = d.plugins && d.plugins.tooltip;
+    if (tt) {
+      tt.backgroundColor = cssVar("--chart-tooltip-bg"); tt.titleColor = cssVar("--chart-tooltip-text"); tt.bodyColor = cssVar("--chart-tooltip-text");
+      tt.padding = 12; tt.cornerRadius = 8; tt.boxPadding = 4; tt.usePointStyle = true;
+    }
+    const lg = d.plugins && d.plugins.legend;
+    if (lg && lg.labels) { lg.labels.usePointStyle = true; lg.labels.pointStyle = "circle"; lg.labels.boxWidth = 7; lg.labels.boxHeight = 7; lg.labels.padding = 14; }
+    if (d.elements) {
+      if (d.elements.bar) { d.elements.bar.borderRadius = 7; d.elements.bar.borderSkipped = false; }
+      if (d.elements.line) { d.elements.line.tension = .38; d.elements.line.borderWidth = 2.25; }
+      if (d.elements.point) { d.elements.point.radius = 0; d.elements.point.hoverRadius = 5; d.elements.point.hitRadius = 10; }
+      if (d.elements.arc) { d.elements.arc.borderWidth = 0; }
+    }
   }
 
   // ---------------- Shell ----------------
@@ -260,16 +293,13 @@
     const pageLinks = g => PAGES.filter(p => p.group === g).map(p => link(root + p.href, p.icon, L(p.title), p.id === pageId)).join("");
     const areaHref = g => root + "area.html?a=" + g;
     const groups = Object.keys(AREAS);
-    let html = '<div class="mc-nav-group"><nav aria-label="' + t("home") + '">' + link(root + "index.html", "apps", t("allAreas"), pageId === "home") + "</nav></div>";
+    let html = '<div class="mc-nav-group"><nav aria-label="' + t("home") + '">' + link(root + "index.html", "space_dashboard", t("allAreas"), pageId === "home") + "</nav></div>";
     if (all) {
-      // Every area with its screens, segmented; the area label opens the area page.
       html += groups.map(g => '<div class="mc-nav-group"><a class="mc-nav-label mc-nav-label-link" href="' + areaHref(g) + '">' + L(GROUPS[g]) + '</a><nav aria-label="' + L(GROUPS[g]) + '">' + pageLinks(g) + "</nav></div>").join("");
     } else if (area) {
-      // Only the current area: its page and its screens.
       html += '<div class="mc-nav-group"><div class="mc-nav-label">' + L(GROUPS[area]) + '</div><nav aria-label="' + L(GROUPS[area]) + '">' +
-        link(areaHref(area), AREAS[area].icon, L(GROUPS[area]), pageId === "area") + pageLinks(area) + "</nav></div>";
+        link(areaHref(area), AREAS[area].icon, t("overview"), pageId === "area") + pageLinks(area) + "</nav></div>";
     } else {
-      // Home: one entry per area.
       html += '<div class="mc-nav-group"><div class="mc-nav-label">' + t("areas") + '</div><nav aria-label="' + t("areas") + '">' +
         groups.map(g => link(areaHref(g), AREAS[g].icon, L(GROUPS[g]), false)).join("") + "</nav></div>";
     }
@@ -277,25 +307,65 @@
     const toggle = document.getElementById("mcNavAll");
     toggle.querySelector(".material-icons").textContent = all ? "filter_list" : "view_list";
     toggle.querySelector(".txt").textContent = all ? (area ? t("viewArea") : t("areas")) : t("viewAll");
-    toggle.title = toggle.querySelector(".txt").textContent;
     toggle.setAttribute("aria-pressed", String(all));
-    document.getElementById("mcTitleIcon").textContent = page.icon;
     document.getElementById("mcTitle").textContent = L(page.title);
     document.title = L(page.title) + " · Business UI Gallery";
     const concept = area && AREAS[area].concept;
+    const crumb = area && pageId !== "area" ? '<a href="' + areaHref(area) + '">' + L(GROUPS[area]) + '</a><span aria-hidden="true">·</span>' : "";
+    document.getElementById("mcSubtitle").innerHTML = crumb + "<span>" + (pageId === "home" ? t("tagline") : t("sample")) + "</span>";
     document.getElementById("mcSample").innerHTML = t("sample") + (concept ? ' · <b title="' + t("conceptNote") + '">' + t("concept") + "</b>" : "");
-    document.getElementById("mcFooter").innerHTML = mi("apartment") + t("company") + ": <b>" + t("companyName") + "</b>";
     document.querySelectorAll(".mc-lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
-    const lightBtn = document.getElementById("mcLight"), darkBtn = document.getElementById("mcDark");
-    lightBtn.classList.toggle("is-active", currentTheme() === "light");
-    darkBtn.classList.toggle("is-active", currentTheme() === "dark");
-    lightBtn.querySelector(".txt").textContent = t("light");
-    darkBtn.querySelector(".txt").textContent = t("dark");
-    lightBtn.title = t("light"); darkBtn.title = t("dark");
-    document.getElementById("mcHomeTxt").textContent = t("home");
+    const dark = currentTheme() === "dark";
+    const themeBtn = document.getElementById("mcTheme");
+    themeBtn.querySelector(".material-icons").textContent = dark ? "light_mode" : "dark_mode";
+    themeBtn.title = dark ? t("light") : t("dark");
+    themeBtn.setAttribute("aria-label", themeBtn.title);
+    document.getElementById("mcHomeSub").textContent = t("homeSub");
+    document.getElementById("mcAuthorSub").textContent = t("authorSub");
     document.getElementById("mcGit").title = t("source");
     document.getElementById("mcGit").setAttribute("aria-label", t("source"));
     document.getElementById("mcMenu").setAttribute("aria-label", t("menu"));
+    const q = document.getElementById("mcSearchInput");
+    q.placeholder = t("searchScreens");
+    q.setAttribute("aria-label", t("searchScreens"));
+  }
+
+  // Search box: jump to any screen or area by name (Spanish or English) or description.
+  function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  function searchItems(term) {
+    const root = document.body.dataset.root || "";
+    const q = norm(term).trim();
+    if (!q) return [];
+    const items = Object.keys(AREAS).map(g => ({ href: root + "area.html?a=" + g, icon: AREAS[g].icon, title: L(GROUPS[g]), group: t("areas"), hay: norm(GROUPS[g].en + " " + GROUPS[g].es + " " + AREAS[g].d.en + " " + AREAS[g].d.es), main: norm(GROUPS[g].en + " " + GROUPS[g].es) }))
+      .concat(PAGES.filter(p => AREAS[p.group]).map(p => ({ href: root + p.href, icon: p.icon, title: L(p.title), group: L(GROUPS[p.group]), hay: norm(p.title.en + " " + p.title.es + " " + p.blurb.en + " " + p.blurb.es), main: norm(p.title.en + " " + p.title.es) })));
+    const words = q.split(/\s+/);
+    return items.filter(it => words.every(w => it.hay.includes(w)))
+      .sort((a, b) => (b.main.includes(q) ? 1 : 0) - (a.main.includes(q) ? 1 : 0)).slice(0, 8);
+  }
+  function wireSearch() {
+    const input = document.getElementById("mcSearchInput"), box = document.getElementById("mcSearchResults");
+    let active = 0, found = [];
+    function render() {
+      found = searchItems(input.value);
+      if (!input.value.trim()) { box.hidden = true; input.setAttribute("aria-expanded", "false"); return; }
+      box.innerHTML = found.length
+        ? found.map((it, i) => '<a role="option" href="' + it.href + '"' + (i === active ? ' class="is-active" aria-selected="true"' : "") + ">" + mi(it.icon) + "<span>" + it.title + "</span><small>" + it.group + "</small></a>").join("")
+        : '<div class="mc-search-empty">' + t("noResults") + "</div>";
+      box.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+    }
+    input.addEventListener("input", () => { active = 0; render(); });
+    input.addEventListener("focus", render);
+    input.addEventListener("keydown", e => {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); if (!found.length) return; active = (active + (e.key === "ArrowDown" ? 1 : -1) + found.length) % found.length; render(); }
+      else if (e.key === "Enter" && found[active]) { e.preventDefault(); location.href = found[active].href; }
+      else if (e.key === "Escape") { input.value = ""; render(); }
+    });
+    document.addEventListener("click", e => { if (!e.target.closest(".mc-search")) box.hidden = true; });
+    document.addEventListener("keydown", e => {
+      const a = document.activeElement;
+      if (e.key === "/" && !/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !a.isContentEditable) { e.preventDefault(); input.focus(); }
+    });
   }
 
   function buildShell() {
@@ -309,13 +379,14 @@
     side.id = "mcSidebar";
     side.innerHTML =
       '<a class="mc-brand" href="' + root + 'index.html" id="mcHome">' +
-        '<span class="mc-brand-mark">' + mi("hub") + '</span><span class="mc-brand-text" id="mcHomeTxt"></span></a>' +
+        '<span class="mc-brand-mark">' + mi("widgets") + '</span><span class="mc-brand-text">UI Gallery<small id="mcHomeSub"></small></span></a>' +
       '<div class="mc-nav" id="mcNav"></div>' +
       '<div class="mc-side-foot">' +
         '<button class="mc-side-btn" type="button" id="mcNavAll">' + mi("view_list") + '<span class="txt"></span></button>' +
-        '<button class="mc-side-btn" type="button" id="mcLight">' + mi("light_mode") + '<span class="txt"></span></button>' +
-        '<button class="mc-side-btn" type="button" id="mcDark">' + mi("dark_mode") + '<span class="txt"></span></button>' +
+        '<a class="mc-author" href="https://www.linkedin.com/in/roberto-mejia-dev" target="_blank" rel="noopener"><span class="mc-author-avatar">RM</span><span><b>Roberto Mejía</b><small id="mcAuthorSub"></small></span></a>' +
       "</div>";
+    const scrim = document.createElement("div");
+    scrim.className = "mc-scrim";
 
     const main = document.createElement("div");
     main.className = "mc-main";
@@ -323,35 +394,34 @@
       '<header class="mc-topbar">' +
         '<div class="mc-topbar-title">' +
           '<button class="mc-icon-btn mc-menu-btn" type="button" id="mcMenu" aria-controls="mcSidebar" aria-expanded="false">' + mi("menu") + "</button>" +
-          '<span class="material-icons" id="mcTitleIcon" aria-hidden="true"></span><h1 id="mcTitle"></h1>' +
-          '<span class="mc-sample" id="mcSample"></span>' +
+          '<div class="mc-title-block"><h1 id="mcTitle"></h1><div class="mc-subtitle" id="mcSubtitle"></div></div>' +
         "</div>" +
+        '<div class="mc-search" role="search">' + mi("search") +
+          '<input id="mcSearchInput" type="search" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="mcSearchResults">' +
+          '<div class="mc-search-results" id="mcSearchResults" role="listbox" hidden></div></div>' +
         '<div class="mc-topbar-tools">' +
+          '<span class="mc-sample" id="mcSample"></span>' +
           '<div class="mc-lang" role="group" aria-label="Language / Idioma"><button type="button" data-lang="es">ES</button><button type="button" data-lang="en">EN</button></div>' +
+          '<button class="mc-icon-btn" type="button" id="mcTheme">' + mi("dark_mode") + "</button>" +
           '<a class="mc-icon-btn" id="mcGit" href="https://github.com/robertomz/business-ui-gallery">' + mi("code") + "</a>" +
         "</div>" +
       "</header>";
     body.insertBefore(side, content);
+    body.insertBefore(scrim, content);
     body.insertBefore(main, content);
     main.appendChild(content);
-    const footer = document.createElement("footer");
-    footer.className = "mc-footer";
-    footer.id = "mcFooter";
-    body.appendChild(footer);
     shellBuilt = true;
 
-    // Desktop: the icon bar expands while the pointer or focus is inside it, like the original.
-    side.addEventListener("mouseenter", () => { if (innerWidth > 760) side.classList.add("open"); });
-    side.addEventListener("mouseleave", () => { if (innerWidth > 760) side.classList.remove("open"); });
-    side.addEventListener("focusin", () => { if (innerWidth > 760) side.classList.add("open"); });
-    side.addEventListener("focusout", e => { if (innerWidth > 760 && !side.contains(e.relatedTarget)) side.classList.remove("open"); });
     const menu = document.getElementById("mcMenu");
+    const closeMenu = () => { side.classList.remove("open"); menu.setAttribute("aria-expanded", "false"); };
     menu.addEventListener("click", () => { const o = side.classList.toggle("open"); menu.setAttribute("aria-expanded", String(o)); });
-    document.addEventListener("click", e => { if (innerWidth <= 760 && side.classList.contains("open") && !side.contains(e.target) && !menu.contains(e.target)) { side.classList.remove("open"); menu.setAttribute("aria-expanded", "false"); } });
+    scrim.addEventListener("click", closeMenu);
+    addEventListener("resize", () => { if (innerWidth > 1024) closeMenu(); });
     document.querySelectorAll(".mc-lang button").forEach(b => b.addEventListener("click", () => setLang(b.dataset.lang)));
-    document.getElementById("mcLight").addEventListener("click", () => setTheme("light"));
-    document.getElementById("mcDark").addEventListener("click", () => setTheme("dark"));
+    document.getElementById("mcTheme").addEventListener("click", () => setTheme(currentTheme() === "dark" ? "light" : "dark"));
     document.getElementById("mcNavAll").addEventListener("click", () => setNavAll(!navAll()));
+    wireSearch();
+    chartDefaults();
     paintShell();
     applyI18n();
   }
@@ -535,7 +605,7 @@
   window.UI = {
     PAGES, GROUPS, AREAS, mi, t, L, strings, applyI18n, get lang() { return lang; }, setLang, currentTheme, setTheme,
     fmtMoney, fmtInt, fmtPct, fmtDate, fmtDay, fmtDayShort, monthName, parseMoney, maskMoney,
-    rng, pick, between, DATA, cssVar, toast, openModal, closeModal, helpBtn, delta, sparkline, aboutBox, csvDownload
+    rng, pick, between, DATA, cssVar, palette, chartDefaults, toast, openModal, closeModal, helpBtn, delta, sparkline, aboutBox, csvDownload
   };
 
   document.addEventListener("DOMContentLoaded", buildShell);

@@ -6,8 +6,8 @@
   <title>Automatic purchasing · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
@@ -16,7 +16,7 @@
     .ca-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px 10px; align-items: end; }
     .ca-grid .mc-field { min-width: 0; }
     .ca-grid .span2 { grid-column: span 2; }
-    .ca-params { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--mc-line); }
+    .ca-params { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
     .ca-params .mc-field { flex: 0 0 auto; width: 76px; min-width: 0; }
     .ca-params .mc-field.days { width: 92px; }
     @media (max-width: 1200px) { .ca-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -24,17 +24,15 @@
     .mc-kpis.ca { grid-template-columns: repeat(8, minmax(0, 1fr)); }
     @media (max-width: 1200px) { .mc-kpis.ca { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
     @media (max-width: 560px) { .mc-kpis.ca { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    .sem { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
-    .sem .material-icons { font-size: 14px; }
-    .sem-short { color: #fecaca; background: rgba(239,68,68,.22); }
-    .sem-buy { color: #fde68a; background: rgba(245,158,11,.2); }
-    .sem-ok { color: #99f6e4; background: rgba(20,184,166,.2); }
-    .sem-over { color: #c4b5fd; background: rgba(139,92,246,.22); }
-    .sem-none { color: var(--mc-muted); background: rgba(148,163,184,.14); }
-    :root[data-theme="light"] .sem-short { color: #991b1b; } :root[data-theme="light"] .sem-buy { color: #8a5a00; }
-    :root[data-theme="light"] .sem-ok { color: #0f766e; } :root[data-theme="light"] .sem-over { color: #6d28d9; }
-    td.sug { font-weight: 800; color: var(--mc-good); }
-    .legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 11px; color: var(--mc-muted); }
+    .sem { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: var(--r-pill); white-space: nowrap; }
+    .sem .material-icons { font-size: 15px; }
+    .sem-short { color: var(--danger); background: var(--danger-soft); }
+    .sem-buy { color: var(--warning); background: var(--warning-soft); }
+    .sem-ok { color: var(--success); background: var(--success-soft); }
+    .sem-over { color: var(--brand-text); background: var(--bg-selected); }
+    .sem-none { color: var(--text-secondary); background: var(--surface-alt); }
+    td.sug { font-weight: 600; color: var(--success); }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: var(--text-secondary); }
     .tbl-tools { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
   </style>
 </head>
@@ -234,8 +232,8 @@
       const over = current.filter(r => r.c.st === "over").length, overV = sum((x, c) => c.overV);
       const days = Math.round((new Date(document.getElementById("fTo").value) - new Date(document.getElementById("fFrom").value)) / 86400000) + 1;
       const k = (l, v, color) => '<div class="mc-kpi is-accent" style="--k-color:' + color + '"><div class="k-label">' + t(l) + '</div><div class="k-value num">' + v + "</div></div>";
-      document.getElementById("kpis").innerHTML = k("k_units", t("k_unitsV"), "#38bdf8") + k("k_prod", UI.fmtInt(current.length), "#14b8a6") + k("k_inv", M(inv), "#14b8a6") + k("k_sug", M(sug), "#f59e0b") +
-        k("k_buy", UI.fmtInt(buy), "#f59e0b") + k("k_over", UI.fmtInt(over), "#8b5cf6") + k("k_overV", M(overV), "#8b5cf6") + k("k_days", isNaN(days) ? "—" : days, "#64748b");
+      document.getElementById("kpis").innerHTML = k("k_units", t("k_unitsV"), "var(--chart-6)") + k("k_prod", UI.fmtInt(current.length), "var(--chart-2)") + k("k_inv", M(inv), "var(--chart-2)") + k("k_sug", M(sug), "var(--chart-4)") +
+        k("k_buy", UI.fmtInt(buy), "var(--chart-4)") + k("k_over", UI.fmtInt(over), "var(--chart-1)") + k("k_overV", M(overV), "var(--chart-1)") + k("k_days", isNaN(days) ? "—" : days, "var(--text-tertiary)");
       const foot = dt.table().footer().querySelectorAll("th");
       const tot = (i, v) => { if (foot[i]) foot[i].innerHTML = v; };
       foot.forEach(th => th.innerHTML = "");

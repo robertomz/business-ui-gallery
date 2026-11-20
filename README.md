@@ -4,7 +4,7 @@ Business software screens rebuilt with sample data, organized by area: sales, in
 
 **Live demo:** https://robertomz.github.io/business-ui-gallery/
 
-![Operations dashboard in dark mode](assets/img/og-image.png)
+![Operations dashboard in light mode](assets/img/og-image.png)
 
 I build and maintain an internal ERP for a distribution company: a Django platform with 20+ modules that replaced a legacy Visual FoxPro system. That code is private, so this gallery rebuilds the screens I work on every day, keeping their layout, look and business rules, with generated data and no company information, so anyone can open and try them.
 
@@ -53,6 +53,10 @@ I build and maintain an internal ERP for a distribution company: a Django platfo
 | IT & services | Dashboard builder | Drag-and-drop canvas to build dashboards from widgets |
 
 The **Health & clinics** screens are concept screens: designed as samples of what I can build for clinics and doctors, not taken from a system in production. Every other screen is rebuilt from software in daily use.
+
+## Design
+
+One design system for every screen: semantic color tokens with a light theme by default and a matching dark theme (it follows the system setting until you choose), white rounded cards on a soft neutral canvas, purple only for actions and selection, a pastel palette for data, Poppins for headings and Inter for tables. The sidebar shows the current area, and the search box in the top bar (press **/**) jumps to any screen.
 
 ## Rules these screens follow
 

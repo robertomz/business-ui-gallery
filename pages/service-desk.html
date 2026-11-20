@@ -6,29 +6,30 @@
   <title>Service desk · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .sd-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-    .sd-col { background: var(--mc-panel); border: 1px solid var(--mc-line); border-top: 3px solid var(--c); border-radius: 10px; padding: 10px; min-width: 0; display: flex; flex-direction: column; gap: 8px; min-height: 200px; }
+    .sd-col { background: var(--surface-alt); border: 1px solid var(--border-subtle); border-radius: var(--r-lg); padding: 12px; min-width: 0; display: flex; flex-direction: column; gap: 8px; min-height: 200px; }
     .sd-col.drop { outline: 2px dashed var(--c); outline-offset: -4px; }
-    .sd-col-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); }
-    .sd-col-head span.count { border: 1px solid var(--mc-line); border-radius: 10px; padding: 1px 8px; color: var(--mc-text); }
-    .sd-card { background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-left: 3px solid var(--p); border-radius: 8px; padding: 9px; display: flex; flex-direction: column; gap: 6px; cursor: grab; }
-    :root[data-theme="light"] .sd-card { background: #fff; }
+    .sd-col-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: var(--text-heading); }
+    .sd-col-head > span:first-child { display: inline-flex; align-items: center; gap: 8px; }
+    .sd-col-head > span:first-child::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+    .sd-col-head span.count { background: var(--surface); border-radius: var(--r-pill); padding: 1px 9px; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+    .sd-card { background: var(--surface); border: 1px solid var(--border-subtle); border-left: 3px solid var(--p); border-radius: var(--r-sm); box-shadow: var(--shadow-card); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; cursor: grab; }
     .sd-card.dragging { opacity: .5; }
-    .sd-card h4 { font-size: 12.5px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
-    .sd-card .meta { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--mc-muted); }
-    .sd-av { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; flex: none; }
+    .sd-card h4 { font-size: 13px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+    .sd-card .meta { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
+    .sd-av { width: 28px; height: 28px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 600; color: var(--text-heading); background: color-mix(in srgb, var(--a, var(--text-tertiary)) 24%, var(--surface)); flex: none; }
     .sd-moves { display: flex; gap: 4px; }
     .sd-moves .btn { min-height: 26px; padding: 0 6px; }
     .sd-sla { font-variant-numeric: tabular-nums; }
-    .sd-timeline { display: flex; flex-direction: column; gap: 10px; border-left: 2px solid var(--mc-line); margin-left: 12px; padding-left: 16px; }
-    .sd-tl { position: relative; font-size: 12px; }
-    .sd-tl::before { content: ""; position: absolute; left: -22px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--mc-teal); border: 2px solid var(--mc-panel); }
-    .sd-tl.sys::before { background: var(--mc-muted); }
-    .sd-tl small { display: block; color: var(--mc-muted); font-size: 10.5px; margin-bottom: 2px; }
+    .sd-timeline { display: flex; flex-direction: column; gap: 10px; border-left: 2px solid var(--border); margin-left: 12px; padding-left: 16px; }
+    .sd-tl { position: relative; font-size: 13px; }
+    .sd-tl::before { content: ""; position: absolute; left: -22px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); border: 2px solid var(--surface); }
+    .sd-tl.sys::before { background: var(--icon); }
+    .sd-tl small { display: block; color: var(--text-secondary); font-size: 11.5px; margin-bottom: 2px; }
     @media (max-width: 1100px) { .sd-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 640px) { .sd-board { grid-template-columns: minmax(0, 1fr); } }
   </style>
@@ -130,10 +131,10 @@
 
   $(function () {
     const t = UI.t, mi = UI.mi, D = UI.DATA;
-    const STATUSES = [["new", "s_new", "#38bdf8"], ["progress", "s_progress", "#14b8a6"], ["waiting", "s_waiting", "#f59e0b"], ["resolved", "s_resolved", "#22c55e"]];
-    const PRI = { high: { k: "p_high", h: 4, c: "#fb7185", icon: "keyboard_double_arrow_up", cls: "chip-neg" }, medium: { k: "p_medium", h: 8, c: "#f59e0b", icon: "drag_handle", cls: "chip-warn" }, low: { k: "p_low", h: 24, c: "#38bdf8", icon: "keyboard_arrow_down", cls: "chip-info" } };
+    const STATUSES = [["new", "s_new", "var(--info-solid)"], ["progress", "s_progress", "var(--brand)"], ["waiting", "s_waiting", "var(--warning-solid)"], ["resolved", "s_resolved", "var(--success-solid)"]];
+    const PRI = { high: { k: "p_high", h: 4, c: "var(--danger-solid)", icon: "keyboard_double_arrow_up", cls: "chip-neg" }, medium: { k: "p_medium", h: 8, c: "var(--warning-solid)", icon: "drag_handle", cls: "chip-warn" }, low: { k: "p_low", h: 24, c: "var(--info-solid)", icon: "keyboard_arrow_down", cls: "chip-info" } };
     const CATS = ["hw", "sw", "net", "print", "access"];
-    const AGENTS = [["R. Molina", "#8b5cf6"], ["J. Cruz", "#06b6d4"], ["M. Herrera", "#14b8a6"]];
+    const AGENTS = [["R. Molina", "var(--chart-1)"], ["J. Cruz", "var(--chart-6)"], ["M. Herrera", "var(--chart-2)"]];
     const SUBJ = {
       hw: [["Laptop does not turn on", "La laptop no enciende"], ["Monitor flickers", "El monitor parpadea"], ["Keyboard keys not working", "Teclas del teclado no funcionan"]],
       sw: [["Error when saving an invoice", "Error al guardar una factura"], ["Report takes too long to load", "El reporte tarda mucho en cargar"], ["Cannot open the sales module", "No abre el módulo de ventas"]],
@@ -168,7 +169,7 @@
         : '<span class="chip chip-neg sd-sla">' + mi("alarm_off") + t("slaBreached", { t: dur(left) }) + "</span>";
     }
     const priChip = p => '<span class="chip ' + PRI[p].cls + '">' + mi(PRI[p].icon) + t(PRI[p].k) + "</span>";
-    const av = a => a < 0 ? '<span class="sd-av" style="background:#64748b" title="' + t("unassigned") + '">—</span>' : '<span class="sd-av" style="background:' + AGENTS[a][1] + '" title="' + AGENTS[a][0] + '">' + AGENTS[a][0].replace(/[^A-Z]/g, "") + "</span>";
+    const av = a => a < 0 ? '<span class="sd-av" title="' + t("unassigned") + '">—</span>' : '<span class="sd-av" style="--a:' + AGENTS[a][1] + '" title="' + AGENTS[a][0] + '">' + AGENTS[a][0].replace(/[^A-Z]/g, "") + "</span>";
     function pass(tk) {
       const a = $("#fAssignee").val(), p = $("#fPriority").val(), c = $("#fCat").val(), q = $("#fText").val().trim().toLowerCase();
       return (a === "all" || String(tk.assignee) === a) && (p === "all" || tk.pri === p) && (c === "all" || tk.cat === c) &&
@@ -189,15 +190,15 @@
       const avg = res.length ? res.reduce((a, x) => a + (x.resolved - x.created), 0) / res.length / 3600000 : 0;
       const onTime = res.length ? res.filter(x => x.resolved <= x.created + PRI[x.pri].h * 3600000).length / res.length : 0;
       const k = (l, v, col) => '<div class="mc-kpi is-accent" style="--k-color:' + col + '"><div class="k-label">' + t(l) + '</div><div class="k-value">' + v + "</div></div>";
-      document.getElementById("kpis").innerHTML = k("kOpen", open.length, "#38bdf8") + k("kBreached", breached, "#fb7185") + k("kAvg", t("hours", { n: avg.toFixed(1) }), "#a78bfa") + k("kOnTime", UI.fmtPct(onTime, 0), "#2dd4bf");
+      document.getElementById("kpis").innerHTML = k("kOpen", open.length, "var(--info-solid)") + k("kBreached", breached, "var(--danger-solid)") + k("kAvg", t("hours", { n: avg.toFixed(1) }), "var(--chart-1)") + k("kOnTime", UI.fmtPct(onTime, 0), "var(--success-solid)");
     }
     function card(tk, si) {
       return '<article class="sd-card" draggable="true" data-no="' + tk.no + '" style="--p:' + PRI[tk.pri].c + '">' +
-        '<div class="meta"><b style="color:var(--mc-text)">#' + tk.no + "</b>" + priChip(tk.pri) + "</div>" +
+        '<div class="meta"><b style="color:var(--text-heading)">#' + tk.no + "</b>" + priChip(tk.pri) + "</div>" +
         '<h4><a href="#" data-open="' + tk.no + '" style="color:inherit;text-decoration:none">' + UI.L(tk.subj) + "</a></h4>" +
         '<div class="meta"><span>' + mi("label") + " " + t("c_" + tk.cat) + "</span><span>" + D.branches[tk.branch] + "</span></div>" +
         '<div class="meta">' + sla(tk) + av(tk.assignee) + "</div>" +
-        '<div class="meta"><span class="muted" style="font-size:10.5px">' + tk.req + '</span><span class="sd-moves">' +
+        '<div class="meta"><span class="muted" style="font-size:12px">' + tk.req + '</span><span class="sd-moves">' +
         (si > 0 ? '<button type="button" class="btn btn-sm" data-move="-1" data-no="' + tk.no + '" aria-label="' + t("moveLeft") + " #" + tk.no + '">' + mi("chevron_left") + "</button>" : "") +
         (si < STATUSES.length - 1 ? '<button type="button" class="btn btn-sm" data-move="1" data-no="' + tk.no + '" aria-label="' + t("moveRight") + " #" + tk.no + '">' + mi("chevron_right") + "</button>" : "") + "</span></div></article>";
     }

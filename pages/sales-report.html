@@ -6,28 +6,32 @@
   <title>Sales detail report · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .rv-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-    .rv-title { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; }
-    .rv-title .material-icons { color: var(--mc-cyan); font-size: 19px; }
+    .rv-title { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-heading); }
+    .rv-title .material-icons { color: var(--icon-active); font-size: 20px; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--brand-soft); }
     .rv-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .rv-luces { display: inline-flex; gap: 6px; align-items: center; padding: 4px 8px; border: 1px solid var(--mc-line); border-radius: 8px; }
-    .rv-luz { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; opacity: .55; display: grid; place-items: center; color: #0b1626; font-size: 10px; font-weight: 900; }
-    .rv-luz.rojo { background: #ef4444; } .rv-luz.amarillo { background: #facc15; } .rv-luz.verde { background: #22c55e; }
-    .rv-luz[aria-pressed="true"] { opacity: 1; border-color: var(--mc-text); }
-    .mc-kpi.dest { border-top: 3px solid var(--mc-teal); }
-    .mc-kpi.dest .k-value { color: var(--mc-good); }
-    td.m-bad { color: var(--mc-bad); font-weight: 800; } td.m-mid { color: var(--mc-warn); font-weight: 800; } td.m-ok { color: var(--mc-good); font-weight: 800; }
+    .rv-luces { display: inline-flex; gap: 8px; align-items: center; padding: 4px 10px; background: var(--bg-input); border-radius: 12px; min-height: 42px; }
+    .rv-luz { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; opacity: .45; display: grid; place-items: center; padding: 0; }
+    .rv-luz.rojo { background: var(--danger-solid); } .rv-luz.amarillo { background: var(--warning-solid); } .rv-luz.verde { background: var(--success-solid); }
+    .rv-luz:hover { opacity: .8; }
+    .rv-luz[aria-pressed="true"] { opacity: 1; border-color: var(--surface); box-shadow: 0 0 0 2px var(--brand); }
+    .mc-kpi.dest { background: var(--brand-soft); border-color: transparent; }
+    .mc-kpi.dest .k-value { color: var(--brand-text); }
+    .mc-kpi.dest .k-label { color: var(--text); }
+    table.dataTable tbody td.m-bad { color: var(--danger) !important; font-weight: 600; } table.dataTable tbody td.m-mid { color: var(--warning) !important; font-weight: 600; } table.dataTable tbody td.m-ok { color: var(--success) !important; font-weight: 600; }
     .dataTables_wrapper .dataTables_filter { display: none; }
     table.dataTable, div.dts table.dataTable { background: transparent !important; }
     #tSales_wrapper, #tRet_wrapper { width: 100%; }
-    .rv-luz-txt { font-size: 11px; color: var(--mc-muted); }
+    /* Scroller needs every row at the same fixed height: keep it in sync with rowHeight in the script (ROW_H) */
+    #tSales tbody td, #tRet tbody td { height: 40px; padding: 0 14px; line-height: 20px; white-space: nowrap; box-sizing: border-box; }
+    .rv-luz-txt { font-size: 12.5px; font-weight: 500; color: var(--text-secondary); }
   </style>
 </head>
 <body data-page="sales-report" data-root="../">
@@ -181,8 +185,9 @@
       return { x, date: UI.fmtDay(x.date), inv: x.inv, branch: D.branches[x.b], seller: D.sellers[x.seller], route: x.route, cust: D.customers[x.cust], type: t(TYPES[x.type]), item: x.item, cat: UI.L(D.categories[x.cat]), sup: x.sup };
     }
 
+    const ROW_H = 40;   // same as the td height in the page CSS
     const dt = $("#tSales").DataTable({
-      data: [], deferRender: true, scrollY: "52vh", scrollX: true, scroller: { rowHeight: 30, displayBuffer: 4 }, paging: true, info: false, order: [[0, "desc"]], dom: "rt",
+      data: [], deferRender: true, scrollY: "52vh", scrollX: true, scroller: { rowHeight: ROW_H, displayBuffer: 4 }, paging: true, info: false, order: [[0, "desc"]], dom: "rt",
       columns: [
         { data: "x.date", render: (d, ty, row) => ty === "sort" ? d.getTime() : row.date, title: "" },
         { data: "inv" }, { data: "branch" }, { data: "seller" }, { data: "route" }, { data: "cust" }, { data: "type" }, { data: "item" }, { data: "cat" }, { data: "sup" },
@@ -197,7 +202,7 @@
       ]
     });
     const dtRet = $("#tRet").DataTable({
-      data: [], deferRender: true, scrollY: "30vh", scrollX: true, scroller: { rowHeight: 30 }, paging: true, info: false, order: [[0, "desc"]], dom: "rt",
+      data: [], deferRender: true, scrollY: "30vh", scrollX: true, scroller: { rowHeight: ROW_H }, paging: true, info: false, order: [[0, "desc"]], dom: "rt",
       columns: [
         { data: "x.date", render: (d, ty, row) => ty === "sort" ? d.getTime() : UI.fmtDay(d) }, { data: "x.orig" }, { data: null, render: (d, ty, row) => D.branches[row.x.o.b] },
         { data: null, render: (d, ty, row) => D.customers[row.x.o.cust] }, { data: null, render: (d, ty, row) => row.x.o.item },

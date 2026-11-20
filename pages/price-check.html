@@ -6,20 +6,21 @@
   <title>Price check · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     tr.click { cursor: pointer; }
-    tr.click:focus-visible { outline: 2px solid var(--mc-cyan); outline-offset: -2px; }
+    tr.click:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
     tr.is-checked td { opacity: .62; }
-    .cost-up { color: var(--mc-bad); font-weight: 800; } .cost-down { color: var(--mc-good); font-weight: 800; }
+    .cost-up { color: var(--danger); font-weight: 600; } .cost-down { color: var(--success); font-weight: 600; }
     .progress-line { display: flex; align-items: center; gap: 10px; min-width: 220px; font-size: 12px; }
     .progress-line .progress { flex: 1; }
-    .cfg-table input { width: 100%; min-height: 30px; padding: 4px 7px; border: 1px solid var(--mc-line); border-radius: 5px; background: var(--mc-panel-2); color: var(--mc-text); font-size: 12px; text-align: right; }
-    .cfg-table input[aria-invalid="true"] { border-color: var(--mc-bad); }
-    .chk { width: 18px; height: 18px; accent-color: var(--mc-teal); }
+    .cfg-table input { width: 100%; min-height: 34px; padding: 4px 9px; border: 1px solid var(--border); border-radius: var(--r-xs); background: var(--bg-input); color: var(--text); font-size: 12.5px; text-align: right; }
+    .cfg-table input:focus { outline: none; border-color: var(--focus); background: var(--surface); }
+    .cfg-table input[aria-invalid="true"] { border-color: var(--danger-solid); background: var(--danger-soft); }
+    .chk { width: 18px; height: 18px; accent-color: var(--brand); }
   </style>
 </head>
 <body data-page="price-check" data-root="../">
@@ -196,7 +197,7 @@
       document.querySelector("#chkBar span").style.width = (all.length ? done / all.length * 100 : 0) + "%";
       document.getElementById("chkBar").setAttribute("aria-valuenow", Math.round(all.length ? done / all.length * 100 : 0));
       const below = list.filter(x => LISTS.some((l, i) => margin(x.p.prices[i], x.p.cost) < MINM[x.p.cat])).length;
-      document.getElementById("kCheck").innerHTML = kpi("k_lines", list.length, "#38bdf8") + kpi("k_up", list.filter(x => x.state === "up").length, "#fb7185") + kpi("k_req", list.filter(x => x.state === "up").length, "#f59e0b") + kpi("k_done", list.filter(x => x.p.checked).length, "#14b8a6") + kpi("k_below", below, "#8b5cf6");
+      document.getElementById("kCheck").innerHTML = kpi("k_lines", list.length, "var(--chart-6)") + kpi("k_up", list.filter(x => x.state === "up").length, "var(--chart-7)") + kpi("k_req", list.filter(x => x.state === "up").length, "var(--chart-4)") + kpi("k_done", list.filter(x => x.p.checked).length, "var(--chart-2)") + kpi("k_below", below, "var(--chart-1)");
       document.querySelector("#tCheck thead").innerHTML = "<tr><th>" + t("code") + "</th><th>" + t("desc") + "</th><th>" + t("pres") + '</th><th class="r">' + t("qty") + '</th><th class="r">' + t("oldCost") + '</th><th class="r">' + t("newCost") + "</th><th>" + t("costState") + "</th><th>" + t("type") + "</th><th>" + t("check") + "</th></tr>";
       const ST = { up: ["up", "cost-up", "arrow_upward"], down: ["down", "cost-down", "arrow_downward"], same: ["same", "muted", "remove"] };
       document.querySelector("#tCheck tbody").innerHTML = list.map(x => '<tr class="click' + (x.p.checked ? " is-checked" : "") + '" tabindex="0" data-code="' + x.p.code + '"><td>' + x.p.code + "</td><td>" + x.p.name + "</td><td>" + UI.L(PRES[x.p.pres]) + '</td><td class="r">' + x.qty + '</td><td class="r">' + M(x.p.prevCost) + '</td><td class="r ' + ST[x.state][1] + '">' + M(x.p.cost) + '</td><td><span class="' + ST[x.state][1] + '">' + mi(ST[x.state][2]) + " " + t(ST[x.state][0]) + " (" + (x.p.cost / x.p.prevCost - 1 >= 0 ? "+" : "") + UI.fmtPct(x.p.cost / x.p.prevCost - 1) + ")</span></td><td>" +
@@ -214,7 +215,7 @@
       const p = PROD.find(x => x.code === code);
       editing = { p, prices: p.prices.slice() };
       document.getElementById("cfgTitle").textContent = t("cfgTitle", { p: p.name });
-      document.getElementById("cfgInfo").innerHTML = kpi("oldCost", M(p.prevCost), "#64748b") + kpi("newCost", M(p.cost), p.cost > p.prevCost ? "#fb7185" : "#14b8a6") + kpi("minMargin", UI.fmtPct(MINM[p.cat], 0), "#f59e0b") + kpi("category", UI.L(D.categories[p.cat]), "#38bdf8");
+      document.getElementById("cfgInfo").innerHTML = kpi("oldCost", M(p.prevCost), "var(--text-tertiary)") + kpi("newCost", M(p.cost), p.cost > p.prevCost ? "var(--danger-solid)" : "var(--success-solid)") + kpi("minMargin", UI.fmtPct(MINM[p.cat], 0), "var(--chart-4)") + kpi("category", UI.L(D.categories[p.cat]), "var(--chart-6)");
       document.querySelector("#tCfg thead").innerHTML = "<tr><th>" + t("list") + '</th><th class="r">' + t("curPrice") + '</th><th class="r">' + t("curMargin") + '</th><th class="r" style="width:140px">' + t("newPrice") + '</th><th class="r" style="width:120px">' + t("newMargin") + "</th><th>" + t("after") + "</th></tr>";
       document.querySelector("#tCfg tbody").innerHTML = LISTS.map((l, i) => "<tr><td>" + UI.L(l) + '</td><td class="r">' + M(p.prices[i]) + '</td><td class="r">' + UI.fmtPct(margin(p.prices[i], p.cost)) + '</td><td><input data-i="' + i + '" data-k="price" inputmode="decimal" value="' + M(p.prices[i]) + '" aria-label="' + t("newPrice") + " " + UI.L(l) + '"></td><td><input data-i="' + i + '" data-k="margin" inputmode="decimal" value="' + (margin(p.prices[i], p.cost) * 100).toFixed(1) + '" aria-label="' + t("newMargin") + " " + UI.L(l) + '"></td><td id="aft' + i + '"></td></tr>').join("");
       validateCfg();
@@ -231,7 +232,7 @@
         cell.innerHTML = '<span class="num ' + (m < MINM[p.cat] ? "neg" : "pos") + '">' + UI.fmtPct(m) + "</span> " + (m < MINM[p.cat] && pr >= p.cost ? '<span class="chip chip-warn">' + mi("trending_down") + t("a_belowMin") + "</span>" : "");
       });
       const warns = LISTS.map((l, i) => editing.prices[i] >= p.cost && margin(editing.prices[i], p.cost) < MINM[p.cat] ? t("warnMin", { l: UI.L(l), m: UI.fmtPct(MINM[p.cat], 0) }) : null).filter(Boolean);
-      document.getElementById("cfgErr").innerHTML = errs.concat(warns.map(w => '<span style="color:var(--mc-warn)">' + w + "</span>")).join("<br>");
+      document.getElementById("cfgErr").innerHTML = errs.concat(warns.map(w => '<span style="color:var(--warning)">' + w + "</span>")).join("<br>");
       document.getElementById("cfgSave").disabled = errs.length > 0;
     }
     document.getElementById("tCfg").addEventListener("input", e => {
@@ -264,8 +265,8 @@
           rows.push({ p, li, al, m: margin(p.prices[li], p.cost) });
         });
       });
-      document.getElementById("kCat").innerHTML = kpi("k_prices", rows.length, "#38bdf8") + kpi("k_alerts", rows.filter(x => x.al.length).length, "#fb7185") +
-        LISTS.map((l, li) => { const s = rows.filter(x => x.li === li); return kpi("k_avg", s.length ? UI.fmtPct(s.reduce((a, x) => a + x.m, 0) / s.length) : "—", "#14b8a6").replace(t("k_avg"), t("k_avg") + " · " + UI.L(l)); }).join("");
+      document.getElementById("kCat").innerHTML = kpi("k_prices", rows.length, "var(--chart-6)") + kpi("k_alerts", rows.filter(x => x.al.length).length, "var(--chart-7)") +
+        LISTS.map((l, li) => { const s = rows.filter(x => x.li === li); return kpi("k_avg", s.length ? UI.fmtPct(s.reduce((a, x) => a + x.m, 0) / s.length) : "—", "var(--chart-2)").replace(t("k_avg"), t("k_avg") + " · " + UI.L(l)); }).join("");
       document.querySelector("#tCat thead").innerHTML = "<tr><th>" + t("code") + "</th><th>" + t("desc") + "</th><th>" + t("category") + "</th><th>" + t("supplier") + "</th><th>" + t("priceList") + '</th><th class="r">' + t("cost") + '</th><th class="r">' + t("lastCost") + '</th><th class="r">' + t("price") + '</th><th class="r">' + t("margin") + '</th><th class="r">' + t("minMargin") + "</th><th>" + t("alert") + "</th></tr>";
       document.querySelector("#tCat tbody").innerHTML = rows.map(x => '<tr class="click" tabindex="0" data-code="' + x.p.code + '"><td>' + x.p.code + "</td><td>" + x.p.name + "</td><td>" + UI.L(D.categories[x.p.cat]) + "</td><td>" + x.p.sup + "</td><td>" + UI.L(LISTS[x.li]) + '</td><td class="r">' + M(x.p.cost) + '</td><td class="r">' + M(x.p.priceCost) + '</td><td class="r">' + M(x.p.prices[x.li]) + '</td><td class="r ' + (x.m < MINM[x.p.cat] ? "neg" : "") + '">' + UI.fmtPct(x.m) + '</td><td class="r">' + UI.fmtPct(MINM[x.p.cat], 0) + "</td><td>" + alertChips(x.al) + "</td></tr>").join("");
       document.querySelector("#tCat tfoot").innerHTML = '<tr><td colspan="8">' + t("total") + ": " + rows.length + '</td><td class="r">' + (rows.length ? UI.fmtPct(rows.reduce((a, x) => a + x.m, 0) / rows.length) : "—") + '</td><td colspan="2"></td></tr>';
@@ -285,7 +286,7 @@
           simRows.push({ p, li, nc, m0, m1, st, sug: st === "stays" ? null : nc / (1 - min) });
         });
       });
-      document.getElementById("kSim").innerHTML = kpi("k_affected", simRows.length, "#38bdf8") + kpi("k_fall", simRows.filter(x => x.st === "falls").length, "#fb7185") + kpi("k_already", simRows.filter(x => x.st === "already").length, "#f59e0b");
+      document.getElementById("kSim").innerHTML = kpi("k_affected", simRows.length, "var(--chart-6)") + kpi("k_fall", simRows.filter(x => x.st === "falls").length, "var(--chart-7)") + kpi("k_already", simRows.filter(x => x.st === "already").length, "var(--chart-4)");
       const ST = { already: ["already", "chip-warn", "warning"], falls: ["falls", "chip-neg", "trending_down"], stays: ["stays", "chip-pos", "check_circle"] };
       document.querySelector("#tSim thead").innerHTML = "<tr><th>" + t("code") + "</th><th>" + t("desc") + "</th><th>" + t("priceList") + '</th><th class="r">' + t("cost") + '</th><th class="r">' + t("newCostS") + '</th><th class="r">' + t("price") + '</th><th class="r">' + t("curMargin") + '</th><th class="r">' + t("newMarginS") + '</th><th class="r">' + t("minMargin") + "</th><th>" + t("status") + '</th><th class="r">' + t("suggested") + "</th></tr>";
       document.querySelector("#tSim tbody").innerHTML = simRows.sort((a, b) => a.m1 - b.m1).map(x => "<tr><td>" + x.p.code + "</td><td>" + x.p.name + "</td><td>" + UI.L(LISTS[x.li]) + '</td><td class="r">' + M(x.p.cost) + '</td><td class="r">' + M(x.nc) + '</td><td class="r">' + M(x.p.prices[x.li]) + '</td><td class="r">' + UI.fmtPct(x.m0) + '</td><td class="r ' + (x.st !== "stays" ? "neg" : "") + '">' + UI.fmtPct(x.m1) + '</td><td class="r">' + UI.fmtPct(MINM[x.p.cat], 0) + '</td><td><span class="chip ' + ST[x.st][1] + '">' + mi(ST[x.st][2]) + t(ST[x.st][0]) + '</span></td><td class="r"><b>' + (x.sug ? M(x.sug) : "—") + "</b></td></tr>").join("");

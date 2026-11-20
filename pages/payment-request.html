@@ -6,8 +6,8 @@
   <title>Payment request · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
@@ -17,9 +17,9 @@
     .form-grid .mc-field, .line-grid .mc-field { min-width: 0; }
     .line-grid { display: grid; grid-template-columns: 2fr 2fr 1.4fr .8fr .9fr 1fr auto; gap: 10px; align-items: end; }
     .line-grid .mc-check { min-height: 34px; }
-    .budget-hint { font-size: 11px; color: var(--mc-muted); margin-top: 6px; }
-    .totals { display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: flex-end; margin-top: 10px; font-size: 12px; }
-    .totals b { font-variant-numeric: tabular-nums; }
+    .budget-hint { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+    .totals { display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: flex-end; margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+    .totals b { font-variant-numeric: tabular-nums; color: var(--text-heading); font-weight: 600; }
     @media (max-width: 1100px) { .line-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     @media (max-width: 1000px) { .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 560px) { .form-grid, .line-grid { grid-template-columns: minmax(0, 1fr); } .form-grid .span-2 { grid-column: auto; } }
@@ -230,7 +230,7 @@
       const f = $("#fStatus").val() || "all";
       document.querySelector("#tReq thead").innerHTML = "<tr><th>" + t("colNo") + "</th><th>" + t("colPayDate") + "</th><th>" + t("colPayee") + "</th><th>" + t("colDocNo") + "</th><th>" + t("colDocDate") + '</th><th class="r">' + t("colNet") + '</th><th class="r">' + t("colBal") + "</th><th>" + t("status") + "</th><th></th></tr>";
       document.querySelector("#tReq tbody").innerHTML = REQS.filter(x => f === "all" || x.st === f).slice().reverse().map(x => "<tr><td>" + x.n + "</td><td>" + UI.fmtDay(x.pay) + "</td><td>" + PAYEES[x.payee][0] + "</td><td>" + x.doc + "</td><td>" + UI.fmtDay(x.docDate) + '</td><td class="r">' + M(x.net) + '</td><td class="r">' + M(x.bal) + "</td><td>" + chip(x.st) +
-        (x.reason ? '<div class="mc-hint" style="font-size:11px">' + UI.L(x.reason) + "</div>" : "") + "</td><td>" +
+        (x.reason ? '<div class="mc-hint" style="font-size:12px">' + UI.L(x.reason) + "</div>" : "") + "</td><td>" +
         (x.st === "pending" ? '<div style="display:flex;gap:6px"><button type="button" class="btn btn-sm btn-teal" data-ok="' + x.n + '">' + mi("check") + t("approve") + '</button><button type="button" class="btn btn-sm" data-no="' + x.n + '">' + mi("block") + t("reject") + "</button></div>" : "") + "</td></tr>").join("");
     }
 

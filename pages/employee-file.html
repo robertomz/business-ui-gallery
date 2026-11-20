@@ -6,25 +6,24 @@
   <title>Employee file · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    tr.drill { cursor: pointer; } tr.drill.is-sel td { background: rgba(20, 184, 166, .12); }
+    tr.drill { cursor: pointer; } tr.drill.is-sel td { background: var(--bg-selected); }
     .prof-head { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-    .avatar { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(135deg, var(--mc-teal), var(--mc-violet)); flex: none; }
-    .prof-head h3 { font-size: 17px; font-weight: 900; }
+    .avatar { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--brand-text); background: var(--brand-soft); flex: none; }
+    .prof-head h3 { font-size: 18px; font-weight: 600; }
     .prof-head .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-    .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-    .fact { border: 1px solid var(--mc-line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
-    .fact b { display: block; margin-top: 4px; font-size: 13px; overflow-wrap: anywhere; }
-    .timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--mc-line); display: flex; flex-direction: column; gap: 10px; }
-    .timeline li { position: relative; font-size: 12px; }
-    .timeline li::before { content: ""; position: absolute; left: -20px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--mc-teal); }
-    .timeline li small { color: var(--mc-muted); display: block; }
-    @media (max-width: 900px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 520px) { .facts { grid-template-columns: minmax(0, 1fr); } }
+    .facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+    #tEmp td { white-space: nowrap; }
+    .fact { background: var(--surface-alt); border-radius: var(--r-sm); padding: 10px 12px; min-width: 0; }
+    .fact b { display: block; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--text-heading); overflow-wrap: anywhere; }
+    .timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+    .timeline li { position: relative; font-size: 13px; }
+    .timeline li::before { content: ""; position: absolute; left: -20px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); border: 2px solid var(--surface); }
+    .timeline li small { color: var(--text-secondary); display: block; font-size: 12px; }
   </style>
 </head>
 <body data-page="employee-file" data-root="../">

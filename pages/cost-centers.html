@@ -6,15 +6,15 @@
   <title>Cost centers · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     tr.drill { cursor: pointer; }
-    tr.drill.is-sel td { background: rgba(20, 184, 166, .12); }
+    tr.drill.is-sel td { background: var(--bg-selected); }
     .cc-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-    .cc-head h3 { font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: .3px; }
+    .cc-head h3 { font-size: 16px; font-weight: 600; }
     .pbar { display: flex; align-items: center; gap: 8px; min-width: 120px; }
     .pbar .bar-track { flex: 1; height: 6px; }
     .wiz-step[hidden] { display: none; }
@@ -219,7 +219,7 @@
       if (pct > .9) return '<span class="chip chip-warn">' + mi("warning") + t("stNear") + "</span>";
       return '<span class="chip chip-pos">' + mi("check_circle") + t("stOk") + "</span>";
     }
-    function bar(p, spend) { const c = spend ? (p > 1 ? "var(--mc-bad)" : p > .9 ? "var(--mc-amber)" : "var(--mc-good)") : (p >= 1 ? "var(--mc-good)" : p >= .85 ? "var(--mc-amber)" : "var(--mc-bad)"); return '<div class="pbar"><div class="bar-track"><span style="width:' + Math.max(0, Math.min(100, p * 100)) + "%;background:" + c + '"></span></div><span class="num">' + UI.fmtPct(p) + "</span></div>"; }
+    function bar(p, spend) { const c = spend ? (p > 1 ? "var(--danger-solid)" : p > .9 ? "var(--warning-solid)" : "var(--success-solid)") : (p >= 1 ? "var(--success-solid)" : p >= .85 ? "var(--warning-solid)" : "var(--danger-solid)"); return '<div class="pbar"><div class="bar-track"><span style="width:' + Math.max(0, Math.min(100, p * 100)) + "%;background:" + c + '"></span></div><span class="num">' + UI.fmtPct(p) + "</span></div>"; }
 
     function renderList() {
       const ty = $("#fType").val();

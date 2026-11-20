@@ -6,18 +6,19 @@
   <title>Automatic entries · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .src-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px solid var(--mc-line); border-radius: 8px; }
+    .src-tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--border); }
     .src-tabs .mc-tab { display: inline-flex; align-items: center; gap: 6px; }
-    .src-tabs .mc-tab .cnt { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 10px; background: rgba(148,163,184,.16); color: var(--mc-muted); }
+    .src-tabs .mc-tab .cnt { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: var(--r-pill); background: var(--bg-input); color: var(--text-secondary); }
+    .src-tabs .mc-tab[aria-selected="true"] .cnt, .src-tabs .mc-tab.is-active .cnt { background: var(--bg-selected); color: var(--brand-text); }
     .run { display: grid; gap: 8px; }
-    .run-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; }
+    .run-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; }
     .run-top b { font-variant-numeric: tabular-nums; }
     tr.clickable { cursor: pointer; }
-    tr.sel td { background: rgba(20,184,166,.12) !important; }
+    tr.sel td { background: var(--bg-selected) !important; }
   </style>
 </head>
 <body data-page="entry-generation" data-root="../">
@@ -63,7 +64,7 @@
         <div class="mc-panel-title" style="margin-top:14px"><h3><span class="material-icons" aria-hidden="true">list_alt</span><span id="detTitle"></span></h3><button type="button" class="btn btn-sm" id="btnAllDocs" hidden data-i18n="showAll"></button></div>
         <div class="table-wrap" style="max-height:320px"><table class="grid" id="tDet"><thead></thead><tbody></tbody></table></div>
       </div>
-      <div class="modal-foot"><button type="button" class="btn btn-danger" id="btnClosePrev"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
+      <div class="modal-foot"><button type="button" class="btn" id="btnClosePrev"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
     </div>
   </div>
 
@@ -192,8 +193,8 @@
       document.querySelector("#tDays tfoot").innerHTML = "<tr><td>" + t("total") + '</td><td class="r">' + list.reduce((a, x) => a + x.ds.length, 0) + '</td><td></td><td class="r">' + M(list.reduce((a, x) => a + x.deb, 0)) + '</td><td class="r">' + M(list.reduce((a, x) => a + x.cre, 0)) + '</td><td colspan="2"></td></tr>';
       document.getElementById("kpis").innerHTML =
         '<div class="mc-kpi"><div class="k-label">' + t("kDays") + '</div><div class="k-value">' + list.length + "</div></div>" +
-        '<div class="mc-kpi is-accent" style="--k-color:var(--mc-cyan)"><div class="k-label">' + t("kNew") + '</div><div class="k-value">' + list.filter(x => x.st === "new").length + "</div></div>" +
-        '<div class="mc-kpi is-accent" style="--k-color:var(--mc-good)"><div class="k-label">' + t("kDone") + '</div><div class="k-value">' + done.length + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:var(--chart-1)"><div class="k-label">' + t("kNew") + '</div><div class="k-value">' + list.filter(x => x.st === "new").length + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:var(--success-solid)"><div class="k-label">' + t("kDone") + '</div><div class="k-value">' + done.length + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kDocs") + '</div><div class="k-value">' + UI.fmtInt(list.reduce((a, x) => a + x.ds.length, 0)) + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kDebit") + '</div><div class="k-value num">' + M(done.reduce((a, x) => a + x.deb, 0)) + "</div></div>";
       renderTabs();

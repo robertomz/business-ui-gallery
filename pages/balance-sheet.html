@@ -6,23 +6,24 @@
   <title>Balance sheet · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    .tree-btn { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: var(--mc-muted); cursor: pointer; padding: 0; vertical-align: middle; }
-    .tree-btn:hover { background: rgba(148, 163, 184, .14); color: var(--mc-text); }
+    .tree-btn { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: var(--icon); cursor: pointer; padding: 0; vertical-align: middle; }
+    .tree-btn:hover { background: var(--bg-hover); color: var(--brand-text); }
     .tree-btn[aria-expanded="true"] .material-icons { transform: rotate(90deg); }
     .tree-btn .material-icons { transition: transform .15s; font-size: 18px; }
     .tree-pad { display: inline-block; width: 24px; }
-    tr.lvl-1 td { font-weight: 800; background: rgba(20, 184, 166, .06); }
-    tr.lvl-2 td { font-weight: 700; }
-    .manual-in { width: 120px; min-height: 28px; padding: 3px 7px; border: 1px solid var(--mc-line); border-radius: 5px; background: var(--mc-panel-2); color: var(--mc-text); text-align: right; font-size: 11.5px; }
-    .check-banner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
-    .check-banner.ok { background: rgba(45, 212, 191, .1); color: var(--mc-good); border: 1px solid rgba(45, 212, 191, .35); }
-    .check-banner.bad { background: rgba(251, 113, 133, .1); color: var(--mc-bad); border: 1px solid rgba(251, 113, 133, .35); }
-    .check-banner span.muted { font-weight: 500; }
+    tr.lvl-1 td { font-weight: 600; color: var(--text-heading); background: var(--surface-alt); }
+    tr.lvl-2 td { font-weight: 600; }
+    .manual-in { width: 120px; min-height: 32px; padding: 4px 9px; border: 1px solid var(--border); border-radius: var(--r-xs); background: var(--bg-input); color: var(--text); text-align: right; font-size: 13px; }
+    .manual-in:focus { outline: none; border-color: var(--brand); }
+    .check-banner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+    .check-banner.ok { background: var(--success-soft); color: var(--success); }
+    .check-banner.bad { background: var(--danger-soft); color: var(--danger); }
+    .check-banner span.muted { font-weight: 400; color: var(--text-secondary); }
   </style>
 </head>
 <body data-page="balance-sheet" data-root="../">

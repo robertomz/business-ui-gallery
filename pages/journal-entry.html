@@ -6,29 +6,32 @@
   <title>Manual journal entry · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .je-head { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 12px; }
     .je-head .span2 { grid-column: span 2; }
     .je-head .span4 { grid-column: 1 / -1; }
-    .lines-wrap { overflow-x: auto; border: 1px solid var(--mc-line); border-radius: 8px; margin-top: 12px; }
-    table.lines { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 12px; }
-    table.lines th { background: var(--mc-th-bg); color: #fff; font-size: 11px; padding: 8px; text-align: left; white-space: nowrap; }
-    table.lines td { padding: 6px 8px; border-bottom: 1px solid var(--mc-line); vertical-align: top; }
-    table.lines td input[type=text], table.lines td select { width: 100%; min-height: 32px; padding: 4px 8px; border: 1px solid var(--mc-line); border-radius: 6px; background: var(--mc-panel-2); color: var(--mc-text); font-size: 12px; }
+    .lines-wrap { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--r-md); background: var(--surface); margin-top: 12px; }
+    table.lines { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 13px; }
+    table.lines th { background: var(--surface-alt); color: var(--text-secondary); font-size: 12px; font-weight: 600; padding: 12px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border-subtle); }
+    table.lines td { padding: 8px 10px; border-bottom: 1px solid var(--border-subtle); color: var(--text); vertical-align: top; }
+    table.lines tbody tr:last-child td { border-bottom: 0; }
+    table.lines td input[type=text], table.lines td select { width: 100%; min-height: 36px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-input); color: var(--text); font-size: 13px; }
+    table.lines td input[type=text]:focus, table.lines td select:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 20%, transparent); background: var(--surface); }
     table.lines td input.num { text-align: right; }
-    table.lines td input[aria-invalid="true"], table.lines td select[aria-invalid="true"] { border-color: var(--mc-bad); }
+    table.lines td input[aria-invalid="true"], table.lines td select[aria-invalid="true"] { border-color: var(--danger-solid); background: var(--danger-soft); }
     table.lines td.c { text-align: center; }
-    table.lines td.c input { width: 16px; height: 16px; accent-color: var(--mc-teal); margin-top: 8px; }
-    .line-err { font-size: 10.5px; color: var(--mc-bad); margin-top: 3px; }
+    table.lines td.c input { width: 18px; height: 18px; accent-color: var(--brand); margin-top: 9px; }
+    .line-err { font-size: 12px; color: var(--danger); margin-top: 3px; }
     .col-acc { width: 26%; } .col-syn { width: 22%; } .col-amt { width: 12%; } .col-cc { width: 16%; }
     .totals { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 10px; }
     .totals .mc-kpi { min-width: 160px; }
-    .budget-hint { font-size: 11px; color: var(--mc-muted); margin-top: 6px; }
-    .ro td { color: var(--mc-text); }
+    .budget-hint { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+    .ro td { color: var(--text); }
+    #tList td { white-space: nowrap; }
     @media (max-width: 760px) { .je-head { grid-template-columns: minmax(0, 1fr); } .je-head .span2 { grid-column: auto; } }
   </style>
 </head>
@@ -86,7 +89,7 @@
       </div>
       <div class="modal-foot">
         <button type="button" class="btn btn-teal" id="btnSave" disabled><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button>
-        <button type="button" class="btn btn-danger" id="btnCloseEntry"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
+        <button type="button" class="btn" id="btnCloseEntry"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
       </div>
     </div>
   </div>
@@ -96,7 +99,7 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mViewTitle">
       <div class="modal-head"><h3 id="mViewTitle"><span class="material-icons" aria-hidden="true">visibility</span><span id="viewTitle"></span></h3><span id="viewChip"></span></div>
       <div class="modal-body" id="viewBody"></div>
-      <div class="modal-foot"><button type="button" class="btn btn-danger" id="btnCloseView"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
+      <div class="modal-foot"><button type="button" class="btn" id="btnCloseView"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
     </div>
   </div>
 
@@ -196,7 +199,7 @@
         '<div class="mc-kpi"><div class="k-label">' + t("kEntries") + '</div><div class="k-value">' + rows.length + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kDebit") + '</div><div class="k-value num">' + M(td) + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kCredit") + '</div><div class="k-value num">' + M(tc) + "</div></div>" +
-        '<div class="mc-kpi is-accent" style="--k-color:' + (unb ? "var(--mc-bad)" : "var(--mc-good)") + '"><div class="k-label">' + t("kUnbal") + '</div><div class="k-value ' + (unb ? "neg" : "pos") + '">' + unb + "</div></div>";
+        '<div class="mc-kpi is-accent" style="--k-color:' + (unb ? "var(--danger-solid)" : "var(--success-solid)") + '"><div class="k-label">' + t("kUnbal") + '</div><div class="k-value ' + (unb ? "neg" : "pos") + '">' + unb + "</div></div>";
     }
     document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); renderList(); });
 
@@ -317,7 +320,7 @@
       document.getElementById("totals").innerHTML =
         '<div class="mc-kpi"><div class="k-label">' + t("debit") + '</div><div class="k-value num">' + M(td) + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("credit") + '</div><div class="k-value num">' + M(tc) + "</div></div>" +
-        '<div class="mc-kpi is-accent" style="--k-color:' + (bal ? "var(--mc-good)" : "var(--mc-bad)") + '"><div class="k-label">' + t("difference") + '</div><div class="k-value num ' + (bal ? "pos" : "neg") + '">' + M(diff) + '</div><div class="k-sub">' + chipBal(bal) + "</div></div>";
+        '<div class="mc-kpi is-accent" style="--k-color:' + (bal ? "var(--success-solid)" : "var(--danger-solid)") + '"><div class="k-label">' + t("difference") + '</div><div class="k-value num ' + (bal ? "pos" : "neg") + '">' + M(diff) + '</div><div class="k-sub">' + chipBal(bal) + "</div></div>";
       const expLines = lines.filter(l => l.acc.startsWith("6"));
       document.getElementById("budgetHint").innerHTML = mi("info") + " " + t("budgetIntro") + (expLines.length ? " " + expLines.map(l => t("budgetedFor", { a: l.acc, c: (BUDGET[l.acc] || []).map(i => UI.L(CC[i])).join(", ") })).join(" ") : "");
       document.getElementById("btnSave").disabled = !ok;

@@ -6,23 +6,22 @@
   <title>Order fill rate · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.3.0/css/scroller.dataTables.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .cx-cuadros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-    .cx-cuadro { background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
-    :root[data-theme="light"] .cx-cuadro { box-shadow: var(--mc-shadow); }
-    .cx-cuadro h4 { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .4px; color: var(--mc-cyan); margin-bottom: 8px; }
+    .cx-cuadro { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 14px 16px; min-width: 0; box-shadow: var(--shadow-card); }
+    .cx-cuadro h4 { font-size: 14px; font-weight: 600; color: var(--text-heading); margin-bottom: 10px; }
     .cx-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
-    .cx-kpi span { display: block; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); }
-    .cx-kpi strong { font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; }
-    .st { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 6px; white-space: nowrap; }
+    .cx-kpi span { display: block; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+    .cx-kpi strong { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text-heading); font-variant-numeric: tabular-nums; }
+    .st { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: var(--r-pill); white-space: nowrap; }
     .st .material-icons { font-size: 14px; }
-    .st-ok { color: var(--mc-good); background: rgba(45, 212, 191, .1); } .st-mid { color: var(--mc-warn); background: rgba(245, 158, 11, .1); } .st-bad { color: var(--mc-bad); background: rgba(251, 113, 133, .1); }
+    .st-ok { color: var(--success); background: var(--success-soft); } .st-mid { color: var(--warning); background: var(--warning-soft); } .st-bad { color: var(--danger); background: var(--danger-soft); }
     table.dataTable, div.dts table.dataTable { background: transparent !important; }
     .dataTables_wrapper .dataTables_filter { display: none; }
     .chart-box { position: relative; height: 280px; }
@@ -282,11 +281,11 @@
       document.getElementById("vpCount").textContent = t("count", { n: UI.fmtInt(rows.length) });
       const by = {}; rows.forEach(x => { by[x.item] = (by[x.item] || 0) + x.total; });
       const top = Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 10);
-      const txt = UI.cssVar("--mc-muted"), grid = UI.cssVar("--mc-line");
+      const txt = UI.cssVar("--chart-axis"), grid = UI.cssVar("--chart-grid");
       if (chart) chart.destroy();
-      chart = new Chart(document.getElementById("cTop"), { type: "bar", data: { labels: top.map(x => x[0]), datasets: [{ label: t("cTotal"), data: top.map(x => x[1]), backgroundColor: "#fb7185", borderRadius: 4 }] },
+      chart = new Chart(document.getElementById("cTop"), { type: "bar", data: { labels: top.map(x => x[0]), datasets: [{ label: t("cTotal"), data: top.map(x => x[1]), backgroundColor: UI.cssVar("--chart-3") }] },
         options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => M(c.parsed.x) } } },
-          scales: { x: { ticks: { color: txt, callback: v => (v / 1000) + "k" }, grid: { color: grid } }, y: { ticks: { color: txt, font: { size: 10 } }, grid: { display: false } } } } });
+          scales: { x: { ticks: { color: txt, callback: v => (v / 1000) + "k" }, grid: { color: grid } }, y: { ticks: { color: txt, font: { size: 11 } }, grid: { display: false } } } } });
       document.getElementById("cTop").setAttribute("aria-label", t("top10"));
     }
 

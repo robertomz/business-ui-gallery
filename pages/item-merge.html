@@ -6,31 +6,30 @@
   <title>Legacy item matching · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .score { display: flex; flex-direction: column; gap: 3px; min-width: 110px; }
     .score b { font-variant-numeric: tabular-nums; }
-    .score small { font-size: 10px; color: var(--mc-muted); white-space: nowrap; }
+    .score small { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
     .score .ig-barra { height: 6px; }
     .acts { display: flex; gap: 4px; flex-wrap: wrap; }
-    .sub { display: block; font-size: 10.5px; color: var(--mc-muted); }
+    .sub { display: block; font-size: 12px; color: var(--text-secondary); }
     .cmp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
-    .cmp .mc-panel { padding: 10px 12px; }
-    .cmp dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 6px 0 0; font-size: 12px; }
-    .cmp dt { color: var(--mc-muted); }
-    .cmp dd { margin: 0; font-weight: 600; }
+    .cmp .mc-panel { padding: 12px 14px; }
+    .cmp dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 6px 0 0; font-size: 13px; }
+    .cmp dt { color: var(--text-secondary); }
+    .cmp dd { margin: 0; font-weight: 500; color: var(--text-heading); overflow-wrap: anywhere; }
     .ab { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: stretch; }
-    .ab .mc-panel { border-top: 3px solid var(--c); }
+    .ab .mc-panel { background: var(--c-soft); border-color: transparent; box-shadow: none; padding: 12px 14px; min-width: 0; }
     .ab .swap { align-self: center; }
-    .ab h4 { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--c); margin-bottom: 4px; }
-    .ab p { font-weight: 800; }
-    .lock { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 14px; color: var(--mc-warn); border: 1px solid rgba(245,158,11,.45); background: rgba(245,158,11,.1); }
-    .log { list-style: none; margin: 8px 0 0; padding: 0; font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .ab h4 { font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--c); margin-bottom: 4px; }
+    .ab p { font-weight: 600; color: var(--text-heading); overflow-wrap: anywhere; }
+    .log { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
     .log li { display: flex; gap: 6px; align-items: center; }
-    .confirm-code { font-weight: 900; letter-spacing: 2px; color: var(--mc-good); }
+    .confirm-code { font-family: var(--font-display); font-weight: 600; letter-spacing: 2px; color: var(--success); }
     .modes { display: flex; gap: 14px; flex-wrap: wrap; }
     @media (max-width: 760px) { .cmp, .ab { grid-template-columns: minmax(0, 1fr); } .ab .swap { justify-self: center; } }
   </style>
@@ -103,7 +102,7 @@
       </div>
       <div class="modal-foot">
         <button type="button" class="btn btn-teal" id="btnChSave"><span class="material-icons" aria-hidden="true">save</span><span data-i18n="save"></span></button>
-        <button type="button" class="btn btn-danger" id="btnChClose"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
+        <button type="button" class="btn" id="btnChClose"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
       </div>
     </div>
   </div>
@@ -211,7 +210,7 @@
       document.querySelector("#tMatch thead").innerHTML = "<tr><th>" + t("colOld") + "</th><th>" + t("colOldName") + "</th><th>" + t("colPres") + '</th><th class="r">' + t("colStock") + "</th><th>" + t("colNew") + "</th><th>" + t("colScore") + "</th><th>" + t("state") + "</th><th>" + t("actions") + "</th></tr>";
       document.querySelector("#tMatch tbody").innerHTML = list.map(o => {
         const s = stateOf(o), tg = o.isNew ? null : target(o), n = tg ? nb(tg) : null, sc = n ? score(o, n) : null, idx = OLD.indexOf(o);
-        const pct = sc ? sc.total : 0, col = pct >= 80 ? "var(--mc-good)" : pct >= 60 ? "var(--mc-amber)" : "var(--mc-bad)";
+        const pct = sc ? sc.total : 0, col = pct >= 80 ? "var(--success-solid)" : pct >= 60 ? "var(--warning-solid)" : "var(--danger-solid)";
         return "<tr><td>" + o.code + "</td><td>" + o.name + (o.barcode ? '<span class="sub">' + o.barcode + "</span>" : "") + "</td><td>" + (UI.lang === "es" ? "Caja x" : "Box x") + o.factor + '</td><td class="r">' + UI.fmtInt(o.stock) + '<span class="sub">' + M(o.stock * o.cost) + "</span></td><td>" +
           (o.isNew ? '<span class="sub">—</span>' : n ? n.code + " · " + n.name + '<span class="sub">' + (UI.lang === "es" ? "Caja x" : "Box x") + n.factor + "</span>" : "—") + "</td><td>" +
           (sc ? '<div class="score"><b>' + pct + '%</b><div class="ig-barra"><span style="width:' + pct + "%;background:" + col + '"></span></div><small>' + t("code") + " " + sc.c + " · " + t("name") + " " + sc.n + " · " + t("pres") + " " + sc.p + "</small></div>" : "—") +
@@ -224,11 +223,11 @@
       const resolved = OLD.filter(o => o.isNew || o.match), val = o => o.stock * o.cost, tv = OLD.reduce((a, o) => a + val(o), 0);
       const kpi = (l, v, sub, c) => '<div class="mc-kpi' + (c ? " is-accent" : "") + '"' + (c ? ' style="--k-color:' + c + '"' : "") + '><div class="k-label">' + l + '</div><div class="k-value">' + v + "</div>" + (sub ? '<div class="k-sub">' + sub + "</div>" : "") + "</div>";
       document.getElementById("mKpis").innerHTML = kpi(t("kOld"), OLD.length) +
-        kpi(t("kResolved"), UI.fmtPct(resolved.length / OLD.length), resolved.length + " / " + OLD.length, "var(--mc-good)") +
-        kpi(t("kResolvedVal"), UI.fmtPct(resolved.reduce((a, o) => a + val(o), 0) / tv), M(resolved.reduce((a, o) => a + val(o), 0)) + " / " + M(tv), "var(--mc-good)") +
-        kpi(t("kSug"), OLD.filter(o => stateOf(o) === "st_suggested").length, "", "var(--mc-cyan)") +
-        kpi(t("kNo"), OLD.filter(o => stateOf(o) === "st_nomatch").length, "", "var(--mc-bad)") +
-        kpi(t("kDup"), OLD.filter(o => stateOf(o) === "st_duplicate").length, "", "var(--mc-amber)");
+        kpi(t("kResolved"), UI.fmtPct(resolved.length / OLD.length), resolved.length + " / " + OLD.length, "var(--success-solid)") +
+        kpi(t("kResolvedVal"), UI.fmtPct(resolved.reduce((a, o) => a + val(o), 0) / tv), M(resolved.reduce((a, o) => a + val(o), 0)) + " / " + M(tv), "var(--chart-2)") +
+        kpi(t("kSug"), OLD.filter(o => stateOf(o) === "st_suggested").length, "", "var(--chart-1)") +
+        kpi(t("kNo"), OLD.filter(o => stateOf(o) === "st_nomatch").length, "", "var(--danger-solid)") +
+        kpi(t("kDup"), OLD.filter(o => stateOf(o) === "st_duplicate").length, "", "var(--warning-solid)");
     }
     document.getElementById("mFilters").addEventListener("submit", e => { e.preventDefault(); renderMatch(); });
     document.getElementById("btnBulk").addEventListener("click", () => { let n = 0; OLD.forEach(o => { if (!o.match && !o.isNew && o.sug && o.sug.s.total >= 80) { o.match = o.sug.n.code; n++; } }); renderMatch(); UI.toast(t("bulkDone", { n })); });
@@ -273,9 +272,9 @@
       panel.hidden = false;
       const A = nb(pair.a), B = nb(pair.b);
       document.getElementById("ab").innerHTML =
-        '<div class="mc-panel" style="--c:var(--mc-bad)"><h4>' + t("aSide") + "</h4><p>" + A.code + " · " + A.name + '</p><span class="sub">' + (A.active ? "EAN " + A.barcode : t("retired")) + "</span></div>" +
+        '<div class="mc-panel" style="--c:var(--danger);--c-soft:var(--danger-soft)"><h4>' + t("aSide") + "</h4><p>" + A.code + " · " + A.name + '</p><span class="sub">' + (A.active ? "EAN " + A.barcode : t("retired")) + "</span></div>" +
         '<button type="button" class="btn swap" id="btnSwap"' + (running ? " disabled" : "") + ' title="' + t("swap") + '" aria-label="' + t("swap") + '">' + mi("swap_horiz") + "</button>" +
-        '<div class="mc-panel" style="--c:var(--mc-good)"><h4>' + t("bSide") + "</h4><p>" + B.code + " · " + B.name + '</p><span class="sub">EAN ' + B.barcode + "</span></div>";
+        '<div class="mc-panel" style="--c:var(--success);--c-soft:var(--success-soft)"><h4>' + t("bSide") + "</h4><p>" + B.code + " · " + B.name + '</p><span class="sub">EAN ' + B.barcode + "</span></div>";
       const presA = [[1, UI.lang === "es" ? "Unidad" : "Unit"], [A.factor, (UI.lang === "es" ? "Caja x" : "Box x") + A.factor]], presB = [1, B.factor];
       document.getElementById("tPres").innerHTML = "<thead><tr><th>" + t("colPresName") + "</th><th>" + t("inB") + "</th></tr></thead><tbody>" + presA.map(p => "<tr><td>" + p[1] + "</td><td>" + (presB.includes(p[0]) ? '<span class="chip chip-pos">' + mi("check") + t("exists") + "</span>" : '<span class="chip chip-info">' + mi("add") + t("willCreate") + "</span>") + "</td></tr>").join("") + "</tbody>";
       const rk = ["rKardex", "rInvoices", "rOrders", "rPurch"];
@@ -290,7 +289,7 @@
       const diff = Math.abs(A.cost - B.cost) / B.cost; if (diff > .03) cf.push(t("cfCost", { p: UI.fmtPct(diff) }));
       document.getElementById("conflicts").innerHTML = '<div class="mc-label" style="margin-bottom:4px">' + t("conflicts") + "</div>" + (cf.length ? cf.map(c => '<p class="ig-nota">' + mi("warning") + " " + c + "</p>").join("") : '<p class="mc-hint">' + mi("check_circle") + " " + t("noConflicts") + "</p>");
       document.getElementById("cCodeLbl").textContent = t("typeCode", { c: code4 });
-      document.getElementById("lockBadge").innerHTML = running ? '<span class="lock">' + mi("lock") + t("locked") + "</span>" : "";
+      document.getElementById("lockBadge").innerHTML = running ? '<span class="chip chip-warn">' + mi("lock") + t("locked") + "</span>" : "";
       document.getElementById("btnRun").disabled = running || !A.active;
       const sw = document.getElementById("btnSwap"); if (sw) sw.addEventListener("click", () => { pair = { ...pair, a: pair.b, b: pair.a, stock: pair.stock.map(s => [s[1], s[0]]) }; pairs[pairs.findIndex(p => p.a === pair.b && p.b === pair.a)] = pair; renderMerge(); });
     }

@@ -6,16 +6,18 @@
   <title>Balanced scorecard · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    tr.drill { cursor: pointer; } tr.drill.is-sel td { background: rgba(20, 184, 166, .12); }
-    .w-in { width: 74px; min-height: 30px; padding: 3px 6px; border: 1px solid var(--mc-line); border-radius: 5px; background: var(--mc-panel-2); color: var(--mc-text); text-align: right; font-size: 12px; }
+    tr.drill { cursor: pointer; } tr.drill.is-sel td { background: var(--bg-selected); }
+    .w-in { width: 80px; min-height: 34px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-input); color: var(--text); text-align: right; font-size: 12.5px; }
+    .w-in:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 20%, transparent); }
     .w-in:disabled { opacity: .6; }
+    .mid { color: var(--warning); }
     .bsc-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-    .bsc-head h3 { font-size: 15px; font-weight: 900; }
+    .bsc-head h3 { font-size: 16px; font-weight: 600; }
     .persp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
     .chart-box { position: relative; height: 300px; }
     .months { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
@@ -109,7 +111,7 @@
     const wsum = b => b.kpis.reduce((a, k) => a + Number(k.weight || 0), 0);
     const score = b => b.kpis.reduce((a, k) => a + result(k) * k.weight / 100, 0);
     const chipSt = s => s === "draft" ? '<span class="chip chip-warn">' + mi("edit") + t("sDraft") + "</span>" : s === "approved" ? '<span class="chip chip-pos">' + mi("verified") + t("sApproved") + "</span>" : '<span class="chip chip-info">' + mi("lock") + t("sClosed") + "</span>";
-    const resChip = v => '<span class="' + (v >= 1 ? "pos" : v >= .9 ? "" : "neg") + '">' + (v >= 1 ? "▲ " : v >= .9 ? "■ " : "▼ ") + UI.fmtPct(v) + "</span>";
+    const resChip = v => '<span class="' + (v >= 1 ? "pos" : v >= .9 ? "mid" : "neg") + '">' + (v >= 1 ? "▲ " : v >= .9 ? "■ " : "▼ ") + UI.fmtPct(v) + "</span>";
 
     function renderList() {
       document.querySelector("#tBsc thead").innerHTML = "<tr><th>" + t("colName") + "</th><th>" + t("colPeriod") + "</th><th>" + t("colOwner") + '</th><th class="r">' + t("colKpis") + "</th><th>" + t("colStatus") + '</th><th class="r">' + t("colScore") + "</th></tr>";
@@ -141,11 +143,11 @@
         checkGoal();
       } else {
         const per = PERSP.map(p => { const ks = b.kpis.filter(k => k.p === p), w = ks.reduce((a, k) => a + k.weight, 0); return { p, w, s: ks.reduce((a, k) => a + result(k) * k.weight, 0) / (w || 1) }; });
-        P.innerHTML = '<div class="persp">' + per.map(x => '<div class="mc-kpi is-accent" style="--k-color:' + (x.s >= 1 ? "#2dd4bf" : x.s >= .9 ? "#f59e0b" : "#fb7185") + '"><div class="k-label">' + t(x.p) + '</div><div class="k-value">' + resChip(x.s) + '</div><div class="k-sub">' + t("colWeight") + " " + x.w + '%</div><div class="bar-track" style="margin-top:6px"><span style="width:' + Math.min(100, x.s / 1.2 * 100) + "%;background:" + (x.s >= 1 ? "var(--mc-good)" : x.s >= .9 ? "var(--mc-amber)" : "var(--mc-bad)") + '"></span></div></div>').join("") +
+        P.innerHTML = '<div class="persp">' + per.map(x => '<div class="mc-kpi is-accent" style="--k-color:' + (x.s >= 1 ? "var(--success-solid)" : x.s >= .9 ? "var(--warning-solid)" : "var(--danger-solid)") + '"><div class="k-label">' + t(x.p) + '</div><div class="k-value">' + resChip(x.s) + '</div><div class="k-sub">' + t("colWeight") + " " + x.w + '%</div><div class="bar-track" style="margin-top:6px"><span style="width:' + Math.min(100, x.s / 1.2 * 100) + "%;background:" + (x.s >= 1 ? "var(--success-solid)" : x.s >= .9 ? "var(--warning-solid)" : "var(--danger-solid)") + '"></span></div></div>').join("") +
           '</div><div class="chart-box" style="margin-top:12px"><canvas id="radar" role="img" aria-label="' + t("radar") + '"></canvas></div>';
-        const tx = UI.cssVar("--mc-muted"), grid = UI.cssVar("--mc-line");
+        const tx = UI.cssVar("--chart-axis"), grid = UI.cssVar("--chart-grid"), pal = UI.palette(), c1 = pal[1], c2 = pal[3];
         if (chart) chart.destroy();
-        chart = new Chart(document.getElementById("radar"), { type: "radar", data: { labels: per.map(x => t(x.p)), datasets: [{ label: t("radar"), data: per.map(x => Math.round(x.s * 1000) / 10), borderColor: "#14b8a6", backgroundColor: "rgba(20,184,166,.2)", pointBackgroundColor: "#14b8a6" }, { label: "100%", data: per.map(() => 100), borderColor: "#f59e0b", borderDash: [5, 4], pointRadius: 0, backgroundColor: "transparent" }] },
+        chart = new Chart(document.getElementById("radar"), { type: "radar", data: { labels: per.map(x => t(x.p)), datasets: [{ label: t("radar"), data: per.map(x => Math.round(x.s * 1000) / 10), borderColor: c1, backgroundColor: c1 + "33", pointBackgroundColor: c1, pointRadius: 3 }, { label: "100%", data: per.map(() => 100), borderColor: c2, borderDash: [5, 4], pointRadius: 0, backgroundColor: "transparent" }] },
           options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: tx } } }, scales: { r: { min: 0, max: 120, ticks: { color: tx, backdropColor: "transparent", stepSize: 20 }, grid: { color: grid }, angleLines: { color: grid }, pointLabels: { color: tx, font: { size: 11 } } } } } });
       }
     }

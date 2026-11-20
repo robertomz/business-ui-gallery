@@ -6,20 +6,21 @@
   <title>Journal book · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    tr.lines-row td { background: var(--mc-panel-2); padding: 8px 12px 12px 34px; }
-    tr.lines-row table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
-    tr.lines-row th { text-align: left; color: var(--mc-muted); font-size: 10px; text-transform: uppercase; padding: 4px 6px; border-bottom: 1px solid var(--mc-line); }
-    tr.lines-row td td { padding: 4px 6px; border-bottom: 1px dashed var(--mc-line); background: transparent; }
-    .exp-btn { border: 0; background: transparent; color: var(--mc-muted); cursor: pointer; padding: 2px; border-radius: 4px; }
+    tr.lines-row td { background: var(--surface-alt); padding: 8px 12px 12px 34px; }
+    tr.lines-row table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    tr.lines-row th { text-align: left; color: var(--text-secondary); font-size: 12px; font-weight: 500; padding: 6px; border-bottom: 1px solid var(--border); background: transparent; }
+    tr.lines-row td td { padding: 4px 6px; border-bottom: 1px solid var(--border-subtle); background: transparent; }
+    .exp-btn { border: 0; background: transparent; color: var(--icon); cursor: pointer; padding: 2px; border-radius: var(--r-xs); }
+    .exp-btn:hover { background: var(--bg-hover); color: var(--brand-text); }
     .acts { display: flex; gap: 4px; }
     .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px 14px; margin-bottom: 12px; }
     .doc-grid .mc-field { min-width: 0; }
-    .code-box { font-size: 26px; font-weight: 900; letter-spacing: 6px; text-align: center; padding: 10px; border: 1px dashed var(--mc-teal); border-radius: 8px; color: var(--mc-good); }
+    .code-box { font-family: var(--font-display); font-size: 26px; font-weight: 600; letter-spacing: 6px; text-align: center; padding: 12px; border: 1px dashed var(--border-strong); border-radius: var(--r-md); background: var(--surface-alt); color: var(--text-heading); }
     .countdown { font-variant-numeric: tabular-nums; }
   </style>
 </head>
@@ -48,7 +49,7 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="docTitle">
       <div class="modal-head"><h3 id="docTitle"><span class="material-icons" aria-hidden="true">description</span><span id="docTitleTxt"></span></h3><span id="docChip"></span></div>
       <div class="modal-body" id="docBody"></div>
-      <div class="modal-foot"><button type="button" class="btn btn-danger" id="btnCloseDoc"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
+      <div class="modal-foot"><button type="button" class="btn" id="btnCloseDoc"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button></div>
     </div>
   </div>
 
@@ -73,7 +74,7 @@
       </div>
       <div class="modal-foot">
         <button type="button" class="btn btn-teal" id="btnEditMain"></button>
-        <button type="button" class="btn btn-danger" id="btnCloseEdit"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
+        <button type="button" class="btn" id="btnCloseEdit"><span class="material-icons" aria-hidden="true">close</span><span data-i18n="close"></span></button>
       </div>
     </div>
   </div>
@@ -200,7 +201,7 @@
         '<div class="mc-kpi"><div class="k-label">' + t("kEntries") + '</div><div class="k-value">' + UI.fmtInt(rows.length) + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kDebit") + '</div><div class="k-value num">' + M(td) + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kCredit") + '</div><div class="k-value num">' + M(tc) + "</div></div>" +
-        '<div class="mc-kpi is-accent" style="--k-color:' + (un ? "var(--mc-bad)" : "var(--mc-good)") + '"><div class="k-label">' + t("kUnbal") + '</div><div class="k-value ' + (un ? "neg" : "pos") + '">' + un + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:' + (un ? "var(--danger-solid)" : "var(--success-solid)") + '"><div class="k-label">' + t("kUnbal") + '</div><div class="k-value ' + (un ? "neg" : "pos") + '">' + un + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kVoid") + '</div><div class="k-value">' + vo + "</div></div>";
     }
     document.getElementById("filters").addEventListener("submit", e => { e.preventDefault(); render(); });
@@ -208,7 +209,7 @@
 
     // ---------- Source document ----------
     let docNo = null;
-    function field(l, v) { return '<div class="mc-field"><label>' + l + '</label><div class="static" style="color:var(--mc-text)">' + v + "</div></div>"; }
+    function field(l, v) { return '<div class="mc-field"><label>' + l + '</label><div class="static" style="color:var(--text)">' + v + "</div></div>"; }
     function renderDoc() {
       const e = book.find(x => x.no === docNo); if (!e) return;
       const rr = UI.rng(e.seed);

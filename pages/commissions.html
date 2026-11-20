@@ -6,21 +6,23 @@
   <title>Commissions · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
-    table.grid thead tr.grp th { text-align: center; background: #115e59; border-left: 1px solid rgba(255,255,255,.12); }
-    table.grid thead tr.sub th { top: 33px; font-size: 10.5px; }
-    table.grid td.g, table.grid th.g { border-left: 1px solid var(--mc-line); }
-    .tier-table td { padding: 4px 6px; }
-    .tier-table input { width: 100%; min-height: 30px; padding: 4px 7px; border: 1px solid var(--mc-line); border-radius: 5px; background: var(--mc-panel-2); color: var(--mc-text); font-size: 12px; text-align: right; }
-    .tier-table input[aria-invalid="true"] { border-color: var(--mc-bad); }
-    .tier-err { font-size: 11px; color: var(--mc-bad); }
+    table.grid thead tr.grp th { text-align: center; color: var(--text-heading); border-left: 1px solid var(--border); }
+    table.grid thead tr.sub th { top: 43px; font-size: 12px; font-weight: 500; }
+    table.grid td.g, table.grid th.g { border-left: 1px solid var(--border); }
+    .tier-table td { padding: 6px 8px; }
+    .tier-table input { width: 100%; min-height: 34px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-input); color: var(--text); font-size: 12.5px; text-align: right; }
+    .tier-table input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 20%, transparent); }
+    .tier-table input[aria-invalid="true"] { border-color: var(--danger-solid); background: var(--danger-soft); }
+    .tier-err { font-size: 12px; color: var(--danger); }
     .comp-tabs { margin-bottom: 10px; }
-    .closed-banner { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--mc-good); background: rgba(45,212,191,.08); font-size: 12px; }
-    .next { color: var(--mc-muted); }
+    .closed-banner { display: flex; gap: 8px; align-items: center; padding: 10px 14px; border-radius: var(--r-md); background: var(--success-soft); color: var(--success); font-size: 13px; font-weight: 500; }
+    .next { color: var(--text-secondary); }
+    #tCalc tbody td:first-child, #tCalc tfoot td:first-child { white-space: nowrap; }
   </style>
 </head>
 <body data-page="commissions" data-root="../">
@@ -178,9 +180,9 @@
       const sum = k => rows.reduce((a, x) => a + (typeof k === "function" ? k(x) : x[k]), 0);
       const kpi = (l, v, sub, color) => '<div class="mc-kpi is-accent" style="--k-color:' + color + '"><div class="k-label">' + t(l) + '</div><div class="k-value num">' + v + "</div>" + (sub ? '<div class="k-sub">' + sub + "</div>" : "") + "</div>";
       document.getElementById("kpis").innerHTML =
-        kpi("k_sellers", rows.length, "", "#38bdf8") + kpi("k_sales", M(sum("sold")), t("goal") + " " + M(sum("goal")), "#14b8a6") +
-        kpi("k_ach", UI.fmtPct(sum("sold") / sum("goal")), "", "#14b8a6") + kpi("k_col", M(sum("coll")), UI.fmtPct(sum("coll") / sum("cGoal")), "#a78bfa") +
-        kpi("k_com", M(sum("total")), "", "#f59e0b") + kpi("k_next", M(sum("nextTotal")), "", "#fb923c");
+        kpi("k_sellers", rows.length, "", "var(--chart-6)") + kpi("k_sales", M(sum("sold")), t("goal") + " " + M(sum("goal")), "var(--chart-2)") +
+        kpi("k_ach", UI.fmtPct(sum("sold") / sum("goal")), "", "var(--chart-2)") + kpi("k_col", M(sum("coll")), UI.fmtPct(sum("coll") / sum("cGoal")), "var(--chart-1)") +
+        kpi("k_com", M(sum("total")), "", "var(--chart-4)") + kpi("k_next", M(sum("nextTotal")), "", "var(--chart-3)");
 
       const groups = [["g_vol", 5], ["g_prof", 5], ["g_cov", 6], ["g_col", 5], ["g_tot", 2], ["g_cost", 4]];
       const subs = ["goal", "achieved", "commission", "nextPct", "nextCom", "goal", "achieved", "commission", "nextPct", "nextCom",

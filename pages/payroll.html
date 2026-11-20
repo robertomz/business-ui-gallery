@@ -6,28 +6,28 @@
   <title>Payroll · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .info-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-    .info-card { background: var(--mc-panel); border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+    .info-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 12px 14px; min-width: 0; box-shadow: var(--shadow-card); }
     .info-card .mc-label { display: flex; align-items: center; gap: 5px; }
-    .info-card .mc-label .material-icons { font-size: 15px; color: var(--mc-cyan); }
-    .info-card b { display: block; margin-top: 6px; font-size: 14px; font-weight: 800; }
+    .info-card .mc-label .material-icons { font-size: 17px; color: var(--icon); }
+    .info-card b { display: block; margin-top: 6px; font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text-heading); }
     .pay-tools { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin: 10px 0 8px; }
-    .pay-tools h3 { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; }
+    .pay-tools h3 { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; }
     .wide { max-height: 520px; }
     .wide td, .wide th { white-space: nowrap; }
     .wide th:nth-child(4), .wide td:nth-child(4) { position: sticky; left: 0; z-index: 2; }
-    .wide td:nth-child(4) { background: var(--mc-panel); }
+    .wide td:nth-child(4) { background: var(--surface); }
     .wide th:nth-child(4) { z-index: 3; }
-    .wide tr.tot td { font-weight: 800; background: var(--mc-panel-2); position: sticky; top: 33px; z-index: 1; }
+    .wide tr.tot td { font-weight: 600; background: var(--surface-alt); position: sticky; top: 33px; z-index: 1; }
     .wide tr.tot td:nth-child(4) { z-index: 2; }
-    .wide tr.adj td { color: var(--mc-amber); }
-    tr.grp td { background: var(--mc-panel-2); font-weight: 800; }
-    .bankfile { font-family: ui-monospace, Consolas, monospace; font-size: 11px; background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-radius: 6px; padding: 10px; max-height: 260px; overflow: auto; white-space: pre; }
+    .wide tr.adj td { color: var(--warning); }
+    tr.grp td { background: var(--surface-alt); font-weight: 600; color: var(--text-heading); }
+    .bankfile { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--surface-alt); color: var(--text); border: 1px solid var(--border-subtle); border-radius: var(--r-sm); padding: 12px; max-height: 260px; overflow: auto; white-space: pre; }
     @media (max-width: 900px) { .info-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   </style>
 </head>

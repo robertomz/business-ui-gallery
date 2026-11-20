@@ -6,19 +6,19 @@
   <title>Stock by warehouse · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     tr.clickable { cursor: pointer; }
-    tr.sel td { background: rgba(20,184,166,.12) !important; }
+    tr.sel td { background: var(--bg-selected) !important; }
     .obs-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow: auto; }
-    .obs-log li { border: 1px solid var(--mc-line); border-left: 3px solid var(--mc-teal); border-radius: 6px; padding: 8px 10px; font-size: 12px; }
-    .obs-log li header { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; color: var(--mc-muted); font-size: 11px; margin-bottom: 4px; }
+    .obs-log li { border: 1px solid var(--border-subtle); background: var(--surface-alt); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; }
+    .obs-log li header { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; color: var(--text-secondary); font-size: 12px; margin-bottom: 4px; }
     .obs-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
     .obs-form .span2 { grid-column: 1 / -1; }
-    .pres { font-size: 10.5px; color: var(--mc-muted); display: block; }
+    .pres { font-size: 12px; color: var(--text-secondary); display: block; }
     @media (max-width: 760px) { .obs-form { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
@@ -143,8 +143,8 @@
         '<div class="mc-kpi"><div class="k-label">' + t("kItems") + '</div><div class="k-value">' + UI.fmtInt(list.length) + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kUnits") + '</div><div class="k-value">' + UI.fmtInt(units) + "</div></div>" +
         '<div class="mc-kpi"><div class="k-label">' + t("kValue") + '</div><div class="k-value num">' + M(val) + "</div></div>" +
-        '<div class="mc-kpi is-accent" style="--k-color:var(--mc-cyan)"><div class="k-label">' + t("kObs") + '</div><div class="k-value">' + withObs + "</div></div>" +
-        '<div class="mc-kpi is-accent" style="--k-color:var(--mc-amber)"><div class="k-label">' + t("kZero") + '</div><div class="k-value">' + list.filter(x => !x.units).length + "</div></div>";
+        '<div class="mc-kpi is-accent" style="--k-color:var(--chart-1)"><div class="k-label">' + t("kObs") + '</div><div class="k-value">' + withObs + "</div></div>" +
+        '<div class="mc-kpi is-accent" style="--k-color:var(--chart-4)"><div class="k-label">' + t("kZero") + '</div><div class="k-value">' + list.filter(x => !x.units).length + "</div></div>";
       renderSide();
     }
     function renderSide() {
@@ -153,7 +153,7 @@
       const [code, wiS] = sel.split("|"), wi = Number(wiS), it = items.find(i => i.code === code);
       const list = obsFor(code, wi).slice().sort((a, b) => b.date - a.date);
       const stC = s => s === "st_ok" ? "chip-pos" : s === "st_diff" ? "chip-neg" : "chip-warn", stI = s => s === "st_ok" ? "check_circle" : s === "st_diff" ? "error" : "schedule";
-      body.innerHTML = '<p style="font-weight:800;margin-bottom:2px">' + it.code + " · " + it.name + '</p><p class="mc-hint" style="margin-bottom:10px">' + (UI.lang === "es" ? WH[wi][1] : WH[wi][0]) + "</p>" +
+      body.innerHTML = '<p style="font-weight:600;color:var(--text-heading);margin-bottom:2px">' + it.code + " · " + it.name + '</p><p class="mc-hint" style="margin-bottom:10px">' + (UI.lang === "es" ? WH[wi][1] : WH[wi][0]) + "</p>" +
         (list.length ? '<ul class="obs-log">' + list.map(o => "<li><header><span>" + UI.fmtDay(o.date) + " · " + o.user + '</span><span class="chip ' + stC(o.st) + '">' + mi(stI(o.st)) + t(o.st) + "</span></header>" + UI.L(o.text) + (o.all ? '<div class="mc-hint" style="margin-top:4px">' + t("ap_all") + "</div>" : "") + "</li>").join("") + "</ul>" : '<p class="mc-hint">' + t("noObs") + "</p>") +
         '<form class="obs-form" id="obsForm" novalidate>' +
           '<div class="mc-field"><label for="oState">' + t("state") + '</label><select id="oState"><option value="st_ok">' + t("st_ok") + '</option><option value="st_diff">' + t("st_diff") + '</option><option value="st_pending">' + t("st_pending") + "</option></select></div>" +

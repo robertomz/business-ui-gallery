@@ -6,27 +6,29 @@
   <title>Accounts receivable · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .kpi-groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
     .kpi-groups .mc-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    @media (max-width: 1100px) { .kpi-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 1500px) { .kpi-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 560px) { .kpi-groups { grid-template-columns: minmax(0, 1fr); } }
     tr.cust { cursor: pointer; }
-    tr.cust:focus-visible { outline: 2px solid var(--mc-cyan); outline-offset: -2px; }
-    tr.inv td { background: var(--mc-panel-2); font-size: 11px; }
+    #tMain td, #tState td { white-space: nowrap; }
+    tr.cust:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+    tr.inv td { background: var(--surface-alt); font-size: 12.5px; color: var(--text-secondary); }
     tr.inv td:first-child { padding-left: 28px; }
     .limit { display: flex; align-items: center; gap: 6px; min-width: 120px; }
     .limit .bar-track { flex: 1; height: 6px; }
     .eff { display: flex; align-items: center; gap: 6px; min-width: 130px; }
     .eff .bar-track { flex: 1; height: 6px; }
-    .bucket-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: rgba(148,163,184,.16); }
+    .bucket-bar { display: flex; gap: 2px; height: 12px; border-radius: var(--r-pill); overflow: hidden; background: var(--chart-track); }
     .bucket-bar span { display: block; height: 100%; }
-    .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--mc-muted); margin-top: 6px; }
-    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; color: var(--text-secondary); margin-top: 10px; }
+    .legend b { color: var(--text-heading); font-weight: 600; }
+    .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
   </style>
 </head>
 <body data-page="receivables" data-root="../">
@@ -119,7 +121,7 @@
     const SUPS = ["R. Paredes", "M. Solis", "L. Banegas"];
     const ROUTES = ["R-01", "R-02", "R-03", "R-04", "R-05", "R-06"];
     const TYPES = [{ en: "Cash on delivery", es: "Contra entrega" }, { en: "Credit", es: "Crédito" }, { en: "Key account", es: "Cuenta clave" }];
-    const COLORS = ["#14b8a6", "#38bdf8", "#f59e0b", "#fb923c", "#fb7185"];
+    const COLORS = ["var(--chart-2)", "var(--chart-6)", "var(--chart-4)", "var(--chart-3)", "var(--chart-7)"];   // tokens: follow the theme
 
     // Customers and invoices (deterministic)
     const r = UI.rng(4242);
@@ -176,7 +178,7 @@
     function usageCell(bal, limit) {
       const u = bal / limit;
       const st = u > 1 ? ["over", "neg", "error"] : u > .85 ? ["near", "", "warning"] : ["ok", "pos", "check_circle"];
-      return '<div class="limit"><div class="bar-track"><span style="width:' + Math.min(100, u * 100) + "%;background:" + (u > 1 ? "var(--mc-bad)" : u > .85 ? "var(--mc-amber)" : "var(--mc-teal)") + '"></span></div><span class="chip ' + (u > 1 ? "chip-neg" : u > .85 ? "chip-warn" : "chip-pos") + '">' + mi(st[2]) + t(st[0]) + "</span></div>";
+      return '<div class="limit"><div class="bar-track"><span style="width:' + Math.min(100, u * 100) + "%;background:" + (u > 1 ? "var(--danger-solid)" : u > .85 ? "var(--warning-solid)" : "var(--success-solid)") + '"></span></div><span class="chip ' + (u > 1 ? "chip-neg" : u > .85 ? "chip-warn" : "chip-pos") + '">' + mi(st[2]) + t(st[0]) + "</span></div>";
     }
 
     function renderKpis(list) {
@@ -244,7 +246,7 @@
       const k = (l, v) => '<div class="mc-kpi"><div class="k-label">' + t(l) + '</div><div class="k-value num">' + v + "</div></div>";
       document.getElementById("kpis").innerHTML = '<div class="mc-kpi-group" style="grid-column:1/-1"><span class="mc-label">' + t("tabEff") + '</span><div class="mc-kpis">' +
         k("e_coll", M(sum("coll"))) + k("e_valid", M(sum("valid"))) + k("e_validPct", UI.fmtPct(sum("valid") / (sum("coll") || 1))) + k("e_canceled", UI.fmtInt(sum("canceled"))) + k("e_overdue", UI.fmtInt(sum("overdue"))) + k("e_pending", UI.fmtInt(sum("pending"))) + "</div></div>";
-      const effCell = p => { const st = p >= .7 ? ["effective", "chip-pos", "check_circle"] : p >= .45 ? ["regular", "chip-warn", "warning"] : ["low", "chip-neg", "error"]; return '<div class="eff"><div class="bar-track"><span style="width:' + p * 100 + "%;background:" + (p >= .7 ? "var(--mc-teal)" : p >= .45 ? "var(--mc-amber)" : "var(--mc-bad)") + '"></span></div><span class="num">' + UI.fmtPct(p, 0) + '</span><span class="chip ' + st[1] + '">' + mi(st[2]) + t(st[0]) + "</span></div>"; };
+      const effCell = p => { const st = p >= .7 ? ["effective", "chip-pos", "check_circle"] : p >= .45 ? ["regular", "chip-warn", "warning"] : ["low", "chip-neg", "error"]; return '<div class="eff"><div class="bar-track"><span style="width:' + p * 100 + "%;background:" + (p >= .7 ? "var(--success-solid)" : p >= .45 ? "var(--warning-solid)" : "var(--danger-solid)") + '"></span></div><span class="num">' + UI.fmtPct(p, 0) + '</span><span class="chip ' + st[1] + '">' + mi(st[2]) + t(st[0]) + "</span></div>"; };
       document.querySelector("#tMain thead").innerHTML = "<tr><th>" + t("seller") + '</th><th class="r">' + t("e_coll") + '</th><th class="r">' + t("e_valid") + '</th><th class="r">' + t("e_canceled") + "</th><th>" + t("in20") + "</th><th>" + t("in40") + '</th><th class="r">' + t("avgDays") + '</th><th class="r">' + t("e_overdue") + "</th></tr>";
       document.querySelector("#tMain tbody").innerHTML = arr.sort((a, b) => b.in20 / b.canceled - a.in20 / a.canceled).map(s => "<tr><td>" + s.s + '</td><td class="r">' + M(s.coll) + '</td><td class="r">' + M(s.valid) + '</td><td class="r">' + s.canceled + "</td><td>" + effCell(s.in20 / s.canceled) + "</td><td>" + effCell(s.in40 / s.canceled) + '</td><td class="r">' + (s.days / s.canceled).toFixed(1) + '</td><td class="r">' + s.overdue + "</td></tr>").join("");
       document.querySelector("#tMain tfoot").innerHTML = "<tr><td>" + t("total") + '</td><td class="r">' + M(sum("coll")) + '</td><td class="r">' + M(sum("valid")) + '</td><td class="r">' + sum("canceled") + "</td><td>" + UI.fmtPct(sum("in20") / (sum("canceled") || 1), 0) + "</td><td>" + UI.fmtPct(sum("in40") / (sum("canceled") || 1), 0) + '</td><td class="r">' + (sum("days") / (sum("canceled") || 1)).toFixed(1) + '</td><td class="r">' + sum("overdue") + "</td></tr>";

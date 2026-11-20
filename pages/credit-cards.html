@@ -6,28 +6,30 @@
   <title>Credit cards · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-    .ccard { text-align: left; font: inherit; color: var(--mc-text); cursor: pointer; background: var(--mc-panel-2); border: 1px solid var(--mc-line); border-top: 3px solid var(--cc, #38bdf8); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-    .ccard[aria-pressed="true"] { border-color: var(--mc-cyan); box-shadow: 0 0 0 2px rgba(6, 182, 212, .25); }
-    :root[data-theme="light"] .ccard { background: #fff; }
-    .ccard .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); }
-    .ccard .num { font-size: 17px; font-weight: 800; letter-spacing: 1px; }
-    .ccard .row { display: flex; justify-content: space-between; font-size: 11px; color: var(--mc-muted); }
-    .ccard .row b { color: var(--mc-text); font-variant-numeric: tabular-nums; }
+    .ccard { text-align: left; font: inherit; color: var(--text); cursor: pointer; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--r-lg); padding: 16px 18px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .ccard:hover { background: var(--bg-hover); }
+    .ccard[aria-pressed="true"] { border-color: var(--brand); background: var(--bg-selected); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 20%, transparent); }
+    .ccard .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+    .ccard .top span:first-child { display: inline-flex; align-items: center; gap: 8px; }
+    .ccard .top span:first-child::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--cc, var(--brand)); flex: none; }
+    .ccard .num { font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .04em; color: var(--text-heading); }
+    .ccard .row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-secondary); }
+    .ccard .row b { color: var(--text-heading); font-weight: 600; font-variant-numeric: tabular-nums; }
     .ccard .ig-barra { height: 6px; }
-    .ccard .ig-barra span { background: var(--cc, #38bdf8); }
+    .ccard .ig-barra span { background: var(--cc, var(--brand)); }
     .cc-in { min-width: 170px; }
     .form-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
     .form-2 .span-2 { grid-column: 1 / -1; }
     .form-2 .mc-field { min-width: 0; }
-    .seg { display: inline-flex; border: 1px solid var(--mc-line); border-radius: 8px; padding: 2px; flex-wrap: wrap; }
-    .seg button { min-height: 30px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; color: var(--mc-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
-    .seg button[aria-pressed="true"] { background: rgba(20, 184, 166, .18); color: var(--mc-text); }
+    .seg { display: inline-flex; background: var(--bg-input); border-radius: 12px; padding: 3px; flex-wrap: wrap; }
+    .seg button { min-height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent; color: var(--text-secondary); font-size: 12.5px; font-weight: 500; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--surface); color: var(--brand-text); box-shadow: var(--shadow-card); }
     @media (max-width: 560px) { .form-2 { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
@@ -134,7 +136,7 @@
   $(function () {
     const t = UI.t, M = UI.fmtMoney, mi = UI.mi, D = UI.DATA;
     function s2($el, opts) { if ($el.hasClass("select2-hidden-accessible")) $el.select2("destroy"); $el.select2(Object.assign({ width: "100%" }, opts)); }
-    const COLORS = ["#38bdf8", "#a78bfa", "#14b8a6", "#f59e0b", "#fb7185"];
+    const COLORS = ["var(--chart-6)", "var(--chart-1)", "var(--chart-2)", "var(--chart-4)", "var(--chart-3)"];   // tokens: resolve with the current theme
     const USERS = ["A. Torres", "M. Reyes", "L. Castro"];
     const r = UI.rng(9090);
     const CARDS = [

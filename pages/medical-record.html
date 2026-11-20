@@ -6,56 +6,56 @@
   <title>Medical record · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .pt-head { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
-    .avatar { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; font-size: 23px; font-weight: 900; color: #fff; background: linear-gradient(135deg, #ec4899, var(--mc-violet)); flex: none; }
+    .avatar { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-size: 23px; font-weight: 600; color: var(--brand-text); background: var(--brand-soft); flex: none; }
     .pt-main { flex: 1; min-width: 0; }
-    .pt-main h2 { font-size: 18px; font-weight: 900; overflow-wrap: anywhere; }
+    .pt-main h2 { font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
     .pt-main .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
     .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-    .fact { border: 1px solid var(--mc-line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
-    .fact b { display: block; margin-top: 4px; font-size: 13px; overflow-wrap: anywhere; }
-    .alert-banner { display: flex; gap: 10px; align-items: center; margin-top: 12px; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(251, 113, 133, .45); background: rgba(244, 63, 94, .1); color: var(--mc-bad); font-size: 12.5px; font-weight: 700; }
-    .alert-banner.ok { border-color: var(--mc-line); background: transparent; color: var(--mc-muted); font-weight: 600; }
+    .fact { background: var(--surface-alt); border-radius: var(--r-sm); padding: 10px 12px; min-width: 0; }
+    .fact b { display: block; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--text-heading); overflow-wrap: anywhere; }
+    .alert-banner { display: flex; gap: 10px; align-items: center; margin-top: 12px; padding: 10px 12px; border-radius: var(--r-md); border: 0; background: var(--danger-soft); color: var(--danger); font-size: 13px; font-weight: 500; }
+    .alert-banner.ok { background: var(--surface-alt); color: var(--text-secondary); font-weight: 500; }
     .alert-banner .material-icons { font-size: 22px; }
     .vitals { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-    .vital { border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px; min-width: 0; border-top: 3px solid var(--v-c, var(--mc-teal)); }
-    .vital .lbl { display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); }
-    .vital .lbl .material-icons { font-size: 15px; color: var(--v-c, var(--mc-teal)); }
-    .vital .val { font-size: 18px; font-weight: 900; margin-top: 4px; font-variant-numeric: tabular-nums; }
-    .vital .val small { font-size: 11px; color: var(--mc-muted); font-weight: 700; }
-    .vital .sub { font-size: 10.5px; color: var(--mc-muted); margin-top: 2px; }
-    .vital .sub.up { color: var(--mc-warn); } .vital .sub.bad { color: var(--mc-bad); }
+    .vital { background: var(--surface-alt); border-radius: var(--r-md); padding: 12px 14px; min-width: 0; }
+    .vital .lbl { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+    .vital .lbl .material-icons { font-size: 17px; color: var(--v-c, var(--chart-2)); }
+    .vital .val { font-family: var(--font-display); font-size: 19px; font-weight: 600; color: var(--text-heading); margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .vital .val small { font-family: var(--font); font-size: 11.5px; color: var(--text-secondary); font-weight: 500; }
+    .vital .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .vital .sub.up { color: var(--warning); } .vital .sub.bad { color: var(--danger); }
     .sum-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 12px; }
-    .box { border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
-    .box h4 { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--mc-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .box { border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 14px 16px; min-width: 0; }
+    .box h4 { font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .box .ig-sparkline { padding-top: 0; } .box .ig-sparkline-area { height: 70px; }
     .box ul { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.7; }
-    .timeline { list-style: none; margin: 0; padding: 0 0 0 16px; border-left: 2px solid var(--mc-line); display: flex; flex-direction: column; gap: 14px; }
+    .timeline { list-style: none; margin: 0; padding: 0 0 0 16px; border-left: 2px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
     .timeline li { position: relative; font-size: 12.5px; }
-    .timeline li::before { content: ""; position: absolute; left: -23px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--mc-teal); border: 2px solid var(--mc-panel); }
-    .timeline li.is-new::before { background: #ec4899; }
+    .timeline li::before { content: ""; position: absolute; left: -23px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--chart-2); border: 2px solid var(--surface); }
+    .timeline li.is-new::before { background: var(--brand); }
     .tl-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .tl-head b { font-size: 13px; }
-    .tl-head small { color: var(--mc-muted); }
-    .tl-body { margin-top: 4px; color: var(--mc-text); line-height: 1.55; }
+    .tl-head b { font-size: 13px; font-weight: 600; color: var(--text-heading); }
+    .tl-head small { color: var(--text-secondary); }
+    .tl-body { margin-top: 4px; color: var(--text); line-height: 1.55; }
     .tl-body .muted { font-size: 11.5px; }
     .tl-rx { margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap; }
     .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
-    .file { display: flex; gap: 10px; align-items: center; border: 1px solid var(--mc-line); border-radius: 8px; padding: 10px; min-width: 0; }
-    .file .material-icons { font-size: 28px; color: var(--f-c, var(--mc-cyan)); }
-    .file div { min-width: 0; } .file b { display: block; font-size: 12.5px; overflow-wrap: anywhere; } .file small { color: var(--mc-muted); font-size: 11px; }
+    .file { display: flex; gap: 10px; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--r-md); padding: 10px; min-width: 0; }
+    .file .material-icons { font-size: 28px; color: var(--f-c, var(--chart-5)); }
+    .file div { min-width: 0; } .file b { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-heading); overflow-wrap: anywhere; } .file small { color: var(--text-secondary); font-size: 11.5px; }
     .rx-lines td { vertical-align: top; }
     .rx-lines input, .rx-lines select { width: 100%; min-width: 0; }
     .rx-lines .mc-field-error { display: block; }
-    .bmi-box { font-size: 13px; font-weight: 800; min-height: 31px; display: flex; align-items: center; gap: 6px; }
-    .form-sec { grid-column: 1 / -1; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; color: var(--mc-cyan); margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--mc-line); }
+    .bmi-box { font-size: 13px; font-weight: 600; min-height: 31px; display: flex; align-items: center; gap: 6px; }
+    .form-sec { grid-column: 1 / -1; font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--text-heading); margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border-subtle); }
     .form-sec:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
-    .req::after { content: " *"; color: var(--mc-bad); }
+    .req::after { content: " *"; color: var(--danger); }
     .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
     .span-2 { grid-column: span 2; } .span-all { grid-column: 1 / -1; }
     #rxPrint { display: none; }
@@ -359,16 +359,16 @@
       const b = bmi(v), cat = bmiCat(b);
       let h = '<div class="mc-panel-title" style="margin-bottom:8px"><h3>' + mi("monitor_heart") + "<span>" + t("secVitals") + " · " + UI.fmtDay(v.date) + "</span></h3>" + UI.helpBtn("hVitals") + "</div>";
       h += '<div class="vitals">' +
-        vital("favorite", "var(--mc-rose)", t("bp"), v.sys + "/" + v.dia, "mmHg", v.sys >= 140 || v.dia >= 90 ? mi("arrow_upward") + t("high") : diff(v.sys, pv && pv.sys, 0), v.sys >= 140 || v.dia >= 90 ? "bad" : "") +
-        vital("monitor_heart", "var(--mc-violet)", t("hr"), v.hr == null ? t("none") : v.hr, v.hr == null ? "" : "bpm", v.hr == null || !pv || pv.hr == null ? t("firstVisit") : diff(v.hr, pv.hr, 0)) +
-        vital("device_thermostat", "var(--mc-amber)", t("temp"), v.temp == null ? t("none") : v.temp.toFixed(1), v.temp == null ? "" : "°C", v.temp >= 37.8 ? mi("warning") + t("feverT") : (v.temp == null || !pv || pv.temp == null ? t("firstVisit") : diff(v.temp, pv.temp, 1)), v.temp >= 37.8 ? "bad" : "") +
-        vital("monitor_weight", "var(--mc-teal)", t("weight"), v.w.toFixed(1), "kg", diff(v.w, pv && pv.w, 1)) +
-        vital("height", "var(--mc-cyan)", t("height"), v.h, "cm", diff(v.h, pv && pv.h, 0)) +
-        vital("speed", "#ec4899", t("bmi"), b.toFixed(1), "", t("bmiCat" + cat), cat >= 2 ? "up" : "") + "</div>";
+        vital("favorite", "var(--chart-7)", t("bp"), v.sys + "/" + v.dia, "mmHg", v.sys >= 140 || v.dia >= 90 ? mi("arrow_upward") + t("high") : diff(v.sys, pv && pv.sys, 0), v.sys >= 140 || v.dia >= 90 ? "bad" : "") +
+        vital("monitor_heart", "var(--chart-1)", t("hr"), v.hr == null ? t("none") : v.hr, v.hr == null ? "" : "bpm", v.hr == null || !pv || pv.hr == null ? t("firstVisit") : diff(v.hr, pv.hr, 0)) +
+        vital("device_thermostat", "var(--chart-4)", t("temp"), v.temp == null ? t("none") : v.temp.toFixed(1), v.temp == null ? "" : "°C", v.temp >= 37.8 ? mi("warning") + t("feverT") : (v.temp == null || !pv || pv.temp == null ? t("firstVisit") : diff(v.temp, pv.temp, 1)), v.temp >= 37.8 ? "bad" : "") +
+        vital("monitor_weight", "var(--chart-2)", t("weight"), v.w.toFixed(1), "kg", diff(v.w, pv && pv.w, 1)) +
+        vital("height", "var(--chart-5)", t("height"), v.h, "cm", diff(v.h, pv && pv.h, 0)) +
+        vital("speed", "var(--chart-3)", t("bmi"), b.toFixed(1), "", t("bmiCat" + cat), cat >= 2 ? "up" : "") + "</div>";
       const chron = visits.slice().reverse().slice(-10);
       h += '<div class="grid-2" style="margin-top:12px">' +
-        '<div class="box" style="--ig-color:var(--mc-teal)">' + UI.sparkline(chron.map(x => x.w), chron.map(x => UI.fmtDayShort(x.date)), t("spWeight")) + "</div>" +
-        '<div class="box" style="--ig-color:var(--mc-rose)">' + UI.sparkline(chron.map(x => x.sys), chron.map(x => UI.fmtDayShort(x.date)), t("spSys")) + "</div></div>";
+        '<div class="box" style="--ig-color:var(--chart-2)">' + UI.sparkline(chron.map(x => x.w), chron.map(x => UI.fmtDayShort(x.date)), t("spWeight")) + "</div>" +
+        '<div class="box" style="--ig-color:var(--chart-7)">' + UI.sparkline(chron.map(x => x.sys), chron.map(x => UI.fmtDayShort(x.date)), t("spSys")) + "</div></div>";
       const act = rxList().filter(x => x.active);
       h += '<div class="sum-grid">' +
         '<div class="box"><h4>' + mi("assignment_late") + t("problems") + "</h4>" + (p.chronic.length || p.allergies.length ? "<ul>" + p.chronic.map(c => "<li>" + UI.L(CHRONIC[c]) + "</li>").join("") + p.allergies.map(a => '<li class="neg">' + mi("warning", "") + " " + UI.L(D.allergies[a]) + "</li>").join("") + "</ul>" : '<p class="muted">' + t("noProblems") + "</p>") + "</div>" +
@@ -400,7 +400,7 @@
       visits.forEach(v => v.files.forEach(f => fl.push({ v, f })));
       if (!fl.length) return '<p class="muted">' + t("noFiles") + "</p>";
       return '<div class="files">' + fl.map(x => { const F = FILES[x.f.f]; const pdf = F.ext === "pdf";
-        return '<div class="file" style="--f-c:' + (pdf ? "var(--mc-rose)" : "var(--mc-cyan)") + '">' + mi(pdf ? "picture_as_pdf" : "image") + "<div><b>" + UI.L(F.n) + "." + F.ext + "</b><small>" + UI.fmtDay(x.v.date) + " · " + D.doctors[x.v.doc].name + " · " + t("kb", { n: x.f.kb }) + "</small></div></div>"; }).join("") + "</div>";
+        return '<div class="file" style="--f-c:' + (pdf ? "var(--chart-7)" : "var(--chart-5)") + '">' + mi(pdf ? "picture_as_pdf" : "image") + "<div><b>" + UI.L(F.n) + "." + F.ext + "</b><small>" + UI.fmtDay(x.v.date) + " · " + D.doctors[x.v.doc].name + " · " + t("kb", { n: x.f.kb }) + "</small></div></div>"; }).join("") + "</div>";
     }
     function renderPanel() {
       document.getElementById("panel").innerHTML = tab === "sum" ? renderSummary() : tab === "vis" ? renderVisits() : tab === "rx" ? renderRx() : renderFiles();
@@ -448,7 +448,7 @@
       const el = document.getElementById(id), err = document.getElementById(id + "Err");
       if (err) err.textContent = msg || "";
       el.setAttribute("aria-invalid", msg ? "true" : "false");
-      const s2 = $(el).next(".select2"); if (s2.length) s2.find(".select2-selection").css("border-color", msg ? "var(--mc-bad)" : "");
+      const s2 = $(el).next(".select2"); if (s2.length) s2.find(".select2-selection").css("border-color", msg ? "var(--danger-solid)" : "");
     }
     function updateBmi() {
       const w = num("cW"), h = num("cH"), el = document.getElementById("cBmi");

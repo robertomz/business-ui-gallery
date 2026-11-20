@@ -6,20 +6,20 @@
   <title>Expense verification · Business UI Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <link rel="stylesheet" href="../assets/css/base.css">
   <style>
     .score { display: flex; flex-direction: column; gap: 10px; }
-    .score-item header { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-bottom: 4px; }
+    .score-item header { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 4px; }
     .score-item header b { font-variant-numeric: tabular-nums; }
     .score-item .bar-track { height: 8px; }
-    .score-item p { font-size: 10.5px; color: var(--mc-muted); margin-top: 3px; }
+    .score-item p { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
     .checks { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 6px; }
-    .checks li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; padding: 6px 8px; border: 1px solid var(--mc-line); border-radius: 6px; }
+    .checks li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; padding: 8px 10px; border: 1px solid var(--border-subtle); border-radius: var(--r-sm); background: var(--surface-alt); }
     .ocr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
-    .drop { border: 1px dashed var(--mc-line); border-radius: 8px; padding: 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .drop { border: 1px dashed var(--border-strong); border-radius: var(--r-md); background: var(--surface-alt); padding: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     @media (max-width: 600px) { .ocr { grid-template-columns: minmax(0, 1fr); } }
   </style>
 </head>
@@ -58,7 +58,7 @@
       <div class="modal-body">
         <div class="grid-2" id="revInfo"></div>
         <div class="drop" style="margin-top:12px">
-          <span class="material-icons" aria-hidden="true" style="color:var(--mc-cyan)">upload_file</span>
+          <span class="material-icons" aria-hidden="true" style="color:var(--brand)">upload_file</span>
           <div class="mc-field" style="flex:1 1 220px"><label for="rFile" data-i18n="attach"></label><input type="file" id="rFile" accept=".pdf,.jpg,.jpeg,.png"></div>
           <span class="mc-hint" data-i18n="attachHint"></span>
         </div>
@@ -146,7 +146,7 @@
       document.querySelector("#tExp tfoot").innerHTML = '<tr><td colspan="4">' + t("total") + " (" + list.length + ')</td><td class="r">' + M(tot) + '</td><td colspan="2"></td><td class="r">' + M(ver) + '</td><td colspan="3"></td></tr>';
       // Score per center (always over all rows of the month)
       document.getElementById("score").innerHTML = D.costCenters.map((c, i) => { const rs = rows.filter(r => r.c === i), tv = rs.reduce((a, r) => a + r.v, 0), vv = rs.reduce((a, r) => a + r.ver, 0), p = tv ? vv / tv : 0;
-        const col = p >= .8 ? "var(--mc-good)" : p >= .5 ? "var(--mc-amber)" : "var(--mc-bad)";
+        const col = p >= .8 ? "var(--success-solid)" : p >= .5 ? "var(--warning-solid)" : "var(--danger-solid)";
         return { html: '<div class="score-item"><header><span>' + UI.L(c) + "</span><b>" + UI.fmtPct(p) + '</b></header><div class="bar-track"><span style="width:' + (p * 100) + "%;background:" + col + '"></span></div><p>' + M(vv) + " / " + M(tv) + "</p></div>", p }; })
         .sort((a, b) => b.p - a.p).map(x => x.html).join("");
     }
@@ -161,7 +161,7 @@
       cur = rows.find(r => r.id === id); reading = null;
       const m = Number($("#fMonth").val());
       document.getElementById("revInfo").innerHTML = [["infoCenter", UI.L(D.costCenters[cur.c])], ["infoAccount", NO[cur.a] + " · " + UI.L(ACC[cur.a])], ["infoSupplier", cur.sup], ["infoValue", M(cur.v) + " · " + UI.fmtDay(new Date(Date.UTC(2026, m, Math.min(cur.day, 28))))]]
-        .map(x => '<div class="mc-field"><span class="mc-label">' + t(x[0]) + '</span><div style="font-weight:700;padding-top:4px">' + x[1] + "</div></div>").join("");
+        .map(x => '<div class="mc-field"><span class="mc-label">' + t(x[0]) + '</span><div style="font-weight:600;color:var(--text-heading);padding-top:4px">' + x[1] + "</div></div>").join("");
       document.getElementById("rFile").value = "";
       document.getElementById("revResult").hidden = true;
       document.getElementById("rSave").disabled = true;
