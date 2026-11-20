@@ -165,7 +165,7 @@
       perDay: "per day", loading: "Loading…", saved: "Saved", wholeCompany: "Whole company",
       allAreas: "All areas", viewAll: "Show all screens", viewArea: "Show this area only", areas: "Areas",
       concept: "Concept", conceptNote: "Concept screen: designed as a sample of what I can build, not taken from a system in production.",
-      screensN: "{n} screens", openArea: "Open", overview: "Overview", tagline: "Business screens with sample data", homeSub: "Business screens", authorSub: "Custom software", searchScreens: "Search screens…  /", noResults: "No screen matches that search."
+      screensN: "{n} screens", openArea: "Open", overview: "Overview", tagline: "Business screens with sample data", homeSub: "Business screens", authorSub: "Full Stack Engineer", searchScreens: "Search screens…  /", noResults: "No screen matches that search."
     },
     es: {
       sample: "Datos de ejemplo", company: "Empresa activa", companyName: "Demo Company S.A.",
@@ -179,7 +179,7 @@
       perDay: "por día", loading: "Cargando…", saved: "Guardado", wholeCompany: "Toda la empresa",
       allAreas: "Todas las áreas", viewAll: "Ver todas las pantallas", viewArea: "Ver solo esta área", areas: "Áreas",
       concept: "Concepto", conceptNote: "Pantalla de concepto: diseñada como muestra de lo que puedo construir, no tomada de un sistema en producción.",
-      screensN: "{n} pantallas", openArea: "Abrir", overview: "Resumen del área", tagline: "Pantallas de negocio con datos de ejemplo", homeSub: "Pantallas de negocio", authorSub: "Software a la medida", searchScreens: "Buscar pantallas…  /", noResults: "Ninguna pantalla coincide con esa búsqueda."
+      screensN: "{n} pantallas", openArea: "Abrir", overview: "Resumen del área", tagline: "Pantallas de negocio con datos de ejemplo", homeSub: "Pantallas de negocio", authorSub: "Full Stack Engineer", searchScreens: "Buscar pantallas…  /", noResults: "Ninguna pantalla coincide con esa búsqueda."
     }
   };
   const STR = { en: Object.assign({}, COMMON.en), es: Object.assign({}, COMMON.es) };
